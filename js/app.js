@@ -7,6 +7,7 @@ import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
+import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
 export const APP_VERSION = '0.23.0';
@@ -24,6 +25,8 @@ const store = {
 if (params.get('debug') === '1') store.set('kh_debug', '1');
 if (params.get('debug') === '0') store.del('kh_debug');
 const DEBUG = store.get('kh_debug') === '1';
+let theme = loadTheme(store);
+applyTheme(theme);
 const dbg = { panel: false, viewAs: null, autoView: true, bots: false, fast: false, errors: [], lastSync: null, reportText: '' };
 const logError = (msg) => {
   dbg.errors.push(`${new Date().toISOString()} ${msg}`);
@@ -219,6 +222,7 @@ function renderStart() {
           <button type="button" class="slink" data-modal="rules">📖 Regeln</button>
           <button type="button" class="slink" data-modal="stats">🏆 Bestenliste</button>
           <button type="button" class="slink" data-modal="rejoin">🔑 Mit Code zurück</button>
+          <button type="button" class="slink" data-modal="design">🎨 Aussehen</button>
           ${isStandalone() ? '' : '<button type="button" class="slink" data-modal="install">📲 Als App</button>'}
           ${ui.isAdmin ? '<button type="button" class="slink admin-link" data-modal="admin">⚙ Admin</button>' : ''}
         </div>
@@ -1210,6 +1214,7 @@ function renderModal() {
   if (!modal) { el?.remove(); return; }
   if (!el) { el = document.createElement('div'); el.id = 'modal'; document.body.appendChild(el); }
   let body = '';
+  if (modal.kind === 'design') body = themeModal(theme);
   if (modal.kind === 'rules') body = `<h2>Spielregeln</h2><div class="rules">${RULES}</div>`;
   if (modal.kind === 'install') {
     body = `<h2>Als App aufs Handy</h2>
@@ -1276,6 +1281,12 @@ function renderModal() {
     if (b.dataset.m === 'close') { modal = null; return render(); }
     if (b.dataset.m === 'doInstall' && installPrompt) { installPrompt.prompt(); installPrompt = null; modal = null; return render(); }
     if (b.dataset.m === 'animal') return saveProfile({ animal: b.dataset.v });
+    if (b.dataset.m === 'theme' || b.dataset.m === 'themePreset' || b.dataset.m === 'themeReset') {
+      if (b.dataset.m === 'theme') theme = { ...theme, [b.dataset.k]: b.dataset.v };
+      if (b.dataset.m === 'themePreset') theme = { ...PRESETS[b.dataset.v].v };
+      if (b.dataset.m === 'themeReset') theme = { ...DEFAULT_THEME };
+      saveTheme(store, theme); applyTheme(theme); return render();
+    }
     if (modal.kind === 'admin') {
       const v = b.dataset.v;
       const nameOf = (id) => modal.adminData?.users?.find((u) => u.id === id)?.name || 'Spieler';

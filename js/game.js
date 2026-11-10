@@ -277,7 +277,7 @@ export function renderGame(root, ctx) {
       ${bubble}${nudge}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${avatar(p, i)}
-        <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status}</span></div>
+        <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}</span>` : status}</span></div>
       </div>
       <div class="chips" data-a="reactTo" data-v="${esc(p.id)}">${chips}</div>
     </div>`;
@@ -285,6 +285,7 @@ export function renderGame(root, ctx) {
 
   // ----- Versteigerung: findet direkt auf dem Tisch statt -----
   let wake = null; // wann neu zeichnen (Aufdecken, Buzzer-Countdown)
+  let handPick = null; // ersetzt den Geldfächer, solange man Scheine auswählt
   let aucCenter = '';
   let aucLeft = '';
   let aucBanner = '';
@@ -294,7 +295,6 @@ export function renderGame(root, ctx) {
     const high = a.high ? a.high.amount : 0;
     const cap = a.caps[meId];
     const canBid = (amt) => cap == null || amt <= cap;
-    const owners = v.players.filter((p) => p.id !== meId && p.animals[a.animal] > 0).map((p) => `${esc(p.name)} ${p.animals[a.animal]}`).join(', ') || 'niemand';
     const nowR = ctx.now();
     const revealing = a.opensAt != null && nowR < a.opensAt;
     if (revealing) wake = a.opensAt; // nach der Animation neu zeichnen
@@ -302,9 +302,10 @@ export function renderGame(root, ctx) {
     const infoKey = `${a.opensAt}|${a.animal}`;
     const infoFresh = !revealing && local.infoShown !== infoKey;
     if (!revealing) local.infoShown = infoKey;
-    const ainfo = `<div class="ainfo ${infoFresh ? 'fade' : ''}">
-      <div><span>Bei anderen</span><b>${owners}</b></div><div><span>Du hast</span><b>${me.animals[a.animal]}</b></div>
-      ${a.animal === 'esel' && v.lastEvent?.type === 'donkey' ? `<div class="bonus"><span>Esel-Bonus</span><b>alle +${v.lastEvent.payout}</b></div>` : ''}
+    const holders = v.players.map((p, i) => [p, i]).filter(([p]) => p.animals[a.animal] > 0);
+    const ainfo = `<div class="owners ${infoFresh ? 'fade' : ''}">
+      ${holders.length ? `<small>Haben schon</small><div class="olist">${holders.map(([p, i]) => `<span class="own ${p.id === meId ? 'me' : ''}">${avatar(p, i)}<b>${p.id === meId ? 'Du' : esc(p.name)} ×${p.animals[a.animal]}</b></span>`).join('')}</div>`
+        : '<span class="onew">Neu im Spiel</span>'}
     </div>`;
     // Countdown: Ring um die Karte – bieten nur solange er läuft, Zuschlag erst danach
     const now = ctx.now();
@@ -389,9 +390,10 @@ export function renderGame(root, ctx) {
     </div></div>`;
     if (turnId === meId) {
       const values = [...new Set(me.money)].sort((a, b) => a - b);
-      aucLeft = `<div class="lhead">Karte verdeckt legen</div>
-        ${values.length ? `<div class="bidgrid">${values.map((val) => `<button type="button" class="bidbtn" style="--m:${MONEY_COLORS[val]}" data-a="ratLay" data-v="${val}" aria-label="${val} verdeckt legen"><b>${val}</b><small>×${me.money.filter((m) => m === val).length}</small></button>`).join('')}</div>` : '<div class="ldecide">Keine Karten mehr – Ratte nehmen.</div>'}
-        <button type="button" class="pill pill-red" data-a="ratTake"><small>RATTE NEHMEN</small>+ ${karten(potCount)}</button>`;
+      aucLeft = `<button type="button" class="pill pill-red" data-a="ratTake"><small>RATTE NEHMEN</small>+ ${karten(potCount)}</button>`;
+      if (values.length) {
+        handPick = `<div class="hand-row ratlay"><span class="hrlabel">Karte verdeckt legen:</span><div class="piles">${values.map((val) => `<button type="button" class="pile" style="--m:${MONEY_COLORS[val] || '#eee'}" data-a="ratLay" data-v="${val}" aria-label="${val} verdeckt legen"><span class="pv">${val}</span><span class="pcnt">×${me.money.filter((m) => m === val).length}</span></button>`).join('')}</div></div>`;
+      }
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(turnId))} überlegt …</div>`;
     }
@@ -478,7 +480,6 @@ export function renderGame(root, ctx) {
   }
 
   // ----- Bezahlen: auf dem Tisch statt in einem eigenen Fenster -----
-  let handPick = null; // ersetzt den Geldfächer, solange man Scheine auswählt
   if (state.phase === 'payment') {
     const pm = v.payment;
     const isSp = !!pm.special;
@@ -674,20 +675,22 @@ export function renderGame(root, ctx) {
 
   const trades = possibleTrades(state, meId);
   let leftActionsHtml = aucLeft;
+  if (state.phase === 'turn' && !myTurn) leftActionsHtml = `<div class="ldecide">${esc(cur.name)} ist dran …</div>`;
   if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
     leftActionsHtml = `
       <button type="button" class="pill pill-red" data-a="auction" ${v.deck > 0 ? '' : 'disabled'}>KARTE<br>AUFDECKEN</button>
       <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw ? '' : 'disabled'}>Kuhhandel</button>`;
   }
-  const banner = aucBanner || (state.phase === 'ended' || state.phase === 'block' ? 'Spielende' : myTurn ? 'Du bist dran' : `${esc(cur.name)} ist dran`);
+  const askMe = (state.phase === 'turn' && myTurn && !local.tradeOpen) || (state.phase === 'payment' && v.payment.payer === meId)
+    || (state.phase === 'trade' && v.trade.target === meId) || (state.phase === 'rat' && ratCurrent(v) === meId) || (state.phase === 'block' && v.block.player === meId);
+  const banner = aucBanner || (state.phase === 'ended' || state.phase === 'block' ? 'Spielende' : myTurn ? (v.mustDraw ? 'Nochmal aufdecken!' : 'Du bist dran') : `${esc(cur.name)} ist dran`);
   const table = `<div class="gtable">
-    <div class="tbanner ${fresh && myTurn && state.phase === 'turn' ? 'pulse' : ''}">${banner}</div>
+    <div class="tbanner ${askMe ? 'mine' : ''} ${fresh && myTurn && state.phase === 'turn' ? 'pulse' : ''}" ${askMe ? `style="--c:${SEAT_COLORS[meIdx]}"` : ''}>${banner}</div>
     <div class="tcenter">${aucCenter || `<div class="tlog">${esc(lastLog)}</div>
     <div class="deck-wrap">
       ${canDraw ? `<button type="button" class="deck go" data-a="auction" aria-label="Karte aufdecken"><span class="deckcow">${art('kuh')}</span><span class="deckgo">Tippen</span></button>`
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}</span>
-      ${v.mustDraw ? '<span class="deck-count must">Nach der Ratte: nochmal aufdecken!</span>' : ''}
     </div>`}</div>
     <div class="auslage ${myItems.length > 6 ? 'many' : ''} ${handPick ? 'up' : ''} ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
@@ -705,6 +708,7 @@ export function renderGame(root, ctx) {
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">Ton: ${ctx.sound ? 'an' : 'aus'}</button>
       <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button></div>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
+      <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="pin">Wiedereinstieg-Code</button>
       ${ctx.standalone ? '' : '<button type="button" class="pill pill-white pill-small" data-a="modal" data-v="install">Als App aufs Handy</button>'}
       <button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button></div>` : ''}

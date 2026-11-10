@@ -1,16 +1,18 @@
 # Änderungsprotokoll
 
-## v0.23.0 (Prototyp – noch nicht live)
+## v0.23.0
 
-- [ ] Linke Spalte weg, Tisch breiter. Menü als kleiner Knopf oben links in der Tischecke.
-- [ ] Deine Knöpfe unten links im Tisch (Daumen), immer an derselben Stelle.
-- [ ] Dein Profil rechts unten unter den Gegnern; antippen zeigt deine Punkte mit Rechnung.
-- [ ] Geld: Fächer rückt bei vielen Scheinen zusammen, ab 12 Scheinen als Stapel je Wert mit „×N“ – Summe immer sichtbar.
-- [ ] Kuhhandel luftiger: gewähltes Tier groß und golden, die anderen blass.
-- [ ] Gelber Rand bei Aktionen entfernt.
-- [ ] Wenn du dran bist: Tiere der Gegner, um die du handeln kannst, leuchten – antippen startet den Kuhhandel direkt.
-- [ ] Versteigerung: Countdown als Ring um die Karte mit Sekunden-Zahl, die letzten 3 s rot.
-- [ ] Kuhhandel-Schritte als Leiste oben im Duell.
+- [x] Neuer Tischaufbau: linke Spalte weg, Tisch breiter, Menü als kleiner Knopf oben links.
+- [x] Deine Knöpfe immer unten links (Daumen). Wenn du nichts tun musst, steht dort, worauf ihr wartet.
+- [x] Dein Profil rechts unten unter den Gegnern; antippen zeigt deine Punkte mit Rechnung.
+- [x] Kuhhandel direkt über die leuchtenden Tiere der Gegner starten; gewähltes Tier groß und golden, Schritte als Leiste.
+- [x] Versteigerung: Countdown als Ring um die Karte; daneben, wer das Tier schon hat (Bild × Anzahl) oder „Neu im Spiel“.
+- [x] Gegner: Geldkarten-Anzahl als kleines Symbol statt „7 Karten“.
+- [x] Banner groß in deiner Farbe, wenn du gefragt bist („Du bist dran“, „Zahle …“, „Nochmal aufdecken!“).
+- [x] Geld: Fächer rückt zusammen, ab 12 Scheinen als Stapel je Wert mit „×N“ – Summe immer sichtbar.
+- [x] Rattenrunde: Karte legen durch Antippen der eigenen Scheine unten, links nur „Ratte nehmen“.
+- [x] Gelber Rand bei Aktionen entfernt.
+- [x] Neu: „🎨 Aussehen“ (Startseite und Menü): Spielfeld-Farbe und -Muster, Hintergrund-Farbe und -Muster, Kartenrücken-Farbe und -Muster, fünf Vorlagen. ★ = Empfehlung. Standard: Petrol-Tisch auf Bordeaux. Gilt nur auf dem eigenen Gerät.
 
 ## v0.22.0
 

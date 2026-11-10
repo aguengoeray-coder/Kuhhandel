@@ -1,6 +1,6 @@
 # Kuhhandel – Anleitung für KI-Assistenten (Codex, Claude & Co.)
 
-Diese Datei gilt für jede KI, die an diesem Repo arbeitet. `CLAUDE.md` hat denselben Inhalt (für Claude).
+Diese Datei gilt für jede KI, die an diesem Repo arbeitet. `AGENTS.md` hat denselben Inhalt (für Codex).
 Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsch**.
 
 ## Wichtigste Regeln für die Zusammenarbeit
@@ -39,6 +39,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `js/animals.js` | Eigene Tierbilder (SVG) |
 | `js/bots.js` | Test-Spieler für den Debug-Modus |
 | `js/sounds.js` | Geräusche (im Browser erzeugt) |
+| `js/theme.js` | Aussehen: Farben/Muster für Spielfeld, Hintergrund, Kartenrücken (CSS-Variablen, pro Gerät gespeichert) |
 | `js/demo.js` | Beispiel-Spielstände für Screenshots (`?demo=turn`, `auction`, `tradesetup` …) |
 | `css/style.css` | Gestaltung |
 | `worker/index.js` | Cloudflare Worker: liefert die Dateien aus + weckt Supabase täglich (Zeitplan in `wrangler.jsonc`) |
@@ -80,4 +81,6 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 ## Design
 
 Querformat, angelehnt an die Bedienung der Monopoly-App (eigene Gestaltung, keine fremden Grafiken/Figuren).
-Grüner Tisch, Spieler rechts mit Farbband, eigenes Geld als Fächer unten, Aktionen links.
+Breiter Tisch (Standard: Petrol auf Bordeaux, frei wählbar unter „Aussehen“), Spieler rechts mit Farbband (du ganz unten),
+eigenes Geld als Fächer unten, deine Knöpfe unten links im Tisch (Daumen), Menü oben links in der Tischecke.
+Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …), nicht fest einbauen.
