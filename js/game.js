@@ -232,10 +232,10 @@ export function renderGame(root, ctx) {
   const auction = v.auction;
   const others = v.players.filter((p) => p.id !== meId);
   // Position jedes Spielers auf der Bühne (Gegner rechts, du unten rechts im Tisch)
-  const posY = (id) => (id === meId ? 340 : 8 + (374 / Math.max(1, others.length)) * (others.findIndex((p) => p.id === id) + 0.5));
+  const colOrder = [...others, me];
+  const posY = (id) => 8 + (374 / colOrder.length) * (colOrder.findIndex((p) => p.id === id) + 0.5);
   const tradeMap = {};
   if (state.phase === 'turn' && myTurn && !v.mustDraw) possibleTrades(state, meId).forEach((t) => { (tradeMap[t.target] ||= new Set()).add(t.animal); });
-  let meBadge = '';
   const playersCol = v.players.map((p, i) => {
     const isMe = p.id === meId;
     const count = Array.isArray(p.money) ? p.money.length : p.money;
@@ -273,12 +273,7 @@ export function renderGame(root, ctx) {
     const bubble = said ? `<div class="rbubble ${from ? 'to' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
     let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
-    if (isMe) {
-      meBadge = `<button type="button" class="mebadge${turnMark}${isLeader ? ' leader' : ''}" style="--c:${SEAT_COLORS[i]}" data-a="reactTo" data-v="${esc(p.id)}" aria-label="Deine Punkte und Reaktionen">
-        ${bubble}${avatar(p, i)}<span class="mbtext"><b>Du</b><small>${isLeader || status !== karten(count) ? status : `${scoreFor(p).score} Punkte`}</small></span></button>`;
-      return '';
-    }
-    return `<div class="prow${turnMark}${dim}${isLeader ? ' leader' : ''}" style="--c:${SEAT_COLORS[i]}">${coin}
+    return `<div style="order:${isMe ? 9 : 0}" class="prow${isMe ? ' me' : ''}${turnMark}${dim}${isLeader ? ' leader' : ''}" style="--c:${SEAT_COLORS[i]}">${coin}
       ${bubble}${nudge}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${avatar(p, i)}
@@ -665,11 +660,16 @@ export function renderGame(root, ctx) {
     ...(ratsOf(me) ? [stackHtml(RAT, ratsOf(me), { bump: bumpId === RAT })] : []),
   ];
   const myAnimals = myItems.join('') || '<span class="noanimals">Noch keine Tiere</span>';
-  const mid = (me.money.length - 1) / 2;
-  const fan = me.money.map((m, i) => {
+  // Viele Scheine: gleiche Werte zu einem Stapel mit „×N“ zusammenfassen, damit jeder Wert lesbar bleibt
+  const grouped = me.money.length > 11;
+  const fanCards = grouped ? [...new Set(me.money)].sort((x, y) => x - y).map((val) => [val, me.money.filter((m) => m === val).length]) : me.money.map((m) => [m, 1]);
+  const nM = fanCards.length;
+  const mid = (nM - 1) / 2;
+  const step = nM > 1 ? Math.min(grouped ? 50 : 34, 290 / (nM - 1)) : 34; // Abstand zwischen zwei Scheinen
+  const fan = fanCards.map(([m, cnt], i) => {
     const off = i - mid;
-    const rot = me.money.length > 1 ? off * Math.min(7, 40 / me.money.length) : 0;
-    return `<div class="money fan" style="--m:${MONEY_COLORS[m]};transform:rotate(${rot}deg) translateY(${Math.abs(off) * 2.5}px)">${mIn(m)}</div>`;
+    const rot = nM > 1 ? off * Math.min(6, 36 / nM) : 0;
+    return `<div class="money fan ${cnt > 1 ? 'multi' : ''}" style="--m:${MONEY_COLORS[m]};margin-left:${i ? Math.round(step - 46) : 0}px;transform:rotate(${rot}deg) translateY(${Math.min(14, Math.abs(off) * 2.5)}px)">${mIn(m)}${cnt > 1 ? `<span class="mcount">×${cnt}</span>` : ''}</div>`;
   }).join('');
 
   const trades = possibleTrades(state, meId);
@@ -691,7 +691,6 @@ export function renderGame(root, ctx) {
     </div>`}</div>
     <div class="auslage ${myItems.length > 6 ? 'many' : ''} ${handPick ? 'up' : ''} ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
-    ${meBadge}
     ${handPick || `<div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${me.money.length ? `<span class="fansum">${sum(me.money)}</span>` : ''}</div>`}
   </div>`;
 
@@ -877,17 +876,6 @@ export function renderGame(root, ctx) {
 
 
 
-  // Gefordert (dran, herausgefordert, zahlen, Ratte, Entscheidung): Rand leuchtet kurz auf
-  let need = '';
-  if (state.phase === 'turn' && myTurn) need = 'turn';
-  else if (state.phase === 'payment' && v.payment.payer === meId) need = 'pay';
-  else if (state.phase === 'trade' && v.trade.target === meId) need = 'trade';
-  else if (state.phase === 'rat' && ratCurrent(v) === meId) need = 'rat';
-  else if (state.phase === 'block' && v.block.player === meId) need = 'block';
-  else if (state.phase === 'special' && v.special.revealer === meId && specialStage(v, ctx.now()) === 'decide') need = 'special';
-  const needKey = need ? `${need}|${state.log.length}` : '';
-  if (needKey && local.needKey !== undefined && needKey !== local.needKey) effects += `<div class="attn ${need === 'trade' || need === 'pay' ? 'strong' : ''}" aria-hidden="true"></div>`;
-  local.needKey = needKey;
 
   // Was ist passiert: kurz groß in der Tischmitte, danach klein oben
   const ownEffect = /class="(qpop|soldsign|moneyreveal)"/.test(effects) || (aucCenter && state.phase === 'turn');

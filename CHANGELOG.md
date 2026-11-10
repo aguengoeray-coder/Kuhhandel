@@ -4,7 +4,10 @@
 
 - [ ] Linke Spalte weg, Tisch breiter. Menü als kleiner Knopf oben links in der Tischecke.
 - [ ] Deine Knöpfe unten links im Tisch (Daumen), immer an derselben Stelle.
-- [ ] Du unten rechts im Tisch (Bild, Punkte; antippen zeigt die Rechnung). Rechts nur noch die Gegner.
+- [ ] Dein Profil rechts unten unter den Gegnern; antippen zeigt deine Punkte mit Rechnung.
+- [ ] Geld: Fächer rückt bei vielen Scheinen zusammen, ab 12 Scheinen als Stapel je Wert mit „×N“ – Summe immer sichtbar.
+- [ ] Kuhhandel luftiger: gewähltes Tier groß und golden, die anderen blass.
+- [ ] Gelber Rand bei Aktionen entfernt.
 - [ ] Wenn du dran bist: Tiere der Gegner, um die du handeln kannst, leuchten – antippen startet den Kuhhandel direkt.
 - [ ] Versteigerung: Countdown als Ring um die Karte mit Sekunden-Zahl, die letzten 3 s rot.
 - [ ] Kuhhandel-Schritte als Leiste oben im Duell.

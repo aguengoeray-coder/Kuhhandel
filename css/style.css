@@ -1413,3 +1413,24 @@ button.deck:active { transform: scale(.95); }
 .fan-wrap { right: 128px; }
 .fan-wrap { right: 150px; }
 .fan-wrap { left: 172px; }
+
+/* v0.23 Runde 2: Profil wieder rechts, Fächer passt immer, Kuhhandel luftiger */
+.prow.me .ribbon-s { box-shadow: inset 0 0 0 2px rgba(255,255,255,.6); }
+.fan-wrap { left: 168px; right: 10px; padding-left: 0; }
+.fan-wrap .money.fan { width: 46px; }
+.fansum { margin-left: 12px; flex: none; }
+.attn { display: none; }
+
+.tcenter > .tsteps .tstep span { display: none; }
+.tduel { gap: 10px; }
+.tpanel { width: 236px; gap: 6px; }
+.tpanel .atiles { gap: 8px; align-items: flex-end; min-height: 66px; }
+.atile { width: 44px; height: 50px; min-width: 0; min-height: 0; padding: 3px; border-radius: 9px; opacity: .55; transition: transform .15s, opacity .15s; }
+.atile .cv { font-size: 9px; }
+.atile span { font-size: 10px; }
+.atile.on { width: 56px; height: 64px; opacity: 1; border: 3px solid var(--gold); box-shadow: 0 0 0 3px rgba(255,211,78,.45), 0 8px 16px rgba(0,0,0,.35); transform: translateY(-2px); }
+.atiles:has(.atile:only-child) .atile { opacity: 1; }
+.tpanel .tanimal { display: none; }
+.tduel + .tanimal, .tcenter > .tanimal { margin-top: 6px; }
+.money.fan.multi { overflow: visible; box-shadow: 3px -3px 0 -1px #fff, 3px -3px 0 1px var(--ink), -3px 3px 8px rgba(0,0,0,.25); }
+.money.fan .mcount { position: absolute; left: 50%; top: -4px; transform: translateX(-50%); background: var(--ink); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; font-weight: 800; line-height: 16px; }
