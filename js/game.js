@@ -407,6 +407,48 @@ export function renderGame(root, ctx) {
     H.spBuy = () => ctx.act((s) => specialDecide(s, meId, 'buy', ctx.now()));
   }
 
+  // ----- Bezahlen: auf dem Tisch statt in einem eigenen Fenster -----
+  let handPick = null; // ersetzt den Geldfächer, solange man Scheine auswählt
+  if (state.phase === 'payment') {
+    const pm = v.payment;
+    const isSp = !!pm.special;
+    const card = isSp ? specialCard(pm.special, '', 'compact') : bigAnimalCard(pm.animal, '', 'compact');
+    if (pm.payer === meId) {
+      const n = local.sel.length;
+      let status; let cls; let ready;
+      if (isSp) {
+        ready = n === pm.count;
+        status = n < pm.count ? `Noch ${karten(pm.count - n)} wählen` : ready ? 'Passt' : `${karten(n - pm.count)} zu viel`;
+        cls = ready ? 'ok' : 'bad';
+      } else {
+        const diff = selSum - pm.amount;
+        ready = diff >= 0;
+        status = diff < 0 ? `Es fehlen noch ${-diff}` : diff === 0 ? 'Passt genau' : `${diff} zu viel – kein Wechselgeld`;
+        cls = diff < 0 ? 'bad' : diff === 0 ? 'ok' : 'warn';
+      }
+      aucBanner = isSp ? `Zahle ${karten(pm.count)} an ${esc(nameOf(pm.payee))}` : `Zahle ${pm.amount} an ${esc(nameOf(pm.payee))}`;
+      aucCenter = `<div class="auc paytable">${card}
+        <div class="kasse ${entered ? 'pop' : ''}">
+          <div class="kslots">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3)}</div>
+          <div class="kline"><span>${isSp ? `${karten(n)} von ${pm.count}` : `${karten(n)} · ${selSum}`}</span><b class="paystatus ${cls}">${status}</b></div>
+        </div></div>`;
+      aucLeft = `<div class="lhead">${isSp ? `${esc(aname(pm.special))}-Spezialkarte` : `Für: ${esc(aname(pm.animal))}`}</div>
+        <div class="lnote">${isSp ? 'Es zählt nur die Anzahl – du suchst selbst aus, welche.' : 'Tippe unten deine Scheine an. Antippen in der Mitte nimmt sie zurück.'}</div>
+        <button type="button" class="pill pill-white pill-small" data-a="${isSp ? 'autocount' : 'autopay'}">${isSp ? 'Kleinste wählen' : 'Passend wählen'}</button>
+        <button type="button" class="pill pill-red" data-a="pay" ${ready ? '' : 'disabled'}><small>BEZAHLEN</small>${isSp ? karten(n) : `${karten(n)} · ${selSum}`}</button>`;
+      handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
+      H.pay = () => ctx.act((s) => pay(s, meId, local.sel));
+      H.autopay = () => { local.sel = bestPay(me.money, pm.amount); ctx.rerender(); };
+      H.autocount = () => { local.sel = me.money.map((m, i) => [m, i]).sort((a, b) => a[0] - b[0]).slice(0, pm.count).map(([, i]) => i); ctx.rerender(); };
+    } else {
+      aucBanner = `${esc(nameOf(pm.payer))} ${pm.payer === meId ? 'zahlst' : 'zahlt'}`;
+      aucCenter = `<div class="auc paytable">${card}
+        <div class="kasse wait"><div class="kslots">${Array.from({ length: Math.min(isSp ? pm.count : 3, 8) }, () => '<div class="money xs back"></div>').join('')}</div>
+          <div class="kline"><span>${esc(nameOf(pm.payer))} → ${esc(nameOf(pm.payee))}</span><b>${isSp ? karten(pm.count) : `${pm.amount} Taler`}</b></div></div></div>`;
+      aucLeft = `<div class="ldecide">${esc(nameOf(pm.payer))} sucht ${isSp ? 'die Karten' : 'die Scheine'} aus …</div>`;
+    }
+  }
+
   // ----- Tisch -----
   const nextDonkey = v.donkeysDrawn < 4 ? DONKEY_PAYOUTS[v.donkeysDrawn] : null;
   const lastLog = v.log[v.log.length - 1] || '';
@@ -433,7 +475,7 @@ export function renderGame(root, ctx) {
       ${v.mustDraw ? '<span class="deck-count must">Nach der Ratte: nochmal aufdecken!</span>' : ''}
     </div>
     <div class="myanimals ${myItems.length > 8 ? 'many' : ''}">${myAnimals}</div>`}
-    <div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}</div>
+    ${handPick || `<div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}</div>`}
   </div>`;
 
   // ----- linke Spalte -----
@@ -463,7 +505,7 @@ export function renderGame(root, ctx) {
       <span class="ichip">Punkte jetzt: <b>${scoreFor(me).score}</b></span>
       ${nextDonkey ? `<span class="ichip">Nächster Esel: <b>+${nextDonkey}</b></span>` : '<span class="ichip">Alle Esel sind raus</span>'}
     </div>
-    <div class="lactions ${['auction', 'rat', 'special'].includes(state.phase) ? 'auction' : ''}">${leftActions}</div>
+    <div class="lactions ${['auction', 'rat', 'special', 'payment'].includes(state.phase) ? 'auction' : ''}">${leftActions}</div>
   </div>`;
 
   H.menu = () => { local.menu = !local.menu; local.reactOpen = false; ctx.rerender(); };
@@ -490,56 +532,7 @@ export function renderGame(root, ctx) {
   let overlay = '';
 
 
-  if (state.phase === 'payment' && v.payment.special) {
-    const pm = v.payment;
-    const card = specialCard(pm.special);
-    if (pm.payer === meId) {
-      const n = local.sel.length;
-      const status = n < pm.count ? `Noch ${karten(pm.count - n)} wählen` : n === pm.count ? 'Passt' : `${karten(n - pm.count)} zu viel`;
-      overlay = `<div class="overlay light ${entered ? 'enter' : ''}">
-        <div class="pay">
-          <h2>Zahle ${karten(pm.count)} an ${esc(nameOf(pm.payee))}</h2>
-          <p>Für die ${esc(aname(pm.special))}-Spezialkarte. Es zählt nur die Anzahl – du suchst selbst aus, welche.</p>
-          <div class="chosen"><small>Ausgewählt (antippen zum Zurücknehmen):</small><div class="slots wide">${chosenCards(me.money, local.sel, pm.count)}</div></div>
-          ${moneyPiles(me.money, local.sel)}
-          <div class="payrow"><div class="paystatus ${n === pm.count ? 'ok' : 'bad'}">${status}</div>
-            <button type="button" class="pill pill-white pill-small" data-a="autocount">Kleinste wählen</button></div>
-        </div>
-        <div class="bottom-bar"><button type="button" class="pill pill-red big" data-a="pay" ${n === pm.count ? '' : 'disabled'}><small>BEZAHLEN</small>${karten(n)}</button></div>
-      </div>`;
-      H.pay = () => ctx.act((s) => pay(s, meId, local.sel));
-      H.autocount = () => { local.sel = me.money.map((m, i) => [m, i]).sort((a, b) => a[0] - b[0]).slice(0, pm.count).map(([, i]) => i); ctx.rerender(); };
-    } else {
-      overlay = `<div class="overlay light ${entered ? 'enter' : ''}"><div class="wait">
-        ${card}
-        <p><strong>${esc(nameOf(pm.payer))}</strong> ${pm.payer === meId ? 'zahlst' : 'zahlt'} ${karten(pm.count)} an <strong>${esc(nameOf(pm.payee))}</strong> …</p>
-      </div></div>`;
-    }
-  } else if (state.phase === 'payment') {
-    const pm = v.payment;
-    if (pm.payer === meId) {
-      const diff = selSum - pm.amount;
-      const status = diff < 0 ? `Es fehlen noch ${-diff}` : diff === 0 ? 'Passt genau' : `Du überzahlst um ${diff} – kein Wechselgeld`;
-      overlay = `<div class="overlay light ${entered ? 'enter' : ''}">
-        <div class="pay">
-          <h2>Zahle ${pm.amount} an ${esc(nameOf(pm.payee))}</h2>
-          <p>Für: ${aname(pm.animal)}. Wähle Karten, die zusammen mindestens ${pm.amount} ergeben.</p>
-          <div class="chosen"><small>Ausgewählt (antippen zum Zurücknehmen):</small><div class="slots wide">${chosenCards(me.money, local.sel, 3)}</div></div>
-          ${moneyPiles(me.money, local.sel)}
-          <div class="payrow"><div class="paystatus ${diff < 0 ? 'bad' : diff === 0 ? 'ok' : 'warn'}">${status}</div>
-            <button type="button" class="pill pill-white pill-small" data-a="autopay">Passend auswählen</button></div>
-        </div>
-        <div class="bottom-bar"><button type="button" class="pill pill-red big" data-a="pay" ${diff < 0 ? 'disabled' : ''}><small>BEZAHLEN</small>${karten(local.sel.length)} · ${selSum}</button></div>
-      </div>`;
-      H.pay = () => ctx.act((s) => pay(s, meId, local.sel));
-      H.autopay = () => { local.sel = bestPay(me.money, pm.amount); ctx.rerender(); };
-    } else {
-      overlay = `<div class="overlay light ${entered ? 'enter' : ''}"><div class="wait">
-        ${bigAnimalCard(pm.animal)}
-        <p><strong>${esc(nameOf(pm.payer))}</strong> bezahlt ${pm.amount} an <strong>${esc(nameOf(pm.payee))}</strong> …</p>
-      </div></div>`;
-    }
-  }
+  // Bezahlen läuft jetzt auf dem Tisch (siehe oben)
 
   if (state.phase === 'turn' && myTurn && local.tradeOpen) {
     const targets = [...new Set(trades.map((t) => t.target))];
@@ -832,7 +825,12 @@ export function renderGame(root, ctx) {
 export function fitStage() {
   const st = document.getElementById('stage');
   if (!st) return;
-  const s = Math.min(window.innerWidth / 844, window.innerHeight / 390);
+  // Platz innerhalb der sicheren Fläche (iPhone: Kamera-Aussparung und Home-Balken freilassen)
+  const app = document.getElementById('app');
+  const cs = app ? getComputedStyle(app) : null;
+  const padX = cs ? parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) : 0;
+  const padY = cs ? parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) : 0;
+  const s = Math.min((window.innerWidth - padX) / 844, (window.innerHeight - padY) / 390);
   st.style.transform = `scale(${s})`;
   st.classList.toggle('small', s < 0.9 || new URLSearchParams(location.search).has('small'));
   st.parentElement.style.width = `${844 * s}px`;

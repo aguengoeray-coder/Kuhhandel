@@ -180,3 +180,11 @@
 
 - [x] Admin-Bereich → Reiter „Debug“: Debug-Modus auf diesem Gerät an/aus, Testspiel mit 3 oder 4 Spielern starten, Geld im Stapel an/aus
 - [x] Link `?debug=1` funktioniert weiterhin für alle
+
+## v0.16.0 – Bezahlen am Tisch, Bedienung am iPhone (wartet auf Freigabe)
+
+- [x] Bezahlen öffnet kein eigenes Fenster mehr: Tier und Kassenfeld in der Tischmitte, Scheine unten in der Hand antippen, Knöpfe links
+- [x] Gilt auch für die Spezialkarte; die anderen sehen am Tisch, wer gerade zahlt
+- [x] iPhone-App vom Home-Bildschirm: Spiel bleibt in der sicheren Fläche (nicht unter Kamera-Aussparung und Home-Balken)
+- [x] Kein Doppeltipp-Zoom mehr, Knöpfe reagieren schneller
+- [x] Kleine Knöpfe größer: Debug-Leiste („Sicht wechseln“), Debug-Fenster, Emoji-Auswahl, Kuhhandel-Gegner, Warteraum, Admin
