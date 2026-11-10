@@ -83,3 +83,7 @@ begin
     alter publication supabase_realtime add table public.games;
   end if;
 end $$;
+
+-- Gemeinsame Uhr für den Auktions-Countdown (v0.4.2)
+create or replace function public.server_now() returns timestamptz language sql stable as $$ select now() $$;
+grant execute on function public.server_now() to authenticated, anon;

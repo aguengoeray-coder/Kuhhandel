@@ -143,6 +143,9 @@ function renderRoom() {
 const gameLocal = {}; // Auswahl auf dem eigenen Gerät (Karten, Kuhhandel-Entwurf …)
 let toastMsg = '';
 let online = null;      // wer gerade verbunden ist (Set von Spieler-IDs)
+let offlineSince = {};  // Spieler-ID → seit wann nicht mehr verbunden
+let clockOffset = 0;    // Abstand der eigenen Uhr zur Server-Uhr in ms
+const now = () => Date.now() + clockOffset + (DEMO ? demoClock : 0);
 let demoClock = 0;      // nur Demo: Uhr vor-/zurückstellen
 let toastTimer = null;
 let busy = false;
@@ -163,8 +166,8 @@ function renderPlaying() {
     toastMsg,
     rerender: render,
     act,
-    now: () => Date.now() + (DEMO ? demoClock : 0),
-    online,
+    now,
+    online: onlineForDisplay(),
     sound: soundOn(),
     toggleSound: () => { store.set('kh_sound', soundOn() ? 'off' : 'on'); render(); },
     onExit: () => { store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
@@ -253,9 +256,9 @@ setInterval(() => {
   if (ui.screen !== 'playing') return;
   const el = app.querySelector('[data-ends]');
   if (!el) return;
-  const now = Date.now() + (DEMO ? demoClock : 0);
+  const t = now();
   const ends = Number(el.dataset.ends);
-  const left = ends - now;
+  const left = ends - t;
   if (left <= 0) {
     if (!el.classList.contains('over')) render(); // Zeit gerade abgelaufen: Knöpfe umschalten
     return;
@@ -278,6 +281,19 @@ async function connect() {
     session = data.session;
   }
   me.id = session.user.id;
+  await syncClock();
+  setInterval(syncClock, 60000);
+}
+
+// Gemeinsame Uhr: Abstand zur Server-Uhr messen, damit der Countdown auf allen Geräten gleich läuft
+async function syncClock() {
+  try {
+    const t0 = Date.now();
+    const { data, error } = await sb.rpc('server_now');
+    const t1 = Date.now();
+    if (error || !data) return; // Funktion fehlt: dann eigene Uhr benutzen
+    clockOffset = Date.parse(data) + (t1 - t0) / 2 - t1;
+  } catch { /* egal, eigene Uhr */ }
 }
 
 async function loadGames() {
@@ -325,6 +341,11 @@ function watchRoom(id) {
     })
     .on('presence', { event: 'sync' }, () => {
       online = new Set(Object.keys(roomChannel.presenceState()));
+      const t = Date.now();
+      for (const p of ui.game?.players || []) {
+        if (online.has(p.id)) delete offlineSince[p.id];
+        else if (!offlineSince[p.id]) offlineSince[p.id] = t;
+      }
       if (ui.screen === 'playing' || ui.screen === 'room') render();
     })
     .subscribe((status) => {
@@ -332,6 +353,13 @@ function watchRoom(id) {
       // Verbindung weg (z. B. Handy im Standby): Stand neu laden und neu verbinden
       if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') scheduleResync();
     });
+}
+
+// Erst nach 15 Sekunden ohne Verbindung als „offline“ anzeigen (kurze Aussetzer ignorieren)
+function onlineForDisplay() {
+  if (!online || !ui.game) return null;
+  const t = Date.now();
+  return new Set(ui.game.players.map((p) => p.id).filter((id) => !(offlineSince[id] && t - offlineSince[id] > 15000)));
 }
 
 // ---------- Verbindung: nach Standby / Netzwechsel neu abgleichen ----------
@@ -349,15 +377,15 @@ async function resync() {
   const { data, error } = await sb.from('games').select('*').eq('id', id).maybeSingle();
   if (error) return scheduleResync(); // keine Verbindung: später nochmal versuchen, NICHT rauswerfen
   if (!data) { store.del('kh_game'); return openStart(); }
-  ui.game = null; // neuen Stand auf jeden Fall übernehmen
-  showGame(data);
-  if (!roomChannel || roomChannel.state !== 'joined') watchRoom(id);
+  const changed = !ui.game || ui.game.id !== data.id || ui.game.version !== data.version || ui.game.status !== data.status;
+  if (changed && !busy) { ui.game = null; showGame(data); } else if (ui.screen === 'playing') render(); // Offline-Anzeige aktualisieren
+  if (!roomChannel || roomChannel.state === 'closed' || roomChannel.state === 'errored') watchRoom(id);
 }
 
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resync(); });
 window.addEventListener('online', resync);
-// Sicherheitsnetz: während eines Spiels alle 20 Sekunden abgleichen
-setInterval(() => { if (ui.screen === 'playing' && document.visibilityState === 'visible') resync(); }, 20000);
+// Sicherheitsnetz: im Warteraum und im Spiel alle 3 Sekunden abgleichen, auch wenn die Live-Verbindung hakt
+setInterval(() => { if ((ui.screen === 'playing' || ui.screen === 'room') && document.visibilityState === 'visible') resync(); }, 3000);
 
 function showGame(g) {
   if (ui.game && ui.game.id === g.id && g.version < ui.game.version) return; // veraltete Meldung

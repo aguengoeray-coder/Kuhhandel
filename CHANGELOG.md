@@ -49,3 +49,9 @@
 - [x] Spieler wurden rausgeworfen, wenn irgendein anderes Spiel gelöscht wurde – jetzt nur noch beim eigenen Spiel
 - [x] Kurzer Verbindungsabbruch wirft nicht mehr raus, sondern versucht es erneut
 - [x] Countdown: 20 s nach dem Aufdecken, 15 s nach jedem Gebot
+
+## v0.4.2 – Countdown für alle gleich
+
+- [x] Countdown läuft nach der Server-Uhr statt nach der Uhr jedes Geräts
+- [x] Spielstand wird alle 3 Sekunden abgeglichen, auch wenn die Live-Verbindung hakt
+- [x] „Offline“ erst nach 15 Sekunden ohne Verbindung, kurze Aussetzer werden ignoriert
