@@ -156,7 +156,7 @@
 - [x] Spezialkarte: „Darf nicht buzzern“ statt „Erst ab 0“, kürzere Kartenzeile
 - [x] Debug-Testspiel: „Geld im Stapel“ an/aus
 
-## v0.13.0 – Betrieb und Rückblick (wartet auf Freigabe)
+## v0.13.0 – Betrieb und Rückblick
 
 - [x] Supabase schläft nicht mehr ein: Cloudflare fragt täglich kurz die Datenbank an (dazu als Reserve GitHub)
 - [x] Fällt jemand 2 Minuten aus, kann jeder Mitspieler „🤖 Für X übernehmen“ – ein Test-Spieler spielt für ihn weiter, bis er „Selbst weiterspielen“ tippt
@@ -165,4 +165,4 @@
 - [x] Fehler werden automatisch an Supabase gemeldet (Tabelle `error_reports`)
 - [x] Rückblick am Spielende: teuerster Kauf, Kuhhandel-König, Rattenfänger, Sternsammler, Glückspilz, Sparfuchs
 - [x] Ton und Vibration getrennt im Menü
-- [ ] SQL `supabase/v0.13-fehlerberichte.sql` in Supabase ausführen
+- [x] SQL `supabase/v0.13-fehlerberichte.sql` in Supabase ausgeführt
