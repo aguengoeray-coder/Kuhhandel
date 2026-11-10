@@ -112,7 +112,7 @@
 - [x] Supabase: „Confirm email“ ausgeschaltet
 - [x] SQL `supabase/v0.8-konten.sql` in Supabase ausgeführt
 
-## v0.9.0 – Ratten, Spezialkarten und Feinschliff (wartet auf Freigabe)
+## v0.9.0 – Ratten, Spezialkarten und Feinschliff
 
 - [x] 4 Ratten im Stapel: Rattenrunde (verdeckt Karte legen oder Ratte nehmen), danach nochmal aufdecken
 - [x] Rattenhandel: nur wenn beide Ratten haben, wer mehr bietet wird sie los
