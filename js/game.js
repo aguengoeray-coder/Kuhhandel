@@ -453,6 +453,105 @@ export function renderGame(root, ctx) {
     }
   }
 
+  // ----- Kuhhandel: auf dem Tisch statt in einem eigenen Fenster -----
+  const who = (id, label) => { const i = idxOf(id); return `<div class="twho">${avatar(v.players[i], i)}<span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(label || nameOf(id))}</span></div>`; };
+  const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}"><span class="ci">${art(animal)}</span><span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b><small>${note}</small></span></div>`;
+  if (state.phase === 'turn' && myTurn && local.tradeOpen) {
+    const trades0 = possibleTrades(state, meId);
+    const targets = [...new Set(trades0.map((t) => t.target))];
+    if (!targets.includes(local.tradeTarget)) local.tradeTarget = targets[0];
+    const forTarget = trades0.filter((t) => t.target === local.tradeTarget);
+    if (!forTarget.some((t) => t.animal === local.tradeAnimal)) local.tradeAnimal = forTarget[0]?.animal || null;
+    const chosen = forTarget.find((t) => t.animal === local.tradeAnimal);
+    const target = v.players[idxOf(local.tradeTarget)];
+    const canOffer = chosen && (local.sel.length > 0 || me.money.length === 0);
+    aucBanner = chosen?.animal === RAT ? 'Rattenhandel' : 'Kuhhandel';
+    aucCenter = `<div class="tduel ${entered ? 'pop' : ''}">
+      <div class="tpanel">
+        ${who(meId, 'Du')}
+        <div class="kslots">${chosenCards(me.money, local.sel, 3)}</div>
+        <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b><small>sieht nur du</small></div>
+      </div>
+      <div class="tvs">VS</div>
+      <div class="tpanel">
+        ${who(target.id)}
+        ${targets.length > 1 ? `<div class="tabs">${targets.map((id) => `<button type="button" class="tab ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${esc(nameOf(id))}</button>`).join('')}</div>` : ''}
+        <div class="atiles">${forTarget.map((t) => `<button type="button" class="atile ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}" aria-label="${aname(t.animal)}, ${esc(target.name)} hat ${target.animals[t.animal]}">${art(t.animal)}${aval(t.animal) != null ? `<em class="cv">${aval(t.animal)}</em>` : ''}<span>×${target.animals[t.animal]}</span></button>`).join('')}</div>
+        ${chosen ? animalStrip(chosen.animal, chosen.count, chosen.animal === RAT ? `wer mehr bietet, wird ${chosen.count === 2 ? 'beide' : 'sie'} los` : 'darum geht es') : ''}
+      </div>
+    </div>`;
+    aucLeft = `<div class="lhead">${chosen?.animal === RAT ? 'Rattenhandel' : 'Kuhhandel'}</div>
+      <div class="lnote">Gegner und Tier wählen, dann Scheine unten antippen. Dein Angebot ist verdeckt.</div>
+      <button type="button" class="pill pill-white pill-small" data-a="tradeClose">Abbrechen</button>
+      <button type="button" class="pill pill-red" data-a="tradeGo" ${canOffer ? '' : 'disabled'}><small>ANGEBOT MACHEN</small>${karten(local.sel.length)}</button>`;
+    handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
+    H.tTarget = (id) => { local.tradeTarget = id; local.tradeAnimal = null; ctx.rerender(); };
+    H.tAnimal = (id) => { local.tradeAnimal = id; ctx.rerender(); };
+    H.tradeClose = () => { local.tradeOpen = false; local.sel = []; ctx.rerender(); };
+    H.tradeGo = () => ctx.act((s) => startTrade(s, meId, local.tradeTarget, local.tradeAnimal, local.sel));
+  }
+
+  if (state.phase === 'trade') {
+    const t = v.trade;
+    const offerCount = Array.isArray(t.offer) ? t.offer.length : t.offer;
+    const offerCards = Array.isArray(t.offer) ? t.offer.map((m) => moneyCard(m, { size: 'xs' })).join('') : Array.from({ length: offerCount }, () => '<div class="money xs back"></div>').join('');
+    const isRat = t.animal === RAT;
+    aucBanner = `${isRat ? 'Rattenhandel' : 'Kuhhandel'}: ${esc(nameOf(t.challenger))} gegen ${esc(nameOf(t.target))}`;
+    const challengerPanel = `<div class="tpanel">
+        ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
+        <div class="kslots">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
+        <div class="tline"><b>${karten(offerCount)}</b><small>${t.challenger === meId ? 'dein Angebot' : 'verdecktes Angebot'}</small></div>
+      </div>`;
+    if (t.target === meId) {
+      const canCounter = local.sel.length > 0 || me.money.length === 0;
+      aucCenter = `<div class="tduel ${entered ? 'pop' : ''}">${challengerPanel}
+        <div class="tvs">VS</div>
+        <div class="tpanel">
+          ${who(meId, 'Du')}
+          <div class="kslots">${chosenCards(me.money, local.sel, 3)}</div>
+          <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b><small>dein Gegenangebot</small></div>
+        </div>
+      </div>
+      ${animalStrip(t.animal, t.count, isRat ? 'will dir die Ratte geben' : 'will dein Tier')}`;
+      aucLeft = `<div class="lnote">${isRat ? 'Wer mehr bietet, wird die Ratte los.' : 'Höheres Gebot gewinnt.'} Gleichstand: ${esc(nameOf(t.challenger))} gewinnt. Das Geld wird immer getauscht.</div>
+        <button type="button" class="pill pill-white" data-a="accept"><small>ANNEHMEN</small>${isRat ? 'Geld + Ratte' : 'Geld nehmen'}</button>
+        <button type="button" class="pill pill-red" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${karten(local.sel.length)}</button>`;
+      handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
+      H.accept = () => ctx.act((s) => acceptTrade(s, meId));
+      H.counter = () => ctx.act((s) => counterTrade(s, meId, local.sel));
+    } else {
+      aucCenter = `<div class="tduel">${challengerPanel}
+        <div class="tvs">VS</div>
+        <div class="tpanel">
+          ${who(t.target)}
+          <div class="kslots"><div class="slot q">?</div></div>
+          <div class="tline"><b>überlegt …</b><small>annehmen oder dagegen bieten</small></div>
+        </div>
+      </div>
+      ${animalStrip(t.animal, t.count, isRat ? 'Ratte loswerden' : 'darum geht es')}`;
+      aucLeft = `<div class="ldecide">${t.challenger === meId ? `Warte auf die Antwort von ${esc(nameOf(t.target))} …` : `${esc(nameOf(t.target))} überlegt …`}</div>`;
+    }
+  }
+
+  // Ergebnis des letzten Kuhhandels für die Beteiligten (mit Beträgen) – als Kasten auf dem Tisch
+  const tev = v.lastEvent;
+  if (state.phase === 'turn' && !local.tradeOpen && tev?.type === 'trade' && local.seenEvent !== state.log.length && (tev.challenger === meId || tev.target === meId)) {
+    const won = tev.winner === meId;
+    const detail = tev.accepted
+      ? `${esc(nameOf(tev.target))} hat angenommen${tev.offerSum != null ? ` (${tev.offerSum} Taler)` : ''}.`
+      : `${esc(nameOf(tev.challenger))}: ${tev.offerSum} · ${esc(nameOf(tev.target))}: ${tev.counterSum}${tev.offerSum === tev.counterSum ? ' – Gleichstand, Herausforderer gewinnt' : ''}`;
+    const isRat = tev.animal === RAT;
+    const ratWhere = won ? `bist du los – ${esc(nameOf(tev.winner === tev.challenger ? tev.target : tev.challenger))} hat sie` : 'gehören jetzt dir';
+    aucBanner = isRat ? 'Rattenhandel' : 'Kuhhandel';
+    aucCenter = `<div class="tresult ${won ? 'won' : 'lost'} ${fresh ? 'pop' : ''}">
+      <h3>${won ? 'Gewonnen!' : 'Verloren'}</h3>
+      ${animalStrip(tev.animal, tev.count, isRat ? ratWhere : won ? 'gehören jetzt dir' : `gehen an ${esc(nameOf(tev.winner))}`)}
+      <p>${detail}</p>
+      <button type="button" class="pill pill-red pill-small" data-a="seen">Weiter</button>
+    </div>`;
+    H.seen = () => { local.seenEvent = state.log.length; ctx.rerender(); };
+  }
+
   // ----- Tisch -----
   const nextDonkey = v.donkeysDrawn < 4 ? DONKEY_PAYOUTS[v.donkeysDrawn] : null;
   const lastLog = v.log[v.log.length - 1] || '';
@@ -485,7 +584,7 @@ export function renderGame(root, ctx) {
   // ----- linke Spalte -----
   const trades = possibleTrades(state, meId);
   let leftActions = aucLeft;
-  if (state.phase === 'turn' && myTurn) {
+  if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
     leftActions = `
       <button type="button" class="pill pill-red" data-a="auction" ${v.deck > 0 ? '' : 'disabled'}>KARTE<br>AUFDECKEN</button>
       <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw ? '' : 'disabled'}>Kuhhandel</button>`;
@@ -509,7 +608,7 @@ export function renderGame(root, ctx) {
       <span class="ichip">Punkte <b>${scoreFor(me).score}</b></span>
       <span class="ichip">${nextDonkey ? `Esel-Bonus <b>+${nextDonkey}</b>` : 'Esel <b>alle raus</b>'}</span>
     </div>
-    <div class="lactions ${['auction', 'rat', 'special', 'payment'].includes(state.phase) ? 'auction' : ''}">${leftActions}</div>
+    <div class="lactions ${['auction', 'rat', 'special', 'payment', 'trade'].includes(state.phase) || local.tradeOpen ? 'auction' : ''}">${leftActions}</div>
   </div>`;
 
   H.menu = () => { local.menu = !local.menu; local.reactOpen = false; ctx.rerender(); };
@@ -538,110 +637,7 @@ export function renderGame(root, ctx) {
 
   // Bezahlen läuft jetzt auf dem Tisch (siehe oben)
 
-  if (state.phase === 'turn' && myTurn && local.tradeOpen) {
-    const targets = [...new Set(trades.map((t) => t.target))];
-    if (!targets.includes(local.tradeTarget)) local.tradeTarget = targets[0];
-    const forTarget = trades.filter((t) => t.target === local.tradeTarget);
-    if (!forTarget.some((t) => t.animal === local.tradeAnimal)) local.tradeAnimal = forTarget[0]?.animal || null;
-    const chosen = forTarget.find((t) => t.animal === local.tradeAnimal);
-    const tIdx = idxOf(local.tradeTarget);
-    const target = v.players[tIdx];
-    const slots = chosenCards(me.money, local.sel);
-    const canOffer = chosen && (local.sel.length > 0 || me.money.length === 0);
-    overlay = `<div class="overlay green ${entered ? 'enter' : ''}">
-      <div class="trade">
-        <div class="tside">
-          <div class="who">${avatar(me, meIdx)}<span class="ribbon-s" style="--c:${SEAT_COLORS[meIdx]}">Du</span></div>
-          <span class="countpill">${karten(local.sel.length)}</span>
-          <small>= ${selSum} · sieht nur du</small>
-          <div class="slots">${slots}</div>
-          <hr>
-          ${chosen ? `<div class="strip" style="--a:${ANIMAL_COLORS[chosen.animal]}"><i>${art(chosen.animal)}</i><span><b>${chosen.count}× ${aname(chosen.animal)}${aval(chosen.animal) != null ? ` · ${aval(chosen.animal)}` : ''}</b><small>${chosen.animal === RAT ? 'willst du loswerden' : 'im Einsatz'}</small></span></div>` : ''}
-        </div>
-        <div class="tside">
-          <div class="who">${avatar(target, tIdx)}<span class="ribbon-s" style="--c:${SEAT_COLORS[tIdx]}">${esc(target.name)}</span></div>
-          ${targets.length > 1 ? `<div class="tabs">${targets.map((id) => `<button type="button" class="tab ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${esc(nameOf(id))}</button>`).join('')}</div>` : '<span class="countpill">? Karten</span>'}
-          <small>Um welches Tier?</small>
-          <div class="atiles">${forTarget.map((t) => `<button type="button" class="atile ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}" aria-label="${aname(t.animal)}, ${esc(target.name)} hat ${target.animals[t.animal]}">${art(t.animal)}${aval(t.animal) != null ? `<em class="cv">${aval(t.animal)}</em>` : ''}<span>×${target.animals[t.animal]}</span></button>`).join('')}</div>
-          ${chosen ? `<small class="about">${chosen.animal === RAT ? `Ratte: wer mehr bietet, wird ${chosen.count === 2 ? 'beide' : 'sie'} los` : `${aname(chosen.animal)}: es geht um ${chosen.count}`}</small>` : ''}
-        </div>
-      </div>
-      <div class="hand-pick"><small>Deine Scheine – antippen, um einen ins Angebot zu legen</small>${moneyPiles(me.money, local.sel)}</div>
-      <div class="bottom-bar">
-        <button type="button" class="pill pill-white pill-small" data-a="tradeClose">Abbrechen</button>
-        <button type="button" class="pill pill-red big" data-a="tradeGo" ${canOffer ? '' : 'disabled'}><small>ANGEBOT</small>MACHEN</button>
-      </div>
-    </div>`;
-    H.tTarget = (id) => { local.tradeTarget = id; local.tradeAnimal = null; ctx.rerender(); };
-    H.tAnimal = (id) => { local.tradeAnimal = id; ctx.rerender(); };
-    H.tradeClose = () => { local.tradeOpen = false; local.sel = []; ctx.rerender(); };
-    H.tradeGo = () => ctx.act((s) => startTrade(s, meId, local.tradeTarget, local.tradeAnimal, local.sel));
-  }
-
-  if (state.phase === 'trade') {
-    const t = v.trade;
-    const chIdx = idxOf(t.challenger);
-    const tgIdx = idxOf(t.target);
-    const offerCount = Array.isArray(t.offer) ? t.offer.length : t.offer;
-    const offerCards = Array.isArray(t.offer) ? t.offer.map((m) => moneyCard(m, { size: 'xs' })).join('') : Array.from({ length: offerCount }, () => '<div class="money xs back"></div>').join('');
-    if (t.target === meId) {
-      const canCounter = local.sel.length > 0 || me.money.length === 0;
-      overlay = `<div class="overlay green ${entered ? 'enter' : ''}">
-        <div class="trade">
-          <div class="tside">
-            <div class="who">${avatar(v.players[chIdx], chIdx)}<span class="ribbon-s" style="--c:${SEAT_COLORS[chIdx]}">${esc(nameOf(t.challenger))}</span></div>
-            <span class="countpill">${karten(offerCount)}</span>
-            <small>verdecktes Angebot</small>
-            <div class="slots">${offerCards}</div>
-            <hr>
-            <div class="strip" style="--a:${ANIMAL_COLORS[t.animal]}"><i>${art(t.animal)}</i><span><b>${t.count}× ${aname(t.animal)}${aval(t.animal) != null ? ` · ${aval(t.animal)}` : ''}</b><small>${t.animal === RAT ? 'will dir die Ratte geben' : 'will dein Tier'}</small></span></div>
-          </div>
-          <div class="tside">
-            <div class="who">${avatar(me, meIdx)}<span class="ribbon-s" style="--c:${SEAT_COLORS[meIdx]}">Du</span></div>
-            <span class="countpill">${karten(local.sel.length)}</span>
-            <small>= ${selSum} · Gegenangebot</small>
-            <div class="slots">${chosenCards(me.money, local.sel)}</div>
-            <hr>
-            <small class="rule">${t.animal === RAT ? 'Wer mehr bietet, wird die Ratte los.' : 'Höheres Gebot gewinnt.'} Gleichstand: ${esc(nameOf(t.challenger))} gewinnt. Das Geld wird immer getauscht.</small>
-          </div>
-        </div>
-        <div class="hand-pick"><small>Deine Scheine – antippen für ein Gegenangebot</small>${moneyPiles(me.money, local.sel)}</div>
-        <div class="bottom-bar">
-          <button type="button" class="pill pill-white big" data-a="accept"><small>ANNEHMEN</small>${t.animal === RAT ? 'Geld + Ratte nehmen' : 'Geld nehmen'}</button>
-          <button type="button" class="pill pill-red big" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${karten(local.sel.length)}</button>
-        </div>
-      </div>`;
-      H.accept = () => ctx.act((s) => acceptTrade(s, meId));
-      H.counter = () => ctx.act((s) => counterTrade(s, meId, local.sel));
-    } else {
-      overlay = `<div class="overlay green ${entered ? 'enter' : ''}"><div class="wait light-text">
-        <div class="duel">
-          <div class="who">${avatar(v.players[chIdx], chIdx)}<span class="ribbon-s" style="--c:${SEAT_COLORS[chIdx]}">${esc(nameOf(t.challenger))}</span></div>
-          <div class="vs"><div class="slots">${offerCards}</div><b>${t.count}× ${aname(t.animal)}</b></div>
-          <div class="who">${avatar(v.players[tgIdx], tgIdx)}<span class="ribbon-s" style="--c:${SEAT_COLORS[tgIdx]}">${esc(nameOf(t.target))}</span></div>
-        </div>
-        <p>${t.challenger === meId ? `Warte auf die Antwort von ${esc(nameOf(t.target))} …` : `${esc(nameOf(t.challenger))} fordert ${esc(nameOf(t.target))} zum ${t.animal === RAT ? 'Rattenhandel' : 'Kuhhandel'} heraus …`}</p>
-      </div></div>`;
-    }
-  }
-
-  // Ergebnis des letzten Kuhhandels für die Beteiligten (mit Beträgen)
-  const ev = v.lastEvent;
-  if (state.phase === 'turn' && !local.tradeOpen && ev?.type === 'trade' && local.seenEvent !== state.log.length && (ev.challenger === meId || ev.target === meId)) {
-    const won = ev.winner === meId;
-    const detail = ev.accepted
-      ? `${esc(nameOf(ev.target))} hat angenommen${ev.offerSum != null ? ` (${ev.offerSum} Taler)` : ''}.`
-      : `${esc(nameOf(ev.challenger))}: ${ev.offerSum} · ${esc(nameOf(ev.target))}: ${ev.counterSum}${ev.offerSum === ev.counterSum ? ' – Gleichstand, Herausforderer gewinnt' : ''}`;
-    const isRat = ev.animal === RAT;
-    const ratWhere = won ? `bist du los – ${esc(nameOf(ev.winner === ev.challenger ? ev.target : ev.challenger))} hat sie` : 'gehören jetzt dir';
-    overlay = `<div class="overlay green ${entered ? 'enter' : ''}"><div class="wait light-text result">
-      <h2>${won ? 'Gewonnen!' : 'Verloren'}</h2>
-      <div class="strip big" style="--a:${ANIMAL_COLORS[ev.animal]}"><i>${art(ev.animal)}</i><span><b>${ev.count}× ${aname(ev.animal)}</b><small>${isRat ? ratWhere : won ? 'gehören jetzt dir' : `gehen an ${esc(nameOf(ev.winner))}`}</small></span></div>
-      <p>${detail}</p>
-      <button type="button" class="pill pill-red" data-a="seen">Weiter</button>
-    </div></div>`;
-    H.seen = () => { local.seenEvent = state.log.length; ctx.rerender(); };
-  }
+  // Kuhhandel und sein Ergebnis laufen jetzt auf dem Tisch (siehe oben)
 
   if (state.phase === 'block') {
     const bp = v.players[idxOf(v.block.player)];

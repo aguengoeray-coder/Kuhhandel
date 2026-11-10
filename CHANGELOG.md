@@ -193,3 +193,13 @@
 
 - [x] Versteigerung: 10 s nach dem Aufdecken und nach jedem Gebot wieder 10 s (vorher 20 s / 15 s)
 - [x] Geldschein aus dem Stapel: wird allen groß in der Tischmitte gezeigt („Nico zieht 200“) und fliegt dann zum Spieler
+
+## v0.18.0 – Neues Tisch-Design (wartet auf Freigabe)
+
+- [x] Breiterer Tisch, Infos links in einem Kasten, Spielerspalte mit Karten (Symbole unter dem Namen)
+- [x] Reaktionen/Spielerdetails nur noch beim Antippen von Bild oder Name
+- [x] Wer dran ist, leuchtet; Höchstbietender bekommt „🔨 Betrag“ an seiner Karte
+- [x] Neue Tierkarten (Hochformat, Werte oben, Name auf Farbband) und Geldscheine (Zahl in der Mitte)
+- [x] Gebote: nur noch 10 / 20 / 50 / 100 – groß das Gebot, mehr bieten = mehrmals tippen; „⚠ zu viel“ über dem eigenen Geld
+- [x] Kuhhandel, Gegenangebot, Warten und Ergebnis direkt auf dem Tisch statt in eigenen Fenstern
+- [x] Warte-Ansicht beim Bezahlen repariert
