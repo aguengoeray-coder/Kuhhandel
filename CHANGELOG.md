@@ -176,7 +176,7 @@
 - [x] Fehlerberichte direkt in der App ansehen und löschen
 - [x] SQL `supabase/v0.14-admin.sql` in Supabase ausgeführt (Admin: Alp)
 
-## v0.15.0 – Debug im Admin-Bereich (wartet auf Freigabe)
+## v0.15.0 – Debug im Admin-Bereich
 
 - [x] Admin-Bereich → Reiter „Debug“: Debug-Modus auf diesem Gerät an/aus, Testspiel mit 3 oder 4 Spielern starten, Geld im Stapel an/aus
 - [x] Link `?debug=1` funktioniert weiterhin für alle
