@@ -86,7 +86,7 @@
 - [x] Geld als Stapel nach Scheinwert: antippen legt einen Schein ins Angebot, Schein im Angebot antippen nimmt ihn zurück
 - [x] Gilt für Kuhhandel, Gegenangebot und Bezahlen
 
-## v0.7.0 – Optimierungen (wartet auf Freigabe)
+## v0.7.0 – Optimierungen
 
 - [x] War jemand gleichzeitig schneller, wird der Zug automatisch auf dem neuen Stand nochmal versucht
 - [x] Als App aufs Handy (Vollbild, Querformat, Kuh-Symbol) mit Anleitung für iPhone und Android
@@ -96,4 +96,4 @@
 - [x] Quartett-Moment, wenn jemand alle 4 Karten einer Tierart hat
 - [x] Wiedereinstieg auf neuem Gerät mit Spiel-Code + PIN
 - [x] Alte Spiele (2 Tage ohne Zug) werden automatisch gelöscht
-- [ ] SQL `supabase/v0.7-wiedereinstieg.sql` in Supabase ausführen
+- [x] SQL `supabase/v0.7-wiedereinstieg.sql` in Supabase ausgeführt
