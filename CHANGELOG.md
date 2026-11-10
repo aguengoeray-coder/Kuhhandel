@@ -23,7 +23,7 @@
 - [x] Kuhhandel: Gegner, Tier und Karten wählen; Antwort mit Annehmen oder Gegenangebot; Ergebnis für die Beteiligten
 - [x] Spielende mit Wertung
 
-## v0.3.0 – Tierbilder und Animationen (wartet auf Freigabe)
+## v0.3.0 – Tierbilder und Animationen
 
 - [x] 10 eigene Tierbilder auf allen Karten (groß, Tisch, Kuhhandel)
 - [x] Tierkarte fliegt beim Versteigern auf den Tisch
