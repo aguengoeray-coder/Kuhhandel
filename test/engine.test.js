@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createGame, drawForAuction, bid, closeAuction, pay, startTrade, acceptTrade, counterTrade,
-  possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS,
+  possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS, passAuction,
+  AUCTION_START_MS, AUCTION_BID_MS,
 } from '../src/engine.js';
 
 const P = [
@@ -62,6 +63,25 @@ test('Zuschlag: Höchstbietender zahlt den Auktionator, kein Wechselgeld', () =>
   assert.equal(total(g.players[0].money), aBefore + 50);
   assert.equal(g.players[2].animals.kuh, 1);
   assert.equal(currentPlayer(g).id, 'b');
+});
+
+test('Countdown: Zuschlag erst nach Ablauf, jedes Gebot verlängert, alle passen = sofort vorbei', () => {
+  let g = gameWithDeck(['kuh', 'hahn']);
+  const t0 = 1_000_000;
+  g = drawForAuction(g, 'a', t0);
+  assert.equal(g.auction.endsAt, t0 + AUCTION_START_MS);
+  assert.throws(() => closeAuction(g, 'a', 'sell', t0 + 1000), GameError); // läuft noch
+  g = bid(g, 'b', 20, t0 + 9000);
+  assert.equal(g.auction.endsAt, t0 + 9000 + AUCTION_BID_MS);
+  assert.throws(() => closeAuction(g, 'a', 'buy', t0 + 12000), GameError);
+  assert.throws(() => bid(g, 'c', 30, t0 + 9000 + AUCTION_BID_MS + 2000), GameError); // zu spät
+  g = passAuction(g, 'c', t0 + 10000);
+  g = passAuction(g, 'd', t0 + 11000); // alle außer Höchstbietendem gepasst
+  assert.equal(g.auction.endsAt, t0 + 11000);
+  g = closeAuction(g, 'a', 'buy', t0 + 11000); // Auktionator kauft zum Höchstgebot
+  assert.equal(g.phase, 'payment');
+  assert.equal(g.payment.payer, 'a');
+  assert.equal(g.payment.amount, 20);
 });
 
 test('Vorkaufsrecht: Auktionator kauft selbst und zahlt den Höchstbietenden', () => {

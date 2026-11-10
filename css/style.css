@@ -431,3 +431,12 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .myanimals .acard { width: 40px; height: 54px; }
 .myanimals .acard i { height: 10px; }
 .myanimals .acard b .art { width: 36px; height: 36px; }
+
+/* Countdown, Entscheidung, Menü, laufende Spiele */
+.countdown { position: relative; margin-top: 8px; width: 224px; height: 24px; border-radius: 999px; background: #fff; border: 2px solid var(--ink); overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.countdown i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--gold); transition: width .2s linear; }
+.countdown span { position: relative; font-family: var(--font-head); font-weight: 700; font-size: 13px; }
+.countdown.over { background: #F3D9C9; }
+.decide { background: #fff; border-radius: 999px; padding: 14px 22px; font-family: var(--font-head); font-weight: 600; font-size: 17px; box-shadow: 0 4px 0 rgba(0,0,0,.12); }
+.menu .pill { width: 100%; }
+.game-row.resume { background: #FFF4CC; }

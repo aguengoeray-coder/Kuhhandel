@@ -40,6 +40,11 @@ function renderStart() {
        </form>`
     : `<div class="me-line"><strong>${esc(me.name)}</strong><button class="linklike" type="button" id="edit-name">Name ändern</button></div>`;
 
+  const resume = (ui.myGames || []).map((g) => `<li class="game-row resume">
+      <div class="host">Laufendes Spiel<small>${g.players.map((p) => esc(p.name)).join(' · ')}</small></div>
+      <button class="pill pill-red pill-small" type="button" data-resume="${esc(g.id)}">Weiter spielen</button>
+    </li>`).join('');
+
   const list = ui.games.length
     ? ui.games.map((g) => {
         const host = g.players[0]?.name || 'Unbekannt';
@@ -70,7 +75,7 @@ function renderStart() {
           <button class="pill pill-red pill-small" type="button" id="create" ${me.name ? '' : 'disabled'}>Spiel erstellen</button>
         </div>
         ${ui.error ? `<div class="error" role="alert">${esc(ui.error)}</div>` : ''}
-        <ul class="games-list">${list}</ul>
+        <ul class="games-list">${resume}${list}</ul>
       </div>
     </section>`;
 
@@ -89,6 +94,10 @@ function renderStart() {
   document.getElementById('edit-name')?.addEventListener('click', () => { ui.editingName = true; render(); document.getElementById('name-input')?.focus(); });
   document.getElementById('create')?.addEventListener('click', onCreate);
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
+  app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
+    const { data } = await sb.from('games').select('*').eq('id', b.dataset.resume).maybeSingle();
+    if (data) enterRoom(data); else { await loadGames(); render(); }
+  }));
 }
 
 function renderRoom() {
@@ -133,6 +142,8 @@ function renderRoom() {
 
 const gameLocal = {}; // Auswahl auf dem eigenen Gerät (Karten, Kuhhandel-Entwurf …)
 let toastMsg = '';
+let online = null;      // wer gerade verbunden ist (Set von Spieler-IDs)
+let demoClock = 0;      // nur Demo: Uhr vor-/zurückstellen
 let toastTimer = null;
 let busy = false;
 
@@ -144,6 +155,7 @@ function toast(msg) {
 }
 
 function renderPlaying() {
+  checkSignal();
   renderGame(app, {
     state: ui.game.state,
     meId: me.id,
@@ -151,6 +163,10 @@ function renderPlaying() {
     toastMsg,
     rerender: render,
     act,
+    now: () => Date.now() + (DEMO ? demoClock : 0),
+    online,
+    sound: soundOn(),
+    toggleSound: () => { store.set('kh_sound', soundOn() ? 'off' : 'on'); render(); },
     onExit: () => { store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
 }
@@ -183,6 +199,73 @@ async function act(fn) {
   render();
 }
 
+// ---------- Signal, wenn man gefragt ist (Ton + Vibration) ----------
+
+const soundOn = () => store.get('kh_sound') !== 'off';
+let audioCtx = null;
+let lastNeed = '';
+const baseTitle = document.title;
+
+// Browser erlauben Ton erst nach einer Berührung – beim ersten Tippen freischalten
+document.addEventListener('pointerdown', () => {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch { /* kein Ton möglich */ }
+}, { passive: true });
+
+function beep() {
+  if (!soundOn()) return;
+  try { navigator.vibrate?.([120, 70, 120]); } catch { /* egal */ }
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  [[660, 0], [880, 0.14]].forEach(([f, d]) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.frequency.value = f;
+    o.type = 'triangle';
+    g.gain.setValueAtTime(0.0001, t + d);
+    g.gain.exponentialRampToValueAtTime(0.25, t + d + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.18);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(t + d);
+    o.stop(t + d + 0.2);
+  });
+}
+
+// Prüft bei jedem Neuzeichnen, ob man neu gefragt ist: dran, herausgefordert oder muss zahlen
+function checkSignal() {
+  const s = ui.game?.state;
+  if (!s || DEMO) return;
+  let need = '';
+  if (s.phase === 'turn' && s.players[s.turn]?.id === me.id) need = 'turn';
+  else if (s.phase === 'payment' && s.payment?.payer === me.id) need = 'pay';
+  else if (s.phase === 'trade' && s.trade?.target === me.id) need = 'trade';
+  const key = need ? `${need}|${s.log.length}` : '';
+  if (key && key !== lastNeed) beep();
+  lastNeed = key;
+  document.title = need ? '● Du bist dran – Kuhhandel' : baseTitle;
+}
+
+// ---------- Countdown der Versteigerung ticken lassen ----------
+
+setInterval(() => {
+  if (ui.screen !== 'playing') return;
+  const el = app.querySelector('[data-ends]');
+  if (!el) return;
+  const now = Date.now() + (DEMO ? demoClock : 0);
+  const ends = Number(el.dataset.ends);
+  const left = ends - now;
+  if (left <= 0) {
+    if (!el.classList.contains('over')) render(); // Zeit gerade abgelaufen: Knöpfe umschalten
+    return;
+  }
+  const bar = el.querySelector('i');
+  const txt = el.querySelector('span');
+  if (bar) bar.style.width = `${Math.min(100, (left / Number(el.dataset.total)) * 100)}%`;
+  if (txt) txt.textContent = `noch ${Math.ceil(left / 1000)} s`;
+}, 200);
+
 // ---------- Supabase ----------
 
 async function connect() {
@@ -205,6 +288,14 @@ async function loadGames() {
     .order('created_at', { ascending: false }).limit(30);
   if (error) { ui.error = 'Spiele konnten nicht geladen werden.'; return; }
   ui.games = data;
+  // Laufende Spiele, in denen ich sitze (z. B. nach „Spiel verlassen“ oder Handywechsel)
+  const recent = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+  const mine = await sb.from('games')
+    .select('id, code, host, status, players, updated_at')
+    .eq('status', 'playing').gte('updated_at', recent)
+    .contains('players', [{ id: me.id }])
+    .order('updated_at', { ascending: false }).limit(5);
+  ui.myGames = mine.data || [];
 }
 
 function watchLobby() {
@@ -220,7 +311,7 @@ function watchLobby() {
 
 function watchRoom(id) {
   if (roomChannel) sb.removeChannel(roomChannel);
-  roomChannel = sb.channel('game-' + id)
+  roomChannel = sb.channel('game-' + id, { config: { presence: { key: me.id } } })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${id}` }, (payload) => {
       if (payload.eventType === 'DELETE') {
         store.del('kh_game');
@@ -230,8 +321,40 @@ function watchRoom(id) {
       }
       showGame(payload.new);
     })
-    .subscribe();
+    .on('presence', { event: 'sync' }, () => {
+      online = new Set(Object.keys(roomChannel.presenceState()));
+      if (ui.screen === 'playing' || ui.screen === 'room') render();
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') roomChannel.track({ name: me.name });
+      // Verbindung weg (z. B. Handy im Standby): Stand neu laden und neu verbinden
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') scheduleResync();
+    });
 }
+
+// ---------- Verbindung: nach Standby / Netzwechsel neu abgleichen ----------
+
+let resyncTimer = null;
+function scheduleResync() {
+  clearTimeout(resyncTimer);
+  resyncTimer = setTimeout(resync, 1500);
+}
+
+async function resync() {
+  if (!sb || DEMO) return;
+  const id = ui.game?.id || store.get('kh_game');
+  if (ui.screen === 'start' || !id) { await loadGames(); return render(); }
+  const { data } = await sb.from('games').select('*').eq('id', id).maybeSingle();
+  if (!data) { store.del('kh_game'); return openStart(); }
+  ui.game = null; // neuen Stand auf jeden Fall übernehmen
+  showGame(data);
+  if (!roomChannel || roomChannel.state !== 'joined') watchRoom(id);
+}
+
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') resync(); });
+window.addEventListener('online', resync);
+// Sicherheitsnetz: während eines Spiels alle 20 Sekunden abgleichen
+setInterval(() => { if (ui.screen === 'playing' && document.visibilityState === 'visible') resync(); }, 20000);
 
 function showGame(g) {
   if (ui.game && ui.game.id === g.id && g.version < ui.game.version) return; // veraltete Meldung
@@ -307,6 +430,8 @@ function demo(kind) {
     ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'lobby', version: 2, players: [{ id: 'u1', name: 'Alp' }, { id: 'u2', name: 'Nico' }, { id: 'u3', name: 'Lea' }] };
   }
   const demoState = buildDemoState(kind, gameLocal);
+  if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen
+  if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }] }];
   if (demoState) {
     ui.screen = 'playing';
     ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'playing', version: 5, players: demoState.players, state: demoState };

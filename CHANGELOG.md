@@ -33,3 +33,12 @@
 - [x] Gekauftes oder gehandeltes Tier fliegt zum neuen Besitzer
 - [x] „Du bist dran“ pulsiert, Konfetti am Spielende
 - [x] Animationen aus, wenn am Handy „Bewegung reduzieren“ eingestellt ist
+
+## v0.4.0 – Countdown, Verbindung, Signal (wartet auf Freigabe)
+
+- [x] Versteigerung läuft auf Zeit: 10 s Start, jedes Gebot setzt auf 6 s zurück; alle gepasst = sofort vorbei
+- [x] Auktionator entscheidet erst nach Ablauf: Zuschlag oder selbst zum Höchstgebot kaufen
+- [x] Nach Standby / Netzwechsel lädt das Spiel den aktuellen Stand automatisch nach
+- [x] Mitspieler ohne Verbindung werden als „offline“ angezeigt
+- [x] Laufende eigene Spiele auf der Startseite („Weiter spielen“)
+- [x] Ton + Vibration, wenn du dran bist, zahlen musst oder herausgefordert wirst (im Menü abschaltbar)

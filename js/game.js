@@ -1,6 +1,6 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
 import {
-  ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP,
+  ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, AUCTION_START_MS, AUCTION_BID_MS,
   viewFor, possibleTrades, scores, currentPlayer,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade,
@@ -107,7 +107,9 @@ export function renderGame(root, ctx) {
     const leader = state.phase === 'auction' && auction.high && auction.high.player === p.id
       ? `<div class="hightag ${fresh ? 'pop' : ''}"><span>Höchstgebot</span><b>${auction.high.amount}</b></div>` : '';
     const turnMark = cur.id === p.id && state.phase !== 'ended' ? ' turn' : '';
-    const dim = state.phase === 'auction' && auction.passed.includes(p.id) ? ' dim' : '';
+    const offline = ctx.online && !isMe && !ctx.online.has(p.id);
+    if (offline) status = 'offline';
+    const dim = (state.phase === 'auction' && auction.passed.includes(p.id)) || offline ? ' dim' : '';
     const coin = entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey' ? `<span class="coinpop">+${v.lastEvent.payout}</span>` : '';
     return `<div class="prow${turnMark}${dim}">${coin}
       ${leader}
@@ -155,7 +157,10 @@ export function renderGame(root, ctx) {
     <button type="button" class="round" data-a="menu" aria-label="Menü">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
     </button>
-    ${local.menu ? `<div class="menu"><button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button><span>Du kannst später über die Startseite zurückkehren.</span></div>` : ''}
+    ${local.menu ? `<div class="menu">
+      <button type="button" class="pill pill-white pill-small" data-a="sound">Ton &amp; Vibration: ${ctx.sound ? 'an' : 'aus'}</button>
+      <button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button>
+      <span>Über die Startseite kommst du jederzeit zurück ins Spiel.</span></div>` : ''}
     <div class="infochips">
       <span class="ichip">Geld: <b>${sum(me.money)}</b></span>
       ${nextDonkey ? `<span class="ichip">Nächster Esel: <b>+${nextDonkey}</b></span>` : '<span class="ichip">Alle Esel sind raus</span>'}
@@ -165,7 +170,8 @@ export function renderGame(root, ctx) {
 
   H.menu = () => { local.menu = !local.menu; ctx.rerender(); };
   H.exit = () => ctx.onExit();
-  H.auction = () => ctx.act((s) => drawForAuction(s, meId));
+  H.sound = () => ctx.toggleSound();
+  H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
   H.tradeOpen = () => { local.tradeOpen = true; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
 
   // ----- Überlagerung je nach Phase -----
@@ -191,20 +197,40 @@ export function renderGame(root, ctx) {
           <span>Neue Runde – höchstens ${ev.amount - BID_STEP} für ${esc(nameOf(ev.player))}.</span></div>`
       : '';
 
+    // Countdown: Bieten nur solange die Zeit läuft, Zuschlag erst danach
+    const now = ctx.now();
+    const running = a.endsAt != null && now < a.endsAt;
+    const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
+    const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
+    const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
+    const countdown = a.endsAt != null
+      ? `<div class="countdown ${running ? '' : 'over'}" data-ends="${a.endsAt}" data-total="${total}">
+          <i style="width:${pct}%"></i><span>${running ? `noch ${secs} s` : 'Zeit abgelaufen'}</span></div>`
+      : '';
+
     let buttons;
+    let hint = '';
     if (iAmAuctioneer) {
       const myTotal = sum(me.money);
-      buttons = a.high
-        ? `<button type="button" class="pill pill-red big" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))}</button>
-           <button type="button" class="pill pill-white big" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>SELBST KAUFEN</small>${high}</button>`
-        : `<button type="button" class="pill pill-red big" data-a="sell"><small>NIEMAND BIETET</small>Tier nehmen</button>`;
-    } else {
+      if (running) {
+        buttons = `<button type="button" class="pill pill-red big" disabled><small>AUKTION LÄUFT</small>${a.high ? high : '–'}</button>`;
+        hint = 'Wenn die Zeit abgelaufen ist, entscheidest du: Zuschlag oder selbst zum Höchstgebot kaufen.';
+      } else {
+        buttons = a.high
+          ? `<button type="button" class="pill pill-red big" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))}</button>
+             <button type="button" class="pill pill-white big" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>SELBST KAUFEN</small>${high}</button>`
+          : `<button type="button" class="pill pill-red big" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>Tier nehmen</button>`;
+        hint = a.high ? 'Zeit ist um – deine Entscheidung.' : '';
+      }
+    } else if (running) {
       const passed = a.passed.includes(meId);
       buttons = `<button type="button" class="pill pill-red big" data-a="bid" data-v="${bigBid}" ${canBid(bigBid) ? '' : 'disabled'}><small>HOHES GEBOT</small>${bigBid}</button>
         <button type="button" class="pill pill-red big" data-a="bid" data-v="${nextBid}" ${canBid(nextBid) ? '' : 'disabled'}><small>BIETEN</small>${nextBid}</button>
         <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
+    } else {
+      buttons = `<div class="decide">Zeit abgelaufen – ${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
     }
-    const bubble = iAmAuctioneer
+    const bubble = iAmAuctioneer || !running
       ? `<div class="bubble ${fresh ? 'pop' : ''}"><span>${a.high ? 'Höchstgebot' : 'Wer bietet?'}</span><b>${a.high ? high : '–'}</b></div>`
       : `<div class="bubble ${fresh ? 'pop' : ''}"><span>Wer bietet</span><b>${nextBid}</b></div>`;
     const auctioneerIdx = idxOf(a.auctioneer);
@@ -214,17 +240,17 @@ export function renderGame(root, ctx) {
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3.5l7.5 7.5"></path><path d="M10.5 6l7.5 7.5"></path><path d="M11.8 4.8l-4.5 4.5 7.4 7.4 4.5-4.5"></path><path d="M9.5 13.5L3.5 19.5"></path><path d="M3 21h9"></path></svg>
         </div>
         <span class="ribbon-s" style="--c:${SEAT_COLORS[auctioneerIdx]}">${esc(nameOf(a.auctioneer))} versteigert</span>
-        ${iAmAuctioneer ? '<p class="hint">Warte auf Gebote. Du entscheidest, wann Schluss ist.</p>' : ''}
+        ${hint ? `<p class="hint">${hint}</p>` : ''}
       </div>
-      <div class="auction-card">${card}</div>
+      <div class="auction-card">${card}${countdown}</div>
       ${reveal}
       <div class="bottom-bar">${buttons}</div>
     </div>`;
 
-    H.bid = (amt) => ctx.act((s) => bid(s, meId, Number(amt)));
-    H.pass = () => ctx.act((s) => passAuction(s, meId));
-    H.sell = () => ctx.act((s) => closeAuction(s, meId, 'sell'));
-    H.buy = () => ctx.act((s) => closeAuction(s, meId, 'buy'));
+    H.bid = (amt) => ctx.act((s) => bid(s, meId, Number(amt), ctx.now()));
+    H.pass = () => ctx.act((s) => passAuction(s, meId, ctx.now()));
+    H.sell = () => ctx.act((s) => closeAuction(s, meId, 'sell', ctx.now()));
+    H.buy = () => ctx.act((s) => closeAuction(s, meId, 'buy', ctx.now()));
   }
 
   if (state.phase === 'payment') {

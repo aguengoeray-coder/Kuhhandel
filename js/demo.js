@@ -29,15 +29,37 @@ export function buildDemoState(kind, local) {
   switch (kind) {
     case 'turn':
       return base();
-    case 'auction':
+    case 'auction': {
+      const t = Date.now() - 2500;
       g = base(); g.turn = 1; g.deck[0] = 'esel';
-      g = drawForAuction(g, 'u2');
-      g = bid(g, 'u4', 60); g = bid(g, 'u1', 100); g = bid(g, 'u3', 120);
+      g = drawForAuction(g, 'u2', t);
+      g = bid(g, 'u4', 60, t); g = bid(g, 'u1', 100, t); g = bid(g, 'u3', 120, t);
       return g;
-    case 'auctioneer':
+    }
+    case 'auctionrun': {
+      const t = Date.now() - 2000;
       g = base(); g.deck[0] = 'pferd';
-      g = drawForAuction(g, 'u1');
-      g = bid(g, 'u3', 90); g = bid(g, 'u2', 130);
+      g = drawForAuction(g, 'u1', t);
+      g = bid(g, 'u3', 90, t); g = bid(g, 'u2', 130, t);
+      return g;
+    }
+    case 'auctioneer': {
+      const t = Date.now() - 30000;
+      g = base(); g.deck[0] = 'pferd';
+      g = drawForAuction(g, 'u1', t);
+      g = bid(g, 'u3', 90, t + 1000); g = bid(g, 'u2', 130, t + 2000);
+      return g;
+    }
+    case 'bidderover': {
+      const t = Date.now() - 30000;
+      g = base(); g.turn = 1; g.deck[0] = 'kuh';
+      g = drawForAuction(g, 'u2', t);
+      g = bid(g, 'u1', 100, t + 1000); g = bid(g, 'u3', 120, t + 2000);
+      return g;
+    }
+    case 'menu':
+      g = base();
+      local.menu = true;
       return g;
     case 'payment':
       g = base(); g.turn = 1; g.deck[0] = 'schwein';
@@ -46,12 +68,14 @@ export function buildDemoState(kind, local) {
       g = closeAuction(g, 'u2', 'sell');
       local.sel = []; local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5, 6];
       return g;
-    case 'cantpay':
+    case 'cantpay': {
+      const t = Date.now() - 12000;
       g = base(); g.turn = 1; g.deck[0] = 'kuh';
-      g = drawForAuction(g, 'u2');
-      g = bid(g, 'u4', 200);
-      g = closeAuction(g, 'u2', 'sell');
+      g = drawForAuction(g, 'u2', t);
+      g = bid(g, 'u4', 200, t + 1000);
+      g = closeAuction(g, 'u2', 'sell', t + 11000);
       return g;
+    }
     case 'tradesetup':
       g = base();
       local.key = `${g.phase}|${g.turn}|${g.log.length}`;

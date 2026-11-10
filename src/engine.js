@@ -21,6 +21,9 @@ export const DONKEY_PAYOUTS = [50, 100, 200, 500]; // 1. bis 4. Esel: jeder Spie
 export const MIN_PLAYERS = 3;
 export const MAX_PLAYERS = 4;
 export const BID_STEP = 10;
+export const AUCTION_START_MS = 10000; // so lange läuft eine Versteigerung ohne Gebot
+export const AUCTION_BID_MS = 6000;    // nach jedem Gebot startet der Countdown neu
+const GRACE_MS = 800;                  // kleine Toleranz für Handys mit leicht abweichender Uhr
 
 export class GameError extends Error {}
 
@@ -195,7 +198,7 @@ function requireTurn(state, playerId) {
 
 // ---------- Versteigerung ----------
 
-export function drawForAuction(prev, playerId) {
+export function drawForAuction(prev, playerId, now) {
   const state = clone(prev);
   requireTurn(state, playerId);
   if (state.deck.length === 0) fail('Der Stapel ist leer – nur noch Kuhhandel ist möglich.');
@@ -211,12 +214,12 @@ export function drawForAuction(prev, playerId) {
   } else {
     state.lastEvent = { type: 'draw', animal };
   }
-  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [] };
+  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], endsAt: now != null ? now + AUCTION_START_MS : null };
   state.phase = 'auction';
   return state;
 }
 
-export function bid(prev, playerId, amount) {
+export function bid(prev, playerId, amount, now) {
   const state = clone(prev);
   if (state.phase !== 'auction') fail('Gerade läuft keine Versteigerung.');
   const a = state.auction;
@@ -227,27 +230,34 @@ export function bid(prev, playerId, amount) {
   if (a.caps[playerId] != null && amount > a.caps[playerId]) {
     fail(`Du darfst höchstens ${a.caps[playerId]} bieten.`);
   }
+  if (a.endsAt != null && now != null && now > a.endsAt + GRACE_MS) fail('Die Versteigerung ist schon vorbei.');
   a.high = { player: playerId, amount };
   a.passed = a.passed.filter((id) => id !== playerId);
+  if (a.endsAt != null && now != null) a.endsAt = Math.max(a.endsAt, now + AUCTION_BID_MS);
   log(state, `${me.name} bietet ${amount}.`);
   return state;
 }
 
-export function passAuction(prev, playerId) {
+export function passAuction(prev, playerId, now) {
   const state = clone(prev);
   if (state.phase !== 'auction') fail('Gerade läuft keine Versteigerung.');
-  if (playerId === state.auction.auctioneer) fail('Der Auktionator kann nicht passen.');
-  if (!state.auction.passed.includes(playerId)) state.auction.passed.push(playerId);
+  const a = state.auction;
+  if (playerId === a.auctioneer) fail('Der Auktionator kann nicht passen.');
+  if (!a.passed.includes(playerId)) a.passed.push(playerId);
+  // Haben alle außer dem Höchstbietenden gepasst, ist die Versteigerung sofort vorbei
+  const others = state.players.filter((p) => p.id !== a.auctioneer && (!a.high || p.id !== a.high.player));
+  if (a.endsAt != null && now != null && others.every((p) => a.passed.includes(p.id))) a.endsAt = Math.min(a.endsAt, now);
   return state;
 }
 
 // Auktionator beendet die Versteigerung: 'sell' = Zuschlag an den Höchstbietenden,
 // 'buy' = Vorkaufsrecht (Auktionator kauft selbst und zahlt an den Höchstbietenden)
-export function closeAuction(prev, playerId, mode) {
+export function closeAuction(prev, playerId, mode, now) {
   const state = clone(prev);
   if (state.phase !== 'auction') fail('Gerade läuft keine Versteigerung.');
   const a = state.auction;
   if (playerId !== a.auctioneer) fail('Nur der Auktionator kann die Versteigerung beenden.');
+  if (a.endsAt != null && now != null && now < a.endsAt) fail('Die Versteigerung läuft noch.');
   const auctioneer = player(state, a.auctioneer);
 
   if (!a.high) {
@@ -275,6 +285,7 @@ export function closeAuction(prev, playerId, mode) {
     a.caps[bidder.id] = failed - BID_STEP;
     a.high = null;
     a.passed = [];
+    if (a.endsAt != null && now != null) a.endsAt = now + AUCTION_START_MS;
     log(state, `${bidder.name} kann ${failed} nicht zahlen und muss alle Karten zeigen: ${bidder.money.join(', ') || 'keine'}. Die Versteigerung beginnt neu.`);
     return state; // Phase bleibt 'auction'
   }
