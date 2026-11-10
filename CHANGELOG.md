@@ -12,7 +12,7 @@
 - [x] Verdeckte Infos pro Spieler (fremdes Geld nur als Kartenanzahl)
 - [x] Automatische Tests inkl. 200 zufälliger Komplettspiele
 
-## v0.2.0 – Spieltisch (wartet auf Freigabe)
+## v0.2.0 – Spieltisch
 
 - [x] Startseite: Name, offene Spiele, Spiel erstellen, beitreten
 - [x] Warteraum mit 4 Plätzen, Start ab 3 Spielern
