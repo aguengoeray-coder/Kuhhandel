@@ -208,7 +208,8 @@ export function renderGame(root, ctx) {
     const offline = ctx.online && !isMe && !ctx.online.has(p.id);
     if (offline) status = 'offline';
     const dim = (state.phase === 'auction' && auction.passed.includes(p.id)) || offline ? ' dim' : '';
-    const coin = entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey' ? `<span class="coinpop">+${v.lastEvent.payout}</span>` : '';
+    let coin = entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey' ? `<span class="coinpop">+${v.lastEvent.payout}</span>` : '';
+    if (fresh && v.lastEvent?.type === 'money_drawn' && v.lastEvent.player === p.id) coin = `<span class="coinpop big">+${v.lastEvent.value}</span>`;
     const said = ctx.reactions?.[p.id];
     const from = said?.from && said.from !== p.id ? said.from : null;
     const fromIdx = from ? idxOf(from) : -1;
@@ -740,6 +741,7 @@ export function renderGame(root, ctx) {
     if (le.type === 'auction_won') { sounds.push('gavel'); if (le.amount > 0) sounds.push('coins'); }
     if (le.type === 'special_won') { sounds.push('gavel'); if (le.count > 0) sounds.push('coins'); }
     if (le.type === 'rat_taken' && le.count > 0) sounds.push('coins');
+    if (le.type === 'money_drawn') { sounds.push('flip'); sounds.push('coins'); }
     if (le.type === 'trade') sounds.push('trade');
   }
   if (effects.includes('class="qpop"') || (entered && state.phase === 'ended')) sounds.push('quartet');

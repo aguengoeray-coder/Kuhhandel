@@ -198,6 +198,12 @@ export function buildDemoState(kind, local) {
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
       return g;
     }
+    case 'moneydrawn': {
+      g = base(); g.turn = 1; g.deck[0] = 'geld-200';
+      g = drawForAuction(g, 'u2');
+      local.prev = { logLen: g.log.length - 1, phase: 'turn' };
+      return g;
+    }
     case 'mustdraw': {
       g = base(); g.mustDraw = true;
       g.players[0].animals[RAT] = 1;

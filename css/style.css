@@ -751,3 +751,24 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 .rpsresult { color: #fff; font-family: var(--font-head); font-size: 17px; font-weight: 700; opacity: 0; animation: rpsword .3s ease-out 1.5s both; }
 @media (prefers-reduced-motion: reduce) { .nudge, .rpsshow, .rpswords span, .hand .shake, .hand .real, .rpsresult { animation: none !important; opacity: 1; } .hand .shake { display: none; } }
 .nudge { bottom: -27px; right: 4px; }
+
+/* ===== v0.11: Geldscheine im Stapel (Warteraum) ===== */
+.table.short { max-height: 150px; }
+.room-settings { width: min(640px, 100%); background: rgba(255,255,255,.95); border-radius: 18px; padding: 8px 12px; box-shadow: 0 3px 0 rgba(0,0,0,.15); display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.rs-head { display: flex; align-items: center; gap: 10px; }
+.rs-head span { display: flex; flex-direction: column; line-height: 1.2; }
+.rs-head b { font-family: var(--font-head); font-size: 15px; }
+.rs-head small { font-size: 11px; color: var(--muted); font-weight: 600; }
+.toggle { width: 46px; height: 26px; border-radius: 999px; border: 2px solid var(--ink); background: #D9D4C7; position: relative; cursor: pointer; padding: 0; flex-shrink: 0; }
+.toggle i { position: absolute; left: 2px; top: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); transition: left .15s; }
+.toggle.on { background: #2E7D4F; }
+.toggle.on i { left: 22px; }
+.msteps { display: flex; gap: 6px; }
+.mstep { display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: .55; }
+.mstep.on { opacity: 1; }
+.mval { width: 40px; height: 26px; border-radius: 5px; border: 2px solid var(--ink); background: var(--m); display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-weight: 700; font-size: 13px; }
+.mctl { display: flex; align-items: center; gap: 3px; }
+.mctl b { min-width: 16px; text-align: center; font-size: 13px; }
+.mctl button { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--ink); background: #fff; font-weight: 800; font-size: 13px; line-height: 1; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.mctl button:disabled { opacity: .3; cursor: not-allowed; }
+.coinpop.big { font-size: 18px; padding: 2px 12px; }

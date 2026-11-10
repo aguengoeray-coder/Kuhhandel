@@ -7,9 +7,9 @@ import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
-import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage } from '../src/engine.js';
+import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.10.0';
+export const APP_VERSION = '0.11.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -190,6 +190,23 @@ function renderRoom() {
     </div>`;
   }).join('');
   const enough = g.players.length >= MIN_PLAYERS;
+  const money = g.state?.settings?.money || null;
+  const moneyCount = money ? Object.values(money).reduce((a, b) => a + b, 0) : 0;
+  const moneySum = money ? Object.entries(money).reduce((a, [v, n]) => a + Number(v) * n, 0) : 0;
+  const steppers = money ? MONEY_VALUES.map((v) => {
+    const n = money[v] || 0;
+    return `<div class="mstep ${n ? 'on' : ''}">
+      <div class="mval" style="--m:${MONEY_CARD_COLORS[v]}">${v}</div>
+      ${isHost ? `<div class="mctl"><button type="button" data-money="${v}" data-d="-1" ${n ? '' : 'disabled'} aria-label="${v}er weniger">−</button><b>${n}</b><button type="button" data-money="${v}" data-d="1" ${moneyCount < MAX_MONEY_CARDS ? '' : 'disabled'} aria-label="${v}er mehr">+</button></div>` : `<div class="mctl"><b>${n}×</b></div>`}
+    </div>`;
+  }).join('') : '';
+  const settingsBox = `<div class="room-settings">
+    <div class="rs-head">
+      ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
+      <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
+    </div>
+    ${money ? `<div class="msteps">${steppers}</div>` : ''}
+  </div>`;
   const hint = isHost
     ? (enough ? 'Alle da? Dann los!' : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
     : `Warte, bis ${esc((g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'der Gastgeber')} das Spiel startet.`;
@@ -200,7 +217,8 @@ function renderRoom() {
         <h1 class="room-title">Warteraum</h1>
         <span class="code-chip">Spiel-Code <b>${esc(g.code)}</b></span>
       </div>
-      <div class="table" aria-label="Plätze am Tisch">${seats}</div>
+      <div class="table ${money ? 'short' : ''}" aria-label="Plätze am Tisch">${seats}</div>
+      ${settingsBox}
       ${ui.error ? `<div class="error" role="alert">${esc(ui.error)}</div>` : ''}
       <div class="room-actions">
         <button class="pill pill-white pill-small" type="button" id="leave">Verlassen</button>
@@ -216,6 +234,37 @@ function renderRoom() {
     if (error) { ui.error = 'Entfernen hat nicht geklappt.'; render(); }
   }));
   document.getElementById('start')?.addEventListener('click', onStart);
+  document.getElementById('moneyToggle')?.addEventListener('click', () => saveSettings({ money: money ? null : { ...DEFAULT_MONEY } }));
+  app.querySelectorAll('[data-money]').forEach((b) => b.addEventListener('click', () => {
+    const v = b.dataset.money;
+    const next = { ...money, [v]: Math.max(0, (money[v] || 0) + Number(b.dataset.d)) };
+    if (!next[v]) delete next[v];
+    saveSettings({ money: next });
+  }));
+}
+
+const MONEY_CARD_COLORS = { 0: '#ECE7DB', 10: '#F6D98B', 20: '#F2B880', 50: '#A8D5B5', 100: '#9FC9E8', 200: '#C9B6E4', 500: '#E7A1A0' };
+const DEFAULT_MONEY = { 0: 3, 10: 2, 50: 2, 100: 1, 200: 1, 500: 1 };
+
+// Einstellungen im Warteraum speichern (nur Gastgeber). Liegen bis zum Start in games.state.settings.
+async function saveSettings(settings) {
+  const g = ui.game;
+  const count = settings.money ? Object.values(settings.money).reduce((a, b) => a + b, 0) : 0;
+  if (count > MAX_MONEY_CARDS) return;
+  ui.game = { ...g, state: { ...(g.state || {}), settings } };
+  render();
+  if (DEMO) return;
+  for (let tries = 0; tries < 3; tries++) {
+    const cur = ui.game;
+    const { data, error } = await sb.from('games')
+      .update({ state: { settings }, version: cur.version + 1, updated_at: new Date().toISOString() })
+      .eq('id', cur.id).eq('version', cur.version).eq('status', 'lobby').select();
+    if (error) { ui.error = 'Einstellung konnte nicht gespeichert werden.'; return render(); }
+    if (data && data.length) { ui.game = data[0]; return render(); }
+    const fresh = await sb.from('games').select('*').eq('id', cur.id).single();
+    if (!fresh.data || fresh.data.status !== 'lobby') return;
+    ui.game = { ...fresh.data, state: { ...(fresh.data.state || {}), settings } };
+  }
 }
 
 // ---------- Spieltisch ----------
@@ -513,7 +562,8 @@ function debugShortcut(kind) {
         s.players.forEach((p) => { p.money.push(payout); p.money.sort((a, b) => a - b); });
       }
       const lucky = s.players[Math.floor(Math.random() * s.players.length)];
-      if (isSpecialCard(card)) (lucky.specials = lucky.specials || []).push(specialAnimal(card));
+      if (isMoneyCard(card)) { lucky.money.push(moneyValue(card)); lucky.money.sort((a, b) => a - b); }
+      else if (isSpecialCard(card)) (lucky.specials = lucky.specials || []).push(specialAnimal(card));
       else lucky.animals[card] = (lucky.animals[card] || 0) + 1;
     }
     s.log.push('Debug: vorgespult.');
@@ -928,7 +978,7 @@ async function onLeave() {
 async function onStart() {
   const g = ui.game;
   ui.error = '';
-  const state = createGame({ players: g.players.map((p) => ({ id: p.seat || p.id, name: p.name })), seed: Math.floor(Math.random() * 2 ** 31) });
+  const state = createGame({ players: g.players.map((p) => ({ id: p.seat || p.id, name: p.name })), seed: Math.floor(Math.random() * 2 ** 31), settings: g.state?.settings || null });
   const { data, error } = await sb.from('games')
     .update({ status: 'playing', state, version: g.version + 1, updated_at: new Date().toISOString() })
     .eq('id', g.id).eq('version', g.version)
@@ -951,7 +1001,7 @@ async function onRematch() {
   const g = ui.game;
   if (g.local) {
     const players = g.state.players.map((p) => ({ id: p.id, name: p.name }));
-    const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31) });
+    const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: g.state.settings || null });
     Object.keys(gameLocal).forEach((k) => delete gameLocal[k]);
     ui.game = { ...g, version: 0, status: 'playing', state };
     return render();
@@ -977,7 +1027,7 @@ async function onRematch() {
     return toast('Hat nicht geklappt – bitte nochmal tippen.');
   }
   const players = g.players.map((p) => ({ id: p.id, name: p.name }));
-  const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31) });
+  const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: g.state.settings || null });
   const { data, error } = await sb.from('games')
     .insert({ id: newId, code: randomCode(), host: me.id, status: 'playing', players, state, version: 1 })
     .select().single();
@@ -1016,6 +1066,7 @@ const RULES = `
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
   Am Ende hat einer alle 4 Ratten – er wählt eines seiner Quartette, das nicht zählt.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Alle außer dem Aufdecker sehen einen Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
+  <h3>Geldscheine im Stapel</h3><p>Kann der Gastgeber im Warteraum einschalten (bis zu 20 Scheine, Werte frei wählbar). Wird ein Geldschein aufgedeckt, bekommt ihn der Aufdecker – alle sehen den Betrag – und sein Zug ist vorbei.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
 
 function renderModal() {
@@ -1115,7 +1166,8 @@ function demo(kind) {
   ];
   if (kind === 'room') {
     ui.screen = 'room';
-    ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'lobby', version: 2, players: [{ id: 'u1', name: 'Alp' }, { id: 'u2', name: 'Nico' }, { id: 'u3', name: 'Lea' }] };
+    ui.game = { id: 'g0', code: 'HOFX', host: params.get('guest') ? 'u2' : 'u1', status: 'lobby', version: 2, players: [{ id: 'u1', name: 'Alp' }, { id: 'u2', name: 'Nico' }, { id: 'u3', name: 'Lea' }],
+      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : null };
   }
   const demoState = buildDemoState(kind, gameLocal);
   if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen

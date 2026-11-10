@@ -5,7 +5,7 @@ import {
   possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS, passAuction,
   AUCTION_START_MS, AUCTION_BID_MS, bestPay,
   RAT, ratLay, ratTake, ratCurrent, buzz, rpsPick, specialDecide, specialStage, specialNumber,
-  chooseBlock, scoreFor, SPECIAL_DELAY_MS,
+  chooseBlock, scoreFor, SPECIAL_DELAY_MS, moneyDeckFrom,
 } from '../src/engine.js';
 
 const P = [
@@ -261,7 +261,7 @@ function botStep(g, rand) {
 
 test('200 zufällige Komplettspiele enden mit allen Quartetten, allen Ratten bei einem und allen Spezialkarten verteilt', () => {
   for (let seed = 1; seed <= 200; seed++) {
-    let g = createGame({ players: P.slice(0, 3 + (seed % 2)), seed });
+    let g = createGame({ players: P.slice(0, 3 + (seed % 2)), seed, settings: seed % 3 === 0 ? { money: { 0: 3, 50: 2, 200: 4, 500: 1 } } : null });
     let r = seed * 7919;
     const rand = () => { r = (r * 16807) % 2147483647; return r / 2147483647; };
     let steps = 0;
@@ -485,4 +485,26 @@ test('Alter Spielstand ohne Ratten und Spezialkarten endet weiterhin normal', ()
   g = pay(g, 'b', [g.players[1].money.indexOf(10)]);
   assert.equal(g.phase, 'ended');
   assert.ok(scores(g).every((x) => Number.isFinite(x.score)));
+});
+
+// ---------- Geldscheine im Stapel ----------
+
+test('Geld im Stapel: Einstellung landet im Stapel, Obergrenze 20, nur echte Scheine', () => {
+  const g = createGame({ players: P, seed: 4, settings: { money: { 200: 4, 0: 5 } } });
+  assert.equal(g.deck.length, 54 + 9);
+  assert.equal(g.deck.filter((c) => c === 'geld-200').length, 4);
+  assert.equal(g.deck.filter((c) => c === 'geld-0').length, 5);
+  assert.throws(() => moneyDeckFrom({ 100: 21 }), GameError);
+  assert.throws(() => moneyDeckFrom({ 30: 1 }), GameError);
+  assert.equal(createGame({ players: P, seed: 4 }).deck.length, 54);
+});
+
+test('Geldschein aufgedeckt: Aufdecker bekommt ihn, Betrag für alle sichtbar, Zug vorbei', () => {
+  let g = gameWithDeck(['geld-200', 'hahn']);
+  g = drawForAuction(g, 'a');
+  assert.equal(g.phase, 'turn');
+  assert.equal(currentPlayer(g).id, 'b');
+  assert.equal(total(g.players[0].money), 300);
+  assert.deepEqual(g.lastEvent, { type: 'money_drawn', player: 'a', value: 200 });
+  assert.deepEqual(viewFor(g, 'c').lastEvent.value, 200);
 });

@@ -36,6 +36,27 @@ export const SPECIAL_FROM = 10;               // Countdown 10 … 1
 export const RPS = ['stein', 'schere', 'papier'];
 const BEATS = { stein: 'schere', schere: 'papier', papier: 'stein' };
 
+// Geldscheine im Stapel (Einstellung im Warteraum)
+export const MONEY_PREFIX = 'geld-';
+export const MONEY_VALUES = [0, 10, 20, 50, 100, 200, 500];
+export const MAX_MONEY_CARDS = 20;
+export const isMoneyCard = (card) => typeof card === 'string' && card.startsWith(MONEY_PREFIX);
+export const moneyValue = (card) => Number(card.slice(MONEY_PREFIX.length));
+
+// Einstellung { "200": 4, "0": 5 } → Liste der Scheine; prüft Werte und Obergrenze
+export function moneyDeckFrom(counts) {
+  if (!counts) return [];
+  const out = [];
+  for (const [k, n] of Object.entries(counts)) {
+    const v = Number(k);
+    if (!MONEY_VALUES.includes(v)) fail(`Ungültiger Geldschein: ${k}`);
+    if (!Number.isInteger(n) || n < 0) fail('Ungültige Anzahl.');
+    for (let i = 0; i < n; i++) out.push(v);
+  }
+  if (out.length > MAX_MONEY_CARDS) fail(`Höchstens ${MAX_MONEY_CARDS} Geldscheine im Stapel.`);
+  return out.sort((a, b) => a - b);
+}
+
 export const isSpecialCard = (card) => typeof card === 'string' && card.startsWith(SPECIAL_PREFIX);
 export const specialAnimal = (card) => card.slice(SPECIAL_PREFIX.length);
 export function cardName(card) {
@@ -114,7 +135,7 @@ function moveAnimals(from, to, animal, count) {
 
 // ---------- Spielstart ----------
 
-export function createGame({ players, seed = Date.now() }) {
+export function createGame({ players, seed = Date.now(), settings = null }) {
   if (!Array.isArray(players) || players.length < MIN_PLAYERS || players.length > MAX_PLAYERS) {
     fail(`Es braucht ${MIN_PLAYERS} bis ${MAX_PLAYERS} Spieler.`);
   }
@@ -124,6 +145,7 @@ export function createGame({ players, seed = Date.now() }) {
     ...ANIMALS.flatMap((a) => [a.id, a.id, a.id, a.id]),
     ...ANIMALS.map((a) => SPECIAL_PREFIX + a.id),
     ...Array(RAT_COUNT).fill(RAT),
+    ...moneyDeckFrom(settings && settings.money).map((v) => MONEY_PREFIX + v),
   ];
   const deck = shuffle(cards, seed);
   const state = {
@@ -149,6 +171,7 @@ export function createGame({ players, seed = Date.now() }) {
     lastEvent: null,
     log: [],
     winner: null,
+    settings: settings || null,
   };
   log(state, 'Das Spiel beginnt.');
   return state;
@@ -307,6 +330,15 @@ export function drawForAuction(prev, playerId, now) {
     state.phase = 'rat';
     state.lastEvent = { type: 'rat_drawn', player: playerId };
     log(state, `${me.name} deckt eine Ratte auf.`);
+    return state;
+  }
+  if (isMoneyCard(animal)) {
+    // Geldschein: der Aufdecker bekommt ihn, alle sehen den Betrag, der Zug ist vorbei
+    const value = moneyValue(animal);
+    giveCards(me, [value]);
+    state.lastEvent = { type: 'money_drawn', player: playerId, value };
+    log(state, `${me.name} zieht einen Geldschein: ${value}.`);
+    nextTurn(state);
     return state;
   }
   if (isSpecialCard(animal)) {
