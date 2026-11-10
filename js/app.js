@@ -314,6 +314,8 @@ function watchRoom(id) {
   roomChannel = sb.channel('game-' + id, { config: { presence: { key: me.id } } })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${id}` }, (payload) => {
       if (payload.eventType === 'DELETE') {
+        // Supabase meldet Löschungen ALLER Spiele – nur reagieren, wenn wirklich unser Spiel weg ist
+        if (payload.old?.id !== id) return;
         store.del('kh_game');
         ui.error = 'Der Gastgeber hat das Spiel geschlossen.';
         openStart();
@@ -344,7 +346,8 @@ async function resync() {
   if (!sb || DEMO) return;
   const id = ui.game?.id || store.get('kh_game');
   if (ui.screen === 'start' || !id) { await loadGames(); return render(); }
-  const { data } = await sb.from('games').select('*').eq('id', id).maybeSingle();
+  const { data, error } = await sb.from('games').select('*').eq('id', id).maybeSingle();
+  if (error) return scheduleResync(); // keine Verbindung: später nochmal versuchen, NICHT rauswerfen
   if (!data) { store.del('kh_game'); return openStart(); }
   ui.game = null; // neuen Stand auf jeden Fall übernehmen
   showGame(data);
@@ -457,9 +460,9 @@ async function main() {
   watchLobby();
   const saved = store.get('kh_game');
   if (saved) {
-    const { data } = await sb.from('games').select('*').eq('id', saved).maybeSingle();
+    const { data, error } = await sb.from('games').select('*').eq('id', saved).maybeSingle();
     if (data && data.players.some((p) => p.id === me.id)) { watchRoom(data.id); return showGame(data); }
-    store.del('kh_game');
+    if (!error) store.del('kh_game'); // nur vergessen, wenn das Spiel wirklich weg ist
   }
   openStart();
 }

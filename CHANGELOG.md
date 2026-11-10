@@ -43,3 +43,9 @@
 - [x] Laufende eigene Spiele auf der Startseite („Weiter spielen“)
 - [x] Ton + Vibration, wenn du dran bist, zahlen musst oder herausgefordert wirst (im Menü abschaltbar)
 - [x] Gebotsknöpfe für jeden Scheinwert: +10, +20, +50, +100, +200, +500
+
+## v0.4.1 – Fehlerbehebung
+
+- [x] Spieler wurden rausgeworfen, wenn irgendein anderes Spiel gelöscht wurde – jetzt nur noch beim eigenen Spiel
+- [x] Kurzer Verbindungsabbruch wirft nicht mehr raus, sondern versucht es erneut
+- [x] Countdown: 20 s nach dem Aufdecken, 15 s nach jedem Gebot
