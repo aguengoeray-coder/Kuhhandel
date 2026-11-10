@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.21.1
+
+- [x] Zuschlag-Schild („Verkauft an … für …!“) repariert: war schwarz mit kleinem weißem Kästchen (alte Regel im Stil überschrieb es) – jetzt goldenes Band mit Hammer, mittig auf dem Tisch.
+
 ## v0.1.0 – Spiellogik
 
 - [x] Spielstart mit 3–4 Spielern, gemischter Stapel, Startgeld 90 Taler

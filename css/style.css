@@ -1186,8 +1186,8 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .auc .pot { min-height: 20px; }
 
 /* Zuschlag-Schild */
-.gavel { position: absolute; left: 393px; top: 150px; transform: translate(-50%, -50%); z-index: 32; pointer-events: none; display: flex; align-items: center; gap: 10px; background: #fff; border: 3px solid var(--ink); border-radius: 18px; padding: 10px 18px; box-shadow: 0 12px 28px rgba(0,0,0,.35); animation: gavelin 2.4s ease-out both; white-space: nowrap; }
-.gavel b { font-family: var(--font-head); font-size: 20px; }
+.soldsign { position: absolute; left: 393px; top: 205px; transform: translate(-50%, -50%); z-index: 32; pointer-events: none; display: flex; align-items: center; gap: 10px; background: var(--gold); color: var(--ink); border: 3px solid #8A5A00; border-radius: 999px; padding: 8px 22px 8px 14px; box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 -3px 0 rgba(0,0,0,.12); animation: gavelin 2.4s ease-out both; white-space: nowrap; }
+.soldsign b { font-family: var(--font-head); font-weight: 700; font-size: 19px; }
 .ghammer { font-size: 30px; display: inline-block; transform-origin: 80% 80%; animation: hammer .5s ease-in 2 both; }
 @keyframes gavelin { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 10% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); } 18% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%); } }
 @keyframes hammer { 0% { transform: rotate(-40deg); } 70% { transform: rotate(15deg); } 100% { transform: rotate(0); } }
@@ -1198,7 +1198,7 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .qc:first-child { margin-left: 0; }
 .qc .art { width: 44px; height: 44px; }
 @keyframes qcin { from { opacity: 0; transform: translateY(30px) rotate(0); } }
-@media (prefers-reduced-motion: reduce) { .gavel, .ghammer, .stack.bump .spile, .qc { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .soldsign, .ghammer, .stack.bump .spile, .qc { animation: none; } }
 .paycard .pcard, .spauc .pcard { width: 82px; height: 112px; }
 .paycard .pcart, .spauc .pcart { margin-top: 20px; width: 46px; height: 46px; padding: 4px; }
 .spside { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 110px; }

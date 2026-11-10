@@ -776,7 +776,7 @@ export function renderGame(root, ctx) {
       : `Verkauft an ${esc(v.payment.buyer === meId ? 'dich' : nameOf(v.payment.buyer))} für ${v.payment.amount}!`;
   }
   if (fresh && le?.type === 'auction_won' && le.amount === 0 && prev.phase === 'auction') gavel = `Niemand bietet – ${esc(le.buyer === meId ? 'du bekommst' : `${nameOf(le.buyer)} bekommt`)} es umsonst`;
-  if (gavel) { effects += `<div class="gavel" aria-live="polite"><span class="ghammer">🔨</span><b>${gavel}</b></div>`; if (!sounds.includes('gavel')) sounds.push('gavel'); }
+  if (gavel) { effects += `<div class="soldsign" aria-live="polite"><span class="ghammer">🔨</span><b>${gavel}</b></div>`; if (!sounds.includes('gavel')) sounds.push('gavel'); }
   if (fresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade' || le.type === 'special_won' || le.type === 'rat_taken')) {
     let to = le.type === 'trade' ? le.winner : le.type === 'rat_taken' ? le.player : le.buyer;
     if (le.type === 'trade' && le.animal === RAT) to = le.winner === le.challenger ? le.target : le.challenger;
