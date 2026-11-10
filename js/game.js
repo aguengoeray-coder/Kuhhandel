@@ -368,7 +368,11 @@ export function renderGame(root, ctx) {
     const potCount = r.pot;
     const pot = `<div class="pot">${Array.from({ length: Math.min(potCount, 14) }, (_, k) => `<div class="money xs back" style="--r:${(k * 37) % 21 - 10}deg"></div>`).join('') || '<span>noch leer</span>'}</div>`;
     aucBanner = 'Rattenrunde';
-    aucCenter = `<div class="auc">${ratCard(`<div class="row"><span>In der Mitte</span><strong>${karten(potCount)}</strong></div><div class="row line"><span>Am Zug</span><span>${esc(nameOf(turnId))}</span></div>`, `compact ${entered ? 'deal' : ''}`)}${pot}</div>`;
+    aucCenter = `<div class="auc aucmain"><div class="aucrow">
+      <div class="aside l"><div class="ainfo"><div><span>Am Zug</span><b>${esc(turnId === meId ? 'Du' : nameOf(turnId))}</b></div><div><span>Wer alle 4 hat</span><b>−1 Quartett</b></div></div></div>
+      <div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(RAT, 'rat')}</div>
+      <div class="aside r"><div class="potbox">${pot}<small>${karten(potCount)} in der Mitte</small></div></div>
+    </div></div>`;
     if (turnId === meId) {
       const values = [...new Set(me.money)].sort((a, b) => a - b);
       aucLeft = `<div class="lhead">Karte verdeckt legen</div>
@@ -410,7 +414,11 @@ export function renderGame(root, ctx) {
       info = '<div class="aucinfo">Wer zuerst drückt, zahlt so viele Karten</div>';
     }
     aucBanner = `${esc(nameOf(sp.revealer))} ${iRevealed ? 'hast' : 'hat'} eine Spezialkarte`;
-    aucCenter = `<div class="auc spauc"><div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(sp.animal, 'special')}</div><div class="spside">${big}<small class="spfit">passt zum ${esc(aname(sp.animal))}-Quartett</small></div>${info}</div>`;
+    aucCenter = `<div class="auc aucmain"><div class="aucrow">
+      <div class="aside l"><div class="ainfo"><div><span>Wert</span><b>${SPECIAL_VALUE}</b></div><div><span>Passt zu</span><b>${esc(aname(sp.animal))}</b></div><div><span>Handel</span><b>nein</b></div></div></div>
+      <div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(sp.animal, 'special')}</div>
+      <div class="aside r">${big || ''}</div>
+    </div>${info}</div>`;
 
     if (stage === 'wait' || stage === 'countdown') {
       if (iRevealed) {

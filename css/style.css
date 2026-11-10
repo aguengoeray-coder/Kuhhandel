@@ -1244,3 +1244,11 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .aucmain .bidbox .avatar { display: none; }
 .aucmain .reveal-row { max-width: 160px; }
 .auc.aucmain .countdown { margin-top: 4px; }
+.aucmain .bigcard .pcard { width: 82px; height: 112px; }
+.aucmain .bigcard .pcart { margin-top: 20px; width: 46px; height: 46px; padding: 4px; }
+.aucmain .bigcard .pcname { font-size: 11px; }
+.potbox { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.potbox .pot { width: 120px; }
+.potbox small { color: #fff; font-size: 11px; font-weight: 700; }
+.aucmain .bignum { font-size: 44px; }
+.aucmain .aucinfo { margin-top: 4px; font-size: 12px; text-align: center; }
