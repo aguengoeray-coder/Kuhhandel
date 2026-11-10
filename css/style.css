@@ -539,3 +539,34 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .hand-pick { top: 236px; }
 .hand-pick .piles { padding-top: 5px; }
 .hand-pick .pile { width: 42px; height: 52px; }
+
+/* =================== Optimierungen v0.7 =================== */
+.start-links { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.linklike.light { color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.25); padding: 4px 0; }
+.logo { font-size: clamp(36px, 6vw, 56px); }
+.menu .pill { min-height: 38px; font-size: 13px; }
+.payrow { display: flex; align-items: center; gap: 10px; }
+.endbtns { display: flex; gap: 10px; }
+#modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
+.mback { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+.mbox { position: relative; width: min(560px, 92vw); max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 18px; padding: 16px 20px 18px; box-shadow: 0 16px 40px rgba(0,0,0,.35); font-size: 14px; }
+.mbox h2 { margin: 0 0 8px; font-family: var(--font-head); font-size: 22px; }
+.mclose { position: absolute; right: 10px; top: 8px; width: 40px; height: 40px; border: none; background: none; font-size: 18px; cursor: pointer; }
+.rules h3 { margin: 10px 0 2px; font-family: var(--font-head); font-size: 15px; }
+.rules p { margin: 0 0 4px; line-height: 1.4; }
+.mtext { margin: 0 0 10px; color: var(--muted); }
+.pinbox { display: flex; gap: 14px; }
+.pinbox > div { flex: 1; background: #F3F1EA; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+.pinbox small { color: var(--muted); font-weight: 600; }
+.pinbox b { font-family: var(--font-head); font-size: 32px; letter-spacing: 4px; }
+.rejoin { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.rejoin label { display: flex; flex-direction: column; font-weight: 600; font-size: 13px; gap: 3px; }
+.rejoin input { width: 110px; height: 44px; border: 3px solid var(--ink); border-radius: 12px; padding: 0 10px; font-size: 20px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+.mbox .error { margin-top: 10px; }
+@keyframes qpop { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; } 15% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; } 25% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(.9); opacity: 0; } }
+.qpop { position: absolute; left: 376px; top: 190px; z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: #fff; border: 4px solid var(--gold); border-radius: 20px; padding: 12px 22px; box-shadow: 0 0 0 6px rgba(255,211,78,.35), 0 16px 30px rgba(0,0,0,.3); animation: qpop 2.8s ease-out both; }
+.qart { width: 64px; height: 64px; border-radius: 50%; background: var(--a); border: 3px solid var(--ink); padding: 4px; }
+.qpop b { font-family: var(--font-head); font-size: 26px; color: var(--red); }
+.qpop span { font-weight: 700; font-size: 13px; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .qpop { animation: none; display: none; } }

@@ -6,7 +6,7 @@ import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
 
-export const APP_VERSION = '0.6.2';
+export const APP_VERSION = '0.7.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -35,9 +35,18 @@ let ui = { screen: 'start', editingName: !store.get('kh_name'), games: [], game:
 let lobbyChannel = null;
 let roomChannel = null;
 
+// Mein Platz im Spiel: nach einem Gerätewechsel ist meine Anmelde-ID neu, der Platz bleibt gleich
+const seatIn = (g) => g?.players?.find((p) => p.id === me.id)?.seat || me.id;
+const isStandalone = () => window.matchMedia?.('(display-mode: fullscreen)').matches || window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+let installPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; });
+// Als App gestartet: Querformat festhalten (geht nur auf Android)
+document.addEventListener('pointerdown', () => { if (isStandalone()) screen.orientation?.lock?.('landscape').catch(() => {}); }, { once: true });
+
 // ---------- Darstellung ----------
 
 function render() {
+  renderModal();
   app.classList.toggle('playing', ui.screen === 'playing');
   if (ui.screen !== 'playing') app.onclick = null;
   if (ui.screen === 'room' && ui.game) return renderRoom();
@@ -83,6 +92,11 @@ function renderStart() {
       <div class="brand">
         <h1 class="logo">Kuh<br>handel<span>.</span></h1>
         <p class="claim">Das Kartenspiel – online mit Freunden</p>
+        <div class="start-links">
+          <button type="button" class="linklike light" data-modal="rules">Spielregeln</button>
+          ${isStandalone() ? '' : '<button type="button" class="linklike light" data-modal="install">Als App aufs Handy</button>'}
+          <button type="button" class="linklike light" data-modal="rejoin">Mit Code zurück ins Spiel</button>
+        </div>
         <div class="card name-box">
           <label for="name-input">${ui.editingName ? 'Wie heißt du?' : 'Du spielst als'}</label>
           ${nameBlock}
@@ -113,6 +127,7 @@ function renderStart() {
   document.getElementById('edit-name')?.addEventListener('click', () => { ui.editingName = true; render(); document.getElementById('name-input')?.focus(); });
   document.getElementById('create')?.addEventListener('click', onCreate);
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
+  app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-test]').forEach((b) => b.addEventListener('click', () => startLocalGame(Number(b.dataset.test))));
   app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
     const { data } = await sb.from('games').select('*').eq('id', b.dataset.resume).maybeSingle();
@@ -190,7 +205,7 @@ function renderPlaying() {
   }
   renderGame(app, {
     state: ui.game.state,
-    meId: local ? dbg.viewAs : me.id,
+    meId: local ? dbg.viewAs : seatIn(ui.game),
     local: gameLocal,
     toastMsg,
     rerender: render,
@@ -199,38 +214,53 @@ function renderPlaying() {
     sound: soundOn(),
     toggleSound: () => { store.set('kh_sound', soundOn() ? 'off' : 'on'); render(); },
     online: local ? null : onlineForDisplay(),
+    standalone: isStandalone(),
+    openModal,
+    onRematch,
+    rematchId: ui.game.state?.rematchId || null,
     onExit: () => { if (!ui.game?.local) store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
   if (DEBUG) injectDebug();
 }
 
-// Spielzug ausführen: Regeln lokal prüfen, dann neuen Stand speichern (nur wenn niemand schneller war)
+// Spielzug ausführen: Regeln lokal prüfen, dann neuen Stand speichern (nur wenn niemand schneller war).
+// War jemand schneller, wird der Zug automatisch auf dem neuen Stand nochmal geprüft und gespeichert.
 async function act(fn) {
   if (busy) return;
-  let next;
-  try {
-    next = fn(ui.game.state);
-  } catch (e) {
-    if (e instanceof GameError) { logError(`Regel: ${e.message}`); return toast(e.message); }
-    logError(`Absturz: ${e.message}`);
-    throw e;
-  }
-  if (DEMO || ui.game.local) return applyLocal(next);
+  const attempt = () => {
+    try {
+      return { next: fn(ui.game.state) };
+    } catch (e) {
+      if (e instanceof GameError) { logError(`Regel: ${e.message}`); toast(e.message); return null; }
+      logError(`Absturz: ${e.message}`);
+      throw e;
+    }
+  };
+  let r = attempt();
+  if (!r) return;
+  if (DEMO || ui.game.local) return applyLocal(r.next);
   busy = true;
-  const g = ui.game;
-  const { data, error } = await sb.from('games')
-    .update({ state: next, status: next.phase === 'ended' ? 'ended' : 'playing', version: g.version + 1, updated_at: new Date().toISOString() })
-    .eq('id', g.id).eq('version', g.version)
-    .select();
-  busy = false;
-  if (error) { logError(`Speichern: ${error.message}`); return toast('Verbindung hakt – bitte nochmal versuchen.'); }
-  if (!data || data.length === 0) {
-    const fresh = await sb.from('games').select('*').eq('id', g.id).single();
-    if (fresh.data) ui.game = fresh.data;
-    return toast('Jemand war schneller – schau nochmal hin.');
+  try {
+    for (let tries = 0; tries < 3; tries++) {
+      const g = ui.game;
+      const { data, error } = await sb.from('games')
+        .update({ state: r.next, status: r.next.phase === 'ended' ? 'ended' : 'playing', version: g.version + 1, updated_at: new Date().toISOString() })
+        .eq('id', g.id).eq('version', g.version)
+        .select();
+      if (error) { logError(`Speichern: ${error.message}`); return toast('Verbindung hakt – bitte nochmal versuchen.'); }
+      if (data && data.length) { ui.game = data[0]; return render(); }
+      // Jemand war schneller: neuen Stand holen und den Zug darauf nochmal versuchen
+      const fresh = await sb.from('games').select('*').eq('id', g.id).single();
+      if (!fresh.data) return toast('Verbindung hakt – bitte nochmal versuchen.');
+      ui.game = fresh.data;
+      render();
+      r = attempt(); // z. B. Gebot ist inzwischen zu niedrig → Hinweis statt Speichern
+      if (!r) return;
+    }
+    toast('Gerade ist viel los – bitte nochmal tippen.');
+  } finally {
+    busy = false;
   }
-  ui.game = data[0];
-  render();
 }
 
 // ---------- Signal, wenn man gefragt ist (Ton + Vibration) ----------
@@ -272,9 +302,10 @@ function checkSignal() {
   const s = ui.game?.state;
   if (!s || DEMO) return;
   let need = '';
-  if (s.phase === 'turn' && s.players[s.turn]?.id === me.id) need = 'turn';
-  else if (s.phase === 'payment' && s.payment?.payer === me.id) need = 'pay';
-  else if (s.phase === 'trade' && s.trade?.target === me.id) need = 'trade';
+  const seat = seatIn(ui.game);
+  if (s.phase === 'turn' && s.players[s.turn]?.id === seat) need = 'turn';
+  else if (s.phase === 'payment' && s.payment?.payer === seat) need = 'pay';
+  else if (s.phase === 'trade' && s.trade?.target === seat) need = 'trade';
   const key = need ? `${need}|${s.log.length}` : '';
   if (key && key !== lastNeed) beep();
   lastNeed = key;
@@ -484,7 +515,7 @@ function watchLobby() {
 
 function watchRoom(id) {
   if (roomChannel) sb.removeChannel(roomChannel);
-  roomChannel = sb.channel('game-' + id, { config: { presence: { key: me.id } } })
+  roomChannel = sb.channel('game-' + id, { config: { presence: { key: seatIn(ui.game) } } })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${id}` }, (payload) => {
       if (payload.eventType === 'DELETE') {
         // Supabase meldet Löschungen ALLER Spiele – nur reagieren, wenn wirklich unser Spiel weg ist
@@ -501,8 +532,9 @@ function watchRoom(id) {
       online = new Set(Object.keys(roomChannel.presenceState()));
       const t = Date.now();
       for (const p of ui.game?.players || []) {
-        if (online.has(p.id)) delete offlineSince[p.id];
-        else if (!offlineSince[p.id]) offlineSince[p.id] = t;
+        const seat = p.seat || p.id;
+        if (online.has(seat)) delete offlineSince[seat];
+        else if (!offlineSince[seat]) offlineSince[seat] = t;
       }
       if (ui.screen === 'playing' || ui.screen === 'room') render();
     })
@@ -517,7 +549,7 @@ function watchRoom(id) {
 function onlineForDisplay() {
   if (!online || !ui.game) return null;
   const t = Date.now();
-  return new Set(ui.game.players.map((p) => p.id).filter((id) => !(offlineSince[id] && t - offlineSince[id] > 15000)));
+  return new Set(ui.game.players.map((p) => p.seat || p.id).filter((id) => !(offlineSince[id] && t - offlineSince[id] > 15000)));
 }
 
 // ---------- Verbindung: nach Standby / Netzwechsel neu abgleichen ----------
@@ -573,8 +605,9 @@ async function onJoin(id) {
 
 function enterRoom(g) {
   store.set('kh_game', g.id);
-  watchRoom(g.id);
+  ui.game = null;
   showGame(g);
+  watchRoom(g.id);
 }
 
 async function onLeave() {
@@ -588,7 +621,7 @@ async function onLeave() {
 async function onStart() {
   const g = ui.game;
   ui.error = '';
-  const state = createGame({ players: g.players.map((p) => ({ id: p.id, name: p.name })), seed: Math.floor(Math.random() * 2 ** 31) });
+  const state = createGame({ players: g.players.map((p) => ({ id: p.seat || p.id, name: p.name })), seed: Math.floor(Math.random() * 2 ** 31) });
   const { data, error } = await sb.from('games')
     .update({ status: 'playing', state, version: g.version + 1, updated_at: new Date().toISOString() })
     .eq('id', g.id).eq('version', g.version)
@@ -598,10 +631,132 @@ async function onStart() {
 }
 
 async function openStart() {
+  if (sb && !DEMO) sb.rpc('cleanup_old_games').then(() => {}, () => {}); // alte Spiele löschen (still)
   ui.screen = 'start';
   ui.game = null;
   await loadGames();
   render();
+}
+
+// ---------- Revanche ----------
+
+async function onRematch() {
+  const g = ui.game;
+  if (g.local) {
+    const players = g.state.players.map((p) => ({ id: p.id, name: p.name }));
+    const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31) });
+    Object.keys(gameLocal).forEach((k) => delete gameLocal[k]);
+    ui.game = { ...g, version: 0, status: 'playing', state };
+    return render();
+  }
+  // Gibt es schon eine Revanche? Dann einfach beitreten
+  const goTo = async (id) => {
+    for (let i = 0; i < 5; i++) {
+      const { data } = await sb.from('games').select('*').eq('id', id).maybeSingle();
+      if (data) { gameLocal.menu = false; return enterRoom(data); }
+      await new Promise((r) => setTimeout(r, 800));
+    }
+    toast('Revanche nicht gefunden – bitte nochmal tippen.');
+  };
+  if (g.state.rematchId) return goTo(g.state.rematchId);
+  const newId = crypto.randomUUID();
+  // Erst im alten Spiel eintragen (wer zuerst tippt, gewinnt) – dann neues Spiel anlegen
+  const { data: claimed } = await sb.from('games')
+    .update({ state: { ...g.state, rematchId: newId }, version: g.version + 1, updated_at: new Date().toISOString() })
+    .eq('id', g.id).eq('version', g.version).select();
+  if (!claimed || !claimed.length) {
+    const fresh = await sb.from('games').select('*').eq('id', g.id).single();
+    if (fresh.data?.state?.rematchId) return goTo(fresh.data.state.rematchId);
+    return toast('Hat nicht geklappt – bitte nochmal tippen.');
+  }
+  const players = g.players.map((p) => ({ id: p.id, name: p.name }));
+  const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31) });
+  const { data, error } = await sb.from('games')
+    .insert({ id: newId, code: randomCode(), host: me.id, status: 'playing', players, state, version: 1 })
+    .select().single();
+  if (error) { logError(`Revanche: ${error.message}`); return toast('Revanche konnte nicht starten.'); }
+  enterRoom(data);
+}
+
+// ---------- Fenster: Regeln, Installieren, Wiedereinstieg ----------
+
+let modal = null; // { kind, pin, error }
+function openModal(kind) {
+  modal = { kind };
+  gameLocal.menu = false;
+  if (kind === 'pin') loadPin();
+  render();
+}
+async function loadPin() {
+  if (!ui.game || ui.game.local) { modal.pin = '—'; return render(); }
+  const { data, error } = await sb.rpc('my_pin', { p_game: ui.game.id });
+  modal.pin = error ? null : data;
+  modal.error = error ? 'PIN konnte nicht geladen werden.' : '';
+  render();
+}
+
+const RULES = `
+  <h3>Ziel</h3><p>Sammle Quartette (alle 4 Karten einer Tierart). Am Ende zählt: Summe deiner Quartettwerte × Anzahl deiner Quartette.</p>
+  <h3>Tiere</h3><p>Hahn 10 · Gans 40 · Katze 90 · Hund 160 · Schaf 250 · Ziege 350 · Esel 500 · Schwein 650 · Kuh 800 · Pferd 1000</p>
+  <h3>Start</h3><p>Jeder hat 100 Taler: 2× 0, 3× 10, 1× 20, 1× 50. Wie viel die anderen haben, siehst du nicht – nur wie viele Scheine.</p>
+  <h3>Dein Zug</h3><p><b>Versteigern:</b> Du deckst ein Tier auf, die anderen bieten. Nach jedem Gebot läuft die Uhr neu. Ist sie abgelaufen, entscheidest du: Zuschlag an den Höchstbietenden – oder du kaufst selbst zum Höchstgebot.<br>
+  <b>Esel:</b> Wird ein Esel aufgedeckt, bekommen alle Geld von der Bank (50, 100, 200, 500).<br>
+  <b>Kein Wechselgeld:</b> Wer zahlt, wählt seine Scheine selbst. Zu viel gezahlt ist weg.<br>
+  <b>Kann nicht zahlen?</b> Dann alle Scheine offen zeigen, die Auktion startet neu – du darfst höchstens dein altes Gebot minus 10 bieten.</p>
+  <p><b>Kuhhandel:</b> Fordere jemanden heraus, der dieselbe Tierart hat. Du bietest verdeckt. Er nimmt dein Geld und gibt das Tier ab – oder bietet verdeckt dagegen. Die Gebote werden immer getauscht, das höhere gewinnt die Tiere, bei Gleichstand der Herausforderer. Haben beide 2 Karten, geht es um 2.</p>
+  <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind.</p>`;
+
+function renderModal() {
+  let el = document.getElementById('modal');
+  if (!modal) { el?.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'modal'; document.body.appendChild(el); }
+  let body = '';
+  if (modal.kind === 'rules') body = `<h2>Spielregeln</h2><div class="rules">${RULES}</div>`;
+  if (modal.kind === 'install') {
+    body = `<h2>Als App aufs Handy</h2>
+      ${installPrompt ? '<button type="button" class="pill pill-red pill-small" data-m="doInstall">Jetzt installieren</button>' : ''}
+      <div class="rules">
+        <h3>iPhone (Safari)</h3><p>Unten auf das Teilen-Symbol (Quadrat mit Pfeil) tippen → „Zum Home-Bildschirm“ → „Hinzufügen“.</p>
+        <h3>Android (Chrome)</h3><p>Oben rechts auf ⋮ tippen → „App installieren“ oder „Zum Startbildschirm hinzufügen“.</p>
+        <p>Danach startest du Kuhhandel über das Kuh-Symbol – im Vollbild, ohne Browserleisten.</p>
+      </div>`;
+  }
+  if (modal.kind === 'pin') {
+    body = `<h2>Wiedereinstieg</h2>
+      <p class="mtext">Damit kommst du auf einem anderen Gerät zurück auf deinen Platz. Nicht weitergeben!</p>
+      <div class="pinbox"><div><small>Spiel-Code</small><b>${esc(ui.game?.code || '—')}</b></div><div><small>Deine PIN</small><b>${modal.pin === undefined ? '…' : esc(modal.pin || '—')}</b></div></div>
+      ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
+  }
+  if (modal.kind === 'rejoin') {
+    body = `<h2>Mit Code zurück ins Spiel</h2>
+      <p class="mtext">Code und PIN findest du auf deinem alten Gerät im Spiel unter Menü → „Wiedereinstieg-Code“.</p>
+      <form id="rejoin-form" class="rejoin">
+        <label>Spiel-Code<input name="code" maxlength="4" autocomplete="off" autocapitalize="characters" required></label>
+        <label>PIN<input name="pin" maxlength="4" inputmode="numeric" autocomplete="off" required></label>
+        <button type="submit" class="pill pill-red pill-small">Einsteigen</button>
+      </form>
+      ${modal.error ? `<div class="error" role="alert">${esc(modal.error)}</div>` : ''}`;
+  }
+  const html = `<div class="mback" data-m="close"></div><div class="mbox" role="dialog" aria-modal="true">
+    <button type="button" class="mclose" data-m="close" aria-label="Schließen">✕</button>${body}</div>`;
+  if (el._html === html) return; // nichts geändert: Eingaben nicht wegwerfen
+  el._html = html;
+  el.innerHTML = html;
+  el.onclick = async (e) => {
+    const b = e.target.closest('[data-m]');
+    if (!b) return;
+    if (b.dataset.m === 'close') { modal = null; return render(); }
+    if (b.dataset.m === 'doInstall' && installPrompt) { installPrompt.prompt(); installPrompt = null; modal = null; return render(); }
+  };
+  const form = el.querySelector('#rejoin-form');
+  if (form) form.onsubmit = async (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const { data, error } = await sb.rpc('claim_seat', { p_code: String(f.get('code')), p_pin: String(f.get('pin')) });
+    if (error || !data) { modal.error = 'Code oder PIN stimmt nicht.'; return render(); }
+    modal = null;
+    enterRoom(data);
+  };
 }
 
 // ---------- Demo für Screenshots ----------
@@ -626,10 +781,10 @@ function demo(kind) {
   if (demoState) {
     ui.screen = 'playing';
     ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'playing', version: 5, players: demoState.players, state: demoState };
-    render();
-    return;
   }
+  if (params.get('modal')) { modal = { kind: params.get('modal'), pin: '4821' }; }
   render();
+  if (demoState) return;
   // In der Demo nichts speichern oder senden
   app.addEventListener('click', (e) => { if (ui.screen !== 'playing' && e.target.closest('button')) e.stopPropagation(); }, true);
 }
@@ -649,7 +804,7 @@ async function main() {
   const saved = store.get('kh_game');
   if (saved) {
     const { data, error } = await sb.from('games').select('*').eq('id', saved).maybeSingle();
-    if (data && data.players.some((p) => p.id === me.id)) { watchRoom(data.id); return showGame(data); }
+    if (data && data.players.some((p) => p.id === me.id)) { showGame(data); return watchRoom(data.id); }
     if (!error) store.del('kh_game'); // nur vergessen, wenn das Spiel wirklich weg ist
   }
   openStart();

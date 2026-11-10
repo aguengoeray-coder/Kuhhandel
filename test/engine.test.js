@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createGame, drawForAuction, bid, closeAuction, pay, startTrade, acceptTrade, counterTrade,
   possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS, passAuction,
-  AUCTION_START_MS, AUCTION_BID_MS,
+  AUCTION_START_MS, AUCTION_BID_MS, bestPay,
 } from '../src/engine.js';
 
 const P = [
@@ -240,4 +240,12 @@ test('200 zufällige Komplettspiele enden mit allen Quartetten und konstanter Ka
     }
     assert.ok(g.winner.length >= 1);
   }
+});
+
+test('Passend auswählen: am wenigsten überzahlen, sonst möglichst wenige Scheine', () => {
+  const pick = (money, amt) => bestPay(money, amt).map((i) => money[i]).sort((a, b) => a - b);
+  assert.deepEqual(pick([0, 0, 10, 10, 10, 20, 50], 70), [20, 50]);
+  assert.deepEqual(pick([0, 10, 50, 100, 100], 70), [100]);         // 100 statt 10+50+... (60 reicht nicht)
+  assert.deepEqual(pick([10, 10, 10, 50, 500], 30), [10, 10, 10]);  // genau 30
+  assert.deepEqual(pick([0, 10], 50), []);                          // reicht nicht
 });

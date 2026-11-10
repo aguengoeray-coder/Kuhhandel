@@ -376,6 +376,27 @@ export function counterTrade(prev, playerId, cardIndices) {
   return state;
 }
 
+// Scheine finden, mit denen man am wenigsten überzahlt (bei Gleichstand: möglichst wenige Scheine)
+export function bestPay(money, amount) {
+  let best = new Map([[0, []]]); // Summe → Indizes
+  money.forEach((v, i) => {
+    if (v === 0) return;
+    const next = new Map(best);
+    for (const [sum, idx] of best) {
+      const s = sum + v;
+      const cur = next.get(s);
+      if (!cur || cur.length > idx.length + 1) next.set(s, [...idx, i]);
+    }
+    best = next;
+  });
+  let pick = null;
+  for (const [sum, idx] of best) {
+    if (sum < amount) continue;
+    if (!pick || sum < pick.sum || (sum === pick.sum && idx.length < pick.idx.length)) pick = { sum, idx };
+  }
+  return pick ? pick.idx : [];
+}
+
 // ---------- Sicht eines Spielers (verdeckte Infos ausblenden) ----------
 
 export function viewFor(state, playerId) {

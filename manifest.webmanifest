@@ -1,0 +1,17 @@
+{
+  "name": "Kuhhandel",
+  "short_name": "Kuhhandel",
+  "description": "Das Kartenspiel – online mit Freunden",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#5FA845",
+  "theme_color": "#5FA845",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

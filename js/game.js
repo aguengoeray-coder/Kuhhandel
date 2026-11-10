@@ -3,7 +3,7 @@ import {
   ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, AUCTION_START_MS, AUCTION_BID_MS,
   viewFor, possibleTrades, scores, currentPlayer,
   drawForAuction, bid, passAuction, closeAuction, pay,
-  startTrade, acceptTrade, counterTrade,
+  startTrade, acceptTrade, counterTrade, bestPay,
 } from '../src/engine.js';
 import { art } from './animals.js';
 
@@ -250,6 +250,9 @@ export function renderGame(root, ctx) {
     </button>
     ${local.menu ? `<div class="menu">
       <button type="button" class="pill pill-white pill-small" data-a="sound">Ton &amp; Vibration: ${ctx.sound ? 'an' : 'aus'}</button>
+      <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
+      <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="pin">Wiedereinstieg-Code</button>
+      ${ctx.standalone ? '' : '<button type="button" class="pill pill-white pill-small" data-a="modal" data-v="install">Als App aufs Handy</button>'}
       <button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button>
       <span>Über die Startseite kommst du jederzeit zurück ins Spiel.</span></div>` : ''}
     <div class="infochips">
@@ -262,6 +265,7 @@ export function renderGame(root, ctx) {
   H.menu = () => { local.menu = !local.menu; ctx.rerender(); };
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
+  H.modal = (kind) => ctx.openModal(kind);
   H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
   H.tradeOpen = () => { local.tradeOpen = true; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
 
@@ -280,11 +284,13 @@ export function renderGame(root, ctx) {
           <p>Für: ${aname(pm.animal)}. Wähle Karten, die zusammen mindestens ${pm.amount} ergeben.</p>
           <div class="chosen"><small>Ausgewählt (antippen zum Zurücknehmen):</small><div class="slots wide">${chosenCards(me.money, local.sel, 3)}</div></div>
           ${moneyPiles(me.money, local.sel)}
-          <div class="paystatus ${diff < 0 ? 'bad' : diff === 0 ? 'ok' : 'warn'}">${status}</div>
+          <div class="payrow"><div class="paystatus ${diff < 0 ? 'bad' : diff === 0 ? 'ok' : 'warn'}">${status}</div>
+            <button type="button" class="pill pill-white pill-small" data-a="autopay">Passend auswählen</button></div>
         </div>
         <div class="bottom-bar"><button type="button" class="pill pill-red big" data-a="pay" ${diff < 0 ? 'disabled' : ''}><small>BEZAHLEN</small>${karten(local.sel.length)} · ${selSum}</button></div>
       </div>`;
       H.pay = () => ctx.act((s) => pay(s, meId, local.sel));
+      H.autopay = () => { local.sel = bestPay(me.money, pm.amount); ctx.rerender(); };
     } else {
       overlay = `<div class="overlay light ${entered ? 'enter' : ''}"><div class="wait">
         ${bigAnimalCard(pm.animal)}
@@ -405,12 +411,29 @@ export function renderGame(root, ctx) {
         <span class="squart">${r.quartets.map((id) => `<i style="background:${ANIMAL_COLORS[id]}" title="${aname(id)}"></i>`).join('')}</span>
         <span class="sval">${r.score}</span></li>`).join('')}</ol>
       <small>Wertung: Summe der Quartettwerte × Anzahl der Quartette</small>
-      <button type="button" class="pill pill-red" data-a="exit">Zur Startseite</button>
+      <div class="endbtns">
+        <button type="button" class="pill pill-red" data-a="rematch">${ctx.rematchId ? 'Zur Revanche' : 'Revanche'}</button>
+        <button type="button" class="pill pill-white" data-a="exit">Zur Startseite</button>
+      </div>
     </div></div>`;
   }
 
-  // ----- Effekte: Tier fliegt zum neuen Besitzer, Konfetti am Ende -----
+  H.rematch = () => ctx.onRematch();
+
+  // ----- Effekte: Tier fliegt zum neuen Besitzer, Konfetti am Ende, Quartett-Moment -----
   let effects = '';
+  const quartets = [];
+  v.players.forEach((p) => Object.entries(p.animals).forEach(([id, n]) => { if (n === 4) quartets.push(`${p.id}|${id}`); }));
+  if (local.prevQuartets) {
+    const added = quartets.filter((q) => !local.prevQuartets.includes(q));
+    if (added.length) {
+      const [pid, animal] = added[0].split('|');
+      const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
+      effects += `<div class="qpop" aria-live="polite"><div class="qart" style="--a:${ANIMAL_COLORS[animal]}">${art(animal)}</div>
+        <b>Quartett!</b><span>${who} alle 4× ${aname(animal)}</span></div>`;
+    }
+  }
+  local.prevQuartets = quartets;
   const le = v.lastEvent;
   if (fresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade')) {
     const to = le.type === 'trade' ? le.winner : le.buyer;

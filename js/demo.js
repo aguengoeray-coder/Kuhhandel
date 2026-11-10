@@ -76,6 +76,10 @@ export function buildDemoState(kind, local) {
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [9, 6, 2];
       return g;
     }
+    case 'quartet':
+      g = base();
+      local.prevQuartets = []; // Mos Hahn-Quartett gilt als neu
+      return g;
     case 'menu':
       g = base();
       local.menu = true;
