@@ -80,6 +80,17 @@ function animalMini(id, n) {
   </div>`;
 }
 
+// Auslage: ein Stapel pro Tierart, jede weitere Karte sichtbar versetzt dahinter
+function stackHtml(id, n, { special = false, bump = false } = {}) {
+  const v = aval(id);
+  const done = n === 4 && id !== RAT;
+  const cards = Array.from({ length: n }, (_, k) => `<div class="scard ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--k:${n - 1 - k};--a:${ANIMAL_COLORS[id]}">${k === n - 1 ? `${v != null ? `<em>${v}</em>` : ''}<b>${art(id)}</b>` : ''}</div>`).join('');
+  return `<div class="stack ${done ? 'done' : ''} ${id === RAT ? 'rat' : ''} ${bump ? 'bump' : ''}" style="--n:${n}" title="${n}× ${aname(id)}${special ? ' + Spezialkarte' : ''}">
+    <div class="spile">${cards}${special ? `<span class="sstar">${STAR}</span>` : ''}${done ? '<span class="scheck">✓</span>' : ''}</div>
+    <span class="slabel">${n}/4</span>
+  </div>`;
+}
+
 // Spezialkarte (klein): Tierbild mit Stern, Wert 250
 function specialMini(id) {
   return `<div class="amini special" title="${aname(id)}-Spezialkarte">
@@ -239,6 +250,7 @@ export function renderGame(root, ctx) {
     const dim = (state.phase === 'auction' && auction.passed.includes(p.id)) || offline ? ' dim' : '';
     let coin = entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey' ? `<span class="coinpop">+${v.lastEvent.payout}</span>` : '';
     if (fresh && v.lastEvent?.type === 'money_drawn' && v.lastEvent.player === p.id) coin = `<span class="coinpop big">+${v.lastEvent.value}</span>`;
+    if (fresh && isLeader && state.log[state.log.length - 1]?.includes('bietet')) coin = `<span class="coinpop bidpop" style="--c:${SEAT_COLORS[i]}">${auction.high.amount}!</span>`;
     const said = ctx.reactions?.[p.id];
     const from = said?.from && said.from !== p.id ? said.from : null;
     const fromIdx = from ? idxOf(from) : -1;
@@ -271,18 +283,16 @@ export function renderGame(root, ctx) {
     const revealing = a.opensAt != null && nowR < a.opensAt;
     if (revealing) wake = a.opensAt; // nach der Animation neu zeichnen
     // Kleiner, dezenter Infokasten – erscheint erst nach dem Aufdecken
-    const infoKey = `${state.log.length}|${a.animal}`;
+    const infoKey = `${a.opensAt}|${a.animal}`;
     const infoFresh = !revealing && local.infoShown !== infoKey;
     if (!revealing) local.infoShown = infoKey;
     const ainfo = `<div class="ainfo ${infoFresh ? 'fade' : ''}">
-      <div><span>Wert</span><b>${ANIMAL_BY_ID[a.animal].value}</b></div>
-      <div><span>Bei anderen</span><b>${owners}</b></div>
-      <div><span>Du hast</span><b>${me.animals[a.animal]}</b></div>
+      <div><span>Bei anderen</span><b>${owners}</b></div><div><span>Du hast</span><b>${me.animals[a.animal]}</b></div>
       ${a.animal === 'esel' && v.lastEvent?.type === 'donkey' ? `<div class="bonus"><span>Esel-Bonus</span><b>alle +${v.lastEvent.payout}</b></div>` : ''}
     </div>`;
     const card = revealing
       ? `<div class="revealcard">${playCard(a.animal)}</div>`
-      : `<div class="aucard ${infoFresh ? 'settle' : ''}">${playCard(a.animal)}${ainfo}</div>`;
+      : `<div class="aucard center ${infoFresh ? 'settle' : ''}">${playCard(a.animal)}</div>`;
 
     // Countdown: Bieten nur solange die Zeit läuft, Zuschlag erst danach
     const now = ctx.now();
@@ -300,10 +310,19 @@ export function renderGame(root, ctx) {
       ? `<div class="reveal-row ${fresh ? 'shake' : ''}"><strong>${esc(nameOf(ev.player))} ${ev.player === meId ? 'kannst' : 'kann'} ${ev.amount} nicht zahlen:</strong>
           <span class="reveal-cards">${ev.revealed.map((m) => moneyCard(m, { size: 'xs' })).join('') || 'keine Karten'}</span>
           <span>→ max. ${ev.amount - BID_STEP}</span></div>`
-      : `<div class="aucinfo ${fresh ? 'pop' : ''}">${a.high ? `Höchstgebot <b>${high}</b> · ${esc(nameOf(a.high.player))}` : 'Noch kein Gebot'}</div>`;
+      : (() => {
+        // Gebots-Schild: wer bietet wie viel – groß, mit Spielerfarbe, springt bei jedem neuen Gebot auf
+        if (!a.high) return '<div class="bidbox empty"><span>Noch kein Gebot</span></div>';
+        const bi = idxOf(a.high.player);
+        const key = `${a.opensAt}|${a.high.player}|${a.high.amount}`;
+        const isNew = local.bidKey !== key;
+        local.bidKey = key;
+        return `<div class="bidbox ${isNew ? 'pop' : ''}" style="--c:${SEAT_COLORS[bi]}">
+          ${avatar(v.players[bi], bi)}<span class="bwho">${esc(a.high.player === meId ? 'Du' : nameOf(a.high.player))}<small>${a.high.player === meId ? 'bietest' : 'bietet'}</small></span><b>${high}</b></div>`;
+      })();
 
     aucBanner = `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
-    aucCenter = revealing ? `<div class="auc aucreveal">${card}</div>` : `<div class="auc">${card}${countdown}${info}</div>`;
+    aucCenter = revealing ? `<div class="auc aucreveal">${card}</div>` : `<div class="auc aucmain"><div class="aucrow"><div class="aside l">${ainfo}</div>${card}<div class="aside r">${info}</div></div>${countdown}</div>`;
 
     if (iAmAuctioneer) {
       const myTotal = sum(me.money);
@@ -391,7 +410,7 @@ export function renderGame(root, ctx) {
       info = '<div class="aucinfo">Wer zuerst drückt, zahlt so viele Karten</div>';
     }
     aucBanner = `${esc(nameOf(sp.revealer))} ${iRevealed ? 'hast' : 'hat'} eine Spezialkarte`;
-    aucCenter = `<div class="auc spauc">${specialCard(sp.animal, `<div class="row"><span>Passt zu</span><span>${esc(aname(sp.animal))}-Quartett</span></div>`, `compact ${entered ? 'deal' : ''}`)}${big}${info}</div>`;
+    aucCenter = `<div class="auc spauc"><div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(sp.animal, 'special')}</div><div class="spside">${big}<small class="spfit">passt zum ${esc(aname(sp.animal))}-Quartett</small></div>${info}</div>`;
 
     if (stage === 'wait' || stage === 'countdown') {
       if (iRevealed) {
@@ -412,7 +431,7 @@ export function renderGame(root, ctx) {
       const picked = r?.picks?.[meId];
       const last = r?.last;
       const lastRow = last ? `<div class="rpslast">${Object.entries(last.picks).map(([id, c]) => `${esc(nameOf(id))} ${RPS_ICON[c]}`).join(' · ')}${last.winners ? '' : ' → nochmal!'}</div>` : '';
-      aucCenter = `<div class="auc spauc">${specialCard(sp.animal, '', 'compact')}<div class="aucinfo">Gleichstand bei <b>${top}</b>: ${players.map((id) => esc(nameOf(id))).join(' gegen ')}</div>${lastRow}</div>`;
+      aucCenter = `<div class="auc spauc"><div class="bigcard compact">${playCard(sp.animal, 'special')}</div><div class="aucinfo">Gleichstand bei <b>${top}</b>: ${players.map((id) => esc(nameOf(id))).join(' gegen ')}</div>${lastRow}</div>`;
       if (inIt && !picked) {
         aucLeft = `<div class="lhead">Schnick-Schnack-Schnuck</div>
           <div class="rpsgrid">${['stein', 'schere', 'papier'].map((c) => `<button type="button" class="rpsbtn" data-a="rps" data-v="${c}"><b>${RPS_ICON[c]}</b><small>${RPS_NAME[c]}</small></button>`).join('')}</div>`;
@@ -444,7 +463,7 @@ export function renderGame(root, ctx) {
   if (state.phase === 'payment') {
     const pm = v.payment;
     const isSp = !!pm.special;
-    const card = isSp ? specialCard(pm.special, '', 'compact') : bigAnimalCard(pm.animal, '', 'compact');
+    const card = `<div class="aucard paycard">${isSp ? playCard(pm.special, 'special') : playCard(pm.animal)}</div>`;
     if (pm.payer === meId) {
       const n = local.sel.length;
       let status; let cls; let ready;
@@ -602,10 +621,19 @@ export function renderGame(root, ctx) {
   // ----- Tisch -----
   const nextDonkey = v.donkeysDrawn < 4 ? DONKEY_PAYOUTS[v.donkeysDrawn] : null;
   const lastLog = v.log[v.log.length - 1] || '';
+  // Auslage: immer sichtbar über dem Geld. Spezialkarte steckt im Stapel ihres Tiers.
+  const lev = v.lastEvent;
+  let bumpId = null;
+  if (fresh && lev) {
+    if ((lev.type === 'auction_won' || lev.type === 'special_won') && lev.buyer === meId) bumpId = lev.animal;
+    if (lev.type === 'trade' && lev.animal !== RAT && lev.winner === meId) bumpId = lev.animal;
+    if (lev.type === 'rat_taken' && lev.player === meId) bumpId = RAT;
+  }
+  const mySpecials = specialsOf(me);
   const myItems = [
-    ...ANIMALS.filter((a) => me.animals[a.id] > 0).map((a) => animalMini(a.id, me.animals[a.id])),
-    ...(ratsOf(me) ? [animalMini(RAT, ratsOf(me))] : []),
-    ...specialsOf(me).map(specialMini),
+    ...ANIMALS.filter((a) => me.animals[a.id] > 0).map((a) => stackHtml(a.id, me.animals[a.id], { special: mySpecials.includes(a.id), bump: bumpId === a.id })),
+    ...mySpecials.filter((id) => !(me.animals[id] > 0)).map((id) => specialMini(id)),
+    ...(ratsOf(me) ? [stackHtml(RAT, ratsOf(me), { bump: bumpId === RAT })] : []),
   ];
   const myAnimals = myItems.join('') || '<span class="noanimals">Noch keine Tiere</span>';
   const mid = (me.money.length - 1) / 2;
@@ -618,13 +646,13 @@ export function renderGame(root, ctx) {
   const banner = aucBanner || (state.phase === 'ended' || state.phase === 'block' ? 'Spielende' : myTurn ? 'Du bist dran' : `${esc(cur.name)} ist dran`);
   const table = `<div class="gtable">
     <div class="tbanner ${fresh && myTurn && state.phase === 'turn' ? 'pulse' : ''}">${banner}</div>
-    ${aucCenter || `<div class="tlog">${esc(lastLog)}</div>
+    <div class="tcenter">${aucCenter || `<div class="tlog">${esc(lastLog)}</div>
     <div class="deck-wrap">
-      <div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? 'KH' : ''}</div>
-      <span class="deck-count">${v.deck > 0 ? `${v.deck} im Stapel` : 'Stapel leer – nur Kuhhandel'}</span>
+      <div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>
+      <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}</span>
       ${v.mustDraw ? '<span class="deck-count must">Nach der Ratte: nochmal aufdecken!</span>' : ''}
-    </div>
-    <div class="myanimals ${myItems.length > 8 ? 'many' : ''}">${myAnimals}</div>`}
+    </div>`}</div>
+    <div class="auslage ${myItems.length > 7 ? 'many' : ''} ${handPick ? 'up' : ''}" aria-label="Deine Karten">${myAnimals}</div>
     ${handPick || `<div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${me.money.length ? `<span class="fansum">${sum(me.money)}</span>` : ''}</div>`}
   </div>`;
 
@@ -726,21 +754,32 @@ export function renderGame(root, ctx) {
     if (added.length) {
       const [pid, animal] = added[0].split('|');
       const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
-      effects += `<div class="qpop" aria-live="polite"><div class="qart" style="--a:${ANIMAL_COLORS[animal]}">${art(animal)}</div>
+      effects += `<div class="qpop" aria-live="polite"><div class="qcards">${[0, 1, 2, 3].map((k) => `<div class="qc" style="--k:${k};--a:${ANIMAL_COLORS[animal]}">${art(animal)}</div>`).join('')}</div>
         <b>Quartett!</b><span>${who} alle 4× ${aname(animal)}</span></div>`;
     }
   }
   local.prevQuartets = quartets;
   const le = v.lastEvent;
+  // Zuschlag: kurzes Schild mit Hammer in der Tischmitte
+  let gavel = null;
+  if (entered && state.phase === 'payment' && prev.phase === 'auction' && !v.payment.special) {
+    gavel = v.payment.buyer === v.payment.payee
+      ? `${esc(nameOf(v.payment.buyer))} ${v.payment.buyer === meId ? 'kaufst' : 'kauft'} selbst für ${v.payment.amount}!`
+      : `Verkauft an ${esc(v.payment.buyer === meId ? 'dich' : nameOf(v.payment.buyer))} für ${v.payment.amount}!`;
+  }
+  if (fresh && le?.type === 'auction_won' && le.amount === 0 && prev.phase === 'auction') gavel = `Niemand bietet – ${esc(le.buyer === meId ? 'du bekommst' : `${nameOf(le.buyer)} bekommt`)} es umsonst`;
+  if (gavel) { effects += `<div class="gavel" aria-live="polite"><span class="ghammer">🔨</span><b>${gavel}</b></div>`; if (!sounds.includes('gavel')) sounds.push('gavel'); }
   if (fresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade' || le.type === 'special_won' || le.type === 'rat_taken')) {
     let to = le.type === 'trade' ? le.winner : le.type === 'rat_taken' ? le.player : le.buyer;
     if (le.type === 'trade' && le.animal === RAT) to = le.winner === le.challenger ? le.target : le.challenger;
     const flyAnimal = le.type === 'rat_taken' ? RAT : le.animal;
     const i = idxOf(to);
     const slot = 374 / v.players.length;
-    const ty = Math.round(8 + slot * (i + 0.5) - 195);
+    const mine = to === meId;
+    const ty = mine ? 125 : Math.round(8 + slot * (i + 0.5) - 195);
+    const tx = mine ? 0 : 716 - 393;
     const n = le.type === 'trade' ? le.count : 1;
-    effects += Array.from({ length: n }, (_, k) => `<div class="fly" style="--tx:${716 - 393}px;--ty:${ty}px;animation-delay:${k * 120}ms">
+    effects += Array.from({ length: n }, (_, k) => `<div class="fly" style="--tx:${tx}px;--ty:${ty}px;animation-delay:${k * 120}ms">
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join('');
   }
   // Geld fliegt (verdeckt) vom Zahler zum Empfänger

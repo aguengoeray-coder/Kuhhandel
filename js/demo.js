@@ -35,31 +35,31 @@ export function buildDemoState(kind, local) {
     case 'turn':
       return base();
     case 'auction': {
-      const t = Date.now() - 2500;
+      const t = Date.now() - 4100;
       g = base(); g.turn = 1; g.deck[0] = 'esel';
       g = drawForAuction(g, 'u2', t);
-      g = bid(g, 'u4', 60, t); g = bid(g, 'u1', 100, t); g = bid(g, 'u3', 120, t);
+      g = bid(g, 'u4', 60, t + 3200); g = bid(g, 'u1', 100, t + 3200); g = bid(g, 'u3', 120, t + 3200);
       return g;
     }
     case 'auctionrun': {
-      const t = Date.now() - 2000;
+      const t = Date.now() - 3600;
       g = base(); g.deck[0] = 'pferd';
       g = drawForAuction(g, 'u1', t);
-      g = bid(g, 'u3', 90, t); g = bid(g, 'u2', 130, t);
+      g = bid(g, 'u3', 90, t + 3200); g = bid(g, 'u2', 130, t + 3200);
       return g;
     }
     case 'auctioneer': {
       const t = Date.now() - 30000;
       g = base(); g.deck[0] = 'pferd';
       g = drawForAuction(g, 'u1', t);
-      g = bid(g, 'u3', 90, t + 1000); g = bid(g, 'u2', 130, t + 2000);
+      g = bid(g, 'u3', 90, t + 2600); g = bid(g, 'u2', 130, t + 3600);
       return g;
     }
     case 'bidderover': {
       const t = Date.now() - 30000;
       g = base(); g.turn = 1; g.deck[0] = 'kuh';
       g = drawForAuction(g, 'u2', t);
-      g = bid(g, 'u1', 100, t + 1000); g = bid(g, 'u3', 120, t + 2000);
+      g = bid(g, 'u1', 100, t + 2600); g = bid(g, 'u3', 120, t + 3600);
       return g;
     }
     case 'tradebig': {
@@ -76,7 +76,7 @@ export function buildDemoState(kind, local) {
       g = base(); g.turn = 1; g.deck[0] = 'schwein';
       g.players[0].money = [0, 0, 10, 10, 10, 10, 50, 50, 100, 200, 500, 500];
       g = drawForAuction(g, 'u2', t);
-      g = bid(g, 'u1', 270, t + 1000);
+      g = bid(g, 'u1', 270, t + 2600);
       g = closeAuction(g, 'u2', 'sell', t + 30000);
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [9, 6, 2];
       return g;
@@ -100,7 +100,7 @@ export function buildDemoState(kind, local) {
       const t = Date.now() - 25000;
       g = base(); g.turn = 1; g.deck[0] = 'kuh';
       g = drawForAuction(g, 'u2', t);
-      g = bid(g, 'u4', 200, t + 1000);
+      g = bid(g, 'u4', 200, t + 2600);
       g = closeAuction(g, 'u2', 'sell', t + 20500);
       return g;
     }

@@ -217,3 +217,13 @@
 - [x] Danach blendet ein kleiner, dezenter Infokasten ein (Wert, bei anderen, du hast, Esel-Bonus)
 - [x] Countdown und Bieten starten erst nach der Animation – alle sehen die Karte zuerst
 - [x] Ratte und Spezialkarte drehen sich genauso um
+
+## v0.21.0 – Neue Tiere, Auslage, Gebote sichtbar (wartet auf Freigabe)
+
+- [x] Alle 11 Tiere neu gezeichnet: lustige Comic-Köpfe mit je einem Gag (Kuh mit Kaugummi, Schwein mit Sonnenbrille, Ratte mit Gaunermaske …)
+- [x] Eigene Karten liegen fest als Auslage über dem Geld – in jeder Phase sichtbar, pro Tierart ein Stapel (1–4 Karten sichtbar übereinander, Quartett in Gold), Spezialkarte mit Stern im Stapel
+- [x] Gewonnene Karten fliegen in den eigenen Stapel, der kurz hüpft
+- [x] Versteigerung: Karte mittig, links kleine Info, rechts groß „Nico bietet 130“; neues Gebot springt auf und blitzt beim Bieter auf
+- [x] Zuschlag-Schild mit Hammer („Verkauft an Nico für 120!“)
+- [x] Quartett: vier Karten in Gold für alle
+- [x] Stapelrücken mit Kuh, letzte 5 Karten gelb markiert
