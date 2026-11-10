@@ -128,7 +128,7 @@
 - [x] Spielregeln im Spiel ergänzt; Debug: Ratte / Spezialkarte als nächste Karte
 - [x] Laufende alte Spiele ohne Ratten enden weiterhin normal
 
-## v0.10.0 – Anstupsen, Punkte, Rechnung, Buzzer-Spannung (wartet auf Freigabe)
+## v0.10.0 – Anstupsen, Punkte, Rechnung, Buzzer-Spannung
 
 - [x] Anstupsen: Wartet das Spiel über 20 s auf jemanden, erscheint bei ihm „👉 Anstupsen“ – sein Handy piept und vibriert
 - [x] „Punkte jetzt“ links unter dem Geld (nur die eigenen)
