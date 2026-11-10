@@ -333,7 +333,7 @@ export function acceptTrade(prev, playerId) {
   const tg = player(state, t.target);
   giveCards(tg, t.offer);
   moveAnimals(tg, ch, t.animal, t.count);
-  log(state, `${tg.name} nimmt an. ${ch.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
+  log(state, `${tg.name} nimmt den Kuhhandel an. ${ch.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
   state.lastEvent = { type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
   nextTurn(state);
   return state;
@@ -358,7 +358,8 @@ export function counterTrade(prev, playerId, cardIndices) {
   if (challengerWins) moveAnimals(tg, ch, t.animal, t.count);
   else moveAnimals(ch, tg, t.animal, t.count);
   const winner = challengerWins ? ch : tg;
-  log(state, `Aufgedeckt: ${ch.name} ${offerSum} gegen ${tg.name} ${counterSum}. ${winner.name} bekommt ${t.count}× ${animalName(t.animal)}${offerSum === counterSum ? ' (Gleichstand – Herausforderer gewinnt)' : ''}.`);
+  // Im Protokoll (für alle sichtbar) keine Beträge – die sehen nur die beiden Beteiligten
+  log(state, `Kuhhandel ${ch.name} (${t.offer.length} Karten) gegen ${tg.name} (${counter.length} Karten): ${winner.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
   state.lastEvent = { type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, winner: winner.id };
   nextTurn(state);
   return state;

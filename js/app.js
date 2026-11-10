@@ -1,8 +1,8 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
-import { createGame, MIN_PLAYERS, MAX_PLAYERS } from '../src/engine.js';
-
-const SEAT_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0'];
+import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError } from '../src/engine.js';
+import { renderGame, SEAT_COLORS } from './game.js';
+import { buildDemoState } from './demo.js';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -25,6 +25,8 @@ let roomChannel = null;
 // ---------- Darstellung ----------
 
 function render() {
+  app.classList.toggle('playing', ui.screen === 'playing');
+  if (ui.screen !== 'playing') app.onclick = null;
   if (ui.screen === 'room' && ui.game) return renderRoom();
   if (ui.screen === 'playing' && ui.game) return renderPlaying();
   renderStart();
@@ -127,16 +129,58 @@ function renderRoom() {
   document.getElementById('start')?.addEventListener('click', onStart);
 }
 
+// ---------- Spieltisch ----------
+
+const gameLocal = {}; // Auswahl auf dem eigenen Gerät (Karten, Kuhhandel-Entwurf …)
+let toastMsg = '';
+let toastTimer = null;
+let busy = false;
+
+function toast(msg) {
+  toastMsg = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastMsg = ''; render(); }, 3500);
+  render();
+}
+
 function renderPlaying() {
+  renderGame(app, {
+    state: ui.game.state,
+    meId: me.id,
+    local: gameLocal,
+    toastMsg,
+    rerender: render,
+    act,
+    onExit: () => { store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
+  });
+}
+
+// Spielzug ausführen: Regeln lokal prüfen, dann neuen Stand speichern (nur wenn niemand schneller war)
+async function act(fn) {
+  if (busy) return;
+  let next;
+  try {
+    next = fn(ui.game.state);
+  } catch (e) {
+    if (e instanceof GameError) return toast(e.message);
+    throw e;
+  }
+  if (DEMO) { ui.game = { ...ui.game, state: next }; return render(); }
+  busy = true;
   const g = ui.game;
-  app.innerHTML = `
-    <section class="center-msg">
-      <h2>Das Spiel läuft!</h2>
-      <p>${g.players.map((p) => esc(p.name)).join(' · ')}</p>
-      <p>Der Spieltisch kommt im nächsten Schritt.</p>
-      <button class="pill pill-white pill-small" type="button" id="back">Zur Startseite</button>
-    </section>`;
-  document.getElementById('back').addEventListener('click', () => { store.del('kh_game'); openStart(); });
+  const { data, error } = await sb.from('games')
+    .update({ state: next, status: next.phase === 'ended' ? 'ended' : 'playing', version: g.version + 1, updated_at: new Date().toISOString() })
+    .eq('id', g.id).eq('version', g.version)
+    .select();
+  busy = false;
+  if (error) return toast('Verbindung hakt – bitte nochmal versuchen.');
+  if (!data || data.length === 0) {
+    const fresh = await sb.from('games').select('*').eq('id', g.id).single();
+    if (fresh.data) ui.game = fresh.data;
+    return toast('Jemand war schneller – schau nochmal hin.');
+  }
+  ui.game = data[0];
+  render();
 }
 
 // ---------- Supabase ----------
@@ -190,6 +234,7 @@ function watchRoom(id) {
 }
 
 function showGame(g) {
+  if (ui.game && ui.game.id === g.id && g.version < ui.game.version) return; // veraltete Meldung
   ui.game = g;
   ui.screen = g.status === 'lobby' ? 'room' : 'playing';
   render();
@@ -261,9 +306,16 @@ function demo(kind) {
     ui.screen = 'room';
     ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'lobby', version: 2, players: [{ id: 'u1', name: 'Alp' }, { id: 'u2', name: 'Nico' }, { id: 'u3', name: 'Lea' }] };
   }
+  const demoState = buildDemoState(kind, gameLocal);
+  if (demoState) {
+    ui.screen = 'playing';
+    ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'playing', version: 5, players: demoState.players, state: demoState };
+    render();
+    return;
+  }
   render();
   // In der Demo nichts speichern oder senden
-  app.addEventListener('click', (e) => { if (e.target.closest('button')) e.stopPropagation(); }, true);
+  app.addEventListener('click', (e) => { if (ui.screen !== 'playing' && e.target.closest('button')) e.stopPropagation(); }, true);
 }
 
 // ---------- Start ----------
