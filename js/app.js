@@ -9,7 +9,7 @@ import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.11.0';
+export const APP_VERSION = '0.12.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -43,6 +43,7 @@ let lastReactAt = 0;
 const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
 const REACTIONS = ['Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!', '😂', '😱'];
 let roomChannel = null;
+let versions = {}; // Platz → App-Version (aus der Live-Verbindung)
 
 // Mein Platz im Spiel: nach einem Gerätewechsel ist meine Anmelde-ID neu, der Platz bleibt gleich
 const seatIn = (g) => g?.players?.find((p) => p.id === me.id)?.seat || me.id;
@@ -52,6 +53,52 @@ window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); inst
 // Als App gestartet: Querformat festhalten (geht nur auf Android)
 document.addEventListener('pointerdown', () => { if (isStandalone()) screen.orientation?.lock?.('landscape').catch(() => {}); }, { once: true });
 
+// ---------- Neue Version? ----------
+// Vergleicht Versionsnummern wie 0.12.0 (true, wenn a älter als b ist)
+const olderThan = (a, b) => {
+  const x = String(a).split('.').map(Number); const y = String(b).split('.').map(Number);
+  for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); }
+  return false;
+};
+let newVersion = null; // auf dem Server liegt eine neuere Version
+async function checkVersion() {
+  if (DEMO) return;
+  try {
+    const r = await fetch(`version.json?t=${Date.now()}`, { cache: 'no-store' });
+    const { version } = await r.json();
+    if (version && olderThan(APP_VERSION, version) && newVersion !== version) { newVersion = version; render(); }
+  } catch { /* offline – egal */ }
+}
+setInterval(checkVersion, 3 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkVersion(); });
+setTimeout(checkVersion, 4000);
+// Spiel braucht eine neuere Version als dieses Handy hat?
+const tooOld = () => !!(ui.game?.state?.minVersion && olderThan(APP_VERSION, ui.game.state.minVersion));
+function renderVersionBar() {
+  let bar = document.getElementById('verbar');
+  const mustReload = ui.screen === 'playing' && tooOld();
+  const show = (newVersion && !DEMO) || mustReload || params.get('verbar');
+  if (!show) { bar?.remove(); return; }
+  if (!bar) { bar = document.createElement('div'); bar.id = 'verbar'; document.body.appendChild(bar); }
+  bar.className = mustReload ? 'block' : '';
+  bar.innerHTML = mustReload
+    ? '<div><b>Neue Version nötig</b><span>Dieses Spiel läuft mit einer neueren Version. Bitte neu laden.</span><button type="button" id="reloadNow">Jetzt neu laden</button></div>'
+    : '<div><b>Neue Version da</b><span>Bitte neu laden, damit alle mit denselben Regeln spielen.</span><button type="button" id="reloadNow">Neu laden</button></div>';
+  bar.querySelector('#reloadNow').onclick = () => location.reload();
+}
+
+// ---------- Bildschirm anlassen (während Warteraum und Spiel) ----------
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && !wakeLock && navigator.wakeLock && document.visibilityState === 'visible') {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch { wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(ui.screen === 'playing' || ui.screen === 'room'); });
+
 // ---------- Darstellung ----------
 
 function render() {
@@ -59,6 +106,8 @@ function render() {
   let ver = document.getElementById('appver');
   if (!ver) { ver = document.createElement('div'); ver.id = 'appver'; document.body.appendChild(ver); }
   ver.textContent = `v${APP_VERSION}`;
+  renderVersionBar();
+  if (!DEMO) keepAwake(ui.screen === 'playing' || ui.screen === 'room');
   app.classList.toggle('playing', ui.screen === 'playing');
   if (ui.screen !== 'playing') app.onclick = null;
   if (ui.screen === 'login') return renderLogin();
@@ -106,6 +155,12 @@ function renderLogin() {
   });
 }
 
+const moneyNote = (g) => {
+  const m = g.state?.settings?.money;
+  const n = m ? Object.values(m).reduce((a, b) => a + b, 0) : 0;
+  return n ? ` · mit ${n} Geldschein${n === 1 ? '' : 'en'}` : '';
+};
+
 function renderStart() {
   const nameBlock = `<div class="me-line">${avatarHtml(me.id, me.name, 'small')}<strong>${esc(me.name)}</strong>
       <button class="linklike" type="button" data-modal="profile">Spielerbild</button>
@@ -118,6 +173,7 @@ function renderStart() {
 
   const testRow = DEBUG ? `<li class="game-row test">
       <div class="host">Testspiel<small>Nur auf diesem Gerät · Debug-Modus</small></div>
+      <button class="pill pill-white pill-small toggle-pill ${store.get('kh_dbg_money') ? 'on' : ''}" type="button" id="dbgMoney" aria-pressed="${!!store.get('kh_dbg_money')}">Geld im Stapel: ${store.get('kh_dbg_money') ? 'an' : 'aus'}</button>
       <button class="pill pill-white pill-small" type="button" data-test="3">3 Spieler</button>
       <button class="pill pill-red pill-small" type="button" data-test="4">4 Spieler</button>
     </li>` : '';
@@ -129,7 +185,7 @@ function renderStart() {
         const dots = Array.from({ length: MAX_PLAYERS }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
         const full = n >= MAX_PLAYERS;
         return `<li class="game-row">
-          <div class="host">Spiel von ${esc(host)}<small>${n} von ${MAX_PLAYERS} Spielern · Code ${esc(g.code)}</small></div>
+          <div class="host">Spiel von ${esc(host)}<small>${n} von ${MAX_PLAYERS} Spielern · Code ${esc(g.code)}${moneyNote(g)}</small></div>
           <div class="seats-mini" aria-hidden="true">${dots}</div>
           <button class="pill pill-red pill-small" type="button" data-join="${esc(g.id)}" ${full || !me.name ? 'disabled' : ''}>${full ? 'Voll' : 'Beitreten'}</button>
         </li>`;
@@ -167,6 +223,7 @@ function renderStart() {
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-test]').forEach((b) => b.addEventListener('click', () => startLocalGame(Number(b.dataset.test))));
+  document.getElementById('dbgMoney')?.addEventListener('click', () => { if (store.get('kh_dbg_money')) store.del('kh_dbg_money'); else store.set('kh_dbg_money', '1'); render(); });
   app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
     const { data } = await sb.from('games').select('*').eq('id', b.dataset.resume).maybeSingle();
     if (data) enterRoom(data); else { await loadGames(); render(); }
@@ -190,6 +247,7 @@ function renderRoom() {
     </div>`;
   }).join('');
   const enough = g.players.length >= MIN_PLAYERS;
+  const outdated = g.players.filter((p) => { const v = versions[p.seat || p.id]; return v && v !== APP_VERSION && olderThan(v, APP_VERSION); });
   const money = g.state?.settings?.money || null;
   const moneyCount = money ? Object.values(money).reduce((a, b) => a + b, 0) : 0;
   const moneySum = money ? Object.entries(money).reduce((a, [v, n]) => a + Number(v) * n, 0) : 0;
@@ -207,7 +265,9 @@ function renderRoom() {
     </div>
     ${money ? `<div class="msteps">${steppers}</div>` : ''}
   </div>`;
-  const hint = isHost
+  const hint = outdated.length
+    ? `${outdated.map((p) => esc(p.name)).join(', ')} ${outdated.length > 1 ? 'haben' : 'hat'} eine alte Version – bitte App neu laden.`
+    : isHost
     ? (enough ? 'Alle da? Dann los!' : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
     : `Warte, bis ${esc((g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'der Gastgeber')} das Spiel startet.`;
 
@@ -223,7 +283,7 @@ function renderRoom() {
       <div class="room-actions">
         <button class="pill pill-white pill-small" type="button" id="leave">Verlassen</button>
         <button class="pill pill-white pill-small" type="button" id="invite">Freunde einladen</button>
-        ${isHost ? `<button class="pill pill-red" type="button" id="start" ${enough ? '' : 'disabled'}>SPIEL STARTEN</button>` : ''}
+        ${isHost ? `<button class="pill pill-red" type="button" id="start" ${enough && !outdated.length ? '' : 'disabled'}>SPIEL STARTEN</button>` : ''}
         <span class="room-hint">${hint}</span>
       </div>
     </section>`;
@@ -367,6 +427,7 @@ function renderPlaying() {
 // War jemand schneller, wird der Zug automatisch auf dem neuen Stand nochmal geprüft und gespeichert.
 async function act(fn) {
   if (busy) return;
+  if (tooOld()) return toast('Bitte zuerst neu laden – dieses Spiel braucht die neue Version.');
   const attempt = () => {
     try {
       return { next: fn(ui.game.state) };
@@ -477,7 +538,7 @@ setInterval(() => {
 
 function startLocalGame(n) {
   const players = [{ id: 'me', name: me.name || 'Ich' }, ...Array.from({ length: n - 1 }, (_, i) => ({ id: `t${i + 1}`, name: `Test ${i + 1}` }))];
-  const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31) });
+  const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: store.get('kh_dbg_money') ? { money: { ...DEFAULT_MONEY } } : null });
   Object.keys(gameLocal).forEach((k) => delete gameLocal[k]);
   dbg.viewAs = 'me';
   ui.game = { id: 'local', local: true, version: 0, status: 'playing', players, state };
@@ -831,7 +892,7 @@ async function syncClock() {
 async function loadGames() {
   const since = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(); // nur Spiele der letzten 3 Stunden
   const { data, error } = await sb.from('games')
-    .select('id, code, host, status, players, created_at')
+    .select('id, code, host, status, players, created_at, state')
     .eq('status', 'lobby').gte('created_at', since)
     .order('created_at', { ascending: false }).limit(30);
   if (error) { ui.error = 'Spiele konnten nicht geladen werden.'; return; }
@@ -879,7 +940,9 @@ function watchRoom(id) {
       showReaction(payload.seat, payload.text, to);
     })
     .on('presence', { event: 'sync' }, () => {
-      online = new Set(Object.keys(roomChannel.presenceState()));
+      const ps = roomChannel.presenceState();
+      online = new Set(Object.keys(ps));
+      versions = Object.fromEntries(Object.entries(ps).map(([k, arr]) => [k, arr?.[0]?.v || '0.0.0']));
       const t = Date.now();
       for (const p of ui.game?.players || []) {
         const seat = p.seat || p.id;
@@ -889,7 +952,7 @@ function watchRoom(id) {
       if (ui.screen === 'playing' || ui.screen === 'room') render();
     })
     .subscribe((status) => {
-      if (status === 'SUBSCRIBED') roomChannel.track({ name: me.name });
+      if (status === 'SUBSCRIBED') roomChannel.track({ name: me.name, v: APP_VERSION });
       // Verbindung weg (z. B. Handy im Standby): Stand neu laden und neu verbinden
       if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') scheduleResync();
     });
@@ -979,6 +1042,7 @@ async function onStart() {
   const g = ui.game;
   ui.error = '';
   const state = createGame({ players: g.players.map((p) => ({ id: p.seat || p.id, name: p.name })), seed: Math.floor(Math.random() * 2 ** 31), settings: g.state?.settings || null });
+  state.minVersion = APP_VERSION;
   const { data, error } = await sb.from('games')
     .update({ status: 'playing', state, version: g.version + 1, updated_at: new Date().toISOString() })
     .eq('id', g.id).eq('version', g.version)
@@ -1028,6 +1092,7 @@ async function onRematch() {
   }
   const players = g.players.map((p) => ({ id: p.id, name: p.name }));
   const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: g.state.settings || null });
+  state.minVersion = APP_VERSION;
   const { data, error } = await sb.from('games')
     .insert({ id: newId, code: randomCode(), host: me.id, status: 'playing', players, state, version: 1 })
     .select().single();
@@ -1157,6 +1222,7 @@ function demo(kind) {
   if (params.get('react')) reactions.set(params.get('react'), { text: 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
   if (params.get('pick')) gameLocal.reactTo = params.get('pick');
   if (params.get('score')) gameLocal.scoreOpen = params.get('score');
+  if (params.get('oldv')) versions = { u3: '0.11.0' };
   ui.editingName = kind === 'name';
   if (kind === 'name') me.name = '';
   ui.games = [

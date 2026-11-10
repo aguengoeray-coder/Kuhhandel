@@ -142,3 +142,16 @@
 - [x] Mitspieler sehen die Einstellung im Warteraum (nur lesen)
 - [x] Geldschein aufgedeckt: Aufdecker bekommt ihn, alle sehen den Betrag, Zug ist vorbei
 - [x] Revanche übernimmt die Einstellung
+
+## v0.12.0 – Feinschliff (wartet auf Freigabe)
+
+- [x] „Neue Version da – neu laden“: App prüft regelmäßig, ob es ein Update gibt
+- [x] Spiel mit neuerer Version: ältere Handys müssen erst neu laden; im Warteraum startet das Spiel erst, wenn alle aktuell sind
+- [x] Dateien werden nicht mehr veraltet aus dem Zwischenspeicher geladen
+- [x] Bildschirm bleibt im Warteraum und im Spiel an
+- [x] Kleine Handys (iPhone SE/Mini): größere Symbole und Texte, Spielnamen auf der Startseite nicht mehr abgeschnitten
+- [x] Mitspieler antippen zeigt seine Tiere, Ratten, Spezialkarten und Geldkarten groß
+- [x] Kurze Vibration beim Buzzern
+- [x] Startseite: offene Spiele zeigen „mit X Geldscheinen“
+- [x] Spezialkarte: „Darf nicht buzzern“ statt „Erst ab 0“, kürzere Kartenzeile
+- [x] Debug-Testspiel: „Geld im Stapel“ an/aus

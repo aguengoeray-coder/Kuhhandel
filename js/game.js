@@ -100,11 +100,25 @@ export function scoreFormula(p, blocked = null) {
   return `${text || 'keine Quartette'} = ${total}`;
 }
 
+// Großansicht eines Mitspielers (im Emoji-Fenster): Tiere, Ratten, Spezialkarten, Kartenanzahl
+function playerDetail(p) {
+  const items = [];
+  for (const a of ANIMALS) {
+    const n = p.animals[a.id] || 0;
+    if (n) items.push(`<span class="pd ${n === 4 ? 'done' : ''}"><span class="ci" style="--a:${ANIMAL_COLORS[a.id]}">${art(a.id)}</span><b>${n}×</b><small>${a.value}</small></span>`);
+  }
+  const r = ratsOf(p);
+  if (r) items.push(`<span class="pd"><span class="ci" style="--a:${ANIMAL_COLORS[RAT]}">${art(RAT)}</span><b>${r}×</b><small>Ratte</small></span>`);
+  for (const id of specialsOf(p)) items.push(`<span class="pd sp"><span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}${STAR}</span><b>★</b><small>${SPECIAL_VALUE}</small></span>`);
+  const count = Array.isArray(p.money) ? p.money.length : p.money;
+  return `<div class="pdetail"><div class="pdgrid">${items.join('') || '<em>Noch keine Karten</em>'}</div><small>${karten(count)} Geld</small></div>`;
+}
+
 function specialCard(id, extraRows = '', cls = '') {
   return `<div class="bigcard spcard ${cls}">
     <div class="bigcard-in">
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[id]}"><span class="mono">${art(id)}</span><span>SPEZIAL</span>${STAR}</div>
-      <div class="row hl"><span>Spezialkarte · nicht handelbar</span><strong>${SPECIAL_VALUE}</strong></div>
+      <div class="row hl"><span>Nicht handelbar</span><strong>${SPECIAL_VALUE}</strong></div>
       ${extraRows}
     </div>
   </div>`;
@@ -199,7 +213,7 @@ export function renderGame(root, ctx) {
       const sp = v.special;
       if (p.id === sp.revealer) status = 'Aufdecker';
       else if (sp.buzzes[p.id] != null) status = `Buzz bei ${sp.buzzes[p.id]}`;
-      else if (sp.caps[p.id] != null) status = `erst ab ${sp.caps[p.id]}`;
+      else if (sp.caps[p.id] != null) status = sp.caps[p.id] === 0 ? 'darf nicht buzzern' : `erst ab ${sp.caps[p.id]}`;
     }
     const chips = playerChips(p);
     const leader = state.phase === 'auction' && auction.high && auction.high.player === p.id
@@ -351,7 +365,7 @@ export function renderGame(root, ctx) {
         const cap = sp.caps[meId];
         const mine = sp.buzzes[meId];
         const blocked = stage === 'wait' || mine != null || (top != null && num < top) || (cap != null && num > cap);
-        const label = mine != null ? `Gebuzzert bei ${mine}` : stage === 'wait' ? 'Gleich …' : cap != null && num > cap ? `Erst ab ${cap}` : `bei ${num} = ${karten(num)}`;
+        const label = mine != null ? `Gebuzzert bei ${mine}` : cap === 0 ? 'Keine Karten – kein Buzz' : stage === 'wait' ? 'Gleich …' : cap != null && num > cap ? `Erst ab ${cap}` : `bei ${num} = ${karten(num)}`;
         aucLeft = `<div class="lhead">Spezialkarte</div>
           <button type="button" class="buzzer" data-a="buzz" ${blocked ? 'disabled' : ''}><b>BUZZ!</b><small>${label}</small></button>
           <div class="lnote">Drück, sobald die Zahl passt: so viele verdeckte Karten würdest du zahlen.</div>`;
@@ -384,7 +398,7 @@ export function renderGame(root, ctx) {
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(sp.revealer))} entscheidet:<br>kaufen oder verkaufen …</div>`;
     }
-    H.buzz = () => { const t = ctx.now(); ctx.act((s) => buzz(s, meId, t)); };
+    H.buzz = () => { const t = ctx.now(); try { navigator.vibrate?.(70); } catch { /* egal */ } ctx.act((s) => buzz(s, meId, t)); };
     H.rps = (c) => ctx.act((s) => rpsPick(s, meId, c, ctx.now()));
     H.spSell = () => ctx.act((s) => specialDecide(s, meId, 'sell', ctx.now()));
     H.spBuy = () => ctx.act((s) => specialDecide(s, meId, 'buy', ctx.now()));
@@ -780,8 +794,9 @@ export function renderGame(root, ctx) {
     ${effects}
     ${tip}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
-    ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick" style="top:${Math.round(Math.min(250, Math.max(8, 8 + (374 / v.players.length) * (idxOf(local.reactTo) + 0.5) - 60)))}px">
+    ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick ${local.reactTo !== meId ? 'withdetail' : ''}" style="top:${local.reactTo !== meId ? 6 : Math.round(Math.min(250, Math.max(8, 8 + (374 / v.players.length) * (idxOf(local.reactTo) + 0.5) - 60)))}px">
       <div class="rphead">${local.reactTo === meId ? 'An alle' : `An ${esc(nameOf(local.reactTo))}`}<button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
+      ${local.reactTo !== meId ? playerDetail(v.players[idxOf(local.reactTo)]) : ''}
       ${ctx.reactionList.map((r, i) => `<button type="button" data-a="react" data-v="${i}">${esc(r)}</button>`).join('')}</div>` : ''}
     ${ctx.toastMsg ? `<div class="toast" role="alert">${esc(ctx.toastMsg)}</div>` : ''}
   </div></div>`;
@@ -802,6 +817,7 @@ export function fitStage() {
   if (!st) return;
   const s = Math.min(window.innerWidth / 844, window.innerHeight / 390);
   st.style.transform = `scale(${s})`;
+  st.classList.toggle('small', s < 0.9 || new URLSearchParams(location.search).has('small'));
   st.parentElement.style.width = `${844 * s}px`;
   st.parentElement.style.height = `${390 * s}px`;
 }

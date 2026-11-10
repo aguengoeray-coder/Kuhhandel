@@ -772,3 +772,43 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 .mctl button { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--ink); background: #fff; font-weight: 800; font-size: 13px; line-height: 1; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .mctl button:disabled { opacity: .3; cursor: not-allowed; }
 .coinpop.big { font-size: 18px; padding: 2px 12px; }
+
+/* ===== v0.12: Version, kleine Handys, Spielerdetails ===== */
+#verbar { position: fixed; left: 50%; top: 8px; transform: translateX(-50%); z-index: 200; }
+#verbar > div { display: flex; align-items: center; gap: 10px; background: #2B2F36; color: #fff; border-radius: 999px; padding: 6px 6px 6px 16px; box-shadow: 0 6px 18px rgba(0,0,0,.35); font-size: 13px; white-space: nowrap; }
+#verbar b { color: var(--gold); font-family: var(--font-head); }
+#verbar button { border: none; background: var(--gold); color: var(--ink); border-radius: 999px; padding: 7px 14px; font-weight: 800; font-size: 13px; cursor: pointer; }
+#verbar.block { inset: 0; transform: none; top: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.6); }
+#verbar.block > div { flex-direction: column; border-radius: 20px; padding: 20px 26px; gap: 8px; white-space: normal; text-align: center; max-width: 340px; }
+#verbar.block b { font-size: 20px; }
+
+.pdetail { grid-column: 1 / -1; background: #F3F1EA; border-radius: 12px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.pdgrid { display: flex; flex-wrap: wrap; gap: 4px; }
+.pd { display: flex; flex-direction: column; align-items: center; width: 38px; background: #fff; border-radius: 8px; padding: 3px 0; border: 1.5px solid #E2DCCB; }
+.pd.done { border-color: var(--gold); background: #FFF6D6; }
+.pd .ci { width: 26px; height: 26px; }
+.pd .ci .star { position: absolute; right: -5px; top: -5px; width: 12px; height: 12px; }
+.pd b { font-size: 11px; line-height: 1.1; }
+.pd small { font-size: 9px; color: var(--muted); font-weight: 700; }
+.pdetail > small { font-size: 11px; font-weight: 700; color: var(--muted); padding-left: 2px; }
+.pdetail em { font-size: 12px; color: var(--muted); }
+.reactpick { width: 236px; }
+
+/* Kleine Handys: Bühne wird verkleinert → wichtige Texte und Symbole größer */
+.stage.small .chip { font-size: 12.5px; padding: 1px 4px 1px 5px; }
+.stage.small .ci { width: 22px; height: 22px; }
+.stage.small .chips { max-width: 172px; }
+.stage.small .tag-s { font-size: 13px; }
+.stage.small .ichip { font-size: 13px; }
+.stage.small .tlog, .stage.small .deck-count { font-size: 13px; }
+.stage.small .amini span { font-size: 12px; }
+.stage.small .cv { font-size: 10px; }
+@media (max-width: 700px) {
+  .seats-mini { display: none; }
+  .game-row { gap: 8px; }
+  .game-row .host { font-size: 15px; }
+}
+.toggle-pill.on { background: #2E7D4F; color: #fff; }
+.reactpick.withdetail { gap: 4px; padding: 6px 8px; max-height: 378px; }
+.reactpick.withdetail > button { min-height: 30px; font-size: 12px; }
+.game-row .host small { white-space: normal; }

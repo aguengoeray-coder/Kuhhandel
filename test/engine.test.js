@@ -508,3 +508,11 @@ test('Geldschein aufgedeckt: Aufdecker bekommt ihn, Betrag für alle sichtbar, Z
   assert.deepEqual(g.lastEvent, { type: 'money_drawn', player: 'a', value: 200 });
   assert.deepEqual(viewFor(g, 'c').lastEvent.value, 200);
 });
+
+test('Versionsnummer in js/app.js und version.json stimmen überein', async () => {
+  const { readFileSync } = await import('node:fs');
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const v = app.match(/APP_VERSION = '([^']+)'/)[1];
+  const json = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8'));
+  assert.equal(json.version, v);
+});

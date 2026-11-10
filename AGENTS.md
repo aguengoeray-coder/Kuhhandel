@@ -12,7 +12,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 3. **Bei Fragen erst prüfen und berichten**, nicht sofort umbauen.
 4. **Kleine, abgeschlossene Schritte.** Vorher absprechen, wer woran arbeitet – nicht gleichzeitig dieselbe Datei umbauen.
 5. **Änderungsprotokoll pflegen:** Jede Version bekommt einen Eintrag in `CHANGELOG.md` (Checkliste, kurz und verständlich).
-   Versionsnummer in `js/app.js` (`APP_VERSION`) mit hochzählen.
+   Versionsnummer in `js/app.js` (`APP_VERSION`) **und** in `version.json` mit hochzählen (ein Test prüft, dass beide gleich sind;
+   die App zeigt allen „Neue Version da – neu laden“, sobald `version.json` neuer ist).
 6. **Tests müssen grün sein:** `npm test` vor jedem Pull Request.
 7. **Datenbank-Änderungen** nicht selbst ausführen: neue SQL-Datei unter `supabase/` anlegen und Alp
    Schritt für Schritt erklären, wie er sie im Supabase-SQL-Editor ausführt.
