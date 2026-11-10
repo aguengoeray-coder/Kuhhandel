@@ -723,3 +723,31 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 #appver { position: fixed; right: 6px; bottom: 3px; z-index: 100; font-size: 10px; color: rgba(128,128,128,.75); pointer-events: none; font-family: var(--font-body, sans-serif); }
 .bignum.wait { font-size: 22px; flex-direction: row; gap: 6px; align-items: baseline; }
 .spauc .reveal-row { margin-top: 2px; }
+
+/* ===== v0.10: Anstupsen, Punkte, Rechnung, Schnick-Schnack-Schnuck ===== */
+.nudge { position: absolute; right: 0; bottom: -14px; z-index: 7; border: 2px solid var(--ink); background: var(--gold); color: var(--ink); border-radius: 999px; padding: 2px 9px; font-family: var(--font-body); font-weight: 800; font-size: 11px; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,.25); animation: nudgein .4s ease-out, nudgewig 2.4s ease-in-out .6s infinite; }
+@keyframes nudgein { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes nudgewig { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-6deg); } 90% { transform: rotate(6deg); } 95% { transform: rotate(-3deg); } }
+
+.ending li { flex-wrap: wrap; cursor: pointer; }
+.sform { flex-basis: 100%; font-size: 12px; font-weight: 700; color: var(--muted); padding-top: 2px; border-top: 1px dashed #D6CCB4; }
+
+.rpsshow { position: absolute; left: 182px; right: 270px; top: 70px; z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(20,30,25,.82); border-radius: 22px; padding: 14px 10px; animation: rpsfade 2.8s ease-in-out both; }
+@keyframes rpsfade { 0% { opacity: 0; transform: scale(.9); } 8%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.rpswords { display: flex; gap: 12px; font-family: var(--font-head); font-weight: 700; font-size: 20px; color: var(--gold); }
+.rpswords span { opacity: 0; animation: rpsword .3s ease-out both; }
+.rpswords span:nth-child(1) { animation-delay: .05s; }
+.rpswords span:nth-child(2) { animation-delay: .45s; }
+.rpswords span:nth-child(3) { animation-delay: .85s; }
+@keyframes rpsword { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.rpshands { display: flex; gap: 34px; }
+.rh { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #fff; font-weight: 700; }
+.hand { position: relative; width: 64px; height: 64px; font-size: 52px; line-height: 64px; text-align: center; }
+.hand b { position: absolute; inset: 0; }
+.hand .shake { animation: rpsshake 1.2s ease-in-out both; }
+.hand .real { opacity: 0; animation: rpsreal .25s ease-out 1.2s both; }
+@keyframes rpsshake { 0%, 33%, 66% { transform: translateY(0); } 16%, 50%, 83% { transform: translateY(-16px); } 99% { opacity: 1; } 100% { opacity: 0; transform: none; } }
+@keyframes rpsreal { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+.rpsresult { color: #fff; font-family: var(--font-head); font-size: 17px; font-weight: 700; opacity: 0; animation: rpsword .3s ease-out 1.5s both; }
+@media (prefers-reduced-motion: reduce) { .nudge, .rpsshow, .rpswords span, .hand .shake, .hand .real, .rpsresult { animation: none !important; opacity: 1; } .hand .shake { display: none; } }
+.nudge { bottom: -27px; right: 4px; }

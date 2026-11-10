@@ -52,6 +52,10 @@ const SOUNDS = {
   trade: () => { noise(0, 0.25, { freq: 1200, vol: 0.2, q: 0.4 }); tone(400, 0.05, 0.2, { vol: 0.08, slide: 300 }); },
   quartet: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.1, 0.28, { vol: 0.16 })),
   react: () => tone(660, 0, 0.08, { type: 'sine', vol: 0.12, slide: 200 }),
+  tick: () => tone(1250, 0, 0.05, { type: 'square', vol: 0.07 }),
+  buzz: () => { tone(110, 0, 0.45, { type: 'sawtooth', vol: 0.22 }); tone(116, 0, 0.45, { type: 'square', vol: 0.12 }); },
+  rps: () => [0, 0.4, 0.8].forEach((d) => noise(d, 0.09, { freq: 600, vol: 0.4 })),
+  nudge: () => [0, 0.16, 0.32].forEach((d) => tone(990, d, 0.1, { type: 'square', vol: 0.12 })),
 };
 
 export function playSound(kind) {

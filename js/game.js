@@ -87,6 +87,19 @@ function playerChips(p) {
   return out.join('');
 }
 
+// Rechnung für die Wertung, z. B. „(800 + 250★ + 1000) × 2 + 250★ = 4350“
+export function scoreFormula(p, blocked = null) {
+  const specials = p.specials || [];
+  const quartets = ANIMALS.filter((a) => p.animals[a.id] === 4 && a.id !== blocked);
+  const parts = [];
+  for (const a of quartets) parts.push(specials.includes(a.id) ? `${a.value}+${SPECIAL_VALUE}★` : `${a.value}`);
+  const loose = specials.filter((id) => !quartets.some((a) => a.id === id)).length;
+  const total = scoreFor(p, blocked).score;
+  let text = quartets.length ? `(${parts.join(' + ')}) × ${quartets.length}` : '';
+  if (loose) text += `${text ? ' + ' : ''}${loose > 1 ? `${loose} × ` : ''}${SPECIAL_VALUE}★`;
+  return `${text || 'keine Quartette'} = ${total}`;
+}
+
 function specialCard(id, extraRows = '', cls = '') {
   return `<div class="bigcard spcard ${cls}">
     <div class="bigcard-in">
@@ -200,8 +213,9 @@ export function renderGame(root, ctx) {
     const from = said?.from && said.from !== p.id ? said.from : null;
     const fromIdx = from ? idxOf(from) : -1;
     const bubble = said ? `<div class="rbubble ${from ? 'to' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
+    const nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     return `<div class="prow${turnMark}${dim}" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">${coin}
-      ${bubble}
+      ${bubble}${nudge}
       ${leader}
       <div class="chips">${chips}</div>
       <div class="pid">
@@ -427,6 +441,7 @@ export function renderGame(root, ctx) {
       <span>Über die Startseite kommst du jederzeit zurück ins Spiel.</span></div>` : ''}
     <div class="infochips">
       <span class="ichip">Geld: <b>${sum(me.money)}</b></span>
+      <span class="ichip">Punkte jetzt: <b>${scoreFor(me).score}</b></span>
       ${nextDonkey ? `<span class="ichip">Nächster Esel: <b>+${nextDonkey}</b></span>` : '<span class="ichip">Alle Esel sind raus</span>'}
     </div>
     <div class="lactions ${['auction', 'rat', 'special'].includes(state.phase) ? 'auction' : ''}">${leftActions}</div>
@@ -440,6 +455,7 @@ export function renderGame(root, ctx) {
     local.menu = false;
     ctx.rerender();
   };
+  H.nudge = (id) => ctx.nudge && ctx.nudge(id);
   H.reactClose = () => { local.reactTo = null; ctx.rerender(); };
   H.react = (i) => { const to = local.reactTo; local.reactTo = null; ctx.react(ctx.reactionList[Number(i)], to === meId ? null : to); };
   H.exit = () => ctx.onExit();
@@ -631,11 +647,12 @@ export function renderGame(root, ctx) {
     const s = scores(state).sort((a, b) => b.score - a.score);
     overlay = `<div class="overlay light ${entered ? 'enter' : ''}"><div class="ending">
       <h2>${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
-      <ol>${s.map((r) => `<li class="${v.winner?.includes(r.id) ? 'win' : ''}">
+      <ol>${s.map((r) => `<li class="${v.winner?.includes(r.id) ? 'win' : ''} ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}">
         <span class="sname">${esc(r.id === meId ? 'Du' : r.name)}</span>
         <span class="squart">${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}</span>
-        <span class="sval">${r.score}</span></li>`).join('')}</ol>
-      <small>(Quartettwerte + passende Spezialkarten) × Anzahl Quartette, übrige Spezialkarten +${SPECIAL_VALUE}</small>
+        <span class="sval">${r.score}</span>
+        ${local.scoreOpen === r.id ? `<span class="sform">${scoreFormula(v.players[idxOf(r.id)], r.blocked)}${r.blocked ? ` · ${esc(aname(r.blocked))} blockiert` : ''}</span>` : ''}</li>`).join('')}</ol>
+      <small>Spieler antippen für die Rechnung · ★ = Spezialkarte</small>
       <div class="endbtns">
         <button type="button" class="pill pill-red" data-a="rematch">${ctx.rematchId ? 'Zur Revanche' : 'Revanche'}</button>
         <button type="button" class="pill pill-white" data-a="exit">Zur Startseite</button>
@@ -644,6 +661,7 @@ export function renderGame(root, ctx) {
   }
 
   H.rematch = () => ctx.onRematch();
+  H.scoreOpen = (id) => { local.scoreOpen = local.scoreOpen === id ? null : id; ctx.rerender(); };
 
   // ----- Effekte: Tier fliegt zum neuen Besitzer, Konfetti am Ende, Quartett-Moment -----
   let effects = '';
@@ -692,8 +710,30 @@ export function renderGame(root, ctx) {
   // Geräusche zu den Ereignissen
   if (entered && (state.phase === 'rat' || state.phase === 'special')) sounds.push('flip');
   if (fresh && state.phase === 'rat' && !entered) sounds.push('bid');
-  if (fresh && state.phase === 'special' && v.lastEvent?.type === 'rps') sounds.push('trade');
-  else if (fresh && state.phase === 'special' && !entered && v.lastEvent?.type !== 'cant_pay') sounds.push('bid');
+  if (state.phase === 'special') {
+    const sp = v.special;
+    const t = ctx.now();
+    const st = specialStage(v, t);
+    const n = st === 'countdown' ? specialNumber(v, t) : null;
+    if (n != null && n <= 3 && n > 0 && local.lastTick !== `${sp.startsAt}|${n}`) { local.lastTick = `${sp.startsAt}|${n}`; sounds.push('tick'); }
+    const nb = Object.keys(sp.buzzes).length;
+    if ((local.prevBuzz ?? nb) < nb) sounds.push('buzz');
+    local.prevBuzz = nb;
+    // Schnick-Schnack-Schnuck: Hände schütteln, dann aufdecken
+    const le2 = v.lastEvent;
+    const sig = le2?.type === 'rps' ? JSON.stringify(le2) : null;
+    if (sig && local.rpsSig !== sig) { local.rpsSig = sig; local.rpsUntil = Date.now() + 2800; sounds.push('rps'); }
+    if (sig && Date.now() < (local.rpsUntil || 0)) {
+      const names = Object.keys(le2.picks);
+      const result = le2.winners ? (le2.winners.length === 1 ? `${esc(nameOf(le2.winners[0]))} ${le2.winners[0] === meId ? 'gewinnst' : 'gewinnt'}!` : 'Weiter geht’s!') : 'Unentschieden – nochmal!';
+      effects += `<div class="rpsshow" aria-live="polite">
+        <div class="rpswords"><span>Schnick</span><span>Schnack</span><span>Schnuck!</span></div>
+        <div class="rpshands">${names.map((id) => `<div class="rh"><div class="hand"><b class="shake">✊</b><b class="real">${RPS_ICON[le2.picks[id]]}</b></div><small>${esc(nameOf(id))}</small></div>`).join('')}</div>
+        <div class="rpsresult">${result}</div></div>`;
+    }
+  } else {
+    local.prevBuzz = undefined;
+  }
   if (entered && state.phase === 'auction') { sounds.push('flip'); if (v.lastEvent?.type === 'donkey') sounds.push('coins'); }
   else if (fresh && state.phase === 'auction' && auction.high) sounds.push('bid');
   if (fresh && le && (state.phase === 'turn' || state.phase === 'ended')) {

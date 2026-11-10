@@ -127,3 +127,11 @@
 - [x] Wert auf jeder Tierkarte, auch klein
 - [x] Spielregeln im Spiel ergänzt; Debug: Ratte / Spezialkarte als nächste Karte
 - [x] Laufende alte Spiele ohne Ratten enden weiterhin normal
+
+## v0.10.0 – Anstupsen, Punkte, Rechnung, Buzzer-Spannung (wartet auf Freigabe)
+
+- [x] Anstupsen: Wartet das Spiel über 20 s auf jemanden, erscheint bei ihm „👉 Anstupsen“ – sein Handy piept und vibriert
+- [x] „Punkte jetzt“ links unter dem Geld (nur die eigenen)
+- [x] Spielende: Spieler antippen zeigt die Rechnung, z. B. (800+250★ + 1000) × 2 + 250★ = 4350
+- [x] Buzzer: Ticken bei 3-2-1, eigener Buzzer-Ton
+- [x] Schnick-Schnack-Schnuck: Hände schütteln, dann wird aufgedeckt, mit Ergebnis

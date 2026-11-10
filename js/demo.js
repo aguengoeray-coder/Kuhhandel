@@ -157,6 +157,15 @@ export function buildDemoState(kind, local) {
       g = rpsPick(g, 'u1', 'stein', t0 + 30000); g = rpsPick(g, 'u3', 'stein', t0 + 30000);
       return g;
     }
+    case 'rpsshow': {
+      const t0 = Date.now() - 60000;
+      g = base(); g.turn = 3; g.deck[0] = 'sp-ziege';
+      g = drawForAuction(g, 'u4', t0);
+      g = buzz(g, 'u1', t0 + SPECIAL_DELAY_MS + 5100);
+      g = buzz(g, 'u3', t0 + SPECIAL_DELAY_MS + 5600);
+      g = rpsPick(g, 'u1', 'papier', t0 + 30000); g = rpsPick(g, 'u3', 'stein', t0 + 30000);
+      return g;
+    }
     case 'spcantpay': {
       const t0 = Date.now() - 30000;
       g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';

@@ -9,7 +9,7 @@ import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage } from '../src/engine.js';
 
-export const APP_VERSION = '0.9.0';
+export const APP_VERSION = '0.10.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -237,6 +237,40 @@ function toast(msg) {
   render();
 }
 
+// Anstupsen: auf wen wird seit über 20 Sekunden gewartet?
+const NUDGE_AFTER_MS = 20000;
+let waitKey = '';
+let waitSince = 0;
+let lastNudgeAt = 0;
+function waitingFor() {
+  const s = ui.game.state;
+  if (!s || s.phase === 'ended') return null;
+  const who = whoMustAct(s, now());
+  const key = `${who}|${ui.game.version}|${s.phase}`;
+  if (key !== waitKey) {
+    waitKey = key;
+    waitSince = Date.now();
+    if (who) setTimeout(() => { if (waitKey === key) render(); }, NUDGE_AFTER_MS + 100);
+  }
+  if (DEMO && params.get('nudge')) return params.get('nudge');
+  return who && Date.now() - waitSince >= NUDGE_AFTER_MS ? who : null;
+}
+function sendNudge(to) {
+  if (Date.now() - lastNudgeAt < 15000) return toast('Gerade erst angestupst – kurz warten.');
+  lastNudgeAt = Date.now();
+  const seat = ui.game.local ? dbg.viewAs : seatIn(ui.game);
+  const name = ui.game.state.players.find((p) => p.id === to)?.name || '';
+  if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'nudge', payload: { from: seat, to } });
+  toast(`${name} wurde angestupst.`);
+}
+function gotNudge(payload) {
+  if (!payload || payload.to !== seatIn(ui.game)) return;
+  const name = ui.game?.state?.players.find((p) => p.id === payload.from)?.name || 'Jemand';
+  beep();
+  if (soundOn()) playSound('nudge');
+  toast(`${name} stupst dich an – du bist dran!`);
+}
+
 function renderPlaying() {
   const local = !!ui.game.local;
   maybeRecordResults();
@@ -272,6 +306,8 @@ function renderPlaying() {
     reactions: activeReactions(),
     reactionList: REACTIONS,
     react: sendReaction,
+    nudgeWho: waitingFor(),
+    nudge: sendNudge,
     tips: DEMO && !params.get('tips') ? null : { seen: tipsSeen(), mark: markTip },
     onExit: () => { if (!ui.game?.local) store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
@@ -786,6 +822,7 @@ function watchRoom(id) {
       dbg.lastSync = Date.now();
       showGame(payload.new);
     })
+    .on('broadcast', { event: 'nudge' }, ({ payload }) => gotNudge(payload))
     .on('broadcast', { event: 'react' }, ({ payload }) => {
       if (!payload?.seat || !REACTIONS.includes(payload.text)) return;
       const to = typeof payload.to === 'string' && ui.game?.state?.players?.some((p) => p.id === payload.to) ? payload.to : null;
@@ -1068,6 +1105,7 @@ function demo(kind) {
   if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
   if (params.get('react')) reactions.set(params.get('react'), { text: 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
   if (params.get('pick')) gameLocal.reactTo = params.get('pick');
+  if (params.get('score')) gameLocal.scoreOpen = params.get('score');
   ui.editingName = kind === 'name';
   if (kind === 'name') me.name = '';
   ui.games = [
