@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.23.0';
+export const APP_VERSION = '0.24.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -184,8 +184,8 @@ const moneyNote = (g) => {
 
 function renderStart() {
   const nameBlock = `<div class="me-line">${avatarHtml(me.id, me.name, 'small')}<strong>${esc(me.name)}</strong>
-      <button class="linklike" type="button" data-modal="profile">Spielerbild</button>
-      <button class="linklike" type="button" id="logout">Abmelden</button></div>`;
+      <button class="slink sm" type="button" data-modal="profile">🐮 Spielerbild</button>
+      <button class="slink sm" type="button" id="logout">Abmelden</button></div>`;
 
   const resume = (ui.myGames || []).map((g) => `<li class="game-row resume">
       <div class="host">Laufendes Spiel<small>${g.players.map((p) => esc(p.name)).join(' · ')}</small></div>

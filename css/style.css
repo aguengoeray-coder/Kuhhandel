@@ -1493,3 +1493,63 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 /* Rattenrunde: Scheine unten antippen */
 .hand-row.ratlay { align-items: center; gap: 8px; }
 .hrlabel { color: #fff; font-weight: 800; font-size: 12px; }
+
+/* ===================== v0.24 ===================== */
+/* Warteraum: Tisch in der gewählten Farbe */
+.room .table { background: var(--tbl-pat), radial-gradient(ellipse at 50% 40%, var(--tbl-1) 0%, var(--tbl-2) 60%, var(--tbl-3) 100%); }
+
+/* Knopf, der noch nicht geht: grau statt blass-rot */
+.pill-red:disabled { background: #9A9690; color: #EFEDE8; box-shadow: 0 5px 0 #6E6A64; }
+
+/* Spielende auf dem Tisch mit Podest */
+.overlay.endtable { inset: auto; left: 10px; top: 8px; width: 618px; height: 374px; border-radius: 24px; border: 12px solid #8A5A33; background: var(--tbl-pat), radial-gradient(ellipse at 50% 40%, var(--tbl-1) 0%, var(--tbl-2) 60%, var(--tbl-3) 100%); box-shadow: inset 0 0 30px rgba(0,0,0,.35), 0 5px 0 #6B4424; overflow: hidden; z-index: 16; }
+.overlay.endtable .ending { right: 0; gap: 6px; padding: 8px 12px; }
+.ending.podium h2 { color: #fff; font-size: 26px; text-shadow: 0 3px 0 rgba(0,0,0,.25); background: var(--c); padding: 2px 22px; border-radius: 999px; box-shadow: 0 0 0 3px #fff; }
+.pods { display: flex; align-items: flex-end; justify-content: center; gap: 8px; }
+.pod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; border: none; background: none; padding: 0; cursor: pointer; font: inherit; color: #fff; width: 150px; }
+.pod .avatar { width: 44px; height: 44px; }
+.pod.p1 .avatar { width: 56px; height: 56px; }
+.crown { font-size: 22px; line-height: 1; margin-bottom: -4px; }
+.pname2 { font-family: var(--font-head); font-weight: 700; font-size: 15px; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.pblock { position: relative; width: 100%; background: #fff; color: var(--ink); border-radius: 12px 12px 4px 4px; border-top: 6px solid var(--c); display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 6px 6px 18px; box-shadow: 0 6px 14px rgba(0,0,0,.3); }
+.pod.p1 .pblock { min-height: 104px; background: #FFF6D6; }
+.pod.p2 .pblock { min-height: 80px; }
+.pod.p3 .pblock { min-height: 64px; }
+.pblock b { font-family: var(--font-head); font-size: 24px; line-height: 1; }
+.pod.p1 .pblock b { font-size: 30px; }
+.pblock i { position: absolute; bottom: 2px; font-style: normal; font-weight: 800; font-size: 12px; color: var(--muted); }
+.picons { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; margin-top: 4px; }
+.picons .ci { width: 18px; height: 18px; }
+.pod.open .pblock { box-shadow: 0 0 0 3px var(--gold), 0 6px 14px rgba(0,0,0,.3); }
+.prest { display: flex; flex-direction: column; gap: 4px; width: 420px; }
+.prow4 { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.92); border: none; border-radius: 999px; padding: 3px 14px 3px 8px; font: inherit; cursor: pointer; }
+.prow4 .avatar { width: 26px; height: 26px; border-width: 2px; font-size: 11px; }
+.prow4 i { font-style: normal; font-weight: 800; color: var(--muted); }
+.prow4 span:not(.picons) { font-weight: 800; }
+.prow4 .picons { margin: 0 auto 0 0; }
+.prow4 b { font-family: var(--font-head); font-size: 17px; }
+.prow4.open { box-shadow: 0 0 0 3px var(--gold); }
+.sform2 { min-height: 18px; color: #fff; font-size: 12.5px; font-weight: 700; text-align: center; }
+.overlay.endtable .endbtns .pill { min-height: 44px; font-size: 15px; }
+.overlay.endtable .ending.recap h2 { color: #fff; }
+.overlay.endtable .confetti { z-index: 0; }
+
+/* Kleinigkeiten */
+.stage:has(.moneyreveal) .tlog { visibility: hidden; }
+.slabel { font-size: 11.5px; }
+.stack.near .slabel { font-weight: 900; font-size: 12px; }
+.slink.sm { padding: 6px 11px; font-size: 12.5px; background: #F3F1EA; box-shadow: 0 2px 0 rgba(0,0,0,.12); }
+.tline b + small:empty { display: none; }
+.overlay.endtable .ending { justify-content: flex-start; padding-top: 10px; gap: 5px; }
+.ending.podium h2 { font-size: 21px; padding: 1px 18px; }
+.pod .avatar { width: 38px; height: 38px; border-width: 3px; }
+.pod.p1 .avatar { width: 46px; height: 46px; }
+.crown { font-size: 17px; }
+.pname2 { font-size: 14px; }
+.pod.p1 .pblock { min-height: 88px; }
+.pod.p2 .pblock { min-height: 70px; }
+.pod.p3 .pblock { min-height: 56px; }
+.pblock { padding: 4px 6px 16px; }
+.pod.p1 .pblock b { font-size: 26px; }
+.pblock b { font-size: 21px; }
+.overlay.endtable .endbtns { margin-top: auto; padding-bottom: 6px; }

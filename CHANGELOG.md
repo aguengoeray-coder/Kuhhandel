@@ -1,5 +1,16 @@
 # Änderungsprotokoll
 
+## v0.24.0
+
+- [x] Warteraum: Tisch in der gewählten Spielfeld-Farbe.
+- [x] Spielende auf dem Spieltisch mit Siegerpodest (1./2./3., Krone, Quartette), Platz 4 darunter; antippen zeigt die Rechnung. Rückblick ebenfalls auf dem Tisch.
+- [x] Knöpfe, die noch nicht gehen (z. B. „Bezahlen“), sind grau statt blass-rot.
+- [x] Letzte Hinweistexte entfernt (Ratte, Kuhhandel).
+- [x] Spezialkarte: statt Infokasten „Schwein haben: Mo ×1“ bzw. „Noch keiner hat …“.
+- [x] Geldschein aus dem Stapel: Text oben wird solange ausgeblendet.
+- [x] „noch 2“ unter den eigenen Tieren größer, „noch 1“ fett.
+- [x] Startseite: „Spielerbild“ und „Abmelden“ als Knöpfe.
+
 ## v0.23.0
 
 - [x] Neuer Tischaufbau: linke Spalte weg, Tisch breiter, Menü als kleiner Knopf oben links.

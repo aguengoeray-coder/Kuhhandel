@@ -384,7 +384,7 @@ export function renderGame(root, ctx) {
     const pot = `<div class="pot">${Array.from({ length: Math.min(potCount, 14) }, (_, k) => `<div class="money xs back" style="--r:${(k * 37) % 21 - 10}deg"></div>`).join('') || '<span>noch leer</span>'}</div>`;
     aucBanner = 'Rattenrunde';
     aucCenter = `<div class="auc aucmain"><div class="aucrow">
-      <div class="aside l"><div class="ratnow ${turnId === meId ? 'me' : ''}">${turnId === meId ? 'Du bist dran' : `${esc(nameOf(turnId))} ist dran`}<small>Karte legen oder Ratte nehmen</small></div></div>
+      <div class="aside l"><div class="ratnow ${turnId === meId ? 'me' : ''}">${turnId === meId ? 'Du bist dran' : `${esc(nameOf(turnId))} ist dran`}</div></div>
       <div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(RAT, 'rat')}</div>
       <div class="aside r"><div class="potbox">${pot}<small>Gelegt: <b>${karten(potCount)}</b></small></div></div>
     </div></div>`;
@@ -429,7 +429,7 @@ export function renderGame(root, ctx) {
     }
     aucBanner = `${esc(nameOf(sp.revealer))} ${iRevealed ? 'hast' : 'hat'} eine Spezialkarte`;
     aucCenter = `<div class="auc aucmain"><div class="aucrow">
-      <div class="aside l"><div class="ainfo"><div><span>Wert</span><b>${SPECIAL_VALUE}</b></div><div><span>Passt zu</span><b>${esc(aname(sp.animal))}</b></div><div><span>Handel</span><b>nein</b></div></div></div>
+      <div class="aside l">${(() => { const hs = v.players.map((p, i) => [p, i]).filter(([p]) => p.animals[sp.animal] > 0); return `<div class="owners">${hs.length ? `<small>${esc(aname(sp.animal))} haben</small><div class="olist">${hs.map(([p, i]) => `<span class="own ${p.id === meId ? 'me' : ''}">${avatar(p, i)}<b>${p.id === meId ? 'Du' : esc(p.name)} ×${p.animals[sp.animal]}</b></span>`).join('')}</div>` : `<span class="onew">Noch keiner hat ${esc(aname(sp.animal))}</span>`}</div>`; })()}</div>
       <div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(sp.animal, 'special')}</div>
       <div class="aside r">${big || ''}</div>
     </div>${info}</div>`;
@@ -521,7 +521,7 @@ export function renderGame(root, ctx) {
 
   // ----- Kuhhandel: auf dem Tisch statt in einem eigenen Fenster -----
   const who = (id, label) => { const i = idxOf(id); return `<div class="twho">${avatar(v.players[i], i)}<span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(label || nameOf(id))}</span></div>`; };
-  const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}"><span class="ci">${art(animal)}</span><span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b><small>${note}</small></span></div>`;
+  const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}"><span class="ci">${art(animal)}</span><span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b>${note ? `<small>${note}</small>` : ''}</span></div>`;
   if (state.phase === 'turn' && myTurn && local.tradeOpen) {
     const trades0 = possibleTrades(state, meId);
     const targets = [...new Set(trades0.map((t) => t.target))];
@@ -536,7 +536,7 @@ export function renderGame(root, ctx) {
       <div class="tpanel">
         ${who(meId, 'Du')}
         <div class="kslots">${chosenCards(me.money, local.sel, 3)}</div>
-        <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b><small>sieht nur du</small></div>
+        <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
       </div>
       <div class="tvs">VS</div>
       <div class="tpanel">
@@ -573,7 +573,7 @@ export function renderGame(root, ctx) {
     const challengerPanel = `<div class="tpanel">
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
         <div class="kslots">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
-        <div class="tline"><b>${karten(offerCount)}</b><small>${t.challenger === meId ? 'dein Angebot' : 'verdecktes Angebot'}</small></div>
+        <div class="tline"><b>${karten(offerCount)}</b></div>
       </div>`;
     if (t.target === meId) {
       const canCounter = local.sel.length > 0 || me.money.length === 0;
@@ -582,10 +582,10 @@ export function renderGame(root, ctx) {
         <div class="tpanel">
           ${who(meId, 'Du')}
           <div class="kslots">${chosenCards(me.money, local.sel, 3)}</div>
-          <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b><small>dein Gegenangebot</small></div>
+          <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
         </div>
       </div>
-      ${animalStrip(t.animal, t.count, isRat ? 'will dir die Ratte geben' : 'will dein Tier')}`;
+      ${animalStrip(t.animal, t.count, '')}`;
       aucLeft = `<button type="button" class="pill pill-white" data-a="accept"><small>ANNEHMEN</small>${isRat ? 'Geld + Ratte' : 'Geld nehmen'}</button>
         <button type="button" class="pill pill-red" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${karten(local.sel.length)}</button>`;
       handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
@@ -597,10 +597,10 @@ export function renderGame(root, ctx) {
         <div class="tpanel">
           ${who(t.target)}
           <div class="kslots"><div class="slot q">?</div></div>
-          <div class="tline"><b>überlegt …</b><small>annehmen oder dagegen bieten</small></div>
+          <div class="tline"><b>überlegt …</b></div>
         </div>
       </div>
-      ${animalStrip(t.animal, t.count, isRat ? 'Ratte loswerden' : 'darum geht es')}`;
+      ${animalStrip(t.animal, t.count, '')}`;
       aucLeft = `<div class="ldecide">${t.challenger === meId ? `Warte auf die Antwort von ${esc(nameOf(t.target))} …` : `${esc(nameOf(t.target))} überlegt …`}</div>`;
     }
   }
@@ -745,25 +745,38 @@ export function renderGame(root, ctx) {
 
   // Blockieren läuft jetzt auf dem Tisch (siehe oben)
 
+  const iconsOf = (r) => `${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}`;
   if (state.phase === 'ended' && local.recap) {
     const list = awards(state);
-    overlay = `<div class="overlay light"><div class="ending recap">
+    overlay = `<div class="overlay endtable"><div class="ending recap">
       <h2>Rückblick</h2>
       <ul>${list.map((a) => { const i = idxOf(a.who); return `<li><span class="atitle">${esc(a.title)}</span>${i >= 0 ? avatar(v.players[i], i) : ''}<span class="awho">${esc(a.who === meId ? 'Du' : a.name)}</span><span class="atext">${esc(a.text)}</span></li>`; }).join('') || '<li>Keine besonderen Momente – ein ruhiges Spiel.</li>'}</ul>
       <div class="endbtns"><button type="button" class="pill pill-red" data-a="recap">Zurück zur Wertung</button></div>
     </div></div>`;
   } else if (state.phase === 'ended') {
     const s = scores(state).sort((a, b) => b.score - a.score);
+    // Platz nach Punkten (gleiche Punkte = gleicher Platz)
+    const ranked = s.map((r) => ({ ...r, place: s.findIndex((x) => x.score === r.score) + 1 }));
+    const top = ranked.slice(0, 3);
+    const order = top.length === 3 ? [top[1], top[0], top[2]] : top.length === 2 ? [top[1], top[0]] : top;
+    const rest = ranked.slice(3);
+    const winIdx = idxOf(s[0].id);
+    const step = (r) => {
+      const i = idxOf(r.id);
+      return `<button type="button" class="pod p${Math.min(r.place, 3)} ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}" style="--c:${SEAT_COLORS[i]}">
+        ${r.place === 1 ? '<span class="crown">👑</span>' : ''}${avatar(v.players[i], i)}
+        <span class="pname2">${esc(r.id === meId ? 'Du' : r.name)}</span>
+        <span class="pblock"><b>${r.score}</b><span class="picons">${iconsOf(r)}</span><i>${r.place}.</i></span></button>`;
+    };
+    const openRow = local.scoreOpen ? ranked.find((r) => r.id === local.scoreOpen) : null;
     const cols = ['#FFD34E', '#D7263D', '#1D5FC2', '#B8285F', '#6D3FC0', '#7FA88A', '#fff'];
     const confetti = entered ? `<div class="confetti" aria-hidden="true">${Array.from({ length: 40 }, (_, k) =>
       `<i style="left:${(k * 37) % 100}%;background:${cols[k % cols.length]};animation-delay:${(k % 10) * 90}ms;animation-duration:${1600 + (k % 7) * 180}ms;transform:rotate(${k * 29}deg)"></i>`).join('')}</div>` : '';
-    overlay = `<div class="overlay light ${entered ? 'enter' : ''}">${confetti}<div class="ending">
-      <h2>${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
-      <ol>${s.map((r) => `<li class="${v.winner?.includes(r.id) ? 'win' : ''} ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}">
-        <span class="sname">${esc(r.id === meId ? 'Du' : r.name)}</span>
-        <span class="squart">${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}</span>
-        <span class="sval">${r.score}</span>
-        ${local.scoreOpen === r.id ? `<span class="sform">${scoreFormula(v.players[idxOf(r.id)], r.blocked)}${r.blocked ? ` · ${esc(aname(r.blocked))} blockiert` : ''}</span>` : ''}</li>`).join('')}</ol>
+    overlay = `<div class="overlay endtable ${entered ? 'enter' : ''}">${confetti}<div class="ending podium">
+      <h2 style="--c:${SEAT_COLORS[winIdx]}">${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
+      <div class="pods">${order.map(step).join('')}</div>
+      ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
+      <div class="sform2">${openRow ? `${esc(openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(v.players[idxOf(openRow.id)], openRow.blocked)}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}` : ''}</div>
       <div class="endbtns">
         <button type="button" class="pill pill-white" data-a="recap">Rückblick</button>
         <button type="button" class="pill pill-red" data-a="rematch">${ctx.rematchId ? 'Zur Revanche' : 'Revanche'}</button>
