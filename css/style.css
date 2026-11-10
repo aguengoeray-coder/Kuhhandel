@@ -388,3 +388,46 @@ button.strip { cursor: pointer; }
 /* Inhalte der Überlagerung links von der Spielerspalte halten */
 .overlay .bottom-bar, .overlay .pay, .overlay .trade, .overlay .hand-pick { right: 258px; }
 .overlay .wait, .overlay .ending { right: 258px; }
+
+/* =================== Tierbilder =================== */
+.art { width: 100%; height: 100%; display: block; }
+.acard b { padding: 1px; }
+.acard b .art { width: 26px; height: 26px; }
+.acard { height: 42px; }
+.bigcard-head { height: 74px; gap: 10px; }
+.bigcard-head .mono { width: 60px; height: 60px; padding: 3px; border: 2px solid var(--ink); }
+.strip i { width: 34px; height: 34px; border-radius: 50%; background: var(--a); border: 2px solid var(--ink); padding: 2px; }
+.strip i .art { width: 100%; height: 100%; }
+.strip.big i { width: 46px; height: 46px; }
+
+/* =================== Animationen =================== */
+@keyframes deal { 0% { transform: translate(-160px, 120px) rotate(-18deg) scale(.4); opacity: 0; } 60% { transform: translate(0, -6px) rotate(3deg) scale(1.04); opacity: 1; } 100% { transform: none; } }
+.bigcard.deal { animation: deal .6s cubic-bezier(.2, .9, .3, 1.2) both; }
+@keyframes pop { 0% { transform: scale(.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.hightag.pop { animation: pop .35s ease-out; transform-origin: right center; }
+.hightag.pop { animation-name: popTag; }
+@keyframes popTag { 0% { transform: translateY(-50%) scale(.6); } 60% { transform: translateY(-50%) scale(1.15); } 100% { transform: translateY(-50%) scale(1); } }
+.bubble.pop b { display: inline-block; animation: pop .35s ease-out; }
+@keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px) rotate(-2deg); } 40% { transform: translateX(6px) rotate(2deg); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+.reveal.shake { animation: shake .5s ease-in-out; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+.tbanner.pulse { animation: pulse .5s ease-in-out 2; }
+@keyframes enter { from { opacity: 0; } to { opacity: 1; } }
+.overlay.enter { animation: enter .25s ease-out both; }
+@keyframes coin { 0% { transform: translateY(10px) scale(.6); opacity: 0; } 25% { transform: translateY(-6px) scale(1.1); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-34px); opacity: 0; } }
+.coinpop { position: absolute; right: 44px; top: -6px; z-index: 5; background: var(--gold); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 8px; font-family: var(--font-head); font-weight: 700; font-size: 14px; animation: coin 1.8s ease-out both; pointer-events: none; }
+@keyframes fly { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(.25); opacity: 0; } }
+.fly { position: absolute; left: 336px; top: 160px; width: 84px; z-index: 20; pointer-events: none; animation: fly .9s cubic-bezier(.5, 0, .6, 1) both; }
+.fly .bigcard-head { border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,.3); }
+.confetti { position: absolute; inset: 0; pointer-events: none; z-index: 25; overflow: hidden; }
+.confetti i { position: absolute; top: -12px; width: 8px; height: 13px; border-radius: 2px; animation: fall linear both; }
+@keyframes fall { to { top: 105%; transform: translateX(30px) rotate(540deg); } }
+button.money { transition: transform .12s, box-shadow .12s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bigcard.deal, .hightag.pop, .bubble.pop b, .reveal.shake, .tbanner.pulse, .overlay.enter, .coinpop, .fly, .confetti i { animation: none !important; }
+  .fly, .confetti, .coinpop { display: none; }
+}
+.myanimals .acard { width: 40px; height: 54px; }
+.myanimals .acard i { height: 10px; }
+.myanimals .acard b .art { width: 36px; height: 36px; }

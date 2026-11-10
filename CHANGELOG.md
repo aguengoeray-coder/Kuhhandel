@@ -22,3 +22,14 @@
 - [x] Zahlungsunfähig: offene Karten für alle, Obergrenze sichtbar
 - [x] Kuhhandel: Gegner, Tier und Karten wählen; Antwort mit Annehmen oder Gegenangebot; Ergebnis für die Beteiligten
 - [x] Spielende mit Wertung
+
+## v0.3.0 – Tierbilder und Animationen (wartet auf Freigabe)
+
+- [x] 10 eigene Tierbilder auf allen Karten (groß, Tisch, Kuhhandel)
+- [x] Tierkarte fliegt beim Versteigern auf den Tisch
+- [x] Neues Gebot: Höchstgebot-Schild und Sprechblase springen kurz auf
+- [x] Esel-Bonus: „+Betrag“ steigt bei allen Spielern auf
+- [x] Zahlungsunfähig: Kartenkasten wackelt
+- [x] Gekauftes oder gehandeltes Tier fliegt zum neuen Besitzer
+- [x] „Du bist dran“ pulsiert, Konfetti am Spielende
+- [x] Animationen aus, wenn am Handy „Bewegung reduzieren“ eingestellt ist
