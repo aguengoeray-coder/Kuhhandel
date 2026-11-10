@@ -734,6 +734,17 @@ export function renderGame(root, ctx) {
   // Geräusche zu den Ereignissen
   if (entered && (state.phase === 'rat' || state.phase === 'special')) sounds.push('flip');
   if (fresh && state.phase === 'rat' && !entered) sounds.push('bid');
+  // Geldschein aus dem Stapel: Karte groß für alle zeigen, dann fliegt sie zum Spieler
+  const lem = v.lastEvent;
+  const moneySig = lem?.type === 'money_drawn' ? `${state.log.length}|${lem.player}|${lem.value}` : null;
+  if (moneySig && fresh && local.moneySig !== moneySig) { local.moneySig = moneySig; local.moneyUntil = Date.now() + 2600; }
+  if (moneySig && local.moneySig === moneySig && Date.now() < (local.moneyUntil || 0)) {
+    const pi = idxOf(lem.player);
+    const ty = Math.round(8 + (374 / v.players.length) * (pi + 0.5)) - 170;
+    effects += `<div class="moneyreveal" style="--ty:${ty}px">
+      <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${lem.value}</div>
+      <span>${esc(nameOf(lem.player))} ${lem.player === meId ? 'ziehst' : 'zieht'} <b>${lem.value}</b></span></div>`;
+  }
   if (state.phase === 'special') {
     const sp = v.special;
     const t = ctx.now();

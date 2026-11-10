@@ -899,3 +899,16 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .kline .paystatus.bad { background: #F8D7D3; color: #8E1F17; }
 .kline .paystatus.warn { background: #FFF1C2; color: #7A5200; }
 .kline .paystatus.ok { background: #D2F0DC; color: #0B5A33; }
+
+/* ===== v0.17: Geldschein aus dem Stapel für alle zeigen ===== */
+.moneyreveal { position: absolute; left: 376px; top: 170px; transform: translate(-50%, -50%); z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: mrfly 2.6s ease-in-out both; }
+.moneyreveal .money.big { width: 92px; height: 130px; font-size: 30px; border-width: 4px; border-radius: 14px; padding: 8px 10px; box-shadow: 0 12px 30px rgba(0,0,0,.4); animation: mrflip .45s ease-out both; }
+.moneyreveal span { background: #2B2F36; color: #fff; border-radius: 999px; padding: 5px 14px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.moneyreveal span b { color: var(--gold); font-family: var(--font-head); font-size: 17px; }
+@keyframes mrflip { from { transform: rotateY(90deg) scale(.6); } to { transform: none; } }
+@keyframes mrfly {
+  0% { opacity: 0; }
+  8%, 72% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(calc(-50% + 330px), calc(-50% + var(--ty))) scale(.3); }
+}
+@media (prefers-reduced-motion: reduce) { .moneyreveal, .moneyreveal .money.big { animation: none; } }

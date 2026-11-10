@@ -189,6 +189,7 @@
 - [x] Kein Doppeltipp-Zoom mehr, Knöpfe reagieren schneller
 - [x] Kleine Knöpfe größer: Debug-Leiste („Sicht wechseln“), Debug-Fenster, Emoji-Auswahl, Kuhhandel-Gegner, Warteraum, Admin
 
-## v0.17.0 – Schnellere Versteigerung (wartet auf Freigabe)
+## v0.17.0 – Schnellere Versteigerung, Geldschein zeigen (wartet auf Freigabe)
 
 - [x] Versteigerung: 10 s nach dem Aufdecken und nach jedem Gebot wieder 10 s (vorher 20 s / 15 s)
+- [x] Geldschein aus dem Stapel: wird allen groß in der Tischmitte gezeigt („Nico zieht 200“) und fliegt dann zum Spieler
