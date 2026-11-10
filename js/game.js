@@ -31,7 +31,7 @@ const initial = (n) => esc((n || '?').trim().charAt(0).toUpperCase());
 // ---------- kleine Bausteine ----------
 
 // Innenleben eines Geldscheins: große Zahl in der Mitte, kleine Zahlen oben links und unten rechts
-const mIn = (v) => `<span class="mc tl">${v}</span><span class="mv">${v}</span><span class="mc br">${v}</span>`;
+const mIn = (v) => `<span class="mv">${v}</span>`;
 
 function moneyCard(v, { idx = null, selected = false, size = '' } = {}) {
   const cls = `money ${size} ${selected ? 'sel' : ''}`;
@@ -134,8 +134,8 @@ function playCard(id, kind = 'animal') {
   const val = kind === 'special' ? SPECIAL_VALUE : kind === 'rat' ? '' : ANIMAL_BY_ID[id].value;
   const name = aname(id).toUpperCase();
   return `<div class="pcard ${kind}" style="--a:${ANIMAL_COLORS[id]}">
-    ${val !== '' ? `<span class="pcv tl">${val}</span>` : ''}
-    ${kind === 'special' ? `<span class="pcstar">${STAR}</span>` : val !== '' ? `<span class="pcv tr">${val}</span>` : ''}
+    ${val !== '' ? `<span class="pcv">${val}</span>` : ''}
+    ${kind === 'special' ? `<span class="pcstar">${STAR}</span>` : ''}
     <div class="pcart">${art(id)}</div>
     <div class="pcname">${name}</div>
   </div>`;

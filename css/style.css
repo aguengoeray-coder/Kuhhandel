@@ -943,7 +943,7 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .nudge { right: auto; left: -18px; bottom: auto; top: 0; transform: translateX(-100%); }
 .stage.small .prow .chips { max-width: 206px; }
 
-/* Geldscheine: große Zahl in der Mitte, kleine Zahlen in zwei Ecken */
+/* Geldscheine: Betrag einmal groß in der Mitte */
 .money { position: relative; display: block; padding: 0; overflow: hidden;
   background-color: var(--m);
   background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,.55) 0 30%, transparent 31%), repeating-linear-gradient(135deg, rgba(255,255,255,.12) 0 4px, transparent 4px 8px);
@@ -1070,3 +1070,9 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .tresult p { margin: 0; font-size: 13px; font-weight: 600; text-align: center; }
 .tresult .tanimal { margin-top: 0; box-shadow: none; border: 2px solid #ECE7DB; }
 .tresult.pop { animation: pop .4s ease-out; }
+/* Betrag nur einmal, mittig */
+.pcv, .pcv.tl { left: 0; right: 0; top: 6px; text-align: center; font-size: 15px; }
+.bigcard.compact .pcv { font-size: 13.5px; }
+.acard .cv { left: 0; right: 0; text-align: center; top: 2px; }
+.money .mv { font-size: 18px; }
+.money.fan .mv { font-size: 17px; }
