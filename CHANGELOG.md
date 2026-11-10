@@ -211,7 +211,7 @@
 
 - [x] Jede Tierart hat eine eigene, gut unterscheidbare Farbe: Pferd rot, Kuh dunkelblau, Schwein dunkelrosa, Esel orange, Katze lila, Hund hellblau, Hahn hellgrün, Gans gelb, Schaf türkis, Ziege braun, Ratte grau
 
-## v0.20.0 – Aufdecken mit Animation (wartet auf Freigabe)
+## v0.20.0 – Aufdecken mit Animation
 
 - [x] Aufgedeckte Tierkarte dreht sich erst allein groß in der Tischmitte um (1,5 s), dann rutscht sie an ihren Platz
 - [x] Danach blendet ein kleiner, dezenter Infokasten ein (Wert, bei anderen, du hast, Esel-Bonus)
