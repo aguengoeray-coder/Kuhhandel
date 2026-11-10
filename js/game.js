@@ -182,7 +182,6 @@ export function renderGame(root, ctx) {
     const iAmAuctioneer = a.auctioneer === meId;
     const high = a.high ? a.high.amount : 0;
     const nextBid = high + BID_STEP;
-    const bigBid = high + 5 * BID_STEP;
     const cap = a.caps[meId];
     const canBid = (amt) => cap == null || amt <= cap;
     const owners = v.players.filter((p) => p.animals[a.animal] > 0).map((p) => `${esc(p.id === meId ? 'Du' : p.name)} ${p.animals[a.animal]}`).join(', ') || 'noch niemand';
@@ -224,9 +223,14 @@ export function renderGame(root, ctx) {
       }
     } else if (running) {
       const passed = a.passed.includes(meId);
-      buttons = `<button type="button" class="pill pill-red big" data-a="bid" data-v="${bigBid}" ${canBid(bigBid) ? '' : 'disabled'}><small>HOHES GEBOT</small>${bigBid}</button>
-        <button type="button" class="pill pill-red big" data-a="bid" data-v="${nextBid}" ${canBid(nextBid) ? '' : 'disabled'}><small>BIETEN</small>${nextBid}</button>
-        <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
+      // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
+      const steps = [10, 20, 50, 100, 200, 500];
+      buttons = `<div class="bidrow">${steps.map((st) => {
+        const amt = high + st;
+        return `<button type="button" class="bidbtn" style="--m:${MONEY_COLORS[st]}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten">
+          <b>+${st}</b><small>= ${amt}</small></button>`;
+      }).join('')}
+        <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button></div>`;
     } else {
       buttons = `<div class="decide">Zeit abgelaufen – ${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
     }

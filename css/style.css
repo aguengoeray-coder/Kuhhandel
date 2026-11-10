@@ -440,3 +440,17 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .decide { background: #fff; border-radius: 999px; padding: 14px 22px; font-family: var(--font-head); font-weight: 600; font-size: 17px; box-shadow: 0 4px 0 rgba(0,0,0,.12); }
 .menu .pill { width: 100%; }
 .game-row.resume { background: #FFF4CC; }
+
+/* Gebotsknöpfe: einer pro Scheinwert */
+.bidrow { display: flex; align-items: center; gap: 7px; }
+.bidbtn {
+  width: 62px; height: 66px; border-radius: 10px; border: 3px solid var(--ink); background: var(--m);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  box-shadow: 0 4px 0 rgba(0,0,0,.25); cursor: pointer; color: var(--ink); font-family: var(--font-head);
+  transition: transform .08s, box-shadow .08s;
+}
+.bidbtn b { font-size: 19px; font-weight: 700; line-height: 1; }
+.bidbtn small { font-family: var(--font-body); font-size: 10px; font-weight: 700; }
+.bidbtn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+.bidbtn:disabled { opacity: .35; cursor: not-allowed; }
+.bidrow .pill-small { margin-left: 4px; }
