@@ -128,6 +128,13 @@ function giveCards(p, cards) {
   p.money.sort((a, b) => a - b);
 }
 
+// Rückblick am Spielende: kleine Zähler pro Spieler (alte Spielstände ohne Zähler: wird angelegt)
+function stat(state, id) {
+  if (!state.stats) state.stats = {};
+  if (!state.stats[id]) state.stats[id] = { buys: 0, maxBuy: null, tradesWon: 0, tradesLost: 0, ratsTaken: 0, ratCards: 0, moneyDrawn: 0, specialsWon: 0, buzzes: 0 };
+  return state.stats[id];
+}
+
 function moveAnimals(from, to, animal, count) {
   from.animals[animal] -= count;
   to.animals[animal] = (to.animals[animal] || 0) + count;
@@ -172,7 +179,9 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
     log: [],
     winner: null,
     settings: settings || null,
+    stats: {},
   };
+  for (const p of players) stat(state, p.id);
   log(state, 'Das Spiel beginnt.');
   return state;
 }
@@ -336,6 +345,7 @@ export function drawForAuction(prev, playerId, now) {
     // Geldschein: der Aufdecker bekommt ihn, alle sehen den Betrag, der Zug ist vorbei
     const value = moneyValue(animal);
     giveCards(me, [value]);
+    stat(state, playerId).moneyDrawn += value;
     state.lastEvent = { type: 'money_drawn', player: playerId, value };
     log(state, `${me.name} zieht einen Geldschein: ${value}.`);
     nextTurn(state);
@@ -456,6 +466,7 @@ export function pay(prev, playerId, cardIndices) {
     giveCards(player(state, pm.payee), cards);
     const buyer = player(state, pm.buyer);
     buyer.specials.push(pm.special);
+    stat(state, buyer.id).specialsWon += 1;
     log(state, `${payer.name} zahlt ${cards.length} Karte(n). ${buyer.name} bekommt die ${animalName(pm.special)}-Spezialkarte.`);
     state.lastEvent = { type: 'special_won', animal: pm.special, buyer: buyer.id, count: cards.length, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
     nextTurn(state);
@@ -466,6 +477,9 @@ export function pay(prev, playerId, cardIndices) {
   giveCards(player(state, pm.payee), cards);
   const buyer = player(state, pm.buyer);
   buyer.animals[pm.animal] += 1;
+  const st = stat(state, buyer.id);
+  st.buys += 1;
+  if (!st.maxBuy || pm.amount > st.maxBuy.amount) st.maxBuy = { amount: pm.amount, animal: pm.animal };
   log(state, `${payer.name} zahlt mit ${cards.length} Karte(n). ${buyer.name} bekommt ${animalName(pm.animal)}.`);
   state.lastEvent = { type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
   nextTurn(state);
@@ -509,6 +523,8 @@ export function acceptTrade(prev, playerId) {
     moveAnimals(tg, ch, t.animal, t.count);
     log(state, `${tg.name} nimmt den Kuhhandel an. ${ch.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
   }
+  stat(state, ch.id).tradesWon += 1;
+  stat(state, tg.id).tradesLost += 1;
   state.lastEvent = { type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
   nextTurn(state);
   return state;
@@ -541,6 +557,8 @@ export function counterTrade(prev, playerId, cardIndices) {
     // Im Protokoll (für alle sichtbar) keine Beträge – die sehen nur die beiden Beteiligten
     log(state, `Kuhhandel ${ch.name} (${t.offer.length} Karten) gegen ${tg.name} (${counter.length} Karten): ${winner.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
   }
+  stat(state, winner.id).tradesWon += 1;
+  stat(state, loser.id).tradesLost += 1;
   state.lastEvent = { type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, winner: winner.id };
   nextTurn(state);
   return state;
@@ -577,6 +595,8 @@ export function ratTake(prev, playerId) {
   const pot = state.rat.pot;
   giveCards(me, pot);
   me.animals[RAT] = (me.animals[RAT] || 0) + 1;
+  stat(state, playerId).ratsTaken += 1;
+  stat(state, playerId).ratCards += pot.length;
   log(state, `${me.name} nimmt die Ratte und bekommt ${pot.length} Karte(n).`);
   state.lastEvent = { type: 'rat_taken', player: playerId, count: pot.length, cards: pot.slice(), laid: { ...state.rat.laid } };
   afterRat(state);
@@ -643,6 +663,7 @@ export function buzz(prev, playerId, now) {
   if (top && n < top.number) fail('Zu spät – jemand war schneller.');
   if (sp.caps[playerId] != null && n > sp.caps[playerId]) fail(`Du darfst erst bei ${sp.caps[playerId]} drücken.`);
   sp.buzzes[playerId] = n;
+  stat(state, playerId).buzzes += 1;
   log(state, `${player(state, playerId).name} buzzert bei ${n}.`);
   return state;
 }
@@ -687,6 +708,7 @@ export function specialDecide(prev, playerId, mode, now) {
   const res = specialResult(state);
   if (!res) {
     rev.specials.push(sp.animal);
+    stat(state, rev.id).specialsWon += 1;
     log(state, `Niemand buzzert – ${rev.name} bekommt die ${animalName(sp.animal)}-Spezialkarte umsonst.`);
     state.lastEvent = { type: 'special_won', animal: sp.animal, buyer: rev.id, count: 0 };
     nextTurn(state);
@@ -716,6 +738,43 @@ export function specialDecide(prev, playerId, mode, now) {
   log(state, `${rev.name} verkauft die Spezialkarte an ${other.name} für ${res.count} Karte(n).`);
   state.phase = 'payment';
   return state;
+}
+
+// ---------- Rückblick am Spielende ----------
+
+// Kleine Auszeichnungen aus den Zählern (nur was wirklich vorkam)
+export function awards(state) {
+  const st = state.stats || {};
+  const name = (id) => state.players.find((p) => p.id === id)?.name || '?';
+  const best = (key, min = 1) => {
+    let top = null;
+    for (const p of state.players) {
+      const v = st[p.id]?.[key] || 0;
+      if (v >= min && (!top || v > top.v)) top = { id: p.id, v };
+    }
+    return top;
+  };
+  const out = [];
+  let buy = null;
+  for (const p of state.players) {
+    const m = st[p.id]?.maxBuy;
+    if (m && (!buy || m.amount > buy.amount)) buy = { id: p.id, ...m };
+  }
+  if (buy && buy.amount > 0) out.push({ key: 'buy', title: 'Teuerster Kauf', who: buy.id, name: name(buy.id), text: `${animalName(buy.animal)} für ${buy.amount}` });
+  const tr = best('tradesWon');
+  if (tr) out.push({ key: 'trade', title: 'Kuhhandel-König', who: tr.id, name: name(tr.id), text: `${tr.v} Kuhhandel gewonnen` });
+  const rt = best('ratsTaken');
+  if (rt) out.push({ key: 'rat', title: 'Rattenfänger', who: rt.id, name: name(rt.id), text: `${rt.v}× die Ratte genommen` });
+  const rc = best('ratCards');
+  if (rc && (!rt || rc.id !== rt.id)) out.push({ key: 'ratcards', title: 'Ratten-Kasse', who: rc.id, name: name(rc.id), text: `${rc.v} Karten mit Ratten kassiert` });
+  const sw = best('specialsWon');
+  if (sw) out.push({ key: 'special', title: 'Sternsammler', who: sw.id, name: name(sw.id), text: `${sw.v} Spezialkarte${sw.v === 1 ? '' : 'n'}` });
+  const md = best('moneyDrawn', 10);
+  if (md) out.push({ key: 'money', title: 'Glückspilz', who: md.id, name: name(md.id), text: `${md.v} Taler aus dem Stapel gezogen` });
+  let rich = null;
+  for (const p of state.players) { const v = sum(p.money); if (!rich || v > rich.v) rich = { id: p.id, v }; }
+  if (rich) out.push({ key: 'rich', title: 'Sparfuchs', who: rich.id, name: name(rich.id), text: `${rich.v} Taler übrig` });
+  return out;
 }
 
 // Scheine finden, mit denen man am wenigsten überzahlt (bei Gleichstand: möglichst wenige Scheine)

@@ -24,7 +24,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 - **Hosting:** Cloudflare Worker `kuhhandel` (statische Dateien, `wrangler.jsonc` + `.assetsignore`).
   Live: https://kuhhandel.a-guengoeray.workers.dev – jeder Push auf `main` baut automatisch neu.
-- **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results`, `seat_pins`.
+- **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results`, `seat_pins`, `error_reports` (automatische Fehlerberichte).
   Konten: Name + Passwort (intern als `name@kuhhandel.app`, E-Mail-Bestätigung ist aus).
   SQL-Stand: `supabase/schema.sql` + spätere Dateien in `supabase/`.
 - **Kein Build-Schritt**, reines HTML/CSS/JavaScript (ES-Module).
@@ -40,6 +40,9 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `js/sounds.js` | Geräusche (im Browser erzeugt) |
 | `js/demo.js` | Beispiel-Spielstände für Screenshots (`?demo=turn`, `auction`, `tradesetup` …) |
 | `css/style.css` | Gestaltung |
+| `worker/index.js` | Cloudflare Worker: liefert die Dateien aus + weckt Supabase täglich (Zeitplan in `wrangler.jsonc`) |
+| `.github/workflows/` | `tests.yml` (Tests bei jedem Pull Request), `supabase-wach.yml` (zweite Absicherung gegen Pausieren) |
+| `supabase/passwort-zuruecksetzen.md` | Anleitung: Passwort eines Spielers neu setzen |
 
 ## Testen
 

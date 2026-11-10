@@ -231,6 +231,11 @@ export function buildDemoState(kind, local) {
       g.players[0].specials = ['esel', 'hahn', 'gans', 'schaf'];
       g.players[3].animals[RAT] = 4;
       g.blocked = { player: 'u4', animal: 'hahn' };
+      Object.assign(g.stats.u2, { buys: 5, maxBuy: { amount: 620, animal: 'pferd' }, tradesWon: 2 });
+      Object.assign(g.stats.u1, { tradesWon: 4, ratsTaken: 2, ratCards: 6 });
+      Object.assign(g.stats.u4, { ratsTaken: 3, ratCards: 11, specialsWon: 3 });
+      Object.assign(g.stats.u3, { moneyDrawn: 700 });
+      g.players.forEach((p, i) => { p.money = [[0, 10, 50, 200], [0, 0, 10], [500, 100, 20], [10, 10]][i]; });
       g.deck = [];
       g.phase = 'ended';
       const sc = scores(g); const best = Math.max(...sc.map((x) => x.score));

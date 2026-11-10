@@ -5,7 +5,7 @@ import {
   possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS, passAuction,
   AUCTION_START_MS, AUCTION_BID_MS, bestPay,
   RAT, ratLay, ratTake, ratCurrent, buzz, rpsPick, specialDecide, specialStage, specialNumber,
-  chooseBlock, scoreFor, SPECIAL_DELAY_MS, moneyDeckFrom,
+  chooseBlock, scoreFor, SPECIAL_DELAY_MS, moneyDeckFrom, awards,
 } from '../src/engine.js';
 
 const P = [
@@ -515,4 +515,27 @@ test('Versionsnummer in js/app.js und version.json stimmen überein', async () =
   const v = app.match(/APP_VERSION = '([^']+)'/)[1];
   const json = JSON.parse(readFileSync(new URL('../version.json', import.meta.url), 'utf8'));
   assert.equal(json.version, v);
+});
+
+test('Rückblick: teuerster Kauf, Kuhhandel-König, Rattenfänger', () => {
+  let g = gameWithDeck(['pferd', RAT, 'hahn']);
+  g = drawForAuction(g, 'a');
+  g = bid(g, 'b', 70);
+  g = closeAuction(g, 'a', 'sell');
+  g = pay(g, 'b', [g.players[1].money.indexOf(50), g.players[1].money.indexOf(20)]);
+  g = drawForAuction(g, 'b');
+  g = ratTake(g, 'c');
+  g.players[0].animals.kuh = 1; g.players[3].animals.kuh = 1;
+  g.turn = 0; g.phase = 'turn'; g.mustDraw = false;
+  g = startTrade(g, 'a', 'd', 'kuh', [6]);
+  g = acceptTrade(g, 'd');
+  const a = Object.fromEntries(awards(g).map((x) => [x.key, x]));
+  assert.equal(a.buy.who, 'b');
+  assert.equal(a.buy.text, 'Pferd für 70');
+  assert.equal(a.trade.who, 'a');
+  assert.equal(a.rat.who, 'c');
+  assert.ok(a.rich);
+  // alter Spielstand ohne Zähler
+  const old = createGame({ players: P, seed: 2 }); delete old.stats;
+  assert.ok(Array.isArray(awards(old)));
 });

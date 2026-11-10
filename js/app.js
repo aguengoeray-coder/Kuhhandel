@@ -9,7 +9,7 @@ import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.12.0';
+export const APP_VERSION = '0.13.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -25,7 +25,25 @@ if (params.get('debug') === '1') store.set('kh_debug', '1');
 if (params.get('debug') === '0') store.del('kh_debug');
 const DEBUG = store.get('kh_debug') === '1';
 const dbg = { panel: false, viewAs: null, autoView: true, bots: false, fast: false, errors: [], lastSync: null, reportText: '' };
-const logError = (msg) => { dbg.errors.push(`${new Date().toISOString()} ${msg}`); if (dbg.errors.length > 30) dbg.errors.shift(); };
+const logError = (msg) => {
+  dbg.errors.push(`${new Date().toISOString()} ${msg}`);
+  if (dbg.errors.length > 30) dbg.errors.shift();
+  if (!/^Regel:/.test(msg)) reportError(msg); // echte Fehler automatisch melden (Regel-Hinweise nicht)
+};
+// Fehler in Supabase speichern (Tabelle error_reports), höchstens 5 pro Sitzung, keine Doppelten
+const reported = new Set();
+function reportError(msg) {
+  try {
+    if (DEMO || !sb || !me.id || reported.size >= 5 || reported.has(msg)) return;
+    reported.add(msg);
+    const s = ui.game?.state;
+    sb.from('error_reports').insert({
+      version: APP_VERSION,
+      message: String(msg).slice(0, 500),
+      context: { screen: ui.screen, game: ui.game?.local ? 'testspiel' : ui.game?.id || null, phase: s?.phase || null, ua: navigator.userAgent.slice(0, 200) },
+    }).then(() => {}, () => {});
+  } catch { /* nie das Spiel stören */ }
+}
 window.addEventListener('error', (e) => logError(`Fehler: ${e.message} (${e.filename}:${e.lineno})`));
 window.addEventListener('unhandledrejection', (e) => logError(`Fehler: ${e.reason?.message || e.reason}`));
 
@@ -354,7 +372,8 @@ let lastNudgeAt = 0;
 function waitingFor() {
   const s = ui.game.state;
   if (!s || s.phase === 'ended') return null;
-  const who = whoMustAct(s, now());
+  let who = whoMustAct(s, now());
+  if ((s.autoplay || []).includes(who)) who = null; // dafür ist der Test-Spieler da
   const key = `${who}|${ui.game.version}|${s.phase}`;
   if (key !== waitKey) {
     waitKey = key;
@@ -402,6 +421,8 @@ function renderPlaying() {
     now,
     sound: soundOn(),
     toggleSound: () => { store.set('kh_sound', soundOn() ? 'off' : 'on'); render(); },
+    vibe: vibeOn(),
+    toggleVibe: () => { store.set('kh_vibe', vibeOn() ? 'off' : 'on'); render(); },
     online: local ? null : onlineForDisplay(),
     standalone: isStandalone(),
     openModal,
@@ -417,6 +438,10 @@ function renderPlaying() {
     react: sendReaction,
     nudgeWho: waitingFor(),
     nudge: sendNudge,
+    autoplay: ui.game.state?.autoplay || [],
+    canTakeover: local ? () => false : (seat) => canTakeover(seat),
+    takeover: (seat) => act((s) => withAutoplay(s, seat, true)),
+    selfPlay: (seat) => act((s) => withAutoplay(s, seat, false)),
     tips: DEMO && !params.get('tips') ? null : { seen: tipsSeen(), mark: markTip },
     onExit: () => { if (!ui.game?.local) store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
@@ -425,14 +450,15 @@ function renderPlaying() {
 
 // Spielzug ausführen: Regeln lokal prüfen, dann neuen Stand speichern (nur wenn niemand schneller war).
 // War jemand schneller, wird der Zug automatisch auf dem neuen Stand nochmal geprüft und gespeichert.
-async function act(fn) {
+async function act(fn, { silent = false } = {}) {
   if (busy) return;
   if (tooOld()) return toast('Bitte zuerst neu laden – dieses Spiel braucht die neue Version.');
   const attempt = () => {
     try {
-      return { next: fn(ui.game.state) };
+      const next = fn(ui.game.state);
+      return next ? { next } : null; // nichts zu tun
     } catch (e) {
-      if (e instanceof GameError) { logError(`Regel: ${e.message}`); toast(e.message); return null; }
+      if (e instanceof GameError) { logError(`Regel: ${e.message}`); if (!silent) toast(e.message); return null; }
       logError(`Absturz: ${e.message}`);
       throw e;
     }
@@ -464,15 +490,49 @@ async function act(fn) {
   }
 }
 
+// ---------- Test-Spieler übernimmt für jemanden, der weg ist ----------
+
+const TAKEOVER_AFTER_MS = 2 * 60 * 1000;
+const nameOfSeat = (s, seat) => s.players.find((p) => p.id === seat)?.name || '?';
+function withAutoplay(prev, seat, on) {
+  const s = JSON.parse(JSON.stringify(prev));
+  const list = new Set(s.autoplay || []);
+  if (on === list.has(seat)) return null;
+  if (on) list.add(seat); else list.delete(seat);
+  s.autoplay = [...list];
+  s.log.push(on ? `Ein Test-Spieler spielt jetzt für ${nameOfSeat(s, seat)}.` : `${nameOfSeat(s, seat)} spielt wieder selbst.`);
+  return s;
+}
+function canTakeover(seat) {
+  const s = ui.game?.state;
+  if (!s || s.phase === 'ended' || (s.autoplay || []).includes(seat) || seat === seatIn(ui.game)) return false;
+  if (DEMO && params.get('takeover')) return seat === params.get('takeover');
+  return !!(online && offlineSince[seat] && Date.now() - offlineSince[seat] >= TAKEOVER_AFTER_MS);
+}
+// Wer lässt die Test-Spieler laufen? Der erste Spieler am Tisch, der online ist und selbst spielt.
+function botRunner() {
+  const s = ui.game.state;
+  const shown = onlineForDisplay();
+  return s.players.map((p) => p.id).find((id) => !(s.autoplay || []).includes(id) && (!shown || shown.has(id))) || null;
+}
+setInterval(() => {
+  if (DEMO || ui.screen !== 'playing' || !ui.game || ui.game.local || busy) return;
+  const s = ui.game.state;
+  if (!s?.autoplay?.length || s.phase === 'ended' || tooOld()) return;
+  if (botRunner() !== seatIn(ui.game)) return;
+  act((st) => botStep(st, st.autoplay || [], now()), { silent: true }).catch((e) => logError(`Test-Spieler: ${e.message}`));
+}, 1500);
+
 // ---------- Signal, wenn man gefragt ist (Ton + Vibration) ----------
 
 const soundOn = () => store.get('kh_sound') !== 'off';
+const vibeOn = () => store.get('kh_vibe') !== 'off';
 let lastNeed = '';
 const baseTitle = document.title;
 
 function beep() {
+  if (vibeOn()) { try { navigator.vibrate?.([120, 70, 120]); } catch { /* egal */ } }
   if (!soundOn()) return;
-  try { navigator.vibrate?.([120, 70, 120]); } catch { /* egal */ }
   const ac = audio();
   if (!ac) return;
   const t = ac.currentTime;
@@ -1162,7 +1222,13 @@ function renderModal() {
       <h3 class="ph">Tier</h3>
       <div class="pick-animals">${ANIMALS.map((a) => `<button type="button" class="pa ${pr.animal === a.id ? 'on' : ''}" data-m="animal" data-v="${a.id}" aria-label="${a.name}" style="--bg:${esc(pr.color || '#7FA88A')}">${art(a.id)}</button>`).join('')}</div>
       <h3 class="ph">Farbe</h3>
-      <div class="pick-colors">${PROFILE_COLORS.map((c) => `<button type="button" class="pc ${pr.color === c ? 'on' : ''}" data-m="color" data-v="${c}" aria-label="Farbe" style="background:${c}"></button>`).join('')}</div>`;
+      <div class="pick-colors">${PROFILE_COLORS.map((c) => `<button type="button" class="pc ${pr.color === c ? 'on' : ''}" data-m="color" data-v="${c}" aria-label="Farbe" style="background:${c}"></button>`).join('')}</div>
+      <h3 class="ph">Passwort ändern</h3>
+      <form id="pw-form" class="pwform">
+        <input name="pw" type="password" minlength="6" autocomplete="new-password" placeholder="Neues Passwort (mind. 6 Zeichen)" required>
+        <button type="submit" class="pill pill-white pill-small">Speichern</button>
+      </form>
+      ${modal.pwMsg ? `<div class="${modal.pwOk ? 'okmsg' : 'error'}" role="status">${esc(modal.pwMsg)}</div>` : ''}`;
   }
   if (modal.kind === 'stats') {
     const rows = modal.stats;
@@ -1200,6 +1266,17 @@ function renderModal() {
     if (b.dataset.m === 'animal') return saveProfile({ animal: b.dataset.v });
     if (b.dataset.m === 'color') return saveProfile({ color: b.dataset.v });
   };
+  const pwForm = el.querySelector('#pw-form');
+  if (pwForm) pwForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const pw = String(new FormData(pwForm).get('pw'));
+    if (pw.length < 6) { modal.pwMsg = 'Mindestens 6 Zeichen.'; modal.pwOk = false; return render(); }
+    if (DEMO) { modal.pwMsg = 'Passwort geändert.'; modal.pwOk = true; return render(); }
+    const { error } = await sb.auth.updateUser({ password: pw });
+    modal.pwOk = !error;
+    modal.pwMsg = error ? 'Hat nicht geklappt – bitte nochmal versuchen.' : 'Passwort geändert. Ab jetzt mit dem neuen anmelden.';
+    render();
+  };
   const form = el.querySelector('#rejoin-form');
   if (form) form.onsubmit = async (e) => {
     e.preventDefault();
@@ -1223,6 +1300,7 @@ function demo(kind) {
   if (params.get('pick')) gameLocal.reactTo = params.get('pick');
   if (params.get('score')) gameLocal.scoreOpen = params.get('score');
   if (params.get('oldv')) versions = { u3: '0.11.0' };
+  if (params.get('recap')) gameLocal.recap = true;
   ui.editingName = kind === 'name';
   if (kind === 'name') me.name = '';
   ui.games = [
@@ -1238,6 +1316,8 @@ function demo(kind) {
   const demoState = buildDemoState(kind, gameLocal);
   if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen
   if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }] }];
+  if (demoState && params.get('bots')) demoState.autoplay = params.get('bots').split(',');
+  if (params.get('takeover')) online = new Set(['u1', 'u2', 'u4']);
   if (demoState) {
     ui.screen = 'playing';
     ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'playing', version: 5, players: demoState.players, state: demoState };

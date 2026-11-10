@@ -4,7 +4,7 @@ import {
   viewFor, possibleTrades, scores, currentPlayer,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
-  RAT, RAT_COUNT, SPECIAL_VALUE, SPECIAL_TICK_MS, SPECIAL_FROM, scoreFor,
+  RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, scoreFor,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
@@ -221,6 +221,8 @@ export function renderGame(root, ctx) {
     const turnMark = (state.phase === 'rat' ? ratCurrent(v) === p.id : cur.id === p.id) && state.phase !== 'ended' ? ' turn' : '';
     const offline = ctx.online && !isMe && !ctx.online.has(p.id);
     if (offline) status = 'offline';
+    const bot = (ctx.autoplay || []).includes(p.id);
+    if (bot) status = '🤖 automatisch';
     const dim = (state.phase === 'auction' && auction.passed.includes(p.id)) || offline ? ' dim' : '';
     let coin = entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey' ? `<span class="coinpop">+${v.lastEvent.payout}</span>` : '';
     if (fresh && v.lastEvent?.type === 'money_drawn' && v.lastEvent.player === p.id) coin = `<span class="coinpop big">+${v.lastEvent.value}</span>`;
@@ -228,7 +230,8 @@ export function renderGame(root, ctx) {
     const from = said?.from && said.from !== p.id ? said.from : null;
     const fromIdx = from ? idxOf(from) : -1;
     const bubble = said ? `<div class="rbubble ${from ? 'to' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
-    const nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
+    let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
+    if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
     return `<div class="prow${turnMark}${dim}" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">${coin}
       ${bubble}${nudge}
       ${leader}
@@ -398,7 +401,7 @@ export function renderGame(root, ctx) {
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(sp.revealer))} entscheidet:<br>kaufen oder verkaufen …</div>`;
     }
-    H.buzz = () => { const t = ctx.now(); try { navigator.vibrate?.(70); } catch { /* egal */ } ctx.act((s) => buzz(s, meId, t)); };
+    H.buzz = () => { const t = ctx.now(); if (ctx.vibe !== false) { try { navigator.vibrate?.(70); } catch { /* egal */ } } ctx.act((s) => buzz(s, meId, t)); };
     H.rps = (c) => ctx.act((s) => rpsPick(s, meId, c, ctx.now()));
     H.spSell = () => ctx.act((s) => specialDecide(s, meId, 'sell', ctx.now()));
     H.spBuy = () => ctx.act((s) => specialDecide(s, meId, 'buy', ctx.now()));
@@ -448,7 +451,8 @@ export function renderGame(root, ctx) {
       </button>
     </div>
     ${local.menu ? `<div class="menu">
-      <button type="button" class="pill pill-white pill-small" data-a="sound">Ton &amp; Vibration: ${ctx.sound ? 'an' : 'aus'}</button>
+      <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">Ton: ${ctx.sound ? 'an' : 'aus'}</button>
+      <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button></div>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="pin">Wiedereinstieg-Code</button>
       ${ctx.standalone ? '' : '<button type="button" class="pill pill-white pill-small" data-a="modal" data-v="install">Als App aufs Handy</button>'}
@@ -471,10 +475,13 @@ export function renderGame(root, ctx) {
     ctx.rerender();
   };
   H.nudge = (id) => ctx.nudge && ctx.nudge(id);
+  H.takeover = (id) => ctx.takeover && ctx.takeover(id);
+  H.selfPlay = () => ctx.selfPlay && ctx.selfPlay(meId);
   H.reactClose = () => { local.reactTo = null; ctx.rerender(); };
   H.react = (i) => { const to = local.reactTo; local.reactTo = null; ctx.react(ctx.reactionList[Number(i)], to === meId ? null : to); };
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
+  H.vibe = () => ctx.toggleVibe && ctx.toggleVibe();
   H.modal = (kind) => ctx.openModal(kind);
   H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
   H.tradeOpen = () => { local.tradeOpen = true; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
@@ -658,7 +665,14 @@ export function renderGame(root, ctx) {
     }
   }
 
-  if (state.phase === 'ended') {
+  if (state.phase === 'ended' && local.recap) {
+    const list = awards(state);
+    overlay = `<div class="overlay light"><div class="ending recap">
+      <h2>Rückblick</h2>
+      <ul>${list.map((a) => { const i = idxOf(a.who); return `<li><span class="atitle">${esc(a.title)}</span>${i >= 0 ? avatar(v.players[i], i) : ''}<span class="awho">${esc(a.who === meId ? 'Du' : a.name)}</span><span class="atext">${esc(a.text)}</span></li>`; }).join('') || '<li>Keine besonderen Momente – ein ruhiges Spiel.</li>'}</ul>
+      <div class="endbtns"><button type="button" class="pill pill-red" data-a="recap">Zurück zur Wertung</button></div>
+    </div></div>`;
+  } else if (state.phase === 'ended') {
     const s = scores(state).sort((a, b) => b.score - a.score);
     overlay = `<div class="overlay light ${entered ? 'enter' : ''}"><div class="ending">
       <h2>${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
@@ -669,6 +683,7 @@ export function renderGame(root, ctx) {
         ${local.scoreOpen === r.id ? `<span class="sform">${scoreFormula(v.players[idxOf(r.id)], r.blocked)}${r.blocked ? ` · ${esc(aname(r.blocked))} blockiert` : ''}</span>` : ''}</li>`).join('')}</ol>
       <small>Spieler antippen für die Rechnung · ★ = Spezialkarte</small>
       <div class="endbtns">
+        <button type="button" class="pill pill-white" data-a="recap">Rückblick</button>
         <button type="button" class="pill pill-red" data-a="rematch">${ctx.rematchId ? 'Zur Revanche' : 'Revanche'}</button>
         <button type="button" class="pill pill-white" data-a="exit">Zur Startseite</button>
       </div>
@@ -676,6 +691,7 @@ export function renderGame(root, ctx) {
   }
 
   H.rematch = () => ctx.onRematch();
+  H.recap = () => { local.recap = !local.recap; ctx.rerender(); };
   H.scoreOpen = (id) => { local.scoreOpen = local.scoreOpen === id ? null : id; ctx.rerender(); };
 
   // ----- Effekte: Tier fliegt zum neuen Besitzer, Konfetti am Ende, Quartett-Moment -----
@@ -794,6 +810,7 @@ export function renderGame(root, ctx) {
     ${effects}
     ${tip}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
+    ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick ${local.reactTo !== meId ? 'withdetail' : ''}" style="top:${local.reactTo !== meId ? 6 : Math.round(Math.min(250, Math.max(8, 8 + (374 / v.players.length) * (idxOf(local.reactTo) + 0.5) - 60)))}px">
       <div class="rphead">${local.reactTo === meId ? 'An alle' : `An ${esc(nameOf(local.reactTo))}`}<button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
       ${local.reactTo !== meId ? playerDetail(v.players[idxOf(local.reactTo)]) : ''}

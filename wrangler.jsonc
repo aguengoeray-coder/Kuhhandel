@@ -1,8 +1,14 @@
 // Cloudflare Worker: liefert die Spieldateien als statische Webseite aus
+// und weckt Supabase einmal am Tag (worker/index.js), damit das Projekt nicht pausiert.
 {
   "name": "kuhhandel",
   "compatibility_date": "2026-06-01",
+  "main": "worker/index.js",
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS"
+  },
+  "triggers": {
+    "crons": ["23 5 * * *"]
   }
 }
