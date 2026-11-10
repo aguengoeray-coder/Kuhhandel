@@ -143,7 +143,7 @@
 - [x] Geldschein aufgedeckt: Aufdecker bekommt ihn, alle sehen den Betrag, Zug ist vorbei
 - [x] Revanche übernimmt die Einstellung
 
-## v0.12.0 – Feinschliff (wartet auf Freigabe)
+## v0.12.0 – Feinschliff
 
 - [x] „Neue Version da – neu laden“: App prüft regelmäßig, ob es ein Update gibt
 - [x] Spiel mit neuerer Version: ältere Handys müssen erst neu laden; im Warteraum startet das Spiel erst, wenn alle aktuell sind
