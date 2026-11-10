@@ -181,7 +181,7 @@
 - [x] Admin-Bereich → Reiter „Debug“: Debug-Modus auf diesem Gerät an/aus, Testspiel mit 3 oder 4 Spielern starten, Geld im Stapel an/aus
 - [x] Link `?debug=1` funktioniert weiterhin für alle
 
-## v0.16.0 – Bezahlen am Tisch, Bedienung am iPhone (wartet auf Freigabe)
+## v0.16.0 – Bezahlen am Tisch, Bedienung am iPhone
 
 - [x] Bezahlen öffnet kein eigenes Fenster mehr: Tier und Kassenfeld in der Tischmitte, Scheine unten in der Hand antippen, Knöpfe links
 - [x] Gilt auch für die Spezialkarte; die anderen sehen am Tisch, wer gerade zahlt
