@@ -9,7 +9,7 @@ import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.21.1';
+export const APP_VERSION = '0.22.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -215,12 +215,12 @@ function renderStart() {
       <div class="brand">
         <h1 class="logo">Kuh<br>handel<span>.</span></h1>
         <p class="claim">Das Kartenspiel – online mit Freunden</p>
-        <div class="start-links">
-          <button type="button" class="linklike light" data-modal="rules">Spielregeln</button>
-          <button type="button" class="linklike light" data-modal="stats">Bestenliste</button>
-          ${isStandalone() ? '' : '<button type="button" class="linklike light" data-modal="install">Als App aufs Handy</button>'}
-          <button type="button" class="linklike light" data-modal="rejoin">Mit Code zurück ins Spiel</button>
-          ${ui.isAdmin ? '<button type="button" class="linklike light admin-link" data-modal="admin">⚙ Admin</button>' : ''}
+        <div class="start-links btns">
+          <button type="button" class="slink" data-modal="rules">📖 Regeln</button>
+          <button type="button" class="slink" data-modal="stats">🏆 Bestenliste</button>
+          <button type="button" class="slink" data-modal="rejoin">🔑 Mit Code zurück</button>
+          ${isStandalone() ? '' : '<button type="button" class="slink" data-modal="install">📲 Als App</button>'}
+          ${ui.isAdmin ? '<button type="button" class="slink admin-link" data-modal="admin">⚙ Admin</button>' : ''}
         </div>
         <div class="card name-box">
           <label>Du spielst als</label>
@@ -443,7 +443,6 @@ function renderPlaying() {
     canTakeover: local ? () => false : (seat) => canTakeover(seat),
     takeover: (seat) => act((s) => withAutoplay(s, seat, true)),
     selfPlay: (seat) => act((s) => withAutoplay(s, seat, false)),
-    tips: DEMO && !params.get('tips') ? null : { seen: tipsSeen(), mark: markTip },
     onExit: () => { if (!ui.game?.local) store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
   if (DEBUG) injectDebug();
@@ -883,9 +882,6 @@ function sendReaction(text, to = null) {
 
 // ---------- Erste-Runde-Hilfe ----------
 
-const tipsKey = () => `kh_tips_${me.id || 'x'}`;
-function tipsSeen() { try { return new Set(JSON.parse(store.get(tipsKey()) || '[]')); } catch { return new Set(); } }
-function markTip(id) { const set = tipsSeen(); set.add(id); store.set(tipsKey(), JSON.stringify([...set])); render(); }
 
 // ---------- Ergebnisse für die Bestenliste ----------
 

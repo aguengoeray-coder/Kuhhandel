@@ -85,9 +85,11 @@ function stackHtml(id, n, { special = false, bump = false } = {}) {
   const v = aval(id);
   const done = n === 4 && id !== RAT;
   const cards = Array.from({ length: n }, (_, k) => `<div class="scard ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--k:${n - 1 - k};--a:${ANIMAL_COLORS[id]}">${k === n - 1 ? `${v != null ? `<em>${v}</em>` : ''}<b>${art(id)}</b>` : ''}</div>`).join('');
-  return `<div class="stack ${done ? 'done' : ''} ${id === RAT ? 'rat' : ''} ${bump ? 'bump' : ''}" style="--n:${n}" title="${n}× ${aname(id)}${special ? ' + Spezialkarte' : ''}">
+  const near = n === 3 && id !== RAT;
+  const label = id === RAT ? `${n}× Ratte` : done ? 'Quartett' : `noch ${4 - n}`;
+  return `<div class="stack ${done ? 'done' : ''} ${near ? 'near' : ''} ${id === RAT ? 'rat' : ''} ${bump ? 'bump' : ''}" style="--n:${n}" title="${n}× ${aname(id)}${special ? ' + Spezialkarte' : ''}">
     <div class="spile">${cards}${special ? `<span class="sstar">${STAR}</span>` : ''}${done ? '<span class="scheck">✓</span>' : ''}</div>
-    <span class="slabel">${n}/4</span>
+    <span class="slabel">${label}</span>
   </div>`;
 }
 
@@ -100,16 +102,20 @@ function specialMini(id) {
 }
 
 // Kleine Symbole in der Spielerspalte: „2× [Tier]“, Ratten, Spezialkarten
+// Höchstens eine Reihe: Quartette zuerst, dann Ratten, Spezialkarten, dann nach Anzahl und Wert; Rest als „+N“
+const CHIP_MAX = 4;
 function playerChips(p) {
-  const out = [];
+  const items = [];
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
-    if (n > 0) out.push(`<span class="chip ${n === 4 ? 'done' : ''}" title="${n}× ${a.name}"><em>${n}×</em><span class="ci" style="--a:${ANIMAL_COLORS[a.id]}">${art(a.id)}</span></span>`);
+    if (n > 0) items.push({ rank: n === 4 ? 0 : 2, n, val: a.value, html: `<span class="chip ${n === 4 ? 'done' : ''}" title="${n}× ${a.name}"><em>${n}×</em><span class="ci" style="--a:${ANIMAL_COLORS[a.id]}">${art(a.id)}</span></span>` });
   }
   const r = ratsOf(p);
-  if (r > 0) out.push(`<span class="chip rat" title="${r}× Ratte"><em>${r}×</em><span class="ci" style="--a:${ANIMAL_COLORS[RAT]}">${art(RAT)}</span></span>`);
-  for (const id of specialsOf(p)) out.push(`<span class="chip sp" title="${aname(id)}-Spezialkarte"><span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>${STAR}</span>`);
-  return out.join('');
+  if (r > 0) items.push({ rank: 1, n: r, val: 0, html: `<span class="chip rat" title="${r}× Ratte"><em>${r}×</em><span class="ci" style="--a:${ANIMAL_COLORS[RAT]}">${art(RAT)}</span></span>` });
+  for (const id of specialsOf(p)) items.push({ rank: 3, n: 1, val: SPECIAL_VALUE, html: `<span class="chip sp" title="${aname(id)}-Spezialkarte"><span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>${STAR}</span>` });
+  items.sort((x, y) => x.rank - y.rank || y.n - x.n || y.val - x.val);
+  if (items.length <= CHIP_MAX) return items.map((x) => x.html).join('');
+  return items.slice(0, CHIP_MAX - 1).map((x) => x.html).join('') + `<span class="chip more">+${items.length - CHIP_MAX + 1}</span>`;
 }
 
 // Rechnung für die Wertung, z. B. „(800 + 250★ + 1000) × 2 + 250★ = 4350“
@@ -248,7 +254,7 @@ export function renderGame(root, ctx) {
     const bot = (ctx.autoplay || []).includes(p.id);
     if (bot) status = '🤖 automatisch';
     const dim = (state.phase === 'auction' && auction.passed.includes(p.id)) || offline ? ' dim' : '';
-    let coin = entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey' ? `<span class="coinpop">+${v.lastEvent.payout}</span>` : '';
+    let coin = '';
     if (fresh && v.lastEvent?.type === 'money_drawn' && v.lastEvent.player === p.id) coin = `<span class="coinpop big">+${v.lastEvent.value}</span>`;
     if (fresh && isLeader && state.log[state.log.length - 1]?.includes('bietet')) coin = `<span class="coinpop bidpop" style="--c:${SEAT_COLORS[i]}">${auction.high.amount}!</span>`;
     const said = ctx.reactions?.[p.id];
@@ -263,7 +269,7 @@ export function renderGame(root, ctx) {
         ${avatar(p, i)}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status}</span></div>
       </div>
-      <div class="chips">${chips}</div>
+      <div class="chips" data-a="reactTo" data-v="${esc(p.id)}">${chips}</div>
     </div>`;
   }).join('');
 
@@ -329,7 +335,7 @@ export function renderGame(root, ctx) {
       if (revealing) {
         aucLeft = `<div class="ldecide">Du deckst auf …</div>`;
       } else if (running) {
-        aucLeft = `<div class="ldecide">Du versteigerst.<br>Wenn die Zeit um ist, entscheidest du: Zuschlag oder selbst kaufen.</div>`;
+        aucLeft = `<div class="ldecide">Du versteigerst …</div>`;
       } else if (a.high) {
         aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))}</button>
           <button type="button" class="pill pill-white" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>SELBST KAUFEN</small>${high}</button>`;
@@ -337,7 +343,7 @@ export function renderGame(root, ctx) {
         aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>Tier nehmen</button>`;
       }
     } else if (revealing) {
-      aucLeft = `<div class="ldecide">Karte wird aufgedeckt –<br>gleich kannst du bieten.</div>`;
+      aucLeft = `<div class="ldecide">Karte wird aufgedeckt …</div>`;
     } else if (running) {
       const passed = a.passed.includes(meId);
       // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
@@ -349,7 +355,6 @@ export function renderGame(root, ctx) {
           const over = amt > mine;
           return `<button type="button" class="bidbtn ${over ? 'over' : ''}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten${over ? ', mehr als du hast' : ''}"><b>${amt}</b><small>${over ? '⚠ zu viel' : `+${st}`}</small></button>`;
         }).join('')}</div>
-        <div class="lnote">Mehr bieten? Einfach nochmal tippen.</div>
         <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
     } else {
       aucLeft = `<div class="ldecide">Zeit abgelaufen –<br>${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
@@ -369,17 +374,17 @@ export function renderGame(root, ctx) {
     const pot = `<div class="pot">${Array.from({ length: Math.min(potCount, 14) }, (_, k) => `<div class="money xs back" style="--r:${(k * 37) % 21 - 10}deg"></div>`).join('') || '<span>noch leer</span>'}</div>`;
     aucBanner = 'Rattenrunde';
     aucCenter = `<div class="auc aucmain"><div class="aucrow">
-      <div class="aside l"><div class="ainfo"><div><span>Am Zug</span><b>${esc(turnId === meId ? 'Du' : nameOf(turnId))}</b></div><div><span>Wer alle 4 hat</span><b>−1 Quartett</b></div></div></div>
+      <div class="aside l"><div class="ratnow ${turnId === meId ? 'me' : ''}">${turnId === meId ? 'Du bist dran' : `${esc(nameOf(turnId))} ist dran`}<small>Karte legen oder Ratte nehmen</small></div></div>
       <div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(RAT, 'rat')}</div>
-      <div class="aside r"><div class="potbox">${pot}<small>${karten(potCount)} in der Mitte</small></div></div>
+      <div class="aside r"><div class="potbox">${pot}<small>Gelegt: <b>${karten(potCount)}</b></small></div></div>
     </div></div>`;
     if (turnId === meId) {
       const values = [...new Set(me.money)].sort((a, b) => a - b);
       aucLeft = `<div class="lhead">Karte verdeckt legen</div>
-        ${values.length ? `<div class="bidgrid">${values.map((val) => `<button type="button" class="bidbtn" style="--m:${MONEY_COLORS[val]}" data-a="ratLay" data-v="${val}" aria-label="${val} verdeckt legen"><b>${val}</b><small>×${me.money.filter((m) => m === val).length}</small></button>`).join('')}</div>` : '<div class="ldecide">Du hast keine Karten mehr – du musst die Ratte nehmen.</div>'}
+        ${values.length ? `<div class="bidgrid">${values.map((val) => `<button type="button" class="bidbtn" style="--m:${MONEY_COLORS[val]}" data-a="ratLay" data-v="${val}" aria-label="${val} verdeckt legen"><b>${val}</b><small>×${me.money.filter((m) => m === val).length}</small></button>`).join('')}</div>` : '<div class="ldecide">Keine Karten mehr – Ratte nehmen.</div>'}
         <button type="button" class="pill pill-red" data-a="ratTake"><small>RATTE NEHMEN</small>+ ${karten(potCount)}</button>`;
     } else {
-      aucLeft = `<div class="ldecide">${esc(nameOf(turnId))} ist dran:<br>Karte legen oder die Ratte nehmen.</div>`;
+      aucLeft = `<div class="ldecide">${esc(nameOf(turnId))} überlegt …</div>`;
     }
     H.ratLay = (val) => { const i = me.money.indexOf(Number(val)); if (i >= 0) ctx.act((s) => ratLay(s, meId, i)); };
     H.ratTake = () => ctx.act((s) => ratTake(s, meId));
@@ -410,8 +415,6 @@ export function renderGame(root, ctx) {
       info = `<div class="aucinfo pop">${buzzed.map((id) => esc(nameOf(id))).join(' & ')} ${buzzed.length > 1 ? 'buzzern' : buzzed[0] === meId ? 'buzzerst' : 'buzzert'} bei <b>${top}</b></div>`;
     } else if (stage === 'decide') {
       info = '<div class="aucinfo">Niemand hat gebuzzert</div>';
-    } else {
-      info = '<div class="aucinfo">Wer zuerst drückt, zahlt so viele Karten</div>';
     }
     aucBanner = `${esc(nameOf(sp.revealer))} ${iRevealed ? 'hast' : 'hat'} eine Spezialkarte`;
     aucCenter = `<div class="auc aucmain"><div class="aucrow">
@@ -422,15 +425,14 @@ export function renderGame(root, ctx) {
 
     if (stage === 'wait' || stage === 'countdown') {
       if (iRevealed) {
-        aucLeft = '<div class="ldecide">Du hast aufgedeckt.<br>Die anderen buzzern – danach entscheidest du: kaufen oder verkaufen.</div>';
+        aucLeft = '<div class="ldecide">Die anderen buzzern …</div>';
       } else {
         const cap = sp.caps[meId];
         const mine = sp.buzzes[meId];
         const blocked = stage === 'wait' || mine != null || (top != null && num < top) || (cap != null && num > cap);
         const label = mine != null ? `Gebuzzert bei ${mine}` : cap === 0 ? 'Keine Karten – kein Buzz' : stage === 'wait' ? 'Gleich …' : cap != null && num > cap ? `Erst ab ${cap}` : `bei ${num} = ${karten(num)}`;
         aucLeft = `<div class="lhead">Spezialkarte</div>
-          <button type="button" class="buzzer" data-a="buzz" ${blocked ? 'disabled' : ''}><b>BUZZ!</b><small>${label}</small></button>
-          <div class="lnote">Drück, sobald die Zahl passt: so viele verdeckte Karten würdest du zahlen.</div>`;
+          <button type="button" class="buzzer" data-a="buzz" ${blocked ? 'disabled' : ''}><b>BUZZ!</b><small>${label}</small></button>`;
       }
     } else if (stage === 'rps') {
       const r = sp.rps;
@@ -492,7 +494,6 @@ export function renderGame(root, ctx) {
           <div class="kline"><span>${isSp ? `${karten(n)} von ${pm.count}` : `${karten(n)} · ${selSum}`}</span><b class="paystatus ${cls}">${status}</b></div>
         </div></div>`;
       aucLeft = `<div class="lhead">${isSp ? `${esc(aname(pm.special))}-Spezialkarte` : `Für: ${esc(aname(pm.animal))}`}</div>
-        <div class="lnote">${isSp ? 'Es zählt nur die Anzahl – du suchst selbst aus, welche.' : 'Tippe unten deine Scheine an. Antippen in der Mitte nimmt sie zurück.'}</div>
         <button type="button" class="pill pill-white pill-small" data-a="${isSp ? 'autocount' : 'autopay'}">${isSp ? 'Kleinste wählen' : 'Passend wählen'}</button>
         <button type="button" class="pill pill-red" data-a="pay" ${ready ? '' : 'disabled'}><small>BEZAHLEN</small>${isSp ? karten(n) : `${karten(n)} · ${selSum}`}</button>`;
       handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
@@ -535,8 +536,14 @@ export function renderGame(root, ctx) {
         ${chosen ? animalStrip(chosen.animal, chosen.count, chosen.animal === RAT ? `wer mehr bietet, wird ${chosen.count === 2 ? 'beide' : 'sie'} los` : 'darum geht es') : ''}
       </div>
     </div>`;
+    const step = (n, label, val, state0) => `<div class="tstep ${state0}"><i>${state0 === 'done' ? '✓' : n}</i><span>${label}</span><b>${val}</b></div>`;
+    const moneyDone = local.sel.length > 0;
     aucLeft = `<div class="lhead">${chosen?.animal === RAT ? 'Rattenhandel' : 'Kuhhandel'}</div>
-      <div class="lnote">Gegner und Tier wählen, dann Scheine unten antippen. Dein Angebot ist verdeckt.</div>
+      <div class="tsteps">
+        ${step(1, 'Gegner', esc(target.name), 'done')}
+        ${step(2, 'Tier', chosen ? esc(aname(chosen.animal)) : '–', chosen ? 'done' : 'now')}
+        ${step(3, 'Geld', moneyDone ? karten(local.sel.length) : 'unten antippen', moneyDone ? 'done' : chosen ? 'now' : '')}
+      </div>
       <button type="button" class="pill pill-white pill-small" data-a="tradeClose">Abbrechen</button>
       <button type="button" class="pill pill-red" data-a="tradeGo" ${canOffer ? '' : 'disabled'}><small>ANGEBOT MACHEN</small>${karten(local.sel.length)}</button>`;
     handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
@@ -568,8 +575,7 @@ export function renderGame(root, ctx) {
         </div>
       </div>
       ${animalStrip(t.animal, t.count, isRat ? 'will dir die Ratte geben' : 'will dein Tier')}`;
-      aucLeft = `<div class="lnote">${isRat ? 'Wer mehr bietet, wird die Ratte los.' : 'Höheres Gebot gewinnt.'} Gleichstand: ${esc(nameOf(t.challenger))} gewinnt. Das Geld wird immer getauscht.</div>
-        <button type="button" class="pill pill-white" data-a="accept"><small>ANNEHMEN</small>${isRat ? 'Geld + Ratte' : 'Geld nehmen'}</button>
+      aucLeft = `<button type="button" class="pill pill-white" data-a="accept"><small>ANNEHMEN</small>${isRat ? 'Geld + Ratte' : 'Geld nehmen'}</button>
         <button type="button" class="pill pill-red" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${karten(local.sel.length)}</button>`;
       handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
       H.accept = () => ctx.act((s) => acceptTrade(s, meId));
@@ -614,11 +620,11 @@ export function renderGame(root, ctx) {
     if (bp.id === meId) {
       const opts = ANIMALS.filter((a) => me.animals[a.id] === 4);
       aucCenter = `<div class="blockpanel ${entered ? 'pop' : ''}">
-        <p>Wähle ein Quartett, das nicht zählt. Darunter: deine Punkte danach.</p>
+        <p>Welches Quartett fällt weg?</p>
         <div class="blockgrid">${opts.map((a) => `<button type="button" class="blockopt" data-a="block" data-v="${a.id}" style="--a:${ANIMAL_COLORS[a.id]}">
           <span class="ci">${art(a.id)}</span><b>${a.name}${specialsOf(me).includes(a.id) ? ` ${STAR}` : ''}</b><small>${scoreFor(me, a.id).score} Punkte</small></button>`).join('')}</div>
       </div>`;
-      aucLeft = `<div class="ldecide">Die Ratten blockieren eines deiner Quartette. Tippe in der Mitte auf das, das wegfallen soll.</div>`;
+      aucLeft = `<div class="ldecide">Quartett wählen …</div>`;
       H.block = (id) => ctx.act((s) => chooseBlock(s, meId, id));
     } else {
       aucCenter = `<div class="auc">${ratCard('', 'compact')}<div class="aucinfo">${esc(bp.name)} wählt, welches Quartett nicht zählt …</div></div>`;
@@ -628,6 +634,7 @@ export function renderGame(root, ctx) {
 
   // ----- Tisch -----
   const nextDonkey = v.donkeysDrawn < 4 ? DONKEY_PAYOUTS[v.donkeysDrawn] : null;
+  const canDraw = state.phase === 'turn' && myTurn && !local.tradeOpen && v.deck > 0;
   const lastLog = v.log[v.log.length - 1] || '';
   // Auslage: immer sichtbar über dem Geld. Spezialkarte steckt im Stapel ihres Tiers.
   const lev = v.lastEvent;
@@ -656,7 +663,8 @@ export function renderGame(root, ctx) {
     <div class="tbanner ${fresh && myTurn && state.phase === 'turn' ? 'pulse' : ''}">${banner}</div>
     <div class="tcenter">${aucCenter || `<div class="tlog">${esc(lastLog)}</div>
     <div class="deck-wrap">
-      <div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>
+      ${canDraw ? `<button type="button" class="deck go" data-a="auction" aria-label="Karte aufdecken"><span class="deckcow">${art('kuh')}</span><span class="deckgo">Tippen</span></button>`
+        : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}</span>
       ${v.mustDraw ? '<span class="deck-count must">Nach der Ratte: nochmal aufdecken!</span>' : ''}
     </div>`}</div>
@@ -684,8 +692,7 @@ export function renderGame(root, ctx) {
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="pin">Wiedereinstieg-Code</button>
       ${ctx.standalone ? '' : '<button type="button" class="pill pill-white pill-small" data-a="modal" data-v="install">Als App aufs Handy</button>'}
-      <button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button>
-      <span>Über die Startseite kommst du jederzeit zurück ins Spiel.</span></div>` : ''}
+      <button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button></div>` : ''}
     <div class="infochips infobox">
       <span class="ichip">Geld <b>${sum(me.money)}</b></span>
       <span class="ichip">Punkte <b>${scoreFor(me).score}</b></span>
@@ -733,14 +740,16 @@ export function renderGame(root, ctx) {
     </div></div>`;
   } else if (state.phase === 'ended') {
     const s = scores(state).sort((a, b) => b.score - a.score);
-    overlay = `<div class="overlay light ${entered ? 'enter' : ''}"><div class="ending">
+    const cols = ['#FFD34E', '#D7263D', '#1D5FC2', '#B8285F', '#6D3FC0', '#7FA88A', '#fff'];
+    const confetti = entered ? `<div class="confetti" aria-hidden="true">${Array.from({ length: 40 }, (_, k) =>
+      `<i style="left:${(k * 37) % 100}%;background:${cols[k % cols.length]};animation-delay:${(k % 10) * 90}ms;animation-duration:${1600 + (k % 7) * 180}ms;transform:rotate(${k * 29}deg)"></i>`).join('')}</div>` : '';
+    overlay = `<div class="overlay light ${entered ? 'enter' : ''}">${confetti}<div class="ending">
       <h2>${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
       <ol>${s.map((r) => `<li class="${v.winner?.includes(r.id) ? 'win' : ''} ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}">
         <span class="sname">${esc(r.id === meId ? 'Du' : r.name)}</span>
         <span class="squart">${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}</span>
         <span class="sval">${r.score}</span>
         ${local.scoreOpen === r.id ? `<span class="sform">${scoreFormula(v.players[idxOf(r.id)], r.blocked)}${r.blocked ? ` · ${esc(aname(r.blocked))} blockiert` : ''}</span>` : ''}</li>`).join('')}</ol>
-      <small>Spieler antippen für die Rechnung · ★ = Spezialkarte</small>
       <div class="endbtns">
         <button type="button" class="pill pill-white" data-a="recap">Rückblick</button>
         <button type="button" class="pill pill-red" data-a="rematch">${ctx.rematchId ? 'Zur Revanche' : 'Revanche'}</button>
@@ -857,30 +866,30 @@ export function renderGame(root, ctx) {
   }
   if (effects.includes('class="qpop"') || (entered && state.phase === 'ended')) sounds.push('quartet');
 
-  // Erste-Runde-Hilfe: jeder Hinweis erscheint nur einmal
-  let tip = '';
-  if (ctx.tips && state.phase !== 'ended') {
-    const a = auction;
-    const running = a && a.endsAt != null && ctx.now() < a.endsAt;
-    let t = null;
-    if (local.tradeOpen) t = ['tradesetup', 'top', 'Wähle oben Gegner und Tier und tippe unten Scheine an. Bluffen ist erlaubt – auch ein 0er zählt als Karte.'];
-    else if (state.phase === 'turn' && myTurn) t = ['turn', 'left', 'Du bist dran! Versteigere ein Tier vom Stapel – oder fordere mit „Kuhhandel“ jemanden heraus, der dasselbe Tier hat.'];
-    else if (state.phase === 'auction' && a.auctioneer === meId) t = ['auctioneer', 'left', 'Du versteigerst. Ist die Zeit um, entscheidest du: Zuschlag an den Höchstbietenden – oder selbst zum Höchstgebot kaufen.'];
-    else if (state.phase === 'auction' && running) t = ['bid', 'left', 'Tippe auf einen Schein, um so viel mehr zu bieten. Nach jedem Gebot startet die Uhr neu.'];
-    else if (state.phase === 'payment' && v.payment.payer === meId) t = ['pay', 'top', 'Kein Wechselgeld! Tippe Scheine an – oder nimm „Passend auswählen“.'];
-    else if (state.phase === 'trade' && v.trade.target === meId && v.trade.animal !== RAT) t = ['trade', 'top', 'Du wirst herausgefordert: Nimm das Geld und gib das Tier ab – oder biete verdeckt dagegen.'];
-    else if (state.phase === 'rat' && ratCurrent(v) === meId) t = ['rat', 'left', 'Ratte! Lege eine Karte verdeckt in die Mitte (auch ein 0er) – oder nimm die Ratte und bekommst alle Karten. Wer am Ende alle Ratten hat, verliert ein Quartett.'];
-    else if (state.phase === 'special' && v.special.revealer !== meId && ['wait', 'countdown'].includes(specialStage(v, ctx.now()))) t = ['buzz', 'left', 'Spezialkarte! Die Zahl zählt runter. Drück BUZZ, sobald du bereit bist, so viele Karten zu zahlen. Der Aufdecker entscheidet dann: kaufen oder verkaufen.'];
-    if (t && !ctx.tips.seen.has(t[0])) {
-      tip = `<div class="tip tip-${t[1]}" role="note"><b>Tipp</b><span>${t[2]}</span><button type="button" data-a="tipok" data-v="${t[0]}">Verstanden</button></div>`;
-    }
-  }
-  H.tipok = (id) => ctx.tips.mark(id);
 
-  if (entered && state.phase === 'ended') {
-    const cols = ['#FFD34E', '#D7263D', '#1D5FC2', '#B8285F', '#6D3FC0', '#7FA88A', '#fff'];
-    effects += `<div class="confetti" aria-hidden="true">${Array.from({ length: 40 }, (_, k) =>
-      `<i style="left:${(k * 37) % 100}%;background:${cols[k % cols.length]};animation-delay:${(k % 10) * 90}ms;animation-duration:${1600 + (k % 7) * 180}ms;transform:rotate(${k * 29}deg)"></i>`).join('')}</div>`;
+
+  // Gefordert (dran, herausgefordert, zahlen, Ratte, Entscheidung): Rand leuchtet kurz auf
+  let need = '';
+  if (state.phase === 'turn' && myTurn) need = 'turn';
+  else if (state.phase === 'payment' && v.payment.payer === meId) need = 'pay';
+  else if (state.phase === 'trade' && v.trade.target === meId) need = 'trade';
+  else if (state.phase === 'rat' && ratCurrent(v) === meId) need = 'rat';
+  else if (state.phase === 'block' && v.block.player === meId) need = 'block';
+  else if (state.phase === 'special' && v.special.revealer === meId && specialStage(v, ctx.now()) === 'decide') need = 'special';
+  const needKey = need ? `${need}|${state.log.length}` : '';
+  if (needKey && local.needKey !== undefined && needKey !== local.needKey) effects += `<div class="attn ${need === 'trade' || need === 'pay' ? 'strong' : ''}" aria-hidden="true"></div>`;
+  local.needKey = needKey;
+
+  // Was ist passiert: kurz groß in der Tischmitte, danach klein oben
+  const ownEffect = /class="(qpop|soldsign|moneyreveal)"/.test(effects) || (aucCenter && state.phase === 'turn');
+  if (fresh && state.phase === 'turn' && lastLog && !ownEffect && !(le?.type === 'money_drawn')) {
+    effects += `<div class="logpop" aria-live="polite">${esc(lastLog)}</div>`;
+  }
+
+  // Esel aufgedeckt: eine große Einblendung, Scheine fliegen zu allen
+  if (entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey') {
+    effects += `<div class="donkeypop" aria-live="polite"><b>Esel!</b><span>Alle bekommen +${v.lastEvent.payout}</span></div>`;
+    effects += v.players.map((p) => `<div class="mflyc" style="--dy:${Math.round(rowY(p.id) - 175)}px"></div>`).join('');
   }
 
   root.innerHTML = `<div class="stage-wrap"><div class="stage" id="stage">
@@ -889,7 +898,6 @@ export function renderGame(root, ctx) {
     <div class="gright">${playersCol}</div>
     ${overlay}
     ${effects}
-    ${tip}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick ${local.reactTo !== meId ? 'withdetail' : ''}" style="top:${local.reactTo !== meId ? 6 : Math.round(Math.min(250, Math.max(8, 8 + (374 / v.players.length) * (idxOf(local.reactTo) + 0.5) - 60)))}px">

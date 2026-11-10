@@ -1252,3 +1252,79 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .potbox small { color: #fff; font-size: 11px; font-weight: 700; }
 .aucmain .bignum { font-size: 44px; }
 .aucmain .aucinfo { margin-top: 4px; font-size: 12px; text-align: center; }
+
+/* ---------- v0.22: Feinschliff ---------- */
+/* Spielerspalte: Tier-Chips in einer Reihe, Rest als +N */
+.prow .chips { flex-wrap: nowrap; max-width: 210px; cursor: pointer; }
+.chip.more { background: var(--ink); color: #fff; padding: 2px 7px; font-weight: 800; }
+
+/* Rattenrunde: wer dran ist, klar und groß */
+.ratnow { background: rgba(0,0,0,.28); color: #fff; border-radius: 12px; padding: 8px 12px; font-family: var(--font-head); font-weight: 700; font-size: 16px; text-align: center; display: flex; flex-direction: column; gap: 2px; min-width: 150px; }
+.ratnow small { font-family: var(--font-body); font-size: 11px; font-weight: 600; opacity: .8; }
+.ratnow.me { background: var(--gold); color: var(--ink); box-shadow: 0 0 0 3px rgba(255,255,255,.5); }
+.potbox small b { color: var(--gold); }
+
+/* Kuhhandel: drei Schritte */
+.tsteps { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+.tstep { display: grid; grid-template-columns: 22px 1fr; grid-template-rows: auto auto; column-gap: 7px; align-items: center; background: rgba(255,255,255,.18); color: #fff; border-radius: 10px; padding: 4px 8px; }
+.tstep i { grid-row: 1 / 3; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: 12px; }
+.tstep span { font-size: 10px; font-weight: 700; opacity: .8; text-transform: uppercase; letter-spacing: .04em; }
+.tstep b { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tstep.done i { background: #2E9E5B; }
+.tstep.now { background: #fff; color: var(--ink); box-shadow: 0 0 0 3px var(--gold); }
+.tstep.now i { background: var(--gold); color: var(--ink); }
+
+/* Gefordert: Rand leuchtet zweimal auf */
+.attn { position: absolute; inset: 0; z-index: 40; pointer-events: none; border-radius: 18px; box-shadow: inset 0 0 0 5px var(--gold), inset 0 0 40px rgba(255,211,78,.7); animation: attn 1.1s ease-in-out 2 both; }
+.attn.strong { box-shadow: inset 0 0 0 6px var(--red), inset 0 0 50px rgba(215,38,61,.55); }
+@keyframes attn { 0%, 100% { opacity: 0; } 40%, 60% { opacity: 1; } }
+
+/* Was ist passiert: groß in der Mitte, danach klein oben */
+.tlog { font-size: 12.5px; font-weight: 600; }
+.logpop { position: absolute; left: 393px; top: 125px; transform: translate(-50%, -50%); z-index: 31; pointer-events: none; max-width: 400px; background: #fff; color: var(--ink); border-radius: 16px; padding: 10px 18px; font-weight: 800; font-size: 16px; line-height: 1.3; text-align: center; box-shadow: 0 10px 24px rgba(0,0,0,.3); animation: logpop 3s ease-out both; }
+@keyframes logpop { 0% { opacity: 0; transform: translate(-50%, -40%) scale(.9); } 10% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -150%) scale(.7); } }
+
+/* Auslage: „noch 1“ golden */
+.slabel { font-size: 10px; white-space: nowrap; }
+.stack.near .slabel { color: var(--gold); opacity: 1; }
+.stack.near .spile { filter: drop-shadow(0 0 4px rgba(255,211,78,.75)); }
+.stack.rat .slabel { visibility: visible; }
+
+/* Stapel: größer, mittig, zum Antippen wenn man dran ist */
+.tcenter:has(.deck-wrap) { justify-content: center; flex: 1 1 auto; }
+.deck { width: 74px; height: 102px; }
+.deck-wrap { margin-top: 2px; gap: 6px; }
+.deckcow { width: 50px; height: 50px; }
+button.deck { position: relative; cursor: pointer; padding: 0; font: inherit; animation: deckwiggle 2.2s ease-in-out infinite; touch-action: manipulation; }
+button.deck:active { transform: scale(.95); }
+.deckgo { position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); background: var(--gold); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 0 9px; font-family: var(--font-body); font-size: 11px; font-weight: 800; }
+@keyframes deckwiggle { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(-4deg); } 82% { transform: rotate(4deg); } 89% { transform: rotate(-2deg); } }
+
+/* Esel: eine Einblendung, Scheine fliegen zu allen */
+.donkeypop { position: absolute; left: 393px; top: 290px; transform: translate(-50%, -50%); z-index: 31; pointer-events: none; display: flex; align-items: baseline; gap: 10px; background: var(--gold); color: var(--ink); border: 3px solid #8A5A00; border-radius: 999px; padding: 6px 20px; box-shadow: 0 10px 24px rgba(0,0,0,.35); white-space: nowrap; animation: gavelin 2.6s ease-out 1.5s both; }
+.donkeypop b { font-family: var(--font-head); font-size: 22px; }
+.donkeypop span { font-weight: 800; font-size: 15px; }
+.mflyc { position: absolute; left: 393px; top: 275px; width: 22px; height: 32px; border-radius: 4px; background: #F6D98B; border: 2px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,.3); z-index: 25; pointer-events: none; animation: mflyc 1s ease-in-out 2.4s both; }
+@keyframes mflyc { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(320px, var(--dy)) rotate(15deg); } }
+
+/* Spielende: Konfetti hinter der Liste */
+.overlay .confetti { z-index: 0; }
+.overlay .ending { z-index: 1; }
+
+/* Startseite: richtige Knöpfe, kompaktere Spielliste */
+.start-links.btns { gap: 6px; }
+.slink { background: rgba(255,255,255,.92); color: var(--ink); border: none; border-radius: 999px; padding: 7px 13px; font-family: inherit; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,.15); touch-action: manipulation; }
+.slink:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.15); }
+.slink.admin-link { background: var(--ink); color: var(--gold) !important; }
+.games-list .game-row { padding: 6px 6px 6px 12px; gap: 10px; }
+.game-row .host { font-size: 15px; }
+.game-row .host small { font-size: 11.5px; }
+.game-row .pill-small { min-height: 40px; padding: 0 16px; }
+
+@media (prefers-reduced-motion: reduce) { button.deck, .attn, .logpop, .donkeypop, .mflyc { animation: none; } .attn, .mflyc { display: none; } }
+.tsteps { gap: 3px; }
+.tstep { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px; border-radius: 999px; }
+.tstep i { width: 18px; height: 18px; font-size: 11px; flex: none; }
+.tstep span { font-size: 9.5px; }
+.tstep b { margin-left: auto; font-size: 12.5px; }
+.deck-wrap:has(button.deck) .deck-count { margin-top: 8px; }

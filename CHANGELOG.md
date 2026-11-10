@@ -1,5 +1,19 @@
 # Änderungsprotokoll
 
+## v0.22.0
+
+- [x] Spielerspalte: Tiere nur noch in einer Reihe (Quartette zuerst), Rest als „+N“ – nichts rutscht mehr übereinander. Antippen zeigt alles.
+- [x] Rattenrunde: groß „Du bist dran“ bzw. „Nico ist dran“ und „Gelegt: N Karten“.
+- [x] Spielende: Konfetti fällt hinter der Wertung, Namen bleiben lesbar.
+- [x] Kuhhandel: drei Schritte links (Gegner → Tier → Geld) mit Häkchen.
+- [x] Wenn du gefordert bist (dran, herausgefordert, zahlen, Ratte, Entscheidung): Rand leuchtet kurz auf.
+- [x] Letzte Aktion erscheint kurz groß in der Mitte, danach klein oben.
+- [x] Eigene Tiere: „noch 2“ statt „2/4“, bei „noch 1“ golden.
+- [x] Stapel größer und mittig; wenn du dran bist, wackelt er und lässt sich antippen.
+- [x] Esel: eine große Einblendung „Esel! Alle bekommen +N“ statt vier kleiner Schilder.
+- [x] Startseite: Links als richtige Knöpfe, Spielliste kompakter.
+- [x] Alle Tipps und Erklärtexte im Spiel entfernt.
+
 ## v0.21.1
 
 - [x] Zuschlag-Schild („Verkauft an … für …!“) repariert: war schwarz mit kleinem weißem Kästchen (alte Regel im Stil überschrieb es) – jetzt goldenes Band mit Hammer, mittig auf dem Tisch.
