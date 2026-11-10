@@ -218,7 +218,7 @@
 - [x] Countdown und Bieten starten erst nach der Animation – alle sehen die Karte zuerst
 - [x] Ratte und Spezialkarte drehen sich genauso um
 
-## v0.21.0 – Neue Tiere, Auslage, Gebote sichtbar (wartet auf Freigabe)
+## v0.21.0 – Neue Tiere, Auslage, Gebote sichtbar
 
 - [x] Alle 11 Tiere neu gezeichnet: lustige Comic-Köpfe mit je einem Gag (Kuh mit Kaugummi, Schwein mit Sonnenbrille, Ratte mit Gaunermaske …)
 - [x] Eigene Karten liegen fest als Auslage über dem Geld – in jeder Phase sichtbar, pro Tierart ein Stapel (1–4 Karten sichtbar übereinander, Quartett in Gold), Spezialkarte mit Stern im Stapel
