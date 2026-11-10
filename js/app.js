@@ -5,8 +5,11 @@ import { renderGame, SEAT_COLORS, fitStage } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
+import { audio, playSound } from './sounds.js';
+import { art } from './animals.js';
+import { scores, ANIMALS } from '../src/engine.js';
 
-export const APP_VERSION = '0.7.0';
+export const APP_VERSION = '0.8.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -33,6 +36,11 @@ let sb = null;
 let me = { id: null, name: store.get('kh_name') || '' };
 let ui = { screen: 'start', editingName: !store.get('kh_name'), games: [], game: null, error: '' };
 let lobbyChannel = null;
+let auth = { mode: 'login', error: '', busy: false }; // Anmelde-Bildschirm
+const profiles = new Map(); // Anmelde-ID → { name, animal, color }
+const reactions = new Map(); // Platz → { text, until }
+const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
+const REACTIONS = ['Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!', '😂', '😱'];
 let roomChannel = null;
 
 // Mein Platz im Spiel: nach einem Gerätewechsel ist meine Anmelde-ID neu, der Platz bleibt gleich
@@ -49,18 +57,55 @@ function render() {
   renderModal();
   app.classList.toggle('playing', ui.screen === 'playing');
   if (ui.screen !== 'playing') app.onclick = null;
+  if (ui.screen === 'login') return renderLogin();
   if (ui.screen === 'room' && ui.game) return renderRoom();
   if (ui.screen === 'playing' && ui.game) return renderPlaying();
   renderStart();
 }
 
+// Kleines Spielerbild (Tier auf Farbe); ohne Profil: Anfangsbuchstabe
+function avatarHtml(id, name, cls = '') {
+  const pr = profiles.get(id);
+  if (pr) return `<div class="avatar pic ${cls}" style="--bg:${esc(pr.color)}" aria-hidden="true">${art(pr.animal)}</div>`;
+  return `<div class="avatar ${cls}" aria-hidden="true">${initial(name)}</div>`;
+}
+
+function renderLogin() {
+  const create = auth.mode === 'create';
+  app.innerHTML = `
+    <section class="start">
+      <div class="brand">
+        <h1 class="logo">Kuh<br>handel<span>.</span></h1>
+        <p class="claim">Das Kartenspiel – online mit Freunden</p>
+        <div class="start-links"><button type="button" class="linklike light" data-modal="rules">Spielregeln</button></div>
+      </div>
+      <div class="card games login">
+        <div class="tabs-login">
+          <button type="button" class="${create ? '' : 'on'}" data-auth="login">Anmelden</button>
+          <button type="button" class="${create ? 'on' : ''}" data-auth="create">Neu hier? Konto erstellen</button>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <label>Name<input name="name" maxlength="16" autocomplete="username" required value="${esc(me.name)}"></label>
+          <label>Passwort<input name="pw" type="password" minlength="6" autocomplete="${create ? 'new-password' : 'current-password'}" required></label>
+          ${create ? '<small>Mindestens 6 Zeichen. Damit meldest du dich auf jedem Handy wieder an.</small>' : '<small>Du bleibst auf diesem Gerät angemeldet.</small>'}
+          ${auth.error ? `<div class="error" role="alert">${esc(auth.error)}</div>` : ''}
+          <button type="submit" class="pill pill-red" ${auth.busy ? 'disabled' : ''}>${create ? 'Konto erstellen' : 'Anmelden'}</button>
+        </form>
+      </div>
+    </section>`;
+  app.querySelectorAll('[data-auth]').forEach((b) => b.addEventListener('click', () => { auth.mode = b.dataset.auth; auth.error = ''; render(); }));
+  app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
+  document.getElementById('auth-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    doAuth(String(f.get('name')).trim(), String(f.get('pw')));
+  });
+}
+
 function renderStart() {
-  const nameBlock = ui.editingName
-    ? `<form class="name-row" id="name-form">
-         <input id="name-input" name="name" maxlength="16" autocomplete="nickname" placeholder="z. B. Alp" value="${esc(me.name)}" required>
-         <button class="pill pill-red pill-small" type="submit">Los</button>
-       </form>`
-    : `<div class="me-line"><strong>${esc(me.name)}</strong><button class="linklike" type="button" id="edit-name">Name ändern</button></div>`;
+  const nameBlock = `<div class="me-line">${avatarHtml(me.id, me.name, 'small')}<strong>${esc(me.name)}</strong>
+      <button class="linklike" type="button" data-modal="profile">Spielerbild</button>
+      <button class="linklike" type="button" id="logout">Abmelden</button></div>`;
 
   const resume = (ui.myGames || []).map((g) => `<li class="game-row resume">
       <div class="host">Laufendes Spiel<small>${g.players.map((p) => esc(p.name)).join(' · ')}</small></div>
@@ -75,7 +120,7 @@ function renderStart() {
 
   const list = ui.games.length
     ? ui.games.map((g) => {
-        const host = g.players[0]?.name || 'Unbekannt';
+        const host = (g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'Unbekannt';
         const n = g.players.length;
         const dots = Array.from({ length: MAX_PLAYERS }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
         const full = n >= MAX_PLAYERS;
@@ -94,11 +139,12 @@ function renderStart() {
         <p class="claim">Das Kartenspiel – online mit Freunden</p>
         <div class="start-links">
           <button type="button" class="linklike light" data-modal="rules">Spielregeln</button>
+          <button type="button" class="linklike light" data-modal="stats">Bestenliste</button>
           ${isStandalone() ? '' : '<button type="button" class="linklike light" data-modal="install">Als App aufs Handy</button>'}
           <button type="button" class="linklike light" data-modal="rejoin">Mit Code zurück ins Spiel</button>
         </div>
         <div class="card name-box">
-          <label for="name-input">${ui.editingName ? 'Wie heißt du?' : 'Du spielst als'}</label>
+          <label>Du spielst als</label>
           ${nameBlock}
         </div>
       </div>
@@ -112,19 +158,7 @@ function renderStart() {
       </div>
     </section>`;
 
-  const form = document.getElementById('name-form');
-  if (form) {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const v = document.getElementById('name-input').value.trim().slice(0, 16);
-      if (!v) return;
-      me.name = v;
-      store.set('kh_name', v);
-      ui.editingName = false;
-      render();
-    });
-  }
-  document.getElementById('edit-name')?.addEventListener('click', () => { ui.editingName = true; render(); document.getElementById('name-input')?.focus(); });
+  document.getElementById('logout')?.addEventListener('click', doLogout);
   document.getElementById('create')?.addEventListener('click', onCreate);
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
@@ -144,16 +178,17 @@ function renderRoom() {
       return `<div class="seat empty-seat"><div class="avatar" aria-hidden="true">+</div><div class="ribbon">Frei</div></div>`;
     }
     const you = p.id === me.id ? ' (du)' : '';
+    const kick = isHost && p.id !== me.id ? `<button type="button" class="kick" data-kick="${esc(p.id)}" aria-label="${esc(p.name)} entfernen">✕</button>` : '';
     return `<div class="seat" style="--c:${SEAT_COLORS[i]}">
-      <div class="avatar" aria-hidden="true">${initial(p.name)}</div>
+      ${kick}${avatarHtml(p.id, p.name)}
       <div class="ribbon">${esc(p.name)}${you}</div>
-      ${i === 0 ? '<span class="host-badge">Gastgeber</span>' : ''}
+      ${p.id === g.host ? '<span class="host-badge">Gastgeber</span>' : ''}
     </div>`;
   }).join('');
   const enough = g.players.length >= MIN_PLAYERS;
   const hint = isHost
     ? (enough ? 'Alle da? Dann los!' : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
-    : `Warte, bis ${esc(g.players[0]?.name || 'der Gastgeber')} das Spiel startet.`;
+    : `Warte, bis ${esc((g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'der Gastgeber')} das Spiel startet.`;
 
   app.innerHTML = `
     <section class="room">
@@ -165,11 +200,17 @@ function renderRoom() {
       ${ui.error ? `<div class="error" role="alert">${esc(ui.error)}</div>` : ''}
       <div class="room-actions">
         <button class="pill pill-white pill-small" type="button" id="leave">Verlassen</button>
+        <button class="pill pill-white pill-small" type="button" id="invite">Freunde einladen</button>
         ${isHost ? `<button class="pill pill-red" type="button" id="start" ${enough ? '' : 'disabled'}>SPIEL STARTEN</button>` : ''}
         <span class="room-hint">${hint}</span>
       </div>
     </section>`;
   document.getElementById('leave').addEventListener('click', onLeave);
+  document.getElementById('invite').addEventListener('click', onInvite);
+  app.querySelectorAll('[data-kick]').forEach((b) => b.addEventListener('click', async () => {
+    const { error } = await sb.rpc('kick_player', { p_game: g.id, p_player: b.dataset.kick });
+    if (error) { ui.error = 'Entfernen hat nicht geklappt.'; render(); }
+  }));
   document.getElementById('start')?.addEventListener('click', onStart);
 }
 
@@ -194,6 +235,7 @@ function toast(msg) {
 
 function renderPlaying() {
   const local = !!ui.game.local;
+  maybeRecordResults();
   if (local) {
     // Testspiel: automatisch zu dem wechseln, der gerade handeln muss
     if (dbg.autoView && !dbg.bots) {
@@ -218,6 +260,15 @@ function renderPlaying() {
     openModal,
     onRematch,
     rematchId: ui.game.state?.rematchId || null,
+    avatarFor: (seat) => {
+      const pl = ui.game.players?.find((x) => (x.seat || x.id) === seat);
+      return profiles.get(pl ? pl.id : (local && seat === 'me' ? me.id : seat)) || null;
+    },
+    playSound: (kind) => { if (soundOn() && !DEMO) playSound(kind); },
+    reactions: activeReactions(),
+    reactionList: REACTIONS,
+    react: sendReaction,
+    tips: DEMO && !params.get('tips') ? null : { seen: tipsSeen(), mark: markTip },
     onExit: () => { if (!ui.game?.local) store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
   if (DEBUG) injectDebug();
@@ -266,32 +317,24 @@ async function act(fn) {
 // ---------- Signal, wenn man gefragt ist (Ton + Vibration) ----------
 
 const soundOn = () => store.get('kh_sound') !== 'off';
-let audioCtx = null;
 let lastNeed = '';
 const baseTitle = document.title;
-
-// Browser erlauben Ton erst nach einer Berührung – beim ersten Tippen freischalten
-document.addEventListener('pointerdown', () => {
-  try {
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-  } catch { /* kein Ton möglich */ }
-}, { passive: true });
 
 function beep() {
   if (!soundOn()) return;
   try { navigator.vibrate?.([120, 70, 120]); } catch { /* egal */ }
-  if (!audioCtx) return;
-  const t = audioCtx.currentTime;
+  const ac = audio();
+  if (!ac) return;
+  const t = ac.currentTime;
   [[660, 0], [880, 0.14]].forEach(([f, d]) => {
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
+    const o = ac.createOscillator();
+    const g = ac.createGain();
     o.frequency.value = f;
     o.type = 'triangle';
     g.gain.setValueAtTime(0.0001, t + d);
     g.gain.exponentialRampToValueAtTime(0.25, t + d + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.18);
-    o.connect(g).connect(audioCtx.destination);
+    o.connect(g).connect(ac.destination);
     o.start(t + d);
     o.stop(t + d + 0.2);
   });
@@ -462,16 +505,206 @@ app.addEventListener('click', async (e) => {
 async function connect() {
   const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
   sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
-  let { data: { session } } = await sb.auth.getSession();
-  if (!session) {
-    const { data, error } = await sb.auth.signInAnonymously();
-    if (error) throw error;
-    session = data.session;
-  }
-  me.id = session.user.id;
+  const { data: { session } } = await sb.auth.getSession();
   await syncClock();
   setInterval(syncClock, 60000);
+  if (session && !session.user.is_anonymous) {
+    setMe(session.user);
+    return true;
+  }
+  return false; // Anmeldung nötig
 }
+
+// ---------- Konten: Name + Passwort ----------
+
+// Aus dem Namen wird intern eine E-Mail-Adresse (wird nirgends benutzt, nur für die Anmeldung)
+const emailFor = (name) => {
+  const slug = name.toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return slug ? `${slug}@kuhhandel.app` : null;
+};
+
+function setMe(user) {
+  me.id = user.id;
+  me.name = user.user_metadata?.name || store.get('kh_name') || 'Spieler';
+  store.set('kh_name', me.name);
+}
+
+function authMessage(err) {
+  const m = (err?.message || '').toLowerCase();
+  if (m.includes('invalid login')) return 'Name oder Passwort stimmt nicht.';
+  if (m.includes('already') || m.includes('registered')) return 'Den Namen gibt es schon – bitte anmelden.';
+  if (m.includes('password')) return 'Das Passwort muss mindestens 6 Zeichen haben.';
+  if (m.includes('confirm')) return 'Konto noch nicht freigeschaltet – in Supabase muss „Confirm email“ ausgeschaltet sein.';
+  return 'Das hat nicht geklappt – bitte nochmal versuchen.';
+}
+
+async function doAuth(name, pw) {
+  const email = emailFor(name);
+  if (!email) { auth.error = 'Bitte einen Namen mit Buchstaben oder Zahlen.'; return render(); }
+  auth.busy = true; auth.error = ''; render();
+  let user = null;
+  let err = null;
+  if (auth.mode === 'create') {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user?.is_anonymous) {
+      // Bisheriges Gerät übernehmen: laufende Spiele bleiben erhalten
+      const r = await sb.auth.updateUser({ email, password: pw, data: { name } });
+      if (!r.error && r.data?.user?.email) user = r.data.user;
+    }
+    if (!user) {
+      const r = await sb.auth.signUp({ email, password: pw, options: { data: { name } } });
+      err = r.error;
+      user = r.data?.session ? r.data.user : null;
+      if (!err && !user) err = { message: 'confirm' };
+    }
+  } else {
+    const r = await sb.auth.signInWithPassword({ email, password: pw });
+    err = r.error;
+    user = r.data?.user || null;
+  }
+  auth.busy = false;
+  if (err || !user) { auth.error = authMessage(err); logError(`Anmeldung: ${err?.message}`); return render(); }
+  setMe(user);
+  if (!user.user_metadata?.name) await sb.auth.updateUser({ data: { name } });
+  await saveProfile({});
+  afterLogin();
+}
+
+async function doLogout() {
+  if (roomChannel) { sb.removeChannel(roomChannel); roomChannel = null; }
+  await sb.auth.signOut();
+  store.del('kh_game');
+  me = { id: null, name: me.name };
+  auth = { mode: 'login', error: '', busy: false };
+  ui.screen = 'login';
+  render();
+}
+
+// ---------- Profile (Spielerbild) ----------
+
+async function loadProfiles(ids) {
+  if (!sb || DEMO) return;
+  const missing = [...new Set(ids)].filter((id) => id && !profiles.has(id));
+  if (!missing.length) return;
+  const { data } = await sb.from('profiles').select('id, name, animal, color').in('id', missing);
+  (data || []).forEach((p) => profiles.set(p.id, p));
+  if (data?.length) render();
+}
+
+async function saveProfile(change) {
+  if (!profiles.has(me.id) && sb && !DEMO) {
+    const { data } = await sb.from('profiles').select('id, name, animal, color').eq('id', me.id).maybeSingle();
+    if (data) profiles.set(me.id, data);
+  }
+  const cur = profiles.get(me.id) || { animal: ANIMALS[Math.floor(Math.random() * ANIMALS.length)].id, color: PROFILE_COLORS[Math.floor(Math.random() * PROFILE_COLORS.length)] };
+  const next = { ...cur, ...change, id: me.id, name: me.name };
+  profiles.set(me.id, next);
+  if (DEMO) return render();
+  const { error } = await sb.from('profiles').upsert({ ...next, updated_at: new Date().toISOString() });
+  if (error) logError(`Profil: ${error.message}`);
+  render();
+}
+
+// ---------- Einladung per Link ----------
+
+async function onInvite() {
+  const url = `${location.origin}${location.pathname}?join=${encodeURIComponent(ui.game.code)}`;
+  const text = `Komm zu Kuhhandel! Spiel-Code ${ui.game.code}`;
+  try {
+    if (navigator.share) { await navigator.share({ title: 'Kuhhandel', text, url }); return; }
+    await navigator.clipboard.writeText(`${text}: ${url}`);
+    toastRoom('Link kopiert – jetzt in WhatsApp einfügen.');
+  } catch { /* abgebrochen */ }
+}
+function toastRoom(msg) { ui.error = msg; render(); setTimeout(() => { if (ui.error === msg) { ui.error = ''; render(); } }, 3000); }
+
+async function joinByCode(code) {
+  history.replaceState(null, '', location.pathname);
+  const { data } = await sb.from('games').select('id, status').eq('code', code.toUpperCase()).eq('status', 'lobby')
+    .order('created_at', { ascending: false }).limit(1);
+  if (data?.length) return onJoin(data[0].id);
+  ui.error = `Kein offener Warteraum mit Code ${code} gefunden.`;
+  return openStart();
+}
+
+// ---------- Reaktionen ----------
+
+function activeReactions() {
+  const t = Date.now();
+  const out = {};
+  for (const [seat, r] of reactions) if (r.until > t) out[seat] = r.text;
+  return out;
+}
+function showReaction(seat, text) {
+  reactions.set(seat, { text, until: Date.now() + 3200 });
+  if (soundOn() && !DEMO) playSound('react');
+  render();
+  setTimeout(render, 3300);
+}
+function sendReaction(text) {
+  const seat = ui.game.local ? dbg.viewAs : seatIn(ui.game);
+  showReaction(seat, text);
+  if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'react', payload: { seat, text } });
+}
+
+// ---------- Erste-Runde-Hilfe ----------
+
+const tipsKey = () => `kh_tips_${me.id || 'x'}`;
+function tipsSeen() { try { return new Set(JSON.parse(store.get(tipsKey()) || '[]')); } catch { return new Set(); } }
+function markTip(id) { const set = tipsSeen(); set.add(id); store.set(tipsKey(), JSON.stringify([...set])); render(); }
+
+// ---------- Ergebnisse für die Bestenliste ----------
+
+const recorded = new Set();
+function maybeRecordResults() {
+  const g = ui.game;
+  if (!g || g.local || DEMO || g.state?.phase !== 'ended' || recorded.has(g.id)) return;
+  recorded.add(g.id);
+  const rows = scores(g.state).map((r) => {
+    const pl = g.players.find((x) => (x.seat || x.id) === r.id);
+    return pl ? { player_id: pl.id, name: r.name, score: r.score, quartets: r.quartets.length, won: (g.state.winner || []).includes(r.id) } : null;
+  }).filter(Boolean);
+  sb.rpc('record_results', { p_game: g.id, p_rows: rows }).then(({ error }) => { if (error) logError(`Ergebnisse: ${error.message}`); });
+}
+
+const DEMO_STATS = [
+  { id: 'u2', name: 'Nico', games: 9, wins: 4, best: 6400, quartets: 23 },
+  { id: 'u1', name: 'Alp', games: 9, wins: 3, best: 7150, quartets: 25 },
+  { id: 'u3', name: 'Bennet', games: 7, wins: 2, best: 4200, quartets: 14 },
+  { id: 'u4', name: 'Mo', games: 4, wins: 0, best: 1300, quartets: 6 },
+];
+
+async function loadStats() {
+  if (DEMO) { modal.stats = DEMO_STATS; return render(); }
+  const { data, error } = await sb.from('game_results').select('player_id, name, score, quartets, won, created_at').order('created_at', { ascending: false }).limit(2000);
+  if (error) { modal.error = 'Bestenliste konnte nicht geladen werden.'; return render(); }
+  const by = new Map();
+  for (const r of data) {
+    const st = by.get(r.player_id) || { id: r.player_id, name: r.name, games: 0, wins: 0, best: 0, quartets: 0 };
+    st.games += 1; st.wins += r.won ? 1 : 0; st.best = Math.max(st.best, r.score); st.quartets += r.quartets;
+    by.set(r.player_id, st);
+  }
+  modal.stats = [...by.values()].sort((a, b) => b.wins - a.wins || b.wins / b.games - a.wins / a.games || b.best - a.best);
+  loadProfiles(modal.stats.map((x) => x.id));
+  render();
+}
+
+async function afterLogin() {
+  ui.screen = 'start';
+  watchLobby();
+  loadProfiles([me.id]);
+  const join = params.get('join');
+  if (join) return joinByCode(join);
+  const saved = store.get('kh_game');
+  if (saved) {
+    const { data, error } = await sb.from('games').select('*').eq('id', saved).maybeSingle();
+    if (data && data.players.some((p) => p.id === me.id)) { showGame(data); return watchRoom(data.id); }
+    if (!error) store.del('kh_game'); // nur vergessen, wenn das Spiel wirklich weg ist
+  }
+  openStart();
+}
+
 
 // Gemeinsame Uhr: Abstand zur Server-Uhr messen, damit der Countdown auf allen Geräten gleich läuft
 async function syncClock() {
@@ -528,6 +761,10 @@ function watchRoom(id) {
       dbg.lastSync = Date.now();
       showGame(payload.new);
     })
+    .on('broadcast', { event: 'react' }, ({ payload }) => {
+      if (!payload?.seat || !REACTIONS.includes(payload.text)) return;
+      showReaction(payload.seat, payload.text);
+    })
     .on('presence', { event: 'sync' }, () => {
       online = new Set(Object.keys(roomChannel.presenceState()));
       const t = Date.now();
@@ -580,6 +817,13 @@ setInterval(() => { if ((ui.screen === 'playing' || ui.screen === 'room') && doc
 
 function showGame(g) {
   if (ui.game && ui.game.id === g.id && g.version < ui.game.version) return; // veraltete Meldung
+  if (g.status === 'lobby' && !g.local && !DEMO && !g.players.some((p) => p.id === me.id)) {
+    store.del('kh_game');
+    ui.error = 'Du wurdest aus dem Warteraum entfernt.';
+    if (roomChannel) { sb.removeChannel(roomChannel); roomChannel = null; }
+    return openStart();
+  }
+  loadProfiles(g.players.map((p) => p.id));
   ui.game = g;
   ui.screen = g.status === 'lobby' ? 'room' : 'playing';
   render();
@@ -592,7 +836,7 @@ async function onCreate() {
   const { data, error } = await sb.from('games')
     .insert({ code: randomCode(), host: me.id, players: [{ id: me.id, name: me.name }] })
     .select().single();
-  if (error) { ui.error = 'Spiel konnte nicht erstellt werden.'; return render(); }
+  if (error) { ui.error = 'Spiel konnte nicht erstellt werden.'; logError(`Erstellen: ${error.message}`); return render(); }
   enterRoom(data);
 }
 
@@ -685,6 +929,7 @@ function openModal(kind) {
   modal = { kind };
   gameLocal.menu = false;
   if (kind === 'pin') loadPin();
+  if (kind === 'stats') loadStats();
   render();
 }
 async function loadPin() {
@@ -727,6 +972,28 @@ function renderModal() {
       <div class="pinbox"><div><small>Spiel-Code</small><b>${esc(ui.game?.code || '—')}</b></div><div><small>Deine PIN</small><b>${modal.pin === undefined ? '…' : esc(modal.pin || '—')}</b></div></div>
       ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
   }
+  if (modal.kind === 'profile') {
+    const pr = profiles.get(me.id) || {};
+    body = `<h2>Dein Spielerbild</h2>
+      <div class="prof-preview">${avatarHtml(me.id, me.name)}<strong>${esc(me.name)}</strong></div>
+      <h3 class="ph">Tier</h3>
+      <div class="pick-animals">${ANIMALS.map((a) => `<button type="button" class="pa ${pr.animal === a.id ? 'on' : ''}" data-m="animal" data-v="${a.id}" aria-label="${a.name}" style="--bg:${esc(pr.color || '#7FA88A')}">${art(a.id)}</button>`).join('')}</div>
+      <h3 class="ph">Farbe</h3>
+      <div class="pick-colors">${PROFILE_COLORS.map((c) => `<button type="button" class="pc ${pr.color === c ? 'on' : ''}" data-m="color" data-v="${c}" aria-label="Farbe" style="background:${c}"></button>`).join('')}</div>`;
+  }
+  if (modal.kind === 'stats') {
+    const rows = modal.stats;
+    body = `<h2>Bestenliste</h2>
+      ${!rows ? '<p class="mtext">Lädt …</p>' : !rows.length ? '<p class="mtext">Noch keine fertigen Spiele. Nach dem ersten Spielende steht hier, wer vorne liegt.</p>' : `
+      <table class="stats">
+        <thead><tr><th></th><th>Spieler</th><th>Siege</th><th>Spiele</th><th>Quote</th><th>Rekord</th><th>Ø Quartette</th></tr></thead>
+        <tbody>${rows.map((r, i) => `<tr class="${r.id === me.id ? 'me' : ''}"><td class="rank">${i + 1}</td>
+          <td class="who">${avatarHtml(r.id, r.name, 'tiny')}${esc(profiles.get(r.id)?.name || r.name)}</td>
+          <td><b>${r.wins}</b></td><td>${r.games}</td><td>${Math.round((r.wins / r.games) * 100)} %</td>
+          <td>${r.best}</td><td>${(r.quartets / r.games).toFixed(1).replace('.', ',')}</td></tr>`).join('')}</tbody>
+      </table>`}
+      ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
+  }
   if (modal.kind === 'rejoin') {
     body = `<h2>Mit Code zurück ins Spiel</h2>
       <p class="mtext">Code und PIN findest du auf deinem alten Gerät im Spiel unter Menü → „Wiedereinstieg-Code“.</p>
@@ -747,6 +1014,8 @@ function renderModal() {
     if (!b) return;
     if (b.dataset.m === 'close') { modal = null; return render(); }
     if (b.dataset.m === 'doInstall' && installPrompt) { installPrompt.prompt(); installPrompt = null; modal = null; return render(); }
+    if (b.dataset.m === 'animal') return saveProfile({ animal: b.dataset.v });
+    if (b.dataset.m === 'color') return saveProfile({ color: b.dataset.v });
   };
   const form = el.querySelector('#rejoin-form');
   if (form) form.onsubmit = async (e) => {
@@ -762,8 +1031,12 @@ function renderModal() {
 // ---------- Demo für Screenshots ----------
 
 function demo(kind) {
+  const demoProfiles = { u1: ['Alp', 'pferd', '#1D5FC2'], u2: ['Nico', 'schwein', '#B8285F'], u3: ['Bennet', 'esel', '#0B7A68'], u4: ['Mo', 'hahn', '#B58A00'] };
+  Object.entries(demoProfiles).forEach(([id, [name, animal, color]]) => profiles.set(id, { id, name, animal, color }));
   if (kind === 'testspiel') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(4); }
   me = { id: 'u1', name: 'Alp' };
+  if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
+  if (params.get('react')) reactions.set(params.get('react'), { text: 'Bluff!', until: Date.now() + 600000 });
   ui.editingName = kind === 'name';
   if (kind === 'name') me.name = '';
   ui.games = [
@@ -782,7 +1055,7 @@ function demo(kind) {
     ui.screen = 'playing';
     ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'playing', version: 5, players: demoState.players, state: demoState };
   }
-  if (params.get('modal')) { modal = { kind: params.get('modal'), pin: '4821' }; }
+  if (params.get('modal')) { modal = { kind: params.get('modal'), pin: '4821', stats: params.get('modal') === 'stats' ? DEMO_STATS : undefined }; }
   render();
   if (demoState) return;
   // In der Demo nichts speichern oder senden
@@ -794,20 +1067,15 @@ function demo(kind) {
 async function main() {
   if (DEMO) return demo(DEMO);
   app.innerHTML = '<section class="center-msg"><h2>Kuhhandel</h2><p>Verbinde …</p></section>';
+  let loggedIn;
   try {
-    await connect();
+    loggedIn = await connect();
   } catch (e) {
     app.innerHTML = '<section class="center-msg"><h2>Keine Verbindung</h2><p>Bitte Internet prüfen und die Seite neu laden.</p></section>';
     return;
   }
-  watchLobby();
-  const saved = store.get('kh_game');
-  if (saved) {
-    const { data, error } = await sb.from('games').select('*').eq('id', saved).maybeSingle();
-    if (data && data.players.some((p) => p.id === me.id)) { showGame(data); return watchRoom(data.id); }
-    if (!error) store.del('kh_game'); // nur vergessen, wenn das Spiel wirklich weg ist
-  }
-  openStart();
+  if (!loggedIn) { ui.screen = 'login'; return render(); }
+  afterLogin();
 }
 
 main();

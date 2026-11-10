@@ -23,7 +23,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 - **Hosting:** Cloudflare Worker `kuhhandel` (statische Dateien, `wrangler.jsonc` + `.assetsignore`).
   Live: https://kuhhandel.a-guengoeray.workers.dev – jeder Push auf `main` baut automatisch neu.
-- **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabelle `games`, anonyme Anmeldung nur mit Namen.
+- **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results`, `seat_pins`.
+  Konten: Name + Passwort (intern als `name@kuhhandel.app`, E-Mail-Bestätigung ist aus).
   SQL-Stand: `supabase/schema.sql` + spätere Dateien in `supabase/`.
 - **Kein Build-Schritt**, reines HTML/CSS/JavaScript (ES-Module).
 
@@ -35,6 +36,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `js/game.js` | Spieltisch im Querformat (alle Phasen) |
 | `js/animals.js` | Eigene Tierbilder (SVG) |
 | `js/bots.js` | Test-Spieler für den Debug-Modus |
+| `js/sounds.js` | Geräusche (im Browser erzeugt) |
 | `js/demo.js` | Beispiel-Spielstände für Screenshots (`?demo=turn`, `auction`, `tradesetup` …) |
 | `css/style.css` | Gestaltung |
 

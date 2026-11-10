@@ -72,7 +72,10 @@ function bigAnimalCard(id, extraRows = '', cls = '') {
   </div>`;
 }
 
+let avatarLookup = () => null; // wird pro Darstellung gesetzt (Spielerbild aus dem Profil)
 function avatar(p, idx, extra = '') {
+  const pr = avatarLookup(p.id);
+  if (pr) return `<div class="avatar pic" style="--c:${SEAT_COLORS[idx]};--bg:${pr.color}" aria-hidden="true">${art(pr.animal)}</div>${extra}`;
   return `<div class="avatar" style="--c:${SEAT_COLORS[idx]}" aria-hidden="true">${initial(p.name)}</div>${extra}`;
 }
 
@@ -80,6 +83,8 @@ function avatar(p, idx, extra = '') {
 
 export function renderGame(root, ctx) {
   const { state, meId, local } = ctx;
+  avatarLookup = ctx.avatarFor || (() => null);
+  const sounds = [];
   const v = viewFor(state, meId);
   const meIdx = v.players.findIndex((p) => p.id === meId);
   const me = v.players[meIdx];
@@ -136,7 +141,9 @@ export function renderGame(root, ctx) {
     if (offline) status = 'offline';
     const dim = (state.phase === 'auction' && auction.passed.includes(p.id)) || offline ? ' dim' : '';
     const coin = entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey' ? `<span class="coinpop">+${v.lastEvent.payout}</span>` : '';
+    const said = ctx.reactions?.[p.id];
     return `<div class="prow${turnMark}${dim}">${coin}
+      ${said ? `<div class="rbubble">${esc(said)}</div>` : ''}
       ${leader}
       <div class="chips">${chips}</div>
       <div class="pid">
@@ -245,9 +252,15 @@ export function renderGame(root, ctx) {
       <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length ? '' : 'disabled'}>Kuhhandel</button>`;
   }
   const left = `<div class="gleft">
-    <button type="button" class="round" data-a="menu" aria-label="Menü">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
-    </button>
+    <div class="lround">
+      <button type="button" class="round" data-a="menu" aria-label="Menü">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </button>
+      ${ctx.reactionList ? `<button type="button" class="round light" data-a="reactOpen" aria-label="Reaktion senden">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"></path><path d="M9 10.5h.01M15 10.5h.01M9.5 14c1.4 1.2 3.6 1.2 5 0"></path></svg>
+      </button>` : ''}
+    </div>
+    ${local.reactOpen && ctx.reactionList ? `<div class="reactpick">${ctx.reactionList.map((r, i) => `<button type="button" data-a="react" data-v="${i}">${esc(r)}</button>`).join('')}</div>` : ''}
     ${local.menu ? `<div class="menu">
       <button type="button" class="pill pill-white pill-small" data-a="sound">Ton &amp; Vibration: ${ctx.sound ? 'an' : 'aus'}</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
@@ -262,7 +275,9 @@ export function renderGame(root, ctx) {
     <div class="lactions ${state.phase === 'auction' ? 'auction' : ''}">${leftActions}</div>
   </div>`;
 
-  H.menu = () => { local.menu = !local.menu; ctx.rerender(); };
+  H.menu = () => { local.menu = !local.menu; local.reactOpen = false; ctx.rerender(); };
+  H.reactOpen = () => { local.reactOpen = !local.reactOpen; local.menu = false; ctx.rerender(); };
+  H.react = (i) => { local.reactOpen = false; ctx.react(ctx.reactionList[Number(i)]); };
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
   H.modal = (kind) => ctx.openModal(kind);
@@ -444,6 +459,50 @@ export function renderGame(root, ctx) {
     effects += Array.from({ length: n }, (_, k) => `<div class="fly" style="--tx:${704 - 376}px;--ty:${ty}px;animation-delay:${k * 120}ms">
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[le.animal]}"><span class="mono">${art(le.animal)}</span></div></div>`).join('');
   }
+  // Geld fliegt (verdeckt) vom Zahler zum Empfänger
+  const rowY = (id) => 8 + (374 / v.players.length) * (idxOf(id) + 0.5);
+  const moneyFly = (from, to, count, delay = 0) => {
+    if (!count || idxOf(from) < 0 || idxOf(to) < 0) return '';
+    const y0 = rowY(from);
+    const dy = Math.round(rowY(to) - y0);
+    return Array.from({ length: Math.min(count, 5) }, (_, k) => `<div class="mfly" style="top:${Math.round(y0 - 16)}px;--dy:${dy}px;animation-delay:${delay + k * 90}ms"></div>`).join('');
+  };
+  if (fresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
+    if (le.type === 'auction_won' && le.amount > 0 && le.payer && le.payee) effects += moneyFly(le.payer, le.payee, le.cardCount || 1, 250);
+    if (le.type === 'trade') {
+      const cnt = (x) => (Array.isArray(x) ? x.length : x || 0);
+      effects += moneyFly(le.challenger, le.target, cnt(le.offer));
+      if (!le.accepted) effects += moneyFly(le.target, le.challenger, cnt(le.counter), 150);
+    }
+  }
+
+  // Geräusche zu den Ereignissen
+  if (entered && state.phase === 'auction') { sounds.push('flip'); if (v.lastEvent?.type === 'donkey') sounds.push('coins'); }
+  else if (fresh && state.phase === 'auction' && auction.high) sounds.push('bid');
+  if (fresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
+    if (le.type === 'auction_won') { sounds.push('gavel'); if (le.amount > 0) sounds.push('coins'); }
+    if (le.type === 'trade') sounds.push('trade');
+  }
+  if (effects.includes('class="qpop"') || (entered && state.phase === 'ended')) sounds.push('quartet');
+
+  // Erste-Runde-Hilfe: jeder Hinweis erscheint nur einmal
+  let tip = '';
+  if (ctx.tips && state.phase !== 'ended') {
+    const a = auction;
+    const running = a && a.endsAt != null && ctx.now() < a.endsAt;
+    let t = null;
+    if (local.tradeOpen) t = ['tradesetup', 'top', 'Wähle oben Gegner und Tier und tippe unten Scheine an. Bluffen ist erlaubt – auch ein 0er zählt als Karte.'];
+    else if (state.phase === 'turn' && myTurn) t = ['turn', 'left', 'Du bist dran! Versteigere ein Tier vom Stapel – oder fordere mit „Kuhhandel“ jemanden heraus, der dasselbe Tier hat.'];
+    else if (state.phase === 'auction' && a.auctioneer === meId) t = ['auctioneer', 'left', 'Du versteigerst. Ist die Zeit um, entscheidest du: Zuschlag an den Höchstbietenden – oder selbst zum Höchstgebot kaufen.'];
+    else if (state.phase === 'auction' && running) t = ['bid', 'left', 'Tippe auf einen Schein, um so viel mehr zu bieten. Nach jedem Gebot startet die Uhr neu.'];
+    else if (state.phase === 'payment' && v.payment.payer === meId) t = ['pay', 'top', 'Kein Wechselgeld! Tippe Scheine an – oder nimm „Passend auswählen“.'];
+    else if (state.phase === 'trade' && v.trade.target === meId) t = ['trade', 'top', 'Du wirst herausgefordert: Nimm das Geld und gib das Tier ab – oder biete verdeckt dagegen.'];
+    if (t && !ctx.tips.seen.has(t[0])) {
+      tip = `<div class="tip tip-${t[1]}" role="note"><b>Tipp</b><span>${t[2]}</span><button type="button" data-a="tipok" data-v="${t[0]}">Verstanden</button></div>`;
+    }
+  }
+  H.tipok = (id) => ctx.tips.mark(id);
+
   if (entered && state.phase === 'ended') {
     const cols = ['#FFD34E', '#D7263D', '#1D5FC2', '#B8285F', '#6D3FC0', '#7FA88A', '#fff'];
     effects += `<div class="confetti" aria-hidden="true">${Array.from({ length: 40 }, (_, k) =>
@@ -456,6 +515,7 @@ export function renderGame(root, ctx) {
     <div class="gright">${playersCol}</div>
     ${overlay}
     ${effects}
+    ${tip}
     ${ctx.toastMsg ? `<div class="toast" role="alert">${esc(ctx.toastMsg)}</div>` : ''}
   </div></div>`;
 
@@ -466,6 +526,7 @@ export function renderGame(root, ctx) {
     if (fn) fn(b.dataset.v);
   };
   fitStage();
+  if (ctx.playSound) [...new Set(sounds)].forEach((k, i) => setTimeout(() => ctx.playSound(k), i * 180));
 }
 
 // Bühne (844×390) passend auf den Bildschirm skalieren

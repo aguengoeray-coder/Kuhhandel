@@ -310,7 +310,7 @@ export function pay(prev, playerId, cardIndices) {
   const buyer = player(state, pm.buyer);
   buyer.animals[pm.animal] += 1;
   log(state, `${payer.name} zahlt mit ${cards.length} Karte(n). ${buyer.name} bekommt ${animalName(pm.animal)}.`);
-  state.lastEvent = { type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length };
+  state.lastEvent = { type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
   nextTurn(state);
   return state;
 }

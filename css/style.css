@@ -570,3 +570,65 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .qpop b { font-family: var(--font-head); font-size: 26px; color: var(--red); }
 .qpop span { font-weight: 700; font-size: 13px; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .qpop { animation: none; display: none; } }
+
+/* =================== v0.8: Konten, Profile, Reaktionen, Hilfe =================== */
+.login { justify-content: center; gap: 12px; }
+.tabs-login { display: flex; gap: 6px; background: #F3F1EA; border-radius: 999px; padding: 4px; }
+.tabs-login button { flex: 1; border: none; background: transparent; border-radius: 999px; padding: 9px 10px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: var(--font-body); color: var(--muted); }
+.tabs-login button.on { background: #fff; color: var(--ink); box-shadow: 0 2px 0 rgba(0,0,0,.1); }
+.auth-form { display: flex; flex-direction: column; gap: 9px; }
+.auth-form label { display: flex; flex-direction: column; gap: 3px; font-weight: 700; font-size: 13px; }
+.auth-form input { height: 44px; border: 3px solid var(--ink); border-radius: 12px; padding: 0 12px; font-size: 16px; font-weight: 600; }
+.auth-form input:focus { outline: 3px solid var(--gold); outline-offset: 1px; }
+.auth-form small { color: var(--muted); font-size: 12px; }
+
+.avatar.pic { background: var(--bg); padding: 3px; }
+.avatar.pic .art { width: 100%; height: 100%; }
+.avatar.small { width: 36px; height: 36px; border-width: 3px; font-size: 15px; --c: var(--ink); }
+.avatar.tiny { width: 26px; height: 26px; border-width: 2px; font-size: 11px; --c: var(--ink); padding: 1px; }
+.me-line { justify-content: flex-start; flex-wrap: wrap; }
+.me-line strong { margin-right: auto; }
+.seat { position: relative; }
+.kick { position: absolute; top: -8px; right: -10px; z-index: 3; width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; background: var(--red); color: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
+
+.prof-preview { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; --c: var(--ink); }
+.prof-preview strong { font-family: var(--font-head); font-size: 20px; }
+.ph { margin: 10px 0 5px; font-family: var(--font-head); font-size: 15px; }
+.pick-animals { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+.pa { aspect-ratio: 1; border-radius: 50%; border: 3px solid #fff; background: var(--bg); padding: 3px; cursor: pointer; box-shadow: 0 0 0 1px #ccc; }
+.pa.on { border-color: var(--ink); box-shadow: 0 0 0 3px var(--gold); }
+.pa .art { width: 100%; height: 100%; }
+.pick-colors { display: flex; gap: 8px; flex-wrap: wrap; }
+.pc { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px #bbb; cursor: pointer; }
+.pc.on { box-shadow: 0 0 0 3px var(--ink); }
+
+table.stats { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.stats th { text-align: left; font-size: 11px; color: var(--muted); font-weight: 700; padding: 4px 6px; border-bottom: 2px solid #EEE; }
+table.stats td { padding: 6px; border-bottom: 1px solid #F0EEE8; }
+table.stats tr.me td { background: #FFF4CC; }
+table.stats .rank { font-family: var(--font-head); font-weight: 700; width: 22px; }
+table.stats .who { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+table.stats td b { font-family: var(--font-head); font-size: 16px; }
+
+.lround { display: flex; gap: 8px; }
+.round.light { background: #fff; color: var(--ink); box-shadow: 0 3px 0 rgba(0,0,0,.15); }
+.reactpick { position: absolute; top: 52px; left: 50px; z-index: 31; background: #fff; border-radius: 16px; padding: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.25); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; width: 220px; }
+.reactpick button { border: 2px solid var(--ink); background: #F3F1EA; border-radius: 999px; min-height: 38px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--font-body); }
+@keyframes rb { 0% { transform: translateY(-50%) scale(.4); opacity: 0; } 12% { transform: translateY(-50%) scale(1.1); opacity: 1; } 20% { transform: translateY(-50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
+.rbubble { position: absolute; right: 168px; top: 50%; z-index: 6; background: #fff; border: 3px solid var(--ink); border-radius: 14px; padding: 4px 10px; font-family: var(--font-head); font-weight: 700; font-size: 15px; white-space: nowrap; animation: rb 3.2s ease-out both; box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+.rbubble::after { content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); border-left: 9px solid var(--ink); border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+
+@keyframes mfly { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 10% { opacity: 1; } 50% { transform: translate(-90px, calc(var(--dy) / 2)) rotate(-20deg); } 90% { opacity: 1; } 100% { transform: translate(0, var(--dy)) rotate(0); opacity: 0; } }
+.mfly { position: absolute; left: 700px; width: 22px; height: 32px; border-radius: 4px; background: #C8372D; border: 2px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,.3); z-index: 25; pointer-events: none; animation: mfly 1s ease-in-out both; }
+
+.tip { position: absolute; z-index: 32; width: 250px; background: #2B2F36; color: #fff; border-radius: 14px; padding: 10px 12px; font-size: 12px; line-height: 1.4; box-shadow: 0 10px 24px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 6px; }
+.tip b { font-family: var(--font-head); color: var(--gold); font-size: 14px; }
+.tip button { align-self: flex-end; border: none; background: var(--gold); color: var(--ink); border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 12px; cursor: pointer; }
+.tip-left { left: 168px; bottom: 70px; }
+.tip-left::before { content: ''; position: absolute; left: -8px; bottom: 30px; border-right: 9px solid #2B2F36; border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
+.tip-top { left: 50%; top: 6px; transform: translateX(-62%); }
+@media (prefers-reduced-motion: reduce) { .rbubble, .mfly { animation: none; } .mfly { display: none; } }
+/* Reaktion über dem Spieler statt daneben (überdeckt kein Höchstgebot-Schild) */
+@keyframes rb2 { 0% { transform: scale(.4); opacity: 0; } 12% { transform: scale(1.1); opacity: 1; } 20% { transform: scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
+.rbubble { right: 120px; top: -22px; animation-name: rb2; transform-origin: 80% 100%; }
+.rbubble::after { right: 18px; top: auto; bottom: -10px; transform: none; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 9px solid var(--ink); border-bottom: none; }

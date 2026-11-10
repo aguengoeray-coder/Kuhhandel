@@ -97,3 +97,17 @@
 - [x] Wiedereinstieg auf neuem Gerät mit Spiel-Code + PIN
 - [x] Alte Spiele (2 Tage ohne Zug) werden automatisch gelöscht
 - [x] SQL `supabase/v0.7-wiedereinstieg.sql` in Supabase ausgeführt
+
+## v0.8.0 – Konten und Extras (wartet auf Freigabe)
+
+- [x] Feste Konten: Anmelden mit Name + Passwort, auf jedem Gerät dasselbe Konto (bisheriges Gerät wird beim Konto-Erstellen übernommen)
+- [x] Spielerbild: Tier + Farbe wählen, erscheint im Warteraum, am Tisch und in der Bestenliste
+- [x] Einladung per Link aus dem Warteraum (WhatsApp & Co.), Link führt direkt in den Warteraum
+- [x] Gastgeber kann Spieler aus dem Warteraum entfernen; geht der Gastgeber, übernimmt der Nächste
+- [x] Reaktionen im Spiel: Bluff!, Niemals!, Gut gespielt!, Zu teuer!, 😂, 😱
+- [x] Geräusche: Karte aufdecken, Gebot, Hammerschlag, Münzen, Kuhhandel, Quartett (im Menü abschaltbar)
+- [x] Geld-Animation: verdeckte Scheine fliegen vom Zahler zum Empfänger
+- [x] Bestenliste: Siege, Spiele, Quote, Rekord, Ø Quartette
+- [x] Erste-Runde-Hilfe: Hinweise beim ersten Mal (je einmal pro Konto und Gerät)
+- [ ] Supabase: „Confirm email“ ausschalten
+- [ ] SQL `supabase/v0.8-konten.sql` in Supabase ausführen
