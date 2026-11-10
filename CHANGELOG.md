@@ -69,3 +69,9 @@
 ## v0.5.1 – Eigenes Geld in der Auktion
 
 - [x] Während der Versteigerung zeigt eine Leiste deine Geldkarten und die Summe (für Bieter und Auktionator)
+
+## v0.6.0 – Versteigerung auf dem Tisch (wartet auf Freigabe)
+
+- [x] Die Auktion verdeckt den Tisch nicht mehr: Tierkarte, Countdown und Höchstgebot liegen mitten auf dem Tisch
+- [x] Eigenes Geld bleibt als Fächer in der Hand sichtbar (extra Geld-Leiste entfällt)
+- [x] Gebotsknöpfe (+10 bis +500) und „Passen“ in der linken Spalte, Auktionator entscheidet dort

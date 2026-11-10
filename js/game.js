@@ -121,6 +121,72 @@ export function renderGame(root, ctx) {
     </div>`;
   }).join('');
 
+  // ----- Versteigerung: findet direkt auf dem Tisch statt -----
+  let aucCenter = '';
+  let aucLeft = '';
+  let aucBanner = '';
+  if (state.phase === 'auction') {
+    const a = auction;
+    const iAmAuctioneer = a.auctioneer === meId;
+    const high = a.high ? a.high.amount : 0;
+    const cap = a.caps[meId];
+    const canBid = (amt) => cap == null || amt <= cap;
+    const owners = v.players.filter((p) => p.animals[a.animal] > 0).map((p) => `${esc(p.id === meId ? 'Du' : p.name)} ${p.animals[a.animal]}`).join(', ') || 'noch niemand';
+    let bonusRow = '';
+    if (a.animal === 'esel' && v.lastEvent?.type === 'donkey') bonusRow = `<div class="row"><span>Esel-Bonus</span><strong>alle +${v.lastEvent.payout}</strong></div>`;
+    const card = bigAnimalCard(a.animal, `${bonusRow}<div class="row"><span>Schon bei</span><span>${owners}</span></div><div class="row line"><span>Du hast</span><span>${me.animals[a.animal]}</span></div>`, `compact ${entered ? 'deal' : ''}`);
+
+    // Countdown: Bieten nur solange die Zeit läuft, Zuschlag erst danach
+    const now = ctx.now();
+    const running = a.endsAt != null && now < a.endsAt;
+    const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
+    const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
+    const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
+    const countdown = a.endsAt != null
+      ? `<div class="countdown ${running ? '' : 'over'}" data-ends="${a.endsAt}" data-total="${total}">
+          <i style="width:${pct}%"></i><span>${running ? `noch ${secs} s` : 'Zeit abgelaufen'}</span></div>`
+      : '';
+
+    const ev = v.lastEvent;
+    const info = ev?.type === 'cant_pay' && !a.high
+      ? `<div class="reveal-row ${fresh ? 'shake' : ''}"><strong>${esc(nameOf(ev.player))} ${ev.player === meId ? 'kannst' : 'kann'} ${ev.amount} nicht zahlen:</strong>
+          <span class="reveal-cards">${ev.revealed.map((m) => moneyCard(m, { size: 'xs' })).join('') || 'keine Karten'}</span>
+          <span>→ max. ${ev.amount - BID_STEP}</span></div>`
+      : `<div class="aucinfo ${fresh ? 'pop' : ''}">${a.high ? `Höchstgebot <b>${high}</b> · ${esc(nameOf(a.high.player))}` : 'Noch kein Gebot'}</div>`;
+
+    aucBanner = `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
+    aucCenter = `<div class="auc">${card}${countdown}${info}</div>`;
+
+    if (iAmAuctioneer) {
+      const myTotal = sum(me.money);
+      if (running) {
+        aucLeft = `<div class="ldecide">Du versteigerst.<br>Wenn die Zeit um ist, entscheidest du: Zuschlag oder selbst kaufen.</div>`;
+      } else if (a.high) {
+        aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))}</button>
+          <button type="button" class="pill pill-white" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>SELBST KAUFEN</small>${high}</button>`;
+      } else {
+        aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>Tier nehmen</button>`;
+      }
+    } else if (running) {
+      const passed = a.passed.includes(meId);
+      // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
+      const steps = [10, 20, 50, 100, 200, 500];
+      aucLeft = `<div class="lhead">Bieten</div>
+        <div class="bidgrid">${steps.map((st) => {
+          const amt = high + st;
+          return `<button type="button" class="bidbtn" style="--m:${MONEY_COLORS[st]}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten"><b>+${st}</b><small>= ${amt}</small></button>`;
+        }).join('')}</div>
+        <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
+    } else {
+      aucLeft = `<div class="ldecide">Zeit abgelaufen –<br>${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
+    }
+
+    H.bid = (amt) => ctx.act((s) => bid(s, meId, Number(amt), ctx.now()));
+    H.pass = () => ctx.act((s) => passAuction(s, meId, ctx.now()));
+    H.sell = () => ctx.act((s) => closeAuction(s, meId, 'sell', ctx.now()));
+    H.buy = () => ctx.act((s) => closeAuction(s, meId, 'buy', ctx.now()));
+  }
+
   // ----- Tisch -----
   const nextDonkey = v.donkeysDrawn < 4 ? DONKEY_PAYOUTS[v.donkeysDrawn] : null;
   const lastLog = v.log[v.log.length - 1] || '';
@@ -133,21 +199,21 @@ export function renderGame(root, ctx) {
     return `<div class="money fan" style="--m:${MONEY_COLORS[m]};transform:rotate(${rot}deg) translateY(${Math.abs(off) * 3}px)">${m}</div>`;
   }).join('');
 
-  const banner = state.phase === 'ended' ? 'Spielende' : myTurn ? 'Du bist dran' : `${esc(cur.name)} ist dran`;
+  const banner = aucBanner || (state.phase === 'ended' ? 'Spielende' : myTurn ? 'Du bist dran' : `${esc(cur.name)} ist dran`);
   const table = `<div class="gtable">
     <div class="tbanner ${fresh && myTurn && state.phase === 'turn' ? 'pulse' : ''}">${banner}</div>
-    <div class="tlog">${esc(lastLog)}</div>
+    ${aucCenter || `<div class="tlog">${esc(lastLog)}</div>
     <div class="deck-wrap">
       <div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? 'KH' : ''}</div>
       <span class="deck-count">${v.deck > 0 ? `${v.deck} im Stapel` : 'Stapel leer – nur Kuhhandel'}</span>
     </div>
-    <div class="myanimals">${myAnimals}</div>
+    <div class="myanimals">${myAnimals}</div>`}
     <div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}</div>
   </div>`;
 
   // ----- linke Spalte -----
   const trades = possibleTrades(state, meId);
-  let leftActions = '';
+  let leftActions = aucLeft;
   if (state.phase === 'turn' && myTurn) {
     leftActions = `
       <button type="button" class="pill pill-red" data-a="auction" ${v.deck > 0 ? '' : 'disabled'}>TIER<br>VERSTEIGERN</button>
@@ -165,7 +231,7 @@ export function renderGame(root, ctx) {
       <span class="ichip">Geld: <b>${sum(me.money)}</b></span>
       ${nextDonkey ? `<span class="ichip">Nächster Esel: <b>+${nextDonkey}</b></span>` : '<span class="ichip">Alle Esel sind raus</span>'}
     </div>
-    <div class="lactions">${leftActions}</div>
+    <div class="lactions ${state.phase === 'auction' ? 'auction' : ''}">${leftActions}</div>
   </div>`;
 
   H.menu = () => { local.menu = !local.menu; ctx.rerender(); };
@@ -177,90 +243,6 @@ export function renderGame(root, ctx) {
   // ----- Überlagerung je nach Phase -----
   let overlay = '';
 
-  if (state.phase === 'auction') {
-    const a = auction;
-    const iAmAuctioneer = a.auctioneer === meId;
-    const high = a.high ? a.high.amount : 0;
-    const nextBid = high + BID_STEP;
-    const cap = a.caps[meId];
-    const canBid = (amt) => cap == null || amt <= cap;
-    const owners = v.players.filter((p) => p.animals[a.animal] > 0).map((p) => `${esc(p.id === meId ? 'Du' : p.name)} ${p.animals[a.animal]}`).join(', ') || 'noch niemand';
-    let bonusRow = '';
-    if (a.animal === 'esel' && v.lastEvent?.type === 'donkey') bonusRow = `<div class="row"><span>Esel-Bonus</span><strong>alle +${v.lastEvent.payout}</strong></div>`;
-    const card = bigAnimalCard(a.animal, `${bonusRow}<div class="row"><span>Schon bei</span><span>${owners}</span></div><div class="row line"><span>Du hast</span><span>${me.animals[a.animal]}</span></div>`, entered ? 'deal' : '');
-
-    const ev = v.lastEvent;
-    const reveal = ev?.type === 'cant_pay' && !a.high
-      ? `<div class="reveal ${fresh ? 'shake' : ''}"><strong>${esc(nameOf(ev.player))} ${ev.player === meId ? 'kannst' : 'kann'} ${ev.amount} nicht zahlen!</strong>
-          <div class="reveal-cards">${ev.revealed.map((m) => moneyCard(m, { size: 'xs' })).join('') || 'keine Karten'}</div>
-          <span>Neue Runde – höchstens ${ev.amount - BID_STEP} für ${esc(nameOf(ev.player))}.</span></div>`
-      : '';
-
-    // Countdown: Bieten nur solange die Zeit läuft, Zuschlag erst danach
-    const now = ctx.now();
-    const running = a.endsAt != null && now < a.endsAt;
-    const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
-    const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
-    const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
-    const countdown = a.endsAt != null
-      ? `<div class="countdown ${running ? '' : 'over'}" data-ends="${a.endsAt}" data-total="${total}">
-          <i style="width:${pct}%"></i><span>${running ? `noch ${secs} s` : 'Zeit abgelaufen'}</span></div>`
-      : '';
-
-    let buttons;
-    let hint = '';
-    if (iAmAuctioneer) {
-      const myTotal = sum(me.money);
-      if (running) {
-        buttons = `<button type="button" class="pill pill-red big" disabled><small>AUKTION LÄUFT</small>${a.high ? high : '–'}</button>`;
-        hint = 'Wenn die Zeit abgelaufen ist, entscheidest du: Zuschlag oder selbst zum Höchstgebot kaufen.';
-      } else {
-        buttons = a.high
-          ? `<button type="button" class="pill pill-red big" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))}</button>
-             <button type="button" class="pill pill-white big" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>SELBST KAUFEN</small>${high}</button>`
-          : `<button type="button" class="pill pill-red big" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>Tier nehmen</button>`;
-        hint = a.high ? 'Zeit ist um – deine Entscheidung.' : '';
-      }
-    } else if (running) {
-      const passed = a.passed.includes(meId);
-      // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
-      const steps = [10, 20, 50, 100, 200, 500];
-      buttons = `<div class="bidrow">${steps.map((st) => {
-        const amt = high + st;
-        return `<button type="button" class="bidbtn" style="--m:${MONEY_COLORS[st]}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten">
-          <b>+${st}</b><small>= ${amt}</small></button>`;
-      }).join('')}
-        <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button></div>`;
-    } else {
-      buttons = `<div class="decide">Zeit abgelaufen – ${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
-    }
-    const bubble = iAmAuctioneer || !running
-      ? `<div class="bubble ${fresh ? 'pop' : ''}"><span>${a.high ? 'Höchstgebot' : 'Wer bietet?'}</span><b>${a.high ? high : '–'}</b></div>`
-      : `<div class="bubble ${fresh ? 'pop' : ''}"><span>Wer bietet</span><b>${nextBid}</b></div>`;
-    const auctioneerIdx = idxOf(a.auctioneer);
-    overlay = `<div class="overlay light ${entered ? 'enter' : ''}">
-      <div class="auctioneer">${bubble}
-        <div class="gavel" style="--c:${SEAT_COLORS[auctioneerIdx]}">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3.5l7.5 7.5"></path><path d="M10.5 6l7.5 7.5"></path><path d="M11.8 4.8l-4.5 4.5 7.4 7.4 4.5-4.5"></path><path d="M9.5 13.5L3.5 19.5"></path><path d="M3 21h9"></path></svg>
-        </div>
-        <span class="ribbon-s" style="--c:${SEAT_COLORS[auctioneerIdx]}">${esc(nameOf(a.auctioneer))} versteigert</span>
-        ${hint ? `<p class="hint">${hint}</p>` : ''}
-      </div>
-      <div class="auction-card">${card}${countdown}</div>
-      ${reveal}
-      <div class="wallet" aria-label="Dein Geld: ${sum(me.money)} Taler">
-        <span>Dein Geld</span>
-        <div class="wallet-cards">${me.money.map((m) => moneyCard(m, { size: 'xs' })).join('') || '<em>keine Karten</em>'}</div>
-        <b>= ${sum(me.money)}</b>
-      </div>
-      <div class="bottom-bar">${buttons}</div>
-    </div>`;
-
-    H.bid = (amt) => ctx.act((s) => bid(s, meId, Number(amt), ctx.now()));
-    H.pass = () => ctx.act((s) => passAuction(s, meId, ctx.now()));
-    H.sell = () => ctx.act((s) => closeAuction(s, meId, 'sell', ctx.now()));
-    H.buy = () => ctx.act((s) => closeAuction(s, meId, 'buy', ctx.now()));
-  }
 
   if (state.phase === 'payment') {
     const pm = v.payment;

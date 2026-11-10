@@ -484,3 +484,31 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .wallet-cards { display: flex; flex-wrap: nowrap; gap: 3px; overflow: hidden; }
 .wallet b { font-family: var(--font-head); font-size: 18px; white-space: nowrap; }
 .wallet em { font-size: 12px; color: var(--muted); }
+
+/* =================== Versteigerung auf dem Tisch =================== */
+.auc { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 2px; }
+.bigcard.compact { width: 176px; padding: 5px; }
+.bigcard.compact .bigcard-in { padding: 4px; }
+.bigcard.compact .bigcard-head { height: 54px; font-size: 17px; gap: 8px; }
+.bigcard.compact .bigcard-head .mono { width: 44px; height: 44px; }
+.bigcard.compact .row { font-size: 10.5px; padding: 2px 3px; }
+.bigcard.compact .row.hl { font-size: 11.5px; margin-top: 4px; }
+.auc .countdown { width: 196px; height: 20px; margin-top: 0; }
+.auc .countdown span { font-size: 12px; }
+.aucinfo { color: #fff; font-size: 13px; font-weight: 600; }
+.aucinfo b { font-family: var(--font-head); font-size: 20px; color: var(--gold); }
+.aucinfo.pop b { display: inline-block; animation: pop .35s ease-out; }
+.reveal-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; justify-content: center; background: #FBE3E6; border-radius: 10px; padding: 4px 8px; font-size: 11px; max-width: 360px; }
+.reveal-row strong { color: #8F1626; }
+.reveal-row.shake { animation: shake .5s ease-in-out; }
+.reveal-row .reveal-cards { display: flex; gap: 2px; }
+.reveal-row .money.xs { width: 20px; height: 28px; font-size: 9px; }
+.lactions.auction { gap: 7px; }
+.lhead { font-family: var(--font-head); font-weight: 700; font-size: 16px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.2); }
+.bidgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.bidgrid .bidbtn { width: auto; height: 50px; border-width: 2px; border-radius: 8px; }
+.bidgrid .bidbtn b { font-size: 15px; }
+.bidgrid .bidbtn small { font-size: 9px; }
+.lactions .pill small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .5px; }
+.lactions .pill-small { min-height: 40px; }
+.ldecide { background: #fff; border-radius: 14px; padding: 10px; font-size: 12px; font-weight: 600; line-height: 1.35; box-shadow: 0 3px 0 rgba(0,0,0,.12); }
