@@ -80,7 +80,7 @@
 
 - [x] Startgeld je Spieler: 2× 0, 3× 10, 1× 20, 1× 50 = 100 Taler (vorher 90)
 
-## v0.6.2 – Kuhhandel übersichtlich (wartet auf Freigabe)
+## v0.6.2 – Kuhhandel übersichtlich
 
 - [x] Tiere im Kuhhandel als kleine Kacheln (passt auch bei allen 10 Tierarten)
 - [x] Geld als Stapel nach Scheinwert: antippen legt einen Schein ins Angebot, Schein im Angebot antippen nimmt ihn zurück
