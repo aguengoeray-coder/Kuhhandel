@@ -55,3 +55,13 @@
 - [x] Countdown läuft nach der Server-Uhr statt nach der Uhr jedes Geräts
 - [x] Spielstand wird alle 3 Sekunden abgeglichen, auch wenn die Live-Verbindung hakt
 - [x] „Offline“ erst nach 15 Sekunden ohne Verbindung, kurze Aussetzer werden ignoriert
+
+## v0.5.0 – Debug-Modus (wartet auf Freigabe)
+
+- [x] Einschalten mit ?debug=1, ausschalten mit ?debug=0 (gilt pro Gerät)
+- [x] Testspiel mit 3 oder 4 Spielern nur auf diesem Gerät, ohne Supabase
+- [x] Sicht wechseln (oben rechts) oder automatisch zu dem, der gerade handeln muss
+- [x] Test-Spieler, die selbst bieten, zahlen, zuschlagen und handeln
+- [x] Abkürzungen: Countdown 5 s, Vorspulen, Esel als nächste Karte, Geld leeren
+- [x] Infofenster: Version, Live-Verbindung, letzter Abgleich, Uhr-Abweichung, Online, Fehler
+- [x] „Fehlerbericht kopieren“ für echte Spiele

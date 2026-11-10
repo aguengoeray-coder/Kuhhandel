@@ -1,8 +1,12 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
-import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError } from '../src/engine.js';
-import { renderGame, SEAT_COLORS } from './game.js';
+import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS } from '../src/engine.js';
+import { renderGame, SEAT_COLORS, fitStage } from './game.js';
 import { buildDemoState } from './demo.js';
+import { botStep, whoMustAct } from './bots.js';
+import { debugChips, debugPanel } from './debug.js';
+
+export const APP_VERSION = '0.5.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -12,6 +16,15 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch { /* egal */ } },
   del(k) { try { localStorage.removeItem(k); } catch { /* egal */ } },
 };
+
+// Debug-Modus: ?debug=1 schaltet ihn auf diesem Gerät ein, ?debug=0 wieder aus
+if (params.get('debug') === '1') store.set('kh_debug', '1');
+if (params.get('debug') === '0') store.del('kh_debug');
+const DEBUG = store.get('kh_debug') === '1';
+const dbg = { panel: false, viewAs: null, autoView: true, bots: false, fast: false, errors: [], lastSync: null, reportText: '' };
+const logError = (msg) => { dbg.errors.push(`${new Date().toISOString()} ${msg}`); if (dbg.errors.length > 30) dbg.errors.shift(); };
+window.addEventListener('error', (e) => logError(`Fehler: ${e.message} (${e.filename}:${e.lineno})`));
+window.addEventListener('unhandledrejection', (e) => logError(`Fehler: ${e.reason?.message || e.reason}`));
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const initial = (name) => esc((name || '?').trim().charAt(0).toUpperCase());
@@ -45,6 +58,12 @@ function renderStart() {
       <button class="pill pill-red pill-small" type="button" data-resume="${esc(g.id)}">Weiter spielen</button>
     </li>`).join('');
 
+  const testRow = DEBUG ? `<li class="game-row test">
+      <div class="host">Testspiel<small>Nur auf diesem Gerät · Debug-Modus</small></div>
+      <button class="pill pill-white pill-small" type="button" data-test="3">3 Spieler</button>
+      <button class="pill pill-red pill-small" type="button" data-test="4">4 Spieler</button>
+    </li>` : '';
+
   const list = ui.games.length
     ? ui.games.map((g) => {
         const host = g.players[0]?.name || 'Unbekannt';
@@ -75,7 +94,7 @@ function renderStart() {
           <button class="pill pill-red pill-small" type="button" id="create" ${me.name ? '' : 'disabled'}>Spiel erstellen</button>
         </div>
         ${ui.error ? `<div class="error" role="alert">${esc(ui.error)}</div>` : ''}
-        <ul class="games-list">${resume}${list}</ul>
+        <ul class="games-list">${testRow}${resume}${list}</ul>
       </div>
     </section>`;
 
@@ -94,6 +113,7 @@ function renderStart() {
   document.getElementById('edit-name')?.addEventListener('click', () => { ui.editingName = true; render(); document.getElementById('name-input')?.focus(); });
   document.getElementById('create')?.addEventListener('click', onCreate);
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
+  app.querySelectorAll('[data-test]').forEach((b) => b.addEventListener('click', () => startLocalGame(Number(b.dataset.test))));
   app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
     const { data } = await sb.from('games').select('*').eq('id', b.dataset.resume).maybeSingle();
     if (data) enterRoom(data); else { await loadGames(); render(); }
@@ -158,20 +178,30 @@ function toast(msg) {
 }
 
 function renderPlaying() {
-  checkSignal();
+  const local = !!ui.game.local;
+  if (local) {
+    // Testspiel: automatisch zu dem wechseln, der gerade handeln muss
+    if (dbg.autoView && !dbg.bots) {
+      const who = whoMustAct(ui.game.state, now());
+      if (who && who !== dbg.viewAs) { dbg.viewAs = who; gameLocal.sel = []; gameLocal.tradeOpen = false; }
+    }
+  } else {
+    checkSignal();
+  }
   renderGame(app, {
     state: ui.game.state,
-    meId: me.id,
+    meId: local ? dbg.viewAs : me.id,
     local: gameLocal,
     toastMsg,
     rerender: render,
     act,
     now,
-    online: onlineForDisplay(),
     sound: soundOn(),
     toggleSound: () => { store.set('kh_sound', soundOn() ? 'off' : 'on'); render(); },
-    onExit: () => { store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
+    online: local ? null : onlineForDisplay(),
+    onExit: () => { if (!ui.game?.local) store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
+  if (DEBUG) injectDebug();
 }
 
 // Spielzug ausführen: Regeln lokal prüfen, dann neuen Stand speichern (nur wenn niemand schneller war)
@@ -181,10 +211,11 @@ async function act(fn) {
   try {
     next = fn(ui.game.state);
   } catch (e) {
-    if (e instanceof GameError) return toast(e.message);
+    if (e instanceof GameError) { logError(`Regel: ${e.message}`); return toast(e.message); }
+    logError(`Absturz: ${e.message}`);
     throw e;
   }
-  if (DEMO) { ui.game = { ...ui.game, state: next }; return render(); }
+  if (DEMO || ui.game.local) return applyLocal(next);
   busy = true;
   const g = ui.game;
   const { data, error } = await sb.from('games')
@@ -192,7 +223,7 @@ async function act(fn) {
     .eq('id', g.id).eq('version', g.version)
     .select();
   busy = false;
-  if (error) return toast('Verbindung hakt – bitte nochmal versuchen.');
+  if (error) { logError(`Speichern: ${error.message}`); return toast('Verbindung hakt – bitte nochmal versuchen.'); }
   if (!data || data.length === 0) {
     const fresh = await sb.from('games').select('*').eq('id', g.id).single();
     if (fresh.data) ui.game = fresh.data;
@@ -269,6 +300,132 @@ setInterval(() => {
   if (txt) txt.textContent = `noch ${Math.ceil(left / 1000)} s`;
 }, 200);
 
+// ---------- Debug-Modus ----------
+
+function startLocalGame(n) {
+  const players = [{ id: 'me', name: me.name || 'Ich' }, ...Array.from({ length: n - 1 }, (_, i) => ({ id: `t${i + 1}`, name: `Test ${i + 1}` }))];
+  const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31) });
+  Object.keys(gameLocal).forEach((k) => delete gameLocal[k]);
+  dbg.viewAs = 'me';
+  ui.game = { id: 'local', local: true, version: 0, status: 'playing', players, state };
+  ui.screen = 'playing';
+  render();
+}
+
+function applyLocal(next) {
+  if (dbg.fast && next.phase === 'auction' && next.auction.endsAt != null) {
+    next.auction.endsAt = Math.min(next.auction.endsAt, now() + 5000);
+  }
+  ui.game = { ...ui.game, state: next, version: (ui.game.version || 0) + 1, status: next.phase === 'ended' ? 'ended' : 'playing' };
+  render();
+}
+
+// Test-Spieler spielen automatisch
+setInterval(() => {
+  if (!DEBUG || !dbg.bots || ui.screen !== 'playing' || !ui.game?.local) return;
+  const s = ui.game.state;
+  if (s.phase === 'ended') return;
+  const bots = s.players.map((p) => p.id).filter((id) => id !== 'me');
+  try {
+    const next = botStep(s, bots, now());
+    if (next) applyLocal(next);
+  } catch (e) {
+    logError(`Test-Spieler: ${e.message}`);
+  }
+}, 700);
+
+function debugInfo() {
+  const g = ui.game;
+  const s = g?.state;
+  const nameOf = (id) => s?.players.find((p) => p.id === id)?.name || '–';
+  return {
+    local: !!g?.local,
+    version: APP_VERSION,
+    gameId: g?.id,
+    channel: g?.local ? '–' : (roomChannel ? roomChannel.state : 'keine'),
+    lastSync: dbg.lastSync ? `vor ${Math.round((Date.now() - dbg.lastSync) / 1000)} s` : '–',
+    clockOffset,
+    gameVersion: g?.version ?? '–',
+    phase: s?.phase || '–',
+    turnName: s ? s.players[s.turn]?.name : '–',
+    online: online ? [...online].map(nameOf).join(', ') || 'niemand' : '–',
+    errors: dbg.errors,
+    players: s?.players || [],
+    viewAs: dbg.viewAs,
+    viewName: nameOf(dbg.viewAs),
+    autoView: dbg.autoView,
+    bots: dbg.bots,
+    fast: dbg.fast,
+    reportText: dbg.reportText,
+  };
+}
+
+function injectDebug() {
+  const stage = document.getElementById('stage');
+  if (!stage) return;
+  const d = debugInfo();
+  stage.insertAdjacentHTML('beforeend', debugChips(d) + (dbg.panel ? debugPanel(d) : ''));
+}
+
+function buildReport() {
+  return JSON.stringify({
+    version: APP_VERSION,
+    zeit: new Date().toISOString(),
+    geraet: navigator.userAgent,
+    ich: { id: me.id, name: me.name },
+    info: (({ players, reportText, ...rest }) => rest)(debugInfo()),
+    spiel: ui.game ? { id: ui.game.id, version: ui.game.version, status: ui.game.status, state: ui.game.state } : null,
+  }, null, 1);
+}
+
+function debugShortcut(kind) {
+  const s = JSON.parse(JSON.stringify(ui.game.state));
+  if (kind === 'forward') {
+    if (s.phase !== 'turn') return toast('Vorspulen geht nur, wenn gerade niemand versteigert oder handelt.');
+    while (s.deck.length > 2) {
+      const card = s.deck.shift();
+      if (card === 'esel' && s.donkeysDrawn < 4) {
+        const payout = DONKEY_PAYOUTS[s.donkeysDrawn++];
+        s.players.forEach((p) => { p.money.push(payout); p.money.sort((a, b) => a - b); });
+      }
+      s.players[Math.floor(Math.random() * s.players.length)].animals[card] += 1;
+    }
+    s.log.push('Debug: vorgespult.');
+  } else if (kind === 'donkey') {
+    const i = s.deck.indexOf('esel');
+    if (i < 0) return toast('Kein Esel mehr im Stapel.');
+    s.deck.splice(i, 1);
+    s.deck.unshift('esel');
+    s.log.push('Debug: Esel liegt oben.');
+  } else if (kind === 'broke') {
+    s.players.find((p) => p.id === dbg.viewAs).money = [0, 10];
+    s.log.push('Debug: Geld geleert.');
+  }
+  applyLocal(s);
+}
+
+app.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-dbg]');
+  if (!b || !DEBUG) return;
+  e.stopPropagation();
+  const k = b.dataset.dbg;
+  const players = ui.game?.state?.players || [];
+  if (k === 'panel') { dbg.panel = !dbg.panel; dbg.reportText = ''; }
+  else if (k === 'cycleView') { const i = players.findIndex((p) => p.id === dbg.viewAs); dbg.viewAs = players[(i + 1) % players.length].id; dbg.autoView = false; gameLocal.sel = []; gameLocal.tradeOpen = false; }
+  else if (k === 'view') { dbg.viewAs = b.dataset.v; dbg.autoView = false; gameLocal.sel = []; gameLocal.tradeOpen = false; }
+  else if (k === 'autoView') dbg.autoView = !dbg.autoView;
+  else if (k === 'bots') { dbg.bots = !dbg.bots; if (dbg.bots) { dbg.viewAs = 'me'; dbg.autoView = false; } }
+  else if (k === 'fast') dbg.fast = !dbg.fast;
+  else if (k === 'reload') { await resync(); }
+  else if (k === 'forward' || k === 'donkey' || k === 'broke') { dbg.panel = false; return debugShortcut(k); }
+  else if (k === 'report') {
+    const text = buildReport();
+    try { await navigator.clipboard.writeText(text); dbg.reportText = ''; toast('Fehlerbericht kopiert – einfach an Claude schicken.'); return; }
+    catch { dbg.reportText = text; }
+  }
+  render();
+}, true);
+
 // ---------- Supabase ----------
 
 async function connect() {
@@ -337,6 +494,7 @@ function watchRoom(id) {
         openStart();
         return;
       }
+      dbg.lastSync = Date.now();
       showGame(payload.new);
     })
     .on('presence', { event: 'sync' }, () => {
@@ -371,12 +529,13 @@ function scheduleResync() {
 }
 
 async function resync() {
-  if (!sb || DEMO) return;
+  if (!sb || DEMO || ui.game?.local) return;
   const id = ui.game?.id || store.get('kh_game');
   if (ui.screen === 'start' || !id) { await loadGames(); return render(); }
   const { data, error } = await sb.from('games').select('*').eq('id', id).maybeSingle();
-  if (error) return scheduleResync(); // keine Verbindung: später nochmal versuchen, NICHT rauswerfen
+  if (error) { logError(`Abgleich: ${error.message}`); return scheduleResync(); } // keine Verbindung: später nochmal versuchen, NICHT rauswerfen
   if (!data) { store.del('kh_game'); return openStart(); }
+  dbg.lastSync = Date.now();
   const changed = !ui.game || ui.game.id !== data.id || ui.game.version !== data.version || ui.game.status !== data.status;
   if (changed && !busy) { ui.game = null; showGame(data); } else if (ui.screen === 'playing') render(); // Offline-Anzeige aktualisieren
   if (!roomChannel || roomChannel.state === 'closed' || roomChannel.state === 'errored') watchRoom(id);
@@ -448,6 +607,7 @@ async function openStart() {
 // ---------- Demo für Screenshots ----------
 
 function demo(kind) {
+  if (kind === 'testspiel') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(4); }
   me = { id: 'u1', name: 'Alp' };
   ui.editingName = kind === 'name';
   if (kind === 'name') me.name = '';
