@@ -58,7 +58,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   Ziege 350, Esel 500, Schwein 650, Kuh 800, Pferd 1000.
 - Startgeld: 2× 0, 3× 10, 1× 20, 1× 50 = 100 Taler. Fremdes Geld ist verdeckt (nur Kartenanzahl sichtbar).
 - Esel-Bonus beim Aufdecken für alle: 50 / 100 / 200 / 500.
-- Versteigerung auf Zeit: 10 s nach dem Aufdecken, nach jedem Gebot wieder 10 s. Gebotsknöpfe +10/+20/+50/+100/+200/+500.
+- Versteigerung auf Zeit: 10 s nach dem Aufdecken, nach jedem Gebot wieder 10 s. Gebotsknöpfe +10/+20/+50/+100 (mehr bieten = mehrmals tippen).
   Erst nach Ablauf entscheidet der Auktionator: Zuschlag an den Höchstbietenden oder selbst zum Höchstgebot kaufen.
 - **Kein Wechselgeld.** Wer nicht zahlen kann, zeigt alle Scheine offen; Auktion startet neu, er darf höchstens altes Gebot − 10 bieten.
 - Kuhhandel: verdecktes Angebot; annehmen (Geld nehmen, Tier abgeben) oder Gegenangebot.

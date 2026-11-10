@@ -134,8 +134,8 @@ function playCard(id, kind = 'animal') {
   const val = kind === 'special' ? SPECIAL_VALUE : kind === 'rat' ? '' : ANIMAL_BY_ID[id].value;
   const name = aname(id).toUpperCase();
   return `<div class="pcard ${kind}" style="--a:${ANIMAL_COLORS[id]}">
-    ${val !== '' ? `<span class="pcv tl">${val}</span><span class="pcv br">${val}</span>` : ''}
-    ${kind === 'special' ? `<span class="pcstar">${STAR}</span>` : ''}
+    ${val !== '' ? `<span class="pcv tl">${val}</span>` : ''}
+    ${kind === 'special' ? `<span class="pcstar">${STAR}</span>` : val !== '' ? `<span class="pcv tr">${val}</span>` : ''}
     <div class="pcart">${art(id)}</div>
     <div class="pcname">${name}</div>
   </div>`;
@@ -293,7 +293,7 @@ export function renderGame(root, ctx) {
     } else if (running) {
       const passed = a.passed.includes(meId);
       // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
-      const steps = [10, 20, 50, 100, 200, 500];
+      const steps = [10, 20, 50, 100]; // mehr bieten = mehrmals tippen (z. B. 100, dann 20)
       const mine = sum(me.money);
       aucLeft = `<div class="lhead">Bieten <small>mind. ${high + BID_STEP}</small></div>
         <div class="bidgrid">${steps.map((st) => {
@@ -301,6 +301,7 @@ export function renderGame(root, ctx) {
           const over = amt > mine;
           return `<button type="button" class="bidbtn ${over ? 'over' : ''}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten${over ? ', mehr als du hast' : ''}"><b>${amt}</b><small>${over ? '⚠ zu viel' : `+${st}`}</small></button>`;
         }).join('')}</div>
+        <div class="lnote">Mehr bieten? Einfach nochmal tippen.</div>
         <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
     } else {
       aucLeft = `<div class="ldecide">Zeit abgelaufen –<br>${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
@@ -446,7 +447,7 @@ export function renderGame(root, ctx) {
     } else {
       aucBanner = `${esc(nameOf(pm.payer))} ${pm.payer === meId ? 'zahlst' : 'zahlt'}`;
       aucCenter = `<div class="auc paytable">${card}
-        <div class="kasse wait"><div class="kslots">${Array.from({ length: Math.min(isSp ? pm.count : 3, 8) }, () => '<div class="money xs back"></div>').join('')}</div>
+        <div class="kasse waiting"><div class="kslots">${Array.from({ length: Math.min(isSp ? pm.count : 3, 8) }, () => '<div class="money xs back"></div>').join('')}</div>
           <div class="kline"><span>${esc(nameOf(pm.payer))} → ${esc(nameOf(pm.payee))}</span><b>${isSp ? karten(pm.count) : `${pm.amount} Taler`}</b></div></div></div>`;
       aucLeft = `<div class="ldecide">${esc(nameOf(pm.payer))} sucht ${isSp ? 'die Karten' : 'die Scheine'} aus …</div>`;
     }

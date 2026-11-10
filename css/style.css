@@ -872,7 +872,7 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 .kslots .money.xs.back { background: repeating-linear-gradient(45deg, #C8372D 0 6px, #A82A22 6px 12px); border-color: var(--ink); }
 .kline { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 12px; font-weight: 700; gap: 8px; }
 .kline .paystatus { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; }
-.kasse.wait .kline b { color: var(--gold); }
+.kasse.waiting .kline b { color: var(--gold); }
 .hand-row { position: absolute; left: 0; right: 0; bottom: 6px; display: flex; justify-content: center; }
 .hand-row .piles { padding-top: 0; gap: 5px; background: rgba(0,0,0,.18); border-radius: 14px; padding: 6px 8px; }
 .hand-row .pile { width: 44px; height: 56px; }
@@ -1030,3 +1030,11 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .pile .pc { bottom: 5px; }
 .pile { overflow: visible; }
 .pile .pcnt { position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); background: var(--ink); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; font-weight: 700; line-height: 16px; }
+/* Werte nicht mehr auf dem Kopf */
+.pcv.tr { right: 7px; top: 7px; left: auto; }
+.money .mc.br { transform: none; }
+/* Gebote: 4 Knöpfe in 2 Reihen, größer */
+.bidgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.bidgrid .bidbtn { height: 54px; }
+.bidgrid .bidbtn b { font-size: 19px; }
+.lactions .lnote { font-size: 11px; }
