@@ -1,0 +1,8 @@
+// Cloudflare Worker: liefert die Spieldateien als statische Webseite aus
+{
+  "name": "kuhhandel",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "."
+  }
+}
