@@ -104,15 +104,18 @@ function specialMini(id) {
 // Kleine Symbole in der Spielerspalte: „2× [Tier]“, Ratten, Spezialkarten
 // Höchstens eine Reihe: Quartette zuerst, dann Ratten, Spezialkarten, dann nach Anzahl und Wert; Rest als „+N“
 const CHIP_MAX = 4;
-function playerChips(p) {
+function playerChips(p, tradeable = new Set()) {
   const items = [];
+  const chip = (id, cls, inner, title) => (tradeable.has(id)
+    ? `<button type="button" class="chip ${cls} tradechip" data-a="tradeWith" data-v="${esc(p.id)}|${id}" aria-label="Kuhhandel mit ${esc(p.name)} um ${aname(id)}">${inner}</button>`
+    : `<span class="chip ${cls}" title="${title}">${inner}</span>`);
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
-    if (n > 0) items.push({ rank: n === 4 ? 0 : 2, n, val: a.value, html: `<span class="chip ${n === 4 ? 'done' : ''}" title="${n}× ${a.name}"><em>${n}×</em><span class="ci" style="--a:${ANIMAL_COLORS[a.id]}">${art(a.id)}</span></span>` });
+    if (n > 0) items.push({ rank: n === 4 ? 0 : tradeable.has(a.id) ? 1 : 3, n, val: a.value, html: chip(a.id, n === 4 ? 'done' : '', `<em>${n}×</em><span class="ci" style="--a:${ANIMAL_COLORS[a.id]}">${art(a.id)}</span>`, `${n}× ${a.name}`) });
   }
   const r = ratsOf(p);
-  if (r > 0) items.push({ rank: 1, n: r, val: 0, html: `<span class="chip rat" title="${r}× Ratte"><em>${r}×</em><span class="ci" style="--a:${ANIMAL_COLORS[RAT]}">${art(RAT)}</span></span>` });
-  for (const id of specialsOf(p)) items.push({ rank: 3, n: 1, val: SPECIAL_VALUE, html: `<span class="chip sp" title="${aname(id)}-Spezialkarte"><span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>${STAR}</span>` });
+  if (r > 0) items.push({ rank: tradeable.has(RAT) ? 1 : 2, n: r, val: 0, html: chip(RAT, 'rat', `<em>${r}×</em><span class="ci" style="--a:${ANIMAL_COLORS[RAT]}">${art(RAT)}</span>`, `${r}× Ratte`) });
+  for (const id of specialsOf(p)) items.push({ rank: 4, n: 1, val: SPECIAL_VALUE, html: `<span class="chip sp" title="${aname(id)}-Spezialkarte"><span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>${STAR}</span>` });
   items.sort((x, y) => x.rank - y.rank || y.n - x.n || y.val - x.val);
   if (items.length <= CHIP_MAX) return items.map((x) => x.html).join('');
   return items.slice(0, CHIP_MAX - 1).map((x) => x.html).join('') + `<span class="chip more">+${items.length - CHIP_MAX + 1}</span>`;
@@ -132,7 +135,7 @@ export function scoreFormula(p, blocked = null) {
 }
 
 // Großansicht eines Mitspielers (im Emoji-Fenster): Tiere, Ratten, Spezialkarten, Kartenanzahl
-function playerDetail(p) {
+function playerDetail(p, withScore = false) {
   const items = [];
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
@@ -142,7 +145,8 @@ function playerDetail(p) {
   if (r) items.push(`<span class="pd"><span class="ci" style="--a:${ANIMAL_COLORS[RAT]}">${art(RAT)}</span><b>${r}×</b><small>Ratte</small></span>`);
   for (const id of specialsOf(p)) items.push(`<span class="pd sp"><span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}${STAR}</span><b>★</b><small>${SPECIAL_VALUE}</small></span>`);
   const count = Array.isArray(p.money) ? p.money.length : p.money;
-  return `<div class="pdetail"><div class="pdgrid">${items.join('') || '<em>Noch keine Karten</em>'}</div><small>${karten(count)} Geld</small></div>`;
+  const pts = withScore ? `<div class="pdscore"><span>Punkte</span><b>${scoreFor(p).score}</b><small>${scoreFormula(p)}</small></div>` : '';
+  return `<div class="pdetail">${pts}<div class="pdgrid">${items.join('') || '<em>Noch keine Karten</em>'}</div>${withScore ? '' : `<small>${karten(count)} Geld</small>`}</div>`;
 }
 
 function specialCard(id, extraRows = '', cls = '') {
@@ -226,6 +230,12 @@ export function renderGame(root, ctx) {
 
   // ----- rechte Spalte: alle Spieler -----
   const auction = v.auction;
+  const others = v.players.filter((p) => p.id !== meId);
+  // Position jedes Spielers auf der Bühne (Gegner rechts, du unten rechts im Tisch)
+  const posY = (id) => (id === meId ? 340 : 8 + (374 / Math.max(1, others.length)) * (others.findIndex((p) => p.id === id) + 0.5));
+  const tradeMap = {};
+  if (state.phase === 'turn' && myTurn && !v.mustDraw) possibleTrades(state, meId).forEach((t) => { (tradeMap[t.target] ||= new Set()).add(t.animal); });
+  let meBadge = '';
   const playersCol = v.players.map((p, i) => {
     const isMe = p.id === meId;
     const count = Array.isArray(p.money) ? p.money.length : p.money;
@@ -245,7 +255,7 @@ export function renderGame(root, ctx) {
       else if (sp.buzzes[p.id] != null) status = `Buzz bei ${sp.buzzes[p.id]}`;
       else if (sp.caps[p.id] != null) status = sp.caps[p.id] === 0 ? 'darf nicht buzzern' : `erst ab ${sp.caps[p.id]}`;
     }
-    const chips = playerChips(p);
+    const chips = playerChips(p, tradeMap[p.id]);
     const isLeader = state.phase === 'auction' && auction.high && auction.high.player === p.id;
     if (isLeader) status = `🔨 ${auction.high.amount}`;
     const turnMark = (state.phase === 'rat' ? ratCurrent(v) === p.id : cur.id === p.id) && state.phase !== 'ended' ? ' turn' : '';
@@ -263,6 +273,11 @@ export function renderGame(root, ctx) {
     const bubble = said ? `<div class="rbubble ${from ? 'to' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
     let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
+    if (isMe) {
+      meBadge = `<button type="button" class="mebadge${turnMark}${isLeader ? ' leader' : ''}" style="--c:${SEAT_COLORS[i]}" data-a="reactTo" data-v="${esc(p.id)}" aria-label="Deine Punkte und Reaktionen">
+        ${bubble}${avatar(p, i)}<span class="mbtext"><b>Du</b><small>${isLeader || status !== karten(count) ? status : `${scoreFor(p).score} Punkte`}</small></span></button>`;
+      return '';
+    }
     return `<div class="prow${turnMark}${dim}${isLeader ? ' leader' : ''}" style="--c:${SEAT_COLORS[i]}">${coin}
       ${bubble}${nudge}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
@@ -296,20 +311,19 @@ export function renderGame(root, ctx) {
       <div><span>Bei anderen</span><b>${owners}</b></div><div><span>Du hast</span><b>${me.animals[a.animal]}</b></div>
       ${a.animal === 'esel' && v.lastEvent?.type === 'donkey' ? `<div class="bonus"><span>Esel-Bonus</span><b>alle +${v.lastEvent.payout}</b></div>` : ''}
     </div>`;
-    const card = revealing
-      ? `<div class="revealcard">${playCard(a.animal)}</div>`
-      : `<div class="aucard center ${infoFresh ? 'settle' : ''}">${playCard(a.animal)}</div>`;
-
-    // Countdown: Bieten nur solange die Zeit läuft, Zuschlag erst danach
+    // Countdown: Ring um die Karte – bieten nur solange er läuft, Zuschlag erst danach
     const now = ctx.now();
     const running = a.endsAt != null && now < a.endsAt && !revealing;
     const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
     const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
-    const countdown = a.endsAt != null && !revealing
-      ? `<div class="countdown ${running ? '' : 'over'}" data-ends="${a.endsAt}" data-total="${total}">
-          <i style="width:${pct}%"></i><span>${running ? `noch ${secs} s` : 'Zeit abgelaufen'}</span></div>`
-      : '';
+    const card = revealing
+      ? `<div class="revealcard">${playCard(a.animal)}</div>`
+      : `<div class="aucard center ringwrap ${infoFresh ? 'settle' : ''} ${running ? (secs <= 3 ? 'low' : '') : 'over'}" ${a.endsAt != null ? `data-ends="${a.endsAt}" data-total="${total}" data-fmt="n"` : ''}>
+          ${playCard(a.animal)}
+          <svg class="ring" viewBox="0 0 112 152" aria-hidden="true"><rect class="ringbg" x="4" y="4" width="104" height="144" rx="16" pathLength="100"></rect><rect class="ringp" x="4" y="4" width="104" height="144" rx="16" pathLength="100" style="stroke-dashoffset:${100 - pct}"></rect></svg>
+          <span class="ringsec">${running ? secs : '✓'}</span></div>`;
+    const countdown = !revealing && !running && a.endsAt != null ? '<div class="timeup">Zeit abgelaufen</div>' : '';
 
     const ev = v.lastEvent;
     const info = ev?.type === 'cant_pay' && !a.high
@@ -538,12 +552,13 @@ export function renderGame(root, ctx) {
     </div>`;
     const step = (n, label, val, state0) => `<div class="tstep ${state0}"><i>${state0 === 'done' ? '✓' : n}</i><span>${label}</span><b>${val}</b></div>`;
     const moneyDone = local.sel.length > 0;
-    aucLeft = `<div class="lhead">${chosen?.animal === RAT ? 'Rattenhandel' : 'Kuhhandel'}</div>
-      <div class="tsteps">
+    const steps = `<div class="tsteps">
         ${step(1, 'Gegner', esc(target.name), 'done')}
         ${step(2, 'Tier', chosen ? esc(aname(chosen.animal)) : '–', chosen ? 'done' : 'now')}
         ${step(3, 'Geld', moneyDone ? karten(local.sel.length) : 'unten antippen', moneyDone ? 'done' : chosen ? 'now' : '')}
-      </div>
+      </div>`;
+    aucCenter = steps + aucCenter;
+    aucLeft = `
       <button type="button" class="pill pill-white pill-small" data-a="tradeClose">Abbrechen</button>
       <button type="button" class="pill pill-red" data-a="tradeGo" ${canOffer ? '' : 'disabled'}><small>ANGEBOT MACHEN</small>${karten(local.sel.length)}</button>`;
     handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
@@ -633,7 +648,6 @@ export function renderGame(root, ctx) {
   }
 
   // ----- Tisch -----
-  const nextDonkey = v.donkeysDrawn < 4 ? DONKEY_PAYOUTS[v.donkeysDrawn] : null;
   const canDraw = state.phase === 'turn' && myTurn && !local.tradeOpen && v.deck > 0;
   const lastLog = v.log[v.log.length - 1] || '';
   // Auslage: immer sichtbar über dem Geld. Spezialkarte steckt im Stapel ihres Tiers.
@@ -658,6 +672,13 @@ export function renderGame(root, ctx) {
     return `<div class="money fan" style="--m:${MONEY_COLORS[m]};transform:rotate(${rot}deg) translateY(${Math.abs(off) * 2.5}px)">${mIn(m)}</div>`;
   }).join('');
 
+  const trades = possibleTrades(state, meId);
+  let leftActionsHtml = aucLeft;
+  if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
+    leftActionsHtml = `
+      <button type="button" class="pill pill-red" data-a="auction" ${v.deck > 0 ? '' : 'disabled'}>KARTE<br>AUFDECKEN</button>
+      <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw ? '' : 'disabled'}>Kuhhandel</button>`;
+  }
   const banner = aucBanner || (state.phase === 'ended' || state.phase === 'block' ? 'Spielende' : myTurn ? 'Du bist dran' : `${esc(cur.name)} ist dran`);
   const table = `<div class="gtable">
     <div class="tbanner ${fresh && myTurn && state.phase === 'turn' ? 'pulse' : ''}">${banner}</div>
@@ -668,18 +689,13 @@ export function renderGame(root, ctx) {
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}</span>
       ${v.mustDraw ? '<span class="deck-count must">Nach der Ratte: nochmal aufdecken!</span>' : ''}
     </div>`}</div>
-    <div class="auslage ${myItems.length > 7 ? 'many' : ''} ${handPick ? 'up' : ''}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage ${myItems.length > 6 ? 'many' : ''} ${handPick ? 'up' : ''} ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" aria-label="Deine Karten">${myAnimals}</div>
+    ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
+    ${meBadge}
     ${handPick || `<div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${me.money.length ? `<span class="fansum">${sum(me.money)}</span>` : ''}</div>`}
   </div>`;
 
-  // ----- linke Spalte -----
-  const trades = possibleTrades(state, meId);
-  let leftActions = aucLeft;
-  if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
-    leftActions = `
-      <button type="button" class="pill pill-red" data-a="auction" ${v.deck > 0 ? '' : 'disabled'}>KARTE<br>AUFDECKEN</button>
-      <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw ? '' : 'disabled'}>Kuhhandel</button>`;
-  }
+  // ----- Menü oben links in der Tischecke -----
   const left = `<div class="gleft">
     <div class="lround">
       <button type="button" class="round" data-a="menu" aria-label="Menü">
@@ -693,12 +709,6 @@ export function renderGame(root, ctx) {
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="pin">Wiedereinstieg-Code</button>
       ${ctx.standalone ? '' : '<button type="button" class="pill pill-white pill-small" data-a="modal" data-v="install">Als App aufs Handy</button>'}
       <button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button></div>` : ''}
-    <div class="infochips infobox">
-      <span class="ichip">Geld <b>${sum(me.money)}</b></span>
-      <span class="ichip">Punkte <b>${scoreFor(me).score}</b></span>
-      <span class="ichip">${nextDonkey ? `Esel-Bonus <b>+${nextDonkey}</b>` : 'Esel <b>alle raus</b>'}</span>
-    </div>
-    <div class="lactions ${['auction', 'rat', 'special', 'payment', 'trade'].includes(state.phase) || local.tradeOpen ? 'auction' : ''}">${leftActions}</div>
   </div>`;
 
   H.menu = () => { local.menu = !local.menu; local.reactOpen = false; ctx.rerender(); };
@@ -720,6 +730,7 @@ export function renderGame(root, ctx) {
   H.modal = (kind) => ctx.openModal(kind);
   H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
   H.tradeOpen = () => { local.tradeOpen = true; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
+  H.tradeWith = (val) => { const [pid, animal] = String(val).split('|'); local.tradeOpen = true; local.sel = []; local.tradeTarget = pid; local.tradeAnimal = animal; ctx.rerender(); };
 
   // ----- Überlagerung je nach Phase -----
   let overlay = '';
@@ -790,17 +801,15 @@ export function renderGame(root, ctx) {
     let to = le.type === 'trade' ? le.winner : le.type === 'rat_taken' ? le.player : le.buyer;
     if (le.type === 'trade' && le.animal === RAT) to = le.winner === le.challenger ? le.target : le.challenger;
     const flyAnimal = le.type === 'rat_taken' ? RAT : le.animal;
-    const i = idxOf(to);
-    const slot = 374 / v.players.length;
     const mine = to === meId;
-    const ty = mine ? 125 : Math.round(8 + slot * (i + 0.5) - 195);
-    const tx = mine ? 0 : 716 - 393;
+    const ty = mine ? 125 : Math.round(posY(to) - 195);
+    const tx = mine ? 30 : 716 - 319;
     const n = le.type === 'trade' ? le.count : 1;
     effects += Array.from({ length: n }, (_, k) => `<div class="fly" style="--tx:${tx}px;--ty:${ty}px;animation-delay:${k * 120}ms">
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join('');
   }
   // Geld fliegt (verdeckt) vom Zahler zum Empfänger
-  const rowY = (id) => 8 + (374 / v.players.length) * (idxOf(id) + 0.5);
+  const rowY = (id) => posY(id);
   const moneyFly = (from, to, count, delay = 0) => {
     if (!count || idxOf(from) < 0 || idxOf(to) < 0) return '';
     const y0 = rowY(from);
@@ -825,9 +834,9 @@ export function renderGame(root, ctx) {
   const moneySig = lem?.type === 'money_drawn' ? `${state.log.length}|${lem.player}|${lem.value}` : null;
   if (moneySig && fresh && local.moneySig !== moneySig) { local.moneySig = moneySig; local.moneyUntil = Date.now() + 2600; }
   if (moneySig && local.moneySig === moneySig && Date.now() < (local.moneyUntil || 0)) {
-    const pi = idxOf(lem.player);
-    const ty = Math.round(8 + (374 / v.players.length) * (pi + 0.5)) - 170;
-    effects += `<div class="moneyreveal" style="--ty:${ty}px">
+    const mineM = lem.player === meId;
+    const ty = mineM ? 150 : Math.round(posY(lem.player)) - 170;
+    effects += `<div class="moneyreveal" style="--ty:${ty}px;--tx:${mineM ? 40 : 397}px">
       <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${mIn(lem.value)}</div>
       <span>${esc(nameOf(lem.player))} ${lem.player === meId ? 'ziehst' : 'zieht'} <b>${lem.value}</b></span></div>`;
   }
@@ -889,7 +898,7 @@ export function renderGame(root, ctx) {
   // Esel aufgedeckt: eine große Einblendung, Scheine fliegen zu allen
   if (entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey') {
     effects += `<div class="donkeypop" aria-live="polite"><b>Esel!</b><span>Alle bekommen +${v.lastEvent.payout}</span></div>`;
-    effects += v.players.map((p) => `<div class="mflyc" style="--dy:${Math.round(rowY(p.id) - 175)}px"></div>`).join('');
+    effects += v.players.map((p) => `<div class="mflyc" style="--dy:${Math.round(p.id === meId ? 60 : rowY(p.id) - 275)}px;--tx:${p.id === meId ? 40 : 397}px"></div>`).join('');
   }
 
   root.innerHTML = `<div class="stage-wrap"><div class="stage" id="stage">
@@ -900,9 +909,9 @@ export function renderGame(root, ctx) {
     ${effects}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
-    ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick ${local.reactTo !== meId ? 'withdetail' : ''}" style="top:${local.reactTo !== meId ? 6 : Math.round(Math.min(250, Math.max(8, 8 + (374 / v.players.length) * (idxOf(local.reactTo) + 0.5) - 60)))}px">
-      <div class="rphead">${local.reactTo === meId ? 'An alle' : `An ${esc(nameOf(local.reactTo))}`}<button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
-      ${local.reactTo !== meId ? playerDetail(v.players[idxOf(local.reactTo)]) : ''}
+    ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick withdetail ${local.reactTo === meId ? 'self' : ''}" style="top:6px">
+      <div class="rphead">${local.reactTo === meId ? 'Du · Reaktion an alle' : `An ${esc(nameOf(local.reactTo))}`}<button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
+      ${playerDetail(v.players[idxOf(local.reactTo)], local.reactTo === meId)}
       ${ctx.reactionList.map((r, i) => `<button type="button" data-a="react" data-v="${i}">${esc(r)}</button>`).join('')}</div>` : ''}
     ${ctx.toastMsg ? `<div class="toast" role="alert">${esc(ctx.toastMsg)}</div>` : ''}
   </div></div>`;

@@ -9,7 +9,7 @@ import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.22.0';
+export const APP_VERSION = '0.23.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -588,10 +588,20 @@ setInterval(() => {
     if (!el.classList.contains('over')) render(); // Zeit gerade abgelaufen: Knöpfe umschalten
     return;
   }
+  const pct = Math.min(100, (left / Number(el.dataset.total)) * 100);
+  const secs = Math.ceil(left / 1000);
+  if (el.dataset.fmt === 'n') { // Ring um die Karte
+    const ring = el.querySelector('.ringp');
+    if (ring) ring.style.strokeDashoffset = String(100 - pct);
+    const sec = el.querySelector('.ringsec');
+    if (sec) sec.textContent = String(secs);
+    el.classList.toggle('low', secs <= 3);
+    return;
+  }
   const bar = el.querySelector('i');
   const txt = el.querySelector('span');
-  if (bar) bar.style.width = `${Math.min(100, (left / Number(el.dataset.total)) * 100)}%`;
-  if (txt) txt.textContent = `noch ${Math.ceil(left / 1000)} s`;
+  if (bar) bar.style.width = `${pct}%`;
+  if (txt) txt.textContent = `noch ${secs} s`;
 }, 100);
 
 // ---------- Debug-Modus ----------

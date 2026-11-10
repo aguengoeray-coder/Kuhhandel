@@ -1328,3 +1328,88 @@ button.deck:active { transform: scale(.95); }
 .tstep span { font-size: 9.5px; }
 .tstep b { margin-left: auto; font-size: 12.5px; }
 .deck-wrap:has(button.deck) .deck-count { margin-top: 8px; }
+
+/* ===================== v0.23: Neuer Aufbau (Prototyp) ===================== */
+/* Tisch breit (links 10 · Tisch 618 · rechts 206), Menü in der Tischecke, Aktionen unten links, du unten rechts */
+.gleft { left: 20px; top: 18px; bottom: auto; width: auto; z-index: 15; }
+.gleft .round { width: 38px; height: 38px; background: rgba(0,0,0,.35); box-shadow: none; }
+.gleft .menu { top: 46px; }
+.gtable { left: 10px; width: 618px; }
+.gtable .tbanner { margin-top: 2px; }
+
+/* Aktionsbereich (Daumen links unten) */
+.dock { position: absolute; left: 8px; bottom: 8px; width: 150px; z-index: 6; display: flex; flex-direction: column; gap: 8px; }
+.dock .ldecide { display: none; }
+.dock .pill { width: 100%; min-height: 52px; font-size: 15px; line-height: 1.05; padding: 0 10px; }
+.dock .pill:has(> small) { flex-direction: column; justify-content: center; line-height: 1.15; padding-top: 5px; padding-bottom: 5px; }
+.dock .pill small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .5px; }
+.dock .pill-small { min-height: 38px; font-size: 14px; }
+.dock .pill-white:disabled { opacity: .55; cursor: not-allowed; }
+.dock .lhead { font-size: 15px; }
+.dock .bidgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.dock .bidgrid .bidbtn { height: 46px; width: auto; }
+.dock .bidgrid .bidbtn b { font-size: 19px; }
+.dock .buzzer { width: 100%; }
+.dock .rpsgrid { width: 100%; }
+
+/* Deine Tiere und dein Geld: zwischen Aktionsbereich und deinem Abzeichen */
+.auslage { left: 166px; right: 112px; }
+.fan-wrap, .hand-row { left: 160px; right: 104px; }
+
+/* Dein Abzeichen unten rechts im Tisch */
+.mebadge { position: absolute; right: 8px; bottom: 10px; z-index: 6; display: flex; align-items: center; border: none; background: none; padding: 0; cursor: pointer; font: inherit; touch-action: manipulation; }
+.mebadge .avatar { width: 46px; height: 46px; z-index: 1; }
+.mebadge .mbtext { display: flex; flex-direction: column; align-items: flex-start; margin-left: -10px; background: #fff; border-radius: 0 10px 10px 0; padding: 3px 10px 3px 16px; box-shadow: 0 3px 0 rgba(0,0,0,.15); }
+.mebadge .mbtext b { font-family: var(--font-head); font-size: 15px; color: var(--c); line-height: 1.1; }
+.mebadge .mbtext small { font-size: 11px; font-weight: 800; white-space: nowrap; }
+.mebadge.turn .avatar { box-shadow: 0 0 0 4px var(--gold); }
+.mebadge.leader .mbtext { background: var(--gold); }
+.mebadge:active { transform: scale(.96); }
+.mebadge .rbubble { position: absolute; bottom: 52px; right: 0; }
+
+/* Gegner rechts: mehr Platz, Tiere größer */
+.prow .chips { max-width: 200px; }
+.chip.tradechip { border: none; font: inherit; font-size: 10.5px; font-weight: 700; cursor: pointer; box-shadow: 0 0 0 2.5px var(--gold); animation: chipglow 1.6s ease-in-out infinite; touch-action: manipulation; }
+@keyframes chipglow { 0%, 100% { box-shadow: 0 0 0 2.5px var(--gold); } 50% { box-shadow: 0 0 0 4px rgba(255,211,78,.55); } }
+
+/* Versteigerung: Countdown als Ring um die Karte */
+.aucrow { width: 540px; }
+.ringwrap { position: relative; padding: 8px; }
+.ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.ring rect { fill: none; stroke-width: 6; }
+.ringbg { stroke: rgba(255,255,255,.22); }
+.ringp { stroke: var(--gold); stroke-dasharray: 100; stroke-linecap: round; transition: stroke-dashoffset .2s linear; transform: scale(-1, 1); transform-origin: 50% 50%; }
+.ringwrap.low .ringp { stroke: var(--red); }
+.ringwrap.over .ringp { stroke: transparent; }
+.ringsec { position: absolute; right: -6px; top: -6px; min-width: 32px; height: 32px; border-radius: 999px; background: var(--gold); color: var(--ink); border: 3px solid var(--ink); font-family: var(--font-head); font-weight: 700; font-size: 17px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.ringwrap.low .ringsec { background: var(--red); color: #fff; animation: pop .35s ease-out; }
+.ringwrap.over .ringsec { background: #fff; }
+.timeup { background: rgba(0,0,0,.3); color: #fff; font-weight: 800; font-size: 12px; border-radius: 999px; padding: 2px 12px; }
+
+/* Kuhhandel-Schritte als Leiste */
+.tcenter > .tsteps { flex-direction: row; justify-content: center; width: auto; gap: 6px; margin-bottom: 2px; }
+.tcenter > .tsteps .tstep { padding: 2px 10px 2px 3px; }
+
+/* Effekte: Tischmitte jetzt bei x=319 */
+.soldsign, .logpop, .donkeypop, .mflyc, .moneyreveal { left: 319px; }
+.qpop { left: 302px; }
+.fly { left: 277px; }
+.rpsshow { left: 22px; right: 220px; }
+@keyframes mflyc { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--tx, 320px), var(--dy)) rotate(15deg); } }
+@keyframes mrfly {
+  0% { opacity: 0; }
+  8%, 72% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--tx, 330px)), calc(-50% + var(--ty))) scale(.3); }
+}
+
+/* Eigene Punkte im Fenster */
+.reactpick.self { top: auto !important; bottom: 70px; }
+.pdscore { display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 0 8px; background: #fff; border-radius: 10px; padding: 4px 8px; }
+.pdscore span { font-size: 11px; font-weight: 700; color: var(--muted); }
+.pdscore b { font-family: var(--font-head); font-size: 20px; text-align: right; }
+.pdscore small { grid-column: 1 / -1; font-size: 11px; color: var(--muted); font-weight: 700; }
+.dock .lhead { display: none; }
+.auslage.hide { display: none; }
+.fan-wrap { right: 128px; }
+.fan-wrap { right: 150px; }
+.fan-wrap { left: 172px; }

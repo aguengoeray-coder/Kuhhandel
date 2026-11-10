@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v0.23.0 (Prototyp – noch nicht live)
+
+- [ ] Linke Spalte weg, Tisch breiter. Menü als kleiner Knopf oben links in der Tischecke.
+- [ ] Deine Knöpfe unten links im Tisch (Daumen), immer an derselben Stelle.
+- [ ] Du unten rechts im Tisch (Bild, Punkte; antippen zeigt die Rechnung). Rechts nur noch die Gegner.
+- [ ] Wenn du dran bist: Tiere der Gegner, um die du handeln kannst, leuchten – antippen startet den Kuhhandel direkt.
+- [ ] Versteigerung: Countdown als Ring um die Karte mit Sekunden-Zahl, die letzten 3 s rot.
+- [ ] Kuhhandel-Schritte als Leiste oben im Duell.
+
 ## v0.22.0
 
 - [x] Spielerspalte: Tiere nur noch in einer Reihe (Quartette zuerst), Rest als „+N“ – nichts rutscht mehr übereinander. Antippen zeigt alles.
