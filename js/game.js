@@ -30,11 +30,14 @@ const initial = (n) => esc((n || '?').trim().charAt(0).toUpperCase());
 
 // ---------- kleine Bausteine ----------
 
+// Innenleben eines Geldscheins: große Zahl in der Mitte, kleine Zahlen oben links und unten rechts
+const mIn = (v) => `<span class="mc tl">${v}</span><span class="mv">${v}</span><span class="mc br">${v}</span>`;
+
 function moneyCard(v, { idx = null, selected = false, size = '' } = {}) {
   const cls = `money ${size} ${selected ? 'sel' : ''}`;
   const style = `--m:${MONEY_COLORS[v] || '#eee'}`;
-  if (idx === null) return `<div class="${cls}" style="${style}">${v}</div>`;
-  return `<button type="button" class="${cls}" style="${style}" data-a="toggle" data-v="${idx}" aria-pressed="${selected}" aria-label="Geldkarte ${v}">${v}</button>`;
+  if (idx === null) return `<div class="${cls}" style="${style}">${mIn(v)}</div>`;
+  return `<button type="button" class="${cls}" style="${style}" data-a="toggle" data-v="${idx}" aria-pressed="${selected}" aria-label="Geldkarte ${v}">${mIn(v)}</button>`;
 }
 
 // Geld als Stapel nach Scheinwert: Tippen legt einen Schein ins Angebot
@@ -46,13 +49,13 @@ function moneyPiles(money, sel) {
     const used = sel.filter((i) => money[i] === v).length;
     const left = total - used;
     return `<button type="button" class="pile" style="--m:${MONEY_COLORS[v] || '#eee'}" data-a="addv" data-v="${v}" ${left ? '' : 'disabled'} aria-label="${v}er hinzufügen, ${left} übrig">
-      <span class="pv">${v}</span><span class="pc">×${left}</span></button>`;
+      <span class="pv">${v}</span><span class="pcnt">×${left}</span></button>`;
   }).join('')}</div>`;
 }
 
 // Ausgewählte Scheine: Tippen nimmt sie wieder zurück
 function chosenCards(money, sel, empty = 4) {
-  const cards = sel.map((i) => `<button type="button" class="money xs" style="--m:${MONEY_COLORS[money[i]]}" data-a="remove" data-v="${i}" aria-label="${money[i]} zurücknehmen">${money[i]}</button>`).join('');
+  const cards = sel.map((i) => `<button type="button" class="money xs" style="--m:${MONEY_COLORS[money[i]]}" data-a="remove" data-v="${i}" aria-label="${money[i]} zurücknehmen">${mIn(money[i])}</button>`).join('');
   return cards + Array.from({ length: Math.max(0, empty - sel.length) }, () => '<div class="slot"></div>').join('');
 }
 
@@ -115,33 +118,32 @@ function playerDetail(p) {
 }
 
 function specialCard(id, extraRows = '', cls = '') {
-  return `<div class="bigcard spcard ${cls}">
-    <div class="bigcard-in">
-      <div class="bigcard-head" style="--a:${ANIMAL_COLORS[id]}"><span class="mono">${art(id)}</span><span>SPEZIAL</span>${STAR}</div>
-      <div class="row hl"><span>Nicht handelbar</span><strong>${SPECIAL_VALUE}</strong></div>
-      ${extraRows}
-    </div>
+  return `<div class="bigcard spcard ${cls}">${playCard(id, 'special')}
+    <div class="bcinfo"><div class="bctitle">Spezialkarte<small>Wert ${SPECIAL_VALUE} · nicht handelbar</small></div>${extraRows}</div>
   </div>`;
 }
 
 function ratCard(extraRows = '', cls = '') {
-  return `<div class="bigcard ratcard ${cls}">
-    <div class="bigcard-in">
-      <div class="bigcard-head" style="--a:${ANIMAL_COLORS[RAT]}"><span class="mono">${art(RAT)}</span><span>RATTE</span></div>
-      <div class="row hl"><span>Wer am Ende alle 4 hat</span><strong>−1 Quartett</strong></div>
-      ${extraRows}
-    </div>
+  return `<div class="bigcard ratcard ${cls}">${playCard(RAT, 'rat')}
+    <div class="bcinfo"><div class="bctitle">Ratte<small>Wer am Ende alle 4 hat: −1 Quartett</small></div>${extraRows}</div>
+  </div>`;
+}
+
+// Eine Spielkarte im Hochformat: Wert oben links und unten rechts, Bild in der Mitte, Name unten auf einem Band
+function playCard(id, kind = 'animal') {
+  const val = kind === 'special' ? SPECIAL_VALUE : kind === 'rat' ? '' : ANIMAL_BY_ID[id].value;
+  const name = aname(id).toUpperCase();
+  return `<div class="pcard ${kind}" style="--a:${ANIMAL_COLORS[id]}">
+    ${val !== '' ? `<span class="pcv tl">${val}</span><span class="pcv br">${val}</span>` : ''}
+    ${kind === 'special' ? `<span class="pcstar">${STAR}</span>` : ''}
+    <div class="pcart">${art(id)}</div>
+    <div class="pcname">${name}</div>
   </div>`;
 }
 
 function bigAnimalCard(id, extraRows = '', cls = '') {
-  const a = ANIMAL_BY_ID[id];
-  return `<div class="bigcard ${cls}">
-    <div class="bigcard-in">
-      <div class="bigcard-head" style="--a:${ANIMAL_COLORS[id]}"><span class="mono">${art(id)}</span><span>${esc(a.name.toUpperCase())}</span></div>
-      <div class="row hl"><span>Quartettwert</span><strong>${a.value}</strong></div>
-      ${extraRows}
-    </div>
+  return `<div class="bigcard ${cls}">${playCard(id)}
+    <div class="bcinfo"><div class="bctitle">${esc(aname(id))}<small>Quartettwert ${ANIMAL_BY_ID[id].value}</small></div>${extraRows}</div>
   </div>`;
 }
 
@@ -216,8 +218,8 @@ export function renderGame(root, ctx) {
       else if (sp.caps[p.id] != null) status = sp.caps[p.id] === 0 ? 'darf nicht buzzern' : `erst ab ${sp.caps[p.id]}`;
     }
     const chips = playerChips(p);
-    const leader = state.phase === 'auction' && auction.high && auction.high.player === p.id
-      ? `<div class="hightag ${fresh ? 'pop' : ''}"><span>Höchstgebot</span><b>${auction.high.amount}</b></div>` : '';
+    const isLeader = state.phase === 'auction' && auction.high && auction.high.player === p.id;
+    if (isLeader) status = `🔨 ${auction.high.amount}`;
     const turnMark = (state.phase === 'rat' ? ratCurrent(v) === p.id : cur.id === p.id) && state.phase !== 'ended' ? ' turn' : '';
     const offline = ctx.online && !isMe && !ctx.online.has(p.id);
     if (offline) status = 'offline';
@@ -232,14 +234,13 @@ export function renderGame(root, ctx) {
     const bubble = said ? `<div class="rbubble ${from ? 'to' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
     let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
-    return `<div class="prow${turnMark}${dim}" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">${coin}
+    return `<div class="prow${turnMark}${dim}${isLeader ? ' leader' : ''}" style="--c:${SEAT_COLORS[i]}">${coin}
       ${bubble}${nudge}
-      ${leader}
-      <div class="chips">${chips}</div>
-      <div class="pid">
+      <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${avatar(p, i)}
-        <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s">${status}</span></div>
+        <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status}</span></div>
       </div>
+      <div class="chips">${chips}</div>
     </div>`;
   }).join('');
 
@@ -293,10 +294,12 @@ export function renderGame(root, ctx) {
       const passed = a.passed.includes(meId);
       // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
       const steps = [10, 20, 50, 100, 200, 500];
-      aucLeft = `<div class="lhead">Bieten</div>
+      const mine = sum(me.money);
+      aucLeft = `<div class="lhead">Bieten <small>mind. ${high + BID_STEP}</small></div>
         <div class="bidgrid">${steps.map((st) => {
           const amt = high + st;
-          return `<button type="button" class="bidbtn" style="--m:${MONEY_COLORS[st]}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten"><b>+${st}</b><small>= ${amt}</small></button>`;
+          const over = amt > mine;
+          return `<button type="button" class="bidbtn ${over ? 'over' : ''}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten${over ? ', mehr als du hast' : ''}"><b>${amt}</b><small>${over ? '⚠ zu viel' : `+${st}`}</small></button>`;
         }).join('')}</div>
         <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
     } else {
@@ -462,7 +465,7 @@ export function renderGame(root, ctx) {
   const fan = me.money.map((m, i) => {
     const off = i - mid;
     const rot = me.money.length > 1 ? off * Math.min(7, 40 / me.money.length) : 0;
-    return `<div class="money fan" style="--m:${MONEY_COLORS[m]};transform:rotate(${rot}deg) translateY(${Math.abs(off) * 3}px)">${m}</div>`;
+    return `<div class="money fan" style="--m:${MONEY_COLORS[m]};transform:rotate(${rot}deg) translateY(${Math.abs(off) * 2.5}px)">${mIn(m)}</div>`;
   }).join('');
 
   const banner = aucBanner || (state.phase === 'ended' || state.phase === 'block' ? 'Spielende' : myTurn ? 'Du bist dran' : `${esc(cur.name)} ist dran`);
@@ -475,7 +478,7 @@ export function renderGame(root, ctx) {
       ${v.mustDraw ? '<span class="deck-count must">Nach der Ratte: nochmal aufdecken!</span>' : ''}
     </div>
     <div class="myanimals ${myItems.length > 8 ? 'many' : ''}">${myAnimals}</div>`}
-    ${handPick || `<div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}</div>`}
+    ${handPick || `<div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${me.money.length ? `<span class="fansum">${sum(me.money)}</span>` : ''}</div>`}
   </div>`;
 
   // ----- linke Spalte -----
@@ -500,10 +503,10 @@ export function renderGame(root, ctx) {
       ${ctx.standalone ? '' : '<button type="button" class="pill pill-white pill-small" data-a="modal" data-v="install">Als App aufs Handy</button>'}
       <button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button>
       <span>Über die Startseite kommst du jederzeit zurück ins Spiel.</span></div>` : ''}
-    <div class="infochips">
-      <span class="ichip">Geld: <b>${sum(me.money)}</b></span>
-      <span class="ichip">Punkte jetzt: <b>${scoreFor(me).score}</b></span>
-      ${nextDonkey ? `<span class="ichip">Nächster Esel: <b>+${nextDonkey}</b></span>` : '<span class="ichip">Alle Esel sind raus</span>'}
+    <div class="infochips infobox">
+      <span class="ichip">Geld <b>${sum(me.money)}</b></span>
+      <span class="ichip">Punkte <b>${scoreFor(me).score}</b></span>
+      <span class="ichip">${nextDonkey ? `Esel-Bonus <b>+${nextDonkey}</b>` : 'Esel <b>alle raus</b>'}</span>
     </div>
     <div class="lactions ${['auction', 'rat', 'special', 'payment'].includes(state.phase) ? 'auction' : ''}">${leftActions}</div>
   </div>`;
@@ -710,7 +713,7 @@ export function renderGame(root, ctx) {
     const slot = 374 / v.players.length;
     const ty = Math.round(8 + slot * (i + 0.5) - 195);
     const n = le.type === 'trade' ? le.count : 1;
-    effects += Array.from({ length: n }, (_, k) => `<div class="fly" style="--tx:${704 - 376}px;--ty:${ty}px;animation-delay:${k * 120}ms">
+    effects += Array.from({ length: n }, (_, k) => `<div class="fly" style="--tx:${716 - 393}px;--ty:${ty}px;animation-delay:${k * 120}ms">
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join('');
   }
   // Geld fliegt (verdeckt) vom Zahler zum Empfänger
@@ -742,7 +745,7 @@ export function renderGame(root, ctx) {
     const pi = idxOf(lem.player);
     const ty = Math.round(8 + (374 / v.players.length) * (pi + 0.5)) - 170;
     effects += `<div class="moneyreveal" style="--ty:${ty}px">
-      <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${lem.value}</div>
+      <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${mIn(lem.value)}</div>
       <span>${esc(nameOf(lem.player))} ${lem.player === meId ? 'ziehst' : 'zieht'} <b>${lem.value}</b></span></div>`;
   }
   if (state.phase === 'special') {

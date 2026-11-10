@@ -912,3 +912,121 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
   100% { opacity: 0; transform: translate(calc(-50% + 330px), calc(-50% + var(--ty))) scale(.3); }
 }
 @media (prefers-reduced-motion: reduce) { .moneyreveal, .moneyreveal .money.big { animation: none; } }
+
+/* ===================== v0.18: Neues Tisch-Design ===================== */
+/* Aufteilung: links 138 · Tisch 470 · rechts 206 */
+.gleft { left: 10px; width: 138px; gap: 8px; }
+.gtable { left: 158px; width: 470px; }
+.gright { right: 8px; width: 206px; justify-content: space-evenly; }
+.overlay .bottom-bar, .overlay .pay, .overlay .trade, .overlay .hand-pick { right: 212px; }
+.reactpick { right: 214px; }
+.pay.block { right: 222px; }
+.rpsshow { left: 166px; right: 214px; }
+.moneyreveal { left: 393px; }
+
+/* Infos links als ein Kasten */
+.infobox { background: #fff; border-radius: 14px; padding: 7px 10px; gap: 3px; box-shadow: 0 3px 0 rgba(0,0,0,.12); align-items: stretch; }
+.infobox .ichip { background: none; box-shadow: none; padding: 0; border-radius: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: 11.5px; color: var(--muted); }
+.infobox .ichip b { color: var(--ink); font-size: 15px; }
+.stage.small .infobox .ichip { font-size: 12.5px; }
+
+/* Spielerspalte: Karte mit Bild + Name, Symbole darunter; nur Bild/Name antippbar */
+.prow { flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; cursor: default; }
+.pid { cursor: pointer; border-radius: 999px 12px 12px 999px; transition: transform .15s; }
+.pid:active { transform: scale(.97); }
+.prow.turn .pid { filter: drop-shadow(0 0 6px rgba(255, 211, 78, .95)); }
+.prow.turn .avatar { box-shadow: 0 0 0 4px var(--gold); }
+.prow .chips { max-width: 200px; justify-content: flex-end; }
+.prow.leader .tag-s { background: var(--gold); color: var(--ink); font-weight: 800; }
+.tag-s.pop { animation: pop .35s ease-out; }
+.rbubble { right: 172px; top: -6px; }
+.nudge { right: auto; left: -18px; bottom: auto; top: 0; transform: translateX(-100%); }
+.stage.small .prow .chips { max-width: 206px; }
+
+/* Geldscheine: große Zahl in der Mitte, kleine Zahlen in zwei Ecken */
+.money { position: relative; display: block; padding: 0; overflow: hidden;
+  background-color: var(--m);
+  background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,.55) 0 30%, transparent 31%), repeating-linear-gradient(135deg, rgba(255,255,255,.12) 0 4px, transparent 4px 8px);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
+.money .mv { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-weight: 700; font-size: 17px; letter-spacing: -.5px; }
+.money .mc { position: absolute; font-size: 9px; font-weight: 800; line-height: 1; }
+.money .mc.tl { left: 3px; top: 3px; }
+.money .mc.br { right: 3px; bottom: 3px; transform: rotate(180deg); }
+.money.s .mv { font-size: 15px; }
+.money.xs { padding: 0; }
+.money.xs .mc { display: none; }
+.money.xs .mv { font-size: 11px; }
+.kslots .money.xs .mv { font-size: 13px; }
+.money.big .mv { font-size: 36px; }
+.money.big .mc { font-size: 14px; }
+.money.big .mc.tl { left: 7px; top: 6px; }
+.money.big .mc.br { right: 7px; bottom: 6px; }
+.money.back { background-image: repeating-linear-gradient(45deg, #C8372D 0 6px, #A82A22 6px 12px); box-shadow: inset 0 0 0 2px rgba(255,255,255,.6); }
+.money.back .mv, .money.back .mc { display: none; }
+.money.fan .mv { font-size: 16px; }
+.money.fan .mc.tl { font-size: 11px; }
+.fan-wrap { bottom: -16px; }
+.fansum { align-self: center; margin-left: 10px; margin-bottom: 26px; background: #2B2F36; color: #fff; border-radius: 999px; padding: 2px 10px; font-family: var(--font-head); font-weight: 700; font-size: 14px; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.pile .pv { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 18px; }
+.pile { display: block; }
+.pile .pc { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); }
+
+/* Spielkarte (groß): Hochformat, Werte in zwei Ecken, Bild in der Mitte, Name auf Band */
+.bigcard, .bigcard.compact { width: auto; background: none; padding: 0; box-shadow: none; display: flex; align-items: center; gap: 12px; }
+.pcard { position: relative; width: 96px; height: 132px; flex-shrink: 0; border-radius: 12px; border: 3px solid var(--ink); background: #FBF7EE; box-shadow: 0 8px 18px rgba(0,0,0,.28), inset 0 0 0 3px #fff; overflow: hidden; display: flex; flex-direction: column; align-items: center; }
+.pcv { position: absolute; font-family: var(--font-head); font-weight: 700; font-size: 14px; line-height: 1; color: var(--ink); z-index: 2; }
+.pcv.tl { left: 7px; top: 7px; }
+.pcv.br { right: 7px; bottom: 27px; transform: rotate(180deg); }
+.pcart { margin-top: 24px; width: 64px; height: 64px; border-radius: 50%; background: var(--a); border: 2px solid var(--ink); padding: 5px; }
+.pcart .art { width: 100%; height: 100%; }
+.pcname { margin-top: auto; width: 100%; background: var(--a); border-top: 2px solid var(--ink); text-align: center; font-family: var(--font-head); font-weight: 700; font-size: 12px; letter-spacing: .5px; padding: 3px 0; color: var(--ink); }
+.pcard.special { border-color: #8A5A00; background: linear-gradient(160deg, #FFF8DC, #FFE9A6); box-shadow: 0 8px 18px rgba(0,0,0,.28), inset 0 0 0 3px #FFD34E; }
+.pcard.special .pcname { background: linear-gradient(90deg, #FFD34E, #F2B33D); }
+.pcstar { position: absolute; right: 6px; top: 5px; z-index: 2; }
+.pcstar .star { width: 20px; height: 20px; }
+.pcard.special .pcv.tl { left: 7px; }
+.pcard.rat { background: #ECE9EF; }
+.bcinfo { background: #fff; border-radius: 14px; padding: 8px 10px; min-width: 176px; max-width: 210px; box-shadow: 0 6px 14px rgba(0,0,0,.18); }
+.bctitle { font-family: var(--font-head); font-weight: 700; font-size: 18px; line-height: 1.1; margin-bottom: 4px; }
+.bctitle small { display: block; font-family: var(--font-body); font-size: 11px; font-weight: 700; color: var(--muted); }
+.bcinfo .row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 2px; font-size: 12px; border-top: 1px solid #ECE7DB; }
+.bcinfo .row.line { border-top: 1px solid var(--ink); }
+.bcinfo .row.hl { background: none; margin: 0; }
+.bigcard.compact .pcard { width: 82px; height: 112px; }
+.bigcard.compact .pcart { margin-top: 20px; width: 52px; height: 52px; }
+.bigcard.compact .pcv { font-size: 12.5px; }
+.bigcard.compact .pcv.br { bottom: 25px; }
+.bigcard.compact .pcname { font-size: 11px; }
+.bigcard.compact .bcinfo { min-width: 168px; padding: 6px 9px; }
+.bigcard.compact .bctitle { font-size: 16px; }
+.bigcard.compact .row { font-size: 11px; padding: 2px; }
+
+/* kleine Tierkarten (eigene Tiere): Wert oben links, Farbband unten */
+.acard { background: #FBF7EE; border-radius: 6px; box-shadow: inset 0 0 0 1.5px #fff; }
+.acard i { order: 3; height: 7px; border-top: 1.5px solid var(--ink); }
+.acard b { order: 2; }
+.acard .cv { left: 2px; right: auto; top: 2px; background: none; font-family: var(--font-head); font-size: 9px; }
+
+/* Gebotsknöpfe: groß das Gebot, klein der Schritt */
+.lhead small { font-family: var(--font-body); font-size: 11px; font-weight: 700; opacity: .85; margin-left: 4px; }
+.bidgrid .bidbtn { background: #fff; border: 2px solid var(--ink); border-radius: 10px; height: 48px; box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.bidgrid .bidbtn b { font-family: var(--font-head); font-size: 17px; }
+.bidgrid .bidbtn small { font-size: 10px; color: var(--muted); font-weight: 800; }
+.bidgrid .bidbtn.over { background: #F1ECE2; border-style: dashed; }
+.bidgrid .bidbtn.over b { color: #7B6F5E; }
+.bidgrid .bidbtn.over small { color: #B4521C; }
+
+/* Stapel */
+.deck { background-color: #C8372D; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.12) 0 6px, transparent 6px 12px); border-radius: 10px; }
+.pcard { height: 136px; }
+.pcart { margin-top: 26px; width: 56px; height: 56px; }
+.pcv.br { bottom: 29px; }
+.bigcard.compact .pcard { height: 116px; }
+.bigcard.compact .pcart { margin-top: 22px; width: 46px; height: 46px; padding: 4px; }
+.bigcard.compact .pcv.br { bottom: 26px; }
+.acard b { padding-top: 8px; }
+.myanimals .acard { height: 58px; }
+.pile .pv { inset: 0 0 auto 0; top: 8px; height: auto; display: block; text-align: center; font-size: 17px; line-height: 1; }
+.pile .pc { bottom: 5px; }
+.pile { overflow: visible; }
+.pile .pcnt { position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); background: var(--ink); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; font-weight: 700; line-height: 16px; }
