@@ -167,11 +167,11 @@
 - [x] Ton und Vibration getrennt im Menü
 - [x] SQL `supabase/v0.13-fehlerberichte.sql` in Supabase ausgeführt
 
-## v0.14.0 – Admin-Bereich (wartet auf Freigabe)
+## v0.14.0 – Admin-Bereich
 
 - [x] Startseite → „⚙ Admin“ (nur für Admins sichtbar, Rechte werden in Supabase geprüft)
 - [x] Spieler: Liste mit letzter Anmeldung, Spielen und Siegen; Passwort neu setzen; Konto löschen; Admin geben/nehmen
 - [x] Spiele: laufende und offene Spiele mit Phase ansehen und löschen
 - [x] Bestenliste: einzelne Spiele entfernen oder alles zurücksetzen
 - [x] Fehlerberichte direkt in der App ansehen und löschen
-- [ ] SQL `supabase/v0.14-admin.sql` in Supabase ausführen
+- [x] SQL `supabase/v0.14-admin.sql` in Supabase ausgeführt (Admin: Alp)
