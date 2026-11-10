@@ -512,3 +512,30 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .lactions .pill small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .5px; }
 .lactions .pill-small { min-height: 40px; }
 .ldecide { background: #fff; border-radius: 14px; padding: 10px; font-size: 12px; font-weight: 600; line-height: 1.35; box-shadow: 0 3px 0 rgba(0,0,0,.12); }
+
+/* =================== Geldstapel und Tier-Kacheln =================== */
+.piles { display: flex; gap: 6px; justify-content: center; padding-top: 8px; }
+.pile { position: relative; width: 46px; height: 60px; border-radius: 8px; border: 3px solid var(--ink); background: var(--m);
+  box-shadow: 3px -3px 0 -1px var(--m), 3px -3px 0 1px var(--ink); cursor: pointer; font-family: var(--font-body); color: var(--ink);
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 3px 4px; }
+.pile .pv { font-weight: 800; font-size: 14px; }
+.pile .pc { align-self: flex-end; background: var(--ink); color: #fff; border-radius: 999px; padding: 0 5px; font-size: 11px; font-weight: 700; }
+.pile:active:not(:disabled) { transform: translateY(2px); }
+.pile:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+.nomoney { color: #fff; font-size: 12px; }
+.overlay.light .nomoney { color: var(--muted); }
+.slots button.money { cursor: pointer; }
+.slots.wide { max-width: 420px; }
+.chosen { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.chosen small { font-size: 11px; color: var(--muted); }
+.atiles { display: grid; grid-template-columns: repeat(5, 32px); gap: 4px; justify-content: center; }
+.atile { position: relative; width: 32px; height: 36px; padding: 2px; border-radius: 7px; border: 2px solid #fff; background: var(--a); cursor: pointer; }
+.atile .art { width: 100%; height: 100%; }
+.atile span { position: absolute; right: -5px; bottom: -6px; background: #fff; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 999px; font-size: 9px; font-weight: 800; padding: 0 3px; }
+.atile.on { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+.about { margin-top: 6px; color: #fff !important; font-weight: 600; }
+/* Platz: Stapel dürfen die Knöpfe unten nicht berühren */
+.tside { height: 200px; }
+.hand-pick { top: 236px; }
+.hand-pick .piles { padding-top: 5px; }
+.hand-pick .pile { width: 42px; height: 52px; }

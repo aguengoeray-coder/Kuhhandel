@@ -57,6 +57,25 @@ export function buildDemoState(kind, local) {
       g = bid(g, 'u1', 100, t + 1000); g = bid(g, 'u3', 120, t + 2000);
       return g;
     }
+    case 'tradebig': {
+      g = base();
+      g.players[0].money = [0, 0, 10, 10, 10, 10, 50, 50, 100, 200, 500, 500];
+      Object.assign(g.players[0].animals, { hahn: 1, gans: 1, katze: 1, hund: 1, schaf: 1, ziege: 1, esel: 1, schwein: 2, kuh: 1, pferd: 1 });
+      Object.assign(g.players[2].animals, { hahn: 2, gans: 2, katze: 1, hund: 1, schaf: 1, ziege: 2, esel: 1, schwein: 2, kuh: 2, pferd: 1 });
+      local.key = `${g.phase}|${g.turn}|${g.log.length}`;
+      local.tradeOpen = true; local.tradeTarget = 'u3'; local.tradeAnimal = 'schwein'; local.sel = [6, 8, 10];
+      return g;
+    }
+    case 'paybig': {
+      const t = Date.now() - 60000;
+      g = base(); g.turn = 1; g.deck[0] = 'schwein';
+      g.players[0].money = [0, 0, 10, 10, 10, 10, 50, 50, 100, 200, 500, 500];
+      g = drawForAuction(g, 'u2', t);
+      g = bid(g, 'u1', 270, t + 1000);
+      g = closeAuction(g, 'u2', 'sell', t + 30000);
+      local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [9, 6, 2];
+      return g;
+    }
     case 'menu':
       g = base();
       local.menu = true;

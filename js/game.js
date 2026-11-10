@@ -33,6 +33,25 @@ function moneyCard(v, { idx = null, selected = false, size = '' } = {}) {
   return `<button type="button" class="${cls}" style="${style}" data-a="toggle" data-v="${idx}" aria-pressed="${selected}" aria-label="Geldkarte ${v}">${v}</button>`;
 }
 
+// Geld als Stapel nach Scheinwert: Tippen legt einen Schein ins Angebot
+function moneyPiles(money, sel) {
+  const values = [...new Set(money)].sort((a, b) => a - b);
+  if (!values.length) return '<em class="nomoney">Keine Geldkarten</em>';
+  return `<div class="piles">${values.map((v) => {
+    const total = money.filter((m) => m === v).length;
+    const used = sel.filter((i) => money[i] === v).length;
+    const left = total - used;
+    return `<button type="button" class="pile" style="--m:${MONEY_COLORS[v] || '#eee'}" data-a="addv" data-v="${v}" ${left ? '' : 'disabled'} aria-label="${v}er hinzufügen, ${left} übrig">
+      <span class="pv">${v}</span><span class="pc">×${left}</span></button>`;
+  }).join('')}</div>`;
+}
+
+// Ausgewählte Scheine: Tippen nimmt sie wieder zurück
+function chosenCards(money, sel, empty = 4) {
+  const cards = sel.map((i) => `<button type="button" class="money xs" style="--m:${MONEY_COLORS[money[i]]}" data-a="remove" data-v="${i}" aria-label="${money[i]} zurücknehmen">${money[i]}</button>`).join('');
+  return cards + Array.from({ length: Math.max(0, empty - sel.length) }, () => '<div class="slot"></div>').join('');
+}
+
 function animalMini(id, n) {
   const shadows = [];
   for (let i = 1; i < n; i++) shadows.push(`${i * 3}px ${-i * 3}px 0 -1px #D6CCB4`);
@@ -85,6 +104,12 @@ export function renderGame(root, ctx) {
   local.prev = { logLen: state.log.length, phase: state.phase };
 
   const H = {}; // Klick-Aktionen dieser Darstellung
+  H.addv = (val) => {
+    const v = Number(val);
+    const i = me.money.findIndex((m, k) => m === v && !local.sel.includes(k));
+    if (i >= 0) { local.sel = [...local.sel, i]; ctx.rerender(); }
+  };
+  H.remove = (i) => { local.sel = local.sel.filter((x) => x !== Number(i)); ctx.rerender(); };
   H.toggle = (i) => {
     i = Number(i);
     local.sel = local.sel.includes(i) ? local.sel.filter((x) => x !== i) : [...local.sel, i];
@@ -253,7 +278,8 @@ export function renderGame(root, ctx) {
         <div class="pay">
           <h2>Zahle ${pm.amount} an ${esc(nameOf(pm.payee))}</h2>
           <p>Für: ${aname(pm.animal)}. Wähle Karten, die zusammen mindestens ${pm.amount} ergeben.</p>
-          <div class="pickrow">${me.money.map((m, i) => moneyCard(m, { idx: i, selected: local.sel.includes(i) })).join('')}</div>
+          <div class="chosen"><small>Ausgewählt (antippen zum Zurücknehmen):</small><div class="slots wide">${chosenCards(me.money, local.sel, 3)}</div></div>
+          ${moneyPiles(me.money, local.sel)}
           <div class="paystatus ${diff < 0 ? 'bad' : diff === 0 ? 'ok' : 'warn'}">${status}</div>
         </div>
         <div class="bottom-bar"><button type="button" class="pill pill-red big" data-a="pay" ${diff < 0 ? 'disabled' : ''}><small>BEZAHLEN</small>${karten(local.sel.length)} · ${selSum}</button></div>
@@ -275,8 +301,7 @@ export function renderGame(root, ctx) {
     const chosen = forTarget.find((t) => t.animal === local.tradeAnimal);
     const tIdx = idxOf(local.tradeTarget);
     const target = v.players[tIdx];
-    const slots = local.sel.map((i) => moneyCard(me.money[i], { size: 'xs' })).join('')
-      + Array.from({ length: Math.max(0, 4 - local.sel.length) }, () => '<div class="slot"></div>').join('');
+    const slots = chosenCards(me.money, local.sel);
     const canOffer = chosen && (local.sel.length > 0 || me.money.length === 0);
     overlay = `<div class="overlay green ${entered ? 'enter' : ''}">
       <div class="trade">
@@ -292,10 +317,11 @@ export function renderGame(root, ctx) {
           <div class="who">${avatar(target, tIdx)}<span class="ribbon-s" style="--c:${SEAT_COLORS[tIdx]}">${esc(target.name)}</span></div>
           ${targets.length > 1 ? `<div class="tabs">${targets.map((id) => `<button type="button" class="tab ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${esc(nameOf(id))}</button>`).join('')}</div>` : '<span class="countpill">? Karten</span>'}
           <small>Um welches Tier?</small>
-          <div class="strips">${forTarget.map((t) => `<button type="button" class="strip ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}"><i>${art(t.animal)}</i><span><b>${aname(t.animal)} ×${target.animals[t.animal]}</b><small>es geht um ${t.count}</small></span></button>`).join('')}</div>
+          <div class="atiles">${forTarget.map((t) => `<button type="button" class="atile ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}" aria-label="${aname(t.animal)}, ${esc(target.name)} hat ${target.animals[t.animal]}">${art(t.animal)}<span>×${target.animals[t.animal]}</span></button>`).join('')}</div>
+          ${chosen ? `<small class="about">${aname(chosen.animal)}: es geht um ${chosen.count}</small>` : ''}
         </div>
       </div>
-      <div class="hand-pick"><small>Deine Karten – antippen zum Bieten</small><div class="pickrow">${me.money.map((m, i) => moneyCard(m, { idx: i, selected: local.sel.includes(i), size: 's' })).join('')}</div></div>
+      <div class="hand-pick"><small>Deine Scheine – antippen, um einen ins Angebot zu legen</small>${moneyPiles(me.money, local.sel)}</div>
       <div class="bottom-bar">
         <button type="button" class="pill pill-white pill-small" data-a="tradeClose">Abbrechen</button>
         <button type="button" class="pill pill-red big" data-a="tradeGo" ${canOffer ? '' : 'disabled'}><small>ANGEBOT</small>MACHEN</button>
@@ -329,12 +355,12 @@ export function renderGame(root, ctx) {
             <div class="who">${avatar(me, meIdx)}<span class="ribbon-s" style="--c:${SEAT_COLORS[meIdx]}">Du</span></div>
             <span class="countpill">${karten(local.sel.length)}</span>
             <small>= ${selSum} · Gegenangebot</small>
-            <div class="slots">${local.sel.map((i) => moneyCard(me.money[i], { size: 'xs' })).join('') || '<div class="slot"></div><div class="slot"></div>'}</div>
+            <div class="slots">${chosenCards(me.money, local.sel)}</div>
             <hr>
             <small class="rule">Höheres Gebot gewinnt. Gleichstand: ${esc(nameOf(t.challenger))} gewinnt. Das Geld wird immer getauscht.</small>
           </div>
         </div>
-        <div class="hand-pick"><small>Deine Karten – antippen für ein Gegenangebot</small><div class="pickrow">${me.money.map((m, i) => moneyCard(m, { idx: i, selected: local.sel.includes(i), size: 's' })).join('')}</div></div>
+        <div class="hand-pick"><small>Deine Scheine – antippen für ein Gegenangebot</small>${moneyPiles(me.money, local.sel)}</div>
         <div class="bottom-bar">
           <button type="button" class="pill pill-white big" data-a="accept"><small>ANNEHMEN</small>Geld nehmen</button>
           <button type="button" class="pill pill-red big" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${karten(local.sel.length)}</button>
