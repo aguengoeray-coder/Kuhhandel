@@ -248,6 +248,11 @@ export function renderGame(root, ctx) {
       </div>
       <div class="auction-card">${card}${countdown}</div>
       ${reveal}
+      <div class="wallet" aria-label="Dein Geld: ${sum(me.money)} Taler">
+        <span>Dein Geld</span>
+        <div class="wallet-cards">${me.money.map((m) => moneyCard(m, { size: 'xs' })).join('') || '<em>keine Karten</em>'}</div>
+        <b>= ${sum(me.money)}</b>
+      </div>
       <div class="bottom-bar">${buttons}</div>
     </div>`;
 

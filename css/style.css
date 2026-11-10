@@ -477,3 +477,10 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .dbtns button { text-align: left; border: 2px solid #D5D2C8; background: #F6F4EE; border-radius: 10px; padding: 7px 10px; font-weight: 600; font-size: 12px; cursor: pointer; font-family: var(--font-body); }
 .dbtns button.on { border-color: var(--ink); background: var(--gold); }
 .dreport { width: 100%; height: 90px; margin-top: 8px; font-family: monospace; font-size: 10px; }
+
+/* Eigenes Geld während der Auktion */
+.wallet { position: absolute; left: 16px; right: 268px; top: 268px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.wallet > span { font-family: var(--font-head); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.wallet-cards { display: flex; flex-wrap: nowrap; gap: 3px; overflow: hidden; }
+.wallet b { font-family: var(--font-head); font-size: 18px; white-space: nowrap; }
+.wallet em { font-size: 12px; color: var(--muted); }

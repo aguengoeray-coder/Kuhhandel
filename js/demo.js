@@ -69,11 +69,11 @@ export function buildDemoState(kind, local) {
       local.sel = []; local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5, 6];
       return g;
     case 'cantpay': {
-      const t = Date.now() - 12000;
+      const t = Date.now() - 25000;
       g = base(); g.turn = 1; g.deck[0] = 'kuh';
       g = drawForAuction(g, 'u2', t);
       g = bid(g, 'u4', 200, t + 1000);
-      g = closeAuction(g, 'u2', 'sell', t + 11000);
+      g = closeAuction(g, 'u2', 'sell', t + 20500);
       return g;
     }
     case 'tradesetup':

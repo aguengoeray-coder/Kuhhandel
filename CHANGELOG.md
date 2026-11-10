@@ -65,3 +65,7 @@
 - [x] Abkürzungen: Countdown 5 s, Vorspulen, Esel als nächste Karte, Geld leeren
 - [x] Infofenster: Version, Live-Verbindung, letzter Abgleich, Uhr-Abweichung, Online, Fehler
 - [x] „Fehlerbericht kopieren“ für echte Spiele
+
+## v0.5.1 – Eigenes Geld in der Auktion (wartet auf Freigabe)
+
+- [x] Während der Versteigerung zeigt eine Leiste deine Geldkarten und die Summe (für Bieter und Auktionator)
