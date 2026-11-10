@@ -75,3 +75,7 @@
 - [x] Die Auktion verdeckt den Tisch nicht mehr: Tierkarte, Countdown und Höchstgebot liegen mitten auf dem Tisch
 - [x] Eigenes Geld bleibt als Fächer in der Hand sichtbar (extra Geld-Leiste entfällt)
 - [x] Gebotsknöpfe (+10 bis +500) und „Passen“ in der linken Spalte, Auktionator entscheidet dort
+
+## v0.6.1 – Startgeld
+
+- [x] Startgeld je Spieler: 2× 0, 3× 10, 1× 20, 1× 50 = 100 Taler (vorher 90)

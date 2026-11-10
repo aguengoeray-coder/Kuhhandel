@@ -21,12 +21,13 @@ function gameWithDeck(deck) {
   return g;
 }
 
-test('Start: 4 Spieler, je 90 Taler in 7 Karten, 40 Tierkarten', () => {
+test('Start: 4 Spieler, je 100 Taler in 7 Karten (2×0, 3×10, 1×20, 1×50), 40 Tierkarten', () => {
   const g = createGame({ players: P, seed: 42 });
   assert.equal(g.deck.length, 40);
   for (const p of g.players) {
     assert.equal(p.money.length, 7);
-    assert.equal(total(p.money), 90);
+    assert.equal(total(p.money), 100);
+    assert.deepEqual(p.money, [0, 0, 10, 10, 10, 20, 50]);
   }
   assert.throws(() => createGame({ players: [...P, { id: 'e', name: 'X' }] }), GameError);
   assert.throws(() => createGame({ players: P.slice(0, 2) }), GameError);
@@ -59,7 +60,7 @@ test('Zuschlag: Höchstbietender zahlt den Auktionator, kein Wechselgeld', () =>
   assert.throws(() => pay(g, 'c', [lea.money.indexOf(10)]), GameError); // 10 reicht nicht
   const aBefore = total(g.players[0].money);
   g = pay(g, 'c', [idx50]); // zahlt 50 für 30 → 20 sind weg
-  assert.equal(total(g.players[2].money), 40);
+  assert.equal(total(g.players[2].money), 50);
   assert.equal(total(g.players[0].money), aBefore + 50);
   assert.equal(g.players[2].animals.kuh, 1);
   assert.equal(currentPlayer(g).id, 'b');
@@ -92,17 +93,17 @@ test('Vorkaufsrecht: Auktionator kauft selbst und zahlt den Höchstbietenden', (
   const alp = g.players[0];
   g = pay(g, 'a', [alp.money.indexOf(50)]);
   assert.equal(g.players[0].animals.pferd, 1);
-  assert.equal(total(g.players[1].money), 140);
+  assert.equal(total(g.players[1].money), 150);
 });
 
 test('Zahlungsunfähig: Karten offen, Neustart, höchstens altes Gebot minus 10', () => {
   let g = gameWithDeck(['schwein', 'hahn']);
   g = drawForAuction(g, 'a');
-  g = bid(g, 'b', 200); // hat nur 90
+  g = bid(g, 'b', 200); // hat nur 100
   g = closeAuction(g, 'a', 'sell');
   assert.equal(g.phase, 'auction');
   assert.equal(g.lastEvent.type, 'cant_pay');
-  assert.deepEqual(g.lastEvent.revealed, [0, 0, 10, 10, 10, 10, 50]);
+  assert.deepEqual(g.lastEvent.revealed, [0, 0, 10, 10, 10, 20, 50]);
   assert.equal(g.auction.high, null);
   assert.throws(() => bid(g, 'b', 200), GameError);
   g = bid(g, 'c', 150);
@@ -120,7 +121,7 @@ test('Kuhhandel angenommen: Herausgeforderter bekommt das Geld, gibt das Tier ab
   g = acceptTrade(g, 'b');
   assert.equal(g.players[0].animals.kuh, 2);
   assert.equal(g.players[1].animals.kuh, 1);
-  assert.equal(total(g.players[1].money), 140);
+  assert.equal(total(g.players[1].money), 150);
 });
 
 test('Kuhhandel 2 gegen 2: es geht um 2 Tiere; höheres Gebot gewinnt, Geld wird getauscht', () => {
@@ -132,8 +133,8 @@ test('Kuhhandel 2 gegen 2: es geht um 2 Tiere; höheres Gebot gewinnt, Geld wird
   g = counterTrade(g, 'b', [6]); // 50
   assert.equal(g.players[1].animals.schaf, 4);
   assert.equal(g.players[0].animals.schaf, 0);
-  assert.equal(total(g.players[0].money), 90 - 20 + 50);
-  assert.equal(total(g.players[1].money), 90 - 50 + 20);
+  assert.equal(total(g.players[0].money), 100 - 20 + 50);
+  assert.equal(total(g.players[1].money), 100 - 50 + 20);
 });
 
 test('Kuhhandel Gleichstand: Herausforderer gewinnt, Geld wird trotzdem getauscht', () => {

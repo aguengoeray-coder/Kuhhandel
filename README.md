@@ -6,7 +6,7 @@ Online-Version des Kartenspiels Kuhhandel, um mit Freunden zu spielen. Querforma
 
 - 3–4 Spieler, 40 Tierkarten (10 Tierarten × 4).
 - Quartettwerte: Hahn 10, Gans 40, Katze 90, Hund 160, Schaf 250, Ziege 350, Esel 500, Schwein 650, Kuh 800, Pferd 1000.
-- Startgeld je Spieler: 2× 0, 4× 10, 1× 50 = 90 Taler. Fremdes Geld ist verdeckt, nur die Kartenanzahl ist sichtbar.
+- Startgeld je Spieler: 2× 0, 3× 10, 1× 20, 1× 50 = 100 Taler. Fremdes Geld ist verdeckt, nur die Kartenanzahl ist sichtbar.
 - **Esel-Bonus:** Wird ein Esel aufgedeckt, bekommen alle Geld von der Bank: 50 / 100 / 200 / 500.
 - **Versteigerung:** Wer am Zug ist, deckt ein Tier auf und versteigert es (Gebote in 10er-Schritten). Der Auktionator entscheidet: Zuschlag an den Höchstbietenden oder **Vorkaufsrecht** (er kauft selbst und zahlt das Höchstgebot an den Höchstbietenden). Bietet niemand, bekommt der Auktionator das Tier umsonst.
 - **Kein Wechselgeld:** Wer zahlt, wählt selbst Karten aus, die mindestens den Betrag ergeben. Überzahltes ist weg.

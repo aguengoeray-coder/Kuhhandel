@@ -16,7 +16,7 @@ export const ANIMALS = [
 ];
 export const ANIMAL_BY_ID = Object.fromEntries(ANIMALS.map((a) => [a.id, a]));
 
-export const START_MONEY = [0, 0, 10, 10, 10, 10, 50]; // = 90 Taler
+export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
 export const DONKEY_PAYOUTS = [50, 100, 200, 500]; // 1. bis 4. Esel: jeder Spieler bekommt so viel von der Bank
 export const MIN_PLAYERS = 3;
 export const MAX_PLAYERS = 4;

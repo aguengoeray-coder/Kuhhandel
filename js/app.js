@@ -6,7 +6,7 @@ import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
 
-export const APP_VERSION = '0.6.0';
+export const APP_VERSION = '0.6.1';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
