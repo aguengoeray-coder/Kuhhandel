@@ -136,7 +136,7 @@
 - [x] Buzzer: Ticken bei 3-2-1, eigener Buzzer-Ton
 - [x] Schnick-Schnack-Schnuck: Hände schütteln, dann wird aufgedeckt, mit Ergebnis
 
-## v0.11.0 – Geldscheine im Stapel (wartet auf Freigabe)
+## v0.11.0 – Geldscheine im Stapel
 
 - [x] Warteraum: Gastgeber schaltet „Geldscheine im Stapel“ ein und stellt pro Schein (0 bis 500) die Anzahl ein, höchstens 20
 - [x] Mitspieler sehen die Einstellung im Warteraum (nur lesen)
