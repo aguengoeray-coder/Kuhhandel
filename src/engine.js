@@ -21,8 +21,8 @@ export const DONKEY_PAYOUTS = [50, 100, 200, 500]; // 1. bis 4. Esel: jeder Spie
 export const MIN_PLAYERS = 3;
 export const MAX_PLAYERS = 4;
 export const BID_STEP = 10;
-export const AUCTION_START_MS = 20000; // so lange läuft eine Versteigerung ohne Gebot
-export const AUCTION_BID_MS = 15000;   // nach jedem Gebot startet der Countdown neu
+export const AUCTION_START_MS = 10000; // so lange läuft eine Versteigerung ohne Gebot
+export const AUCTION_BID_MS = 10000;   // nach jedem Gebot startet der Countdown neu
 const GRACE_MS = 800;                  // kleine Toleranz für Handys mit leicht abweichender Uhr
 
 // Ratten und Spezialkarten (feste Hausregel)

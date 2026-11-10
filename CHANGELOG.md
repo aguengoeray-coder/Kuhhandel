@@ -188,3 +188,7 @@
 - [x] iPhone-App vom Home-Bildschirm: Spiel bleibt in der sicheren Fläche (nicht unter Kamera-Aussparung und Home-Balken)
 - [x] Kein Doppeltipp-Zoom mehr, Knöpfe reagieren schneller
 - [x] Kleine Knöpfe größer: Debug-Leiste („Sicht wechseln“), Debug-Fenster, Emoji-Auswahl, Kuhhandel-Gegner, Warteraum, Admin
+
+## v0.17.0 – Schnellere Versteigerung (wartet auf Freigabe)
+
+- [x] Versteigerung: 10 s nach dem Aufdecken und nach jedem Gebot wieder 10 s (vorher 20 s / 15 s)
