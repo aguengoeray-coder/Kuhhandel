@@ -1098,3 +1098,34 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .acard .cv { left: 50%; right: auto; transform: translateX(-50%); top: 2px; background: rgba(255,255,255,.92); border-radius: 4px; padding: 0 3px; }
 .acard b .art { filter: drop-shadow(0 1px 0 rgba(255,255,255,.6)); }
 .ci { background: radial-gradient(circle, #fff 0 46%, var(--a) 48%); }
+
+/* ===== v0.20: Aufdecken – erst die Karte, dann dezent die Info ===== */
+.auc.aucreveal { justify-content: center; height: 240px; }
+.revealcard { perspective: 700px; }
+.revealcard .pcard { animation: revealflip 1.5s cubic-bezier(.2, .8, .3, 1) both; transform-origin: 50% 50%; }
+@keyframes revealflip {
+  0%   { transform: translate(0, 40px) scale(.55) rotateY(180deg); filter: brightness(.4); }
+  35%  { transform: translate(0, 0) scale(1.35) rotateY(90deg); filter: brightness(.7); }
+  60%  { transform: scale(1.45) rotateY(0deg); filter: none; }
+  100% { transform: scale(1.4); }
+}
+.aucard { display: flex; align-items: center; gap: 12px; }
+.aucard.settle > .pcard { animation: settle .35s ease-out both; }
+@keyframes settle { from { transform: scale(1.4); } to { transform: none; } }
+.ainfo { background: rgba(0,0,0,.28); color: #fff; border-radius: 12px; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 150px; max-width: 190px; }
+.ainfo div { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; }
+.ainfo span { opacity: .75; font-weight: 600; }
+.ainfo b { font-weight: 800; text-align: right; }
+.ainfo .bonus b { color: var(--gold); }
+.ainfo.fade { animation: infofade .5s ease-out .15s both; }
+@keyframes infofade { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .revealcard .pcard, .aucard > .pcard, .ainfo.fade { animation: none; } }
+/* Ratte und Spezialkarte: gleiche Umdreh-Animation */
+.bigcard.deal { animation: none; }
+.bigcard.deal .pcard { animation: revealflip2 .9s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes revealflip2 {
+  0%   { transform: translate(0, 40px) scale(.55) rotateY(180deg); filter: brightness(.4); }
+  45%  { transform: scale(1.25) rotateY(90deg); filter: brightness(.7); }
+  75%  { transform: scale(1.2) rotateY(0deg); filter: none; }
+  100% { transform: none; }
+}

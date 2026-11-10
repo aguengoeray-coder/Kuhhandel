@@ -256,6 +256,7 @@ export function renderGame(root, ctx) {
   }).join('');
 
   // ----- Versteigerung: findet direkt auf dem Tisch statt -----
+  let wake = null; // wann neu zeichnen (Aufdecken, Buzzer-Countdown)
   let aucCenter = '';
   let aucLeft = '';
   let aucBanner = '';
@@ -265,18 +266,31 @@ export function renderGame(root, ctx) {
     const high = a.high ? a.high.amount : 0;
     const cap = a.caps[meId];
     const canBid = (amt) => cap == null || amt <= cap;
-    const owners = v.players.filter((p) => p.animals[a.animal] > 0).map((p) => `${esc(p.id === meId ? 'Du' : p.name)} ${p.animals[a.animal]}`).join(', ') || 'noch niemand';
-    let bonusRow = '';
-    if (a.animal === 'esel' && v.lastEvent?.type === 'donkey') bonusRow = `<div class="row"><span>Esel-Bonus</span><strong>alle +${v.lastEvent.payout}</strong></div>`;
-    const card = bigAnimalCard(a.animal, `${bonusRow}<div class="row"><span>Schon bei</span><span>${owners}</span></div><div class="row line"><span>Du hast</span><span>${me.animals[a.animal]}</span></div>`, `compact ${entered ? 'deal' : ''}`);
+    const owners = v.players.filter((p) => p.id !== meId && p.animals[a.animal] > 0).map((p) => `${esc(p.name)} ${p.animals[a.animal]}`).join(', ') || 'niemand';
+    const nowR = ctx.now();
+    const revealing = a.opensAt != null && nowR < a.opensAt;
+    if (revealing) wake = a.opensAt; // nach der Animation neu zeichnen
+    // Kleiner, dezenter Infokasten – erscheint erst nach dem Aufdecken
+    const infoKey = `${state.log.length}|${a.animal}`;
+    const infoFresh = !revealing && local.infoShown !== infoKey;
+    if (!revealing) local.infoShown = infoKey;
+    const ainfo = `<div class="ainfo ${infoFresh ? 'fade' : ''}">
+      <div><span>Wert</span><b>${ANIMAL_BY_ID[a.animal].value}</b></div>
+      <div><span>Bei anderen</span><b>${owners}</b></div>
+      <div><span>Du hast</span><b>${me.animals[a.animal]}</b></div>
+      ${a.animal === 'esel' && v.lastEvent?.type === 'donkey' ? `<div class="bonus"><span>Esel-Bonus</span><b>alle +${v.lastEvent.payout}</b></div>` : ''}
+    </div>`;
+    const card = revealing
+      ? `<div class="revealcard">${playCard(a.animal)}</div>`
+      : `<div class="aucard ${infoFresh ? 'settle' : ''}">${playCard(a.animal)}${ainfo}</div>`;
 
     // Countdown: Bieten nur solange die Zeit läuft, Zuschlag erst danach
     const now = ctx.now();
-    const running = a.endsAt != null && now < a.endsAt;
+    const running = a.endsAt != null && now < a.endsAt && !revealing;
     const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
     const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
-    const countdown = a.endsAt != null
+    const countdown = a.endsAt != null && !revealing
       ? `<div class="countdown ${running ? '' : 'over'}" data-ends="${a.endsAt}" data-total="${total}">
           <i style="width:${pct}%"></i><span>${running ? `noch ${secs} s` : 'Zeit abgelaufen'}</span></div>`
       : '';
@@ -289,11 +303,13 @@ export function renderGame(root, ctx) {
       : `<div class="aucinfo ${fresh ? 'pop' : ''}">${a.high ? `Höchstgebot <b>${high}</b> · ${esc(nameOf(a.high.player))}` : 'Noch kein Gebot'}</div>`;
 
     aucBanner = `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
-    aucCenter = `<div class="auc">${card}${countdown}${info}</div>`;
+    aucCenter = revealing ? `<div class="auc aucreveal">${card}</div>` : `<div class="auc">${card}${countdown}${info}</div>`;
 
     if (iAmAuctioneer) {
       const myTotal = sum(me.money);
-      if (running) {
+      if (revealing) {
+        aucLeft = `<div class="ldecide">Du deckst auf …</div>`;
+      } else if (running) {
         aucLeft = `<div class="ldecide">Du versteigerst.<br>Wenn die Zeit um ist, entscheidest du: Zuschlag oder selbst kaufen.</div>`;
       } else if (a.high) {
         aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))}</button>
@@ -301,6 +317,8 @@ export function renderGame(root, ctx) {
       } else {
         aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>Tier nehmen</button>`;
       }
+    } else if (revealing) {
+      aucLeft = `<div class="ldecide">Karte wird aufgedeckt –<br>gleich kannst du bieten.</div>`;
     } else if (running) {
       const passed = a.passed.includes(meId);
       // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
@@ -325,7 +343,6 @@ export function renderGame(root, ctx) {
   }
 
   // ----- Rattenrunde: reihum Karte legen oder Ratte nehmen -----
-  let wake = null; // wann neu zeichnen (Buzzer-Countdown)
   if (state.phase === 'rat') {
     const r = v.rat;
     const turnId = ratCurrent(v);

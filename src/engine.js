@@ -22,6 +22,7 @@ export const MIN_PLAYERS = 3;
 export const MAX_PLAYERS = 4;
 export const BID_STEP = 10;
 export const AUCTION_START_MS = 10000; // so lange läuft eine Versteigerung ohne Gebot
+export const REVEAL_MS = 1500;          // Aufdeck-Animation: erst danach läuft die Zeit und man kann bieten
 export const AUCTION_BID_MS = 10000;   // nach jedem Gebot startet der Countdown neu
 const GRACE_MS = 800;                  // kleine Toleranz für Handys mit leicht abweichender Uhr
 
@@ -370,7 +371,7 @@ export function drawForAuction(prev, playerId, now) {
   } else {
     state.lastEvent = { type: 'draw', animal };
   }
-  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], endsAt: now != null ? now + AUCTION_START_MS : null };
+  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + REVEAL_MS : null, endsAt: now != null ? now + REVEAL_MS + AUCTION_START_MS : null };
   state.phase = 'auction';
   return state;
 }
@@ -387,6 +388,7 @@ export function bid(prev, playerId, amount, now) {
     fail(`Du darfst höchstens ${a.caps[playerId]} bieten.`);
   }
   if (a.endsAt != null && now != null && now > a.endsAt + GRACE_MS) fail('Die Versteigerung ist schon vorbei.');
+  if (a.opensAt != null && now != null && now < a.opensAt - GRACE_MS) fail('Die Karte wird gerade aufgedeckt – gleich geht es los.');
   a.high = { player: playerId, amount };
   a.passed = a.passed.filter((id) => id !== playerId);
   if (a.endsAt != null && now != null) a.endsAt = Math.max(a.endsAt, now + AUCTION_BID_MS);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createGame, drawForAuction, bid, closeAuction, pay, startTrade, acceptTrade, counterTrade,
   possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS, passAuction,
-  AUCTION_START_MS, AUCTION_BID_MS, bestPay,
+  AUCTION_START_MS, AUCTION_BID_MS, REVEAL_MS, bestPay,
   RAT, ratLay, ratTake, ratCurrent, buzz, rpsPick, specialDecide, specialStage, specialNumber,
   chooseBlock, scoreFor, SPECIAL_DELAY_MS, moneyDeckFrom, awards,
 } from '../src/engine.js';
@@ -74,7 +74,7 @@ test('Countdown: Zuschlag erst nach Ablauf, jedes Gebot verlängert, alle passen
   let g = gameWithDeck(['kuh', 'hahn']);
   const t0 = 1_000_000;
   g = drawForAuction(g, 'a', t0);
-  assert.equal(g.auction.endsAt, t0 + AUCTION_START_MS);
+  assert.equal(g.auction.endsAt, t0 + REVEAL_MS + AUCTION_START_MS);
   assert.throws(() => closeAuction(g, 'a', 'sell', t0 + 1000), GameError); // läuft noch
   g = bid(g, 'b', 20, t0 + 9000);
   assert.equal(g.auction.endsAt, t0 + 9000 + AUCTION_BID_MS);
@@ -538,4 +538,13 @@ test('Rückblick: teuerster Kauf, Kuhhandel-König, Rattenfänger', () => {
   // alter Spielstand ohne Zähler
   const old = createGame({ players: P, seed: 2 }); delete old.stats;
   assert.ok(Array.isArray(awards(old)));
+});
+
+test('Aufdecken: Countdown startet erst nach der Animation, vorher kein Gebot', () => {
+  let g = gameWithDeck(['kuh']);
+  g = drawForAuction(g, 'a', 0);
+  assert.equal(g.auction.endsAt, REVEAL_MS + AUCTION_START_MS);
+  assert.throws(() => bid(g, 'b', 10, 100), GameError);
+  g = bid(g, 'b', 10, REVEAL_MS);
+  assert.equal(g.auction.high.amount, 10);
 });

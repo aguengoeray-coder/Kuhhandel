@@ -31,6 +31,7 @@ export function botStep(s, bots, now, rand = Math.random) {
   if (s.phase === 'auction') {
     const a = s.auction;
     const running = a.endsAt != null && now < a.endsAt;
+    if (a.opensAt != null && now < a.opensAt) return null; // Karte wird noch aufgedeckt
     if (running) {
       const high = a.high ? a.high.amount : 0;
       const candidates = s.players.filter((p) => isBot(p.id) && p.id !== a.auctioneer && !a.passed.includes(p.id) && (!a.high || a.high.player !== p.id));
