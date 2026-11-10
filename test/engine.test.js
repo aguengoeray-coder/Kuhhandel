@@ -4,6 +4,8 @@ import {
   createGame, drawForAuction, bid, closeAuction, pay, startTrade, acceptTrade, counterTrade,
   possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS, passAuction,
   AUCTION_START_MS, AUCTION_BID_MS, bestPay,
+  RAT, ratLay, ratTake, ratCurrent, buzz, rpsPick, specialDecide, specialStage, specialNumber,
+  chooseBlock, scoreFor, SPECIAL_DELAY_MS,
 } from '../src/engine.js';
 
 const P = [
@@ -21,9 +23,11 @@ function gameWithDeck(deck) {
   return g;
 }
 
-test('Start: 4 Spieler, je 100 Taler in 7 Karten (2×0, 3×10, 1×20, 1×50), 40 Tierkarten', () => {
+test('Start: 4 Spieler, je 100 Taler in 7 Karten (2×0, 3×10, 1×20, 1×50), 54 Karten (40 Tiere, 10 Spezial, 4 Ratten)', () => {
   const g = createGame({ players: P, seed: 42 });
-  assert.equal(g.deck.length, 40);
+  assert.equal(g.deck.length, 54);
+  assert.equal(g.deck.filter((c) => c === RAT).length, 4);
+  assert.equal(g.deck.filter((c) => c.startsWith('sp-')).length, 10);
   for (const p of g.players) {
     assert.equal(p.money.length, 7);
     assert.equal(total(p.money), 100);
@@ -181,12 +185,14 @@ test('Wertung: Summe der Quartettwerte × Anzahl der Quartette', () => {
 });
 
 // Zufällige Komplettspiele mit einfachen Bots: Spiel muss immer sauber zu Ende gehen
+let clock = 0;
 function botStep(g, rand) {
   const pick = (arr) => arr[Math.floor(rand() * arr.length)];
+  clock += 400;
   if (g.phase === 'turn') {
     const me = currentPlayer(g);
     const trades = possibleTrades(g, me.id);
-    if (g.deck.length > 0 && (trades.length === 0 || rand() < 0.7)) return drawForAuction(g, me.id);
+    if (g.deck.length > 0 && (g.mustDraw || trades.length === 0 || rand() < 0.7)) return drawForAuction(g, me.id, clock);
     const t = pick(trades);
     const n = Math.min(me.money.length, 1 + Math.floor(rand() * 3));
     return startTrade(g, me.id, t.target, t.animal, [...Array(n).keys()]);
@@ -206,6 +212,36 @@ function botStep(g, rand) {
     const canBuy = a.high && total(me.money) >= a.high.amount;
     return closeAuction(g, a.auctioneer, canBuy && rand() < 0.3 ? 'buy' : 'sell');
   }
+  if (g.phase === 'rat') {
+    const me = g.players.find((p) => p.id === ratCurrent(g));
+    if (me.money.length === 0 || rand() < 0.25) return ratTake(g, me.id);
+    return ratLay(g, me.id, Math.floor(rand() * me.money.length));
+  }
+  if (g.phase === 'special') {
+    const st = specialStage(g, clock);
+    if (st === 'wait' || st === 'countdown') {
+      if (st === 'countdown' && rand() < 0.3) {
+        const others = g.players.filter((p) => p.id !== g.special.revealer && g.special.buzzes[p.id] == null);
+        if (others.length) { try { return buzz(g, pick(others).id, clock); } catch (e) { if (!(e instanceof GameError)) throw e; } }
+      }
+      return g; // Zeit vergeht
+    }
+    if (st === 'rps') {
+      const r = g.special.rps;
+      const ids = r ? r.players.filter((id) => !r.picks[id]) : Object.keys(g.special.buzzes).filter((id) => g.special.buzzes[id] === Math.max(...Object.values(g.special.buzzes)));
+      return rpsPick(g, ids[0], pick(['stein', 'schere', 'papier']), clock);
+    }
+    try { return specialDecide(g, g.special.revealer, rand() < 0.5 ? 'buy' : 'sell', clock); }
+    catch (e) { if (!(e instanceof GameError)) throw e; return specialDecide(g, g.special.revealer, 'sell', clock); }
+  }
+  if (g.phase === 'block') {
+    const p = g.players.find((x) => x.id === g.block.player);
+    return chooseBlock(g, p.id, ANIMALS.find((a) => p.animals[a.id] === 4).id);
+  }
+  if (g.phase === 'payment' && g.payment.special) {
+    const p = g.players.find((x) => x.id === g.payment.payer);
+    return pay(g, p.id, [...Array(g.payment.count).keys()]);
+  }
   if (g.phase === 'payment') {
     const p = g.players.find((x) => x.id === g.payment.payer);
     const order = p.money.map((v, i) => [v, i]).sort((x, y) => y[0] - x[0]);
@@ -223,7 +259,7 @@ function botStep(g, rand) {
   throw new Error('Unerwartete Phase ' + g.phase);
 }
 
-test('200 zufällige Komplettspiele enden mit allen Quartetten und konstanter Kartenzahl', () => {
+test('200 zufällige Komplettspiele enden mit allen Quartetten, allen Ratten bei einem und allen Spezialkarten verteilt', () => {
   for (let seed = 1; seed <= 200; seed++) {
     let g = createGame({ players: P.slice(0, 3 + (seed % 2)), seed });
     let r = seed * 7919;
@@ -231,8 +267,12 @@ test('200 zufällige Komplettspiele enden mit allen Quartetten und konstanter Ka
     let steps = 0;
     while (g.phase !== 'ended') {
       g = botStep(g, rand);
-      if (++steps > 20000) throw new Error('Spiel endet nicht (Seed ' + seed + ')');
+      if (++steps > 60000) throw new Error('Spiel endet nicht (Seed ' + seed + ')');
     }
+    assert.equal(g.players.filter((p) => p.animals[RAT] === 4).length, 1, `Ratten nicht bei einem (Seed ${seed})`);
+    assert.equal(g.players.reduce((n, p) => n + p.specials.length, 0), 10);
+    const totalMoney = g.players.reduce((n, p) => n + p.money.length, 0);
+    assert.ok(totalMoney >= g.players.length * 7);
     for (const a of ANIMALS) {
       const owners = g.players.filter((p) => p.animals[a.id] > 0);
       assert.equal(owners.length, 1, `${a.id} nicht vollständig (Seed ${seed})`);
@@ -248,4 +288,201 @@ test('Passend auswählen: am wenigsten überzahlen, sonst möglichst wenige Sche
   assert.deepEqual(pick([0, 10, 50, 100, 100], 70), [100]);         // 100 statt 10+50+... (60 reicht nicht)
   assert.deepEqual(pick([10, 10, 10, 50, 500], 30), [10, 10, 10]);  // genau 30
   assert.deepEqual(pick([0, 10], 50), []);                          // reicht nicht
+});
+
+// ---------- Ratten ----------
+
+test('Ratte: reihum ab links vom Aufdecker legen, wer nimmt bekommt alles; danach muss der Aufdecker nochmal aufdecken', () => {
+  let g = gameWithDeck([RAT, 'hahn']);
+  g = drawForAuction(g, 'a');
+  assert.equal(g.phase, 'rat');
+  assert.equal(ratCurrent(g), 'b');                 // links vom Aufdecker beginnt
+  assert.throws(() => ratLay(g, 'c', 0), GameError); // nicht dran
+  g = ratLay(g, 'b', g.players[1].money.indexOf(50));
+  g = ratLay(g, 'c', 0);                             // 0er = Bluff
+  g = ratLay(g, 'd', g.players[3].money.indexOf(20));
+  assert.equal(ratCurrent(g), 'a');                  // Aufdecker macht mit
+  g = ratLay(g, 'a', 0);
+  assert.equal(ratCurrent(g), 'b');                  // geht reihum weiter
+  g = ratTake(g, 'b');
+  assert.equal(g.players[1].animals[RAT], 1);
+  assert.equal(g.players[1].money.length, 6 + 4);    // eigene 6 + 4 gelegte
+  assert.equal(g.phase, 'turn');
+  assert.equal(currentPlayer(g).id, 'a');            // Aufdecker ist nochmal dran
+  assert.ok(g.mustDraw);
+  g.players[0].animals.kuh = 1; g.players[1].animals.kuh = 1;
+  assert.throws(() => startTrade(g, 'a', 'b', 'kuh', [0]), GameError); // muss aufdecken
+  g = drawForAuction(g, 'a');
+  assert.equal(g.phase, 'auction');
+});
+
+test('Ratte: wer keine Karten hat, muss nehmen; ist der Stapel leer, muss der Aufdecker kuhhandeln', () => {
+  let g = gameWithDeck([RAT]);
+  g.players[1].money = [];
+  g.players[0].animals.kuh = 1; g.players[2].animals.kuh = 1;
+  g = drawForAuction(g, 'a');
+  assert.throws(() => ratLay(g, 'b', 0), GameError);
+  g = ratTake(g, 'b');
+  assert.equal(g.phase, 'turn');
+  assert.equal(currentPlayer(g).id, 'a');
+  assert.ok(!g.mustDraw);
+  assert.throws(() => drawForAuction(g, 'a'), GameError);
+});
+
+test('Rattenhandel: nur wenn beide Ratten haben; wer mehr bietet wird sie los, Gleichstand → Herausforderer', () => {
+  let g = gameWithDeck(['hahn']);
+  g.players[0].animals[RAT] = 1;
+  assert.throws(() => startTrade(g, 'a', 'b', RAT, [6]), GameError);
+  g.players[1].animals[RAT] = 1;
+  assert.ok(possibleTrades(g, 'a').some((t) => t.animal === RAT));
+  // a bietet 50, b nur 20 → a wird die Ratte los
+  let h = startTrade(g, 'a', 'b', RAT, [6]);
+  h = counterTrade(h, 'b', [5]);
+  assert.equal(h.players[0].animals[RAT], 0);
+  assert.equal(h.players[1].animals[RAT], 2);
+  // Gleichstand → Herausforderer wird sie los
+  h = startTrade(g, 'a', 'b', RAT, [2]);
+  h = counterTrade(h, 'b', [3]);
+  assert.equal(h.players[0].animals[RAT], 0);
+  // b bietet mehr → a behält sie und bekommt die von b dazu
+  h = startTrade(g, 'a', 'b', RAT, [2]);
+  h = counterTrade(h, 'b', [6]);
+  assert.equal(h.players[0].animals[RAT], 2);
+  // Annehmen: Geld nehmen und Ratte bekommen
+  h = startTrade(g, 'a', 'b', RAT, [6]);
+  h = acceptTrade(h, 'b');
+  assert.equal(h.players[1].animals[RAT], 2);
+  assert.equal(total(h.players[1].money), 150);
+  // 2 gegen 2 → es geht um beide
+  g.players[0].animals[RAT] = 2; g.players[1].animals[RAT] = 2;
+  h = startTrade(g, 'a', 'b', RAT, [6]);
+  h = counterTrade(h, 'b', [0]);
+  assert.equal(h.players[1].animals[RAT], 4);
+});
+
+// ---------- Spezialkarten ----------
+
+function specialGame() {
+  let g = gameWithDeck(['sp-kuh', 'hahn']);
+  g = drawForAuction(g, 'a', 0);
+  assert.equal(g.phase, 'special');
+  return g;
+}
+const at = (n) => SPECIAL_DELAY_MS + (10 - n) * 1000 + 100; // Zeitpunkt, an dem der Countdown n zeigt
+
+test('Spezialkarte: Countdown 10 → 1, wer zuerst buzzert bietet so viele Karten', () => {
+  let g = specialGame();
+  assert.equal(specialStage(g, 1000), 'wait');
+  assert.equal(specialNumber(g, at(10)), 10);
+  assert.equal(specialNumber(g, at(3)), 3);
+  assert.throws(() => buzz(g, 'a', at(5)), GameError);     // Aufdecker buzzert nicht
+  assert.throws(() => buzz(g, 'b', 1000), GameError);      // noch nicht gestartet
+  g = buzz(g, 'b', at(4));
+  assert.throws(() => buzz(g, 'c', at(3)), GameError);     // zu spät
+  assert.equal(specialStage(g, at(4)), 'countdown');
+  assert.throws(() => specialDecide(g, 'a', 'sell', at(4)), GameError);
+  assert.equal(specialStage(g, at(2)), 'decide');
+  // Verkaufen: b zahlt 4 Karten (selbst gewählt, z. B. die 0er) und bekommt die Spezialkarte
+  let h = specialDecide(g, 'a', 'sell', at(2));
+  assert.equal(h.phase, 'payment');
+  assert.throws(() => pay(h, 'b', [0, 1, 2]), GameError);  // genau 4
+  h = pay(h, 'b', [0, 1, 2, 3]);
+  assert.deepEqual(h.players[1].specials, ['kuh']);
+  assert.equal(h.players[1].money.length, 3);
+  assert.equal(h.players[0].money.length, 11);
+  // Kaufen: a zahlt b 4 Karten und behält sie
+  h = specialDecide(g, 'a', 'buy', at(2));
+  h = pay(h, 'a', [0, 1, 2, 3]);
+  assert.deepEqual(h.players[0].specials, ['kuh']);
+  assert.equal(h.players[1].money.length, 11);
+});
+
+test('Spezialkarte: niemand buzzert → Aufdecker bekommt sie umsonst; kein Esel-Bonus', () => {
+  let g = gameWithDeck(['sp-esel', 'hahn']);
+  g = drawForAuction(g, 'a', 0);
+  assert.equal(total(g.players[1].money), 100);
+  g = specialDecide(g, 'a', 'sell', at(0) + 2000);
+  assert.deepEqual(g.players[0].specials, ['esel']);
+  assert.equal(g.phase, 'turn');
+});
+
+test('Spezialkarte zahlungsunfähig: Karten offen, Countdown neu, darf erst bei eigener Kartenanzahl drücken', () => {
+  let g = specialGame();
+  g.players[1].money = [0, 10, 50];
+  g = buzz(g, 'b', at(8));
+  assert.throws(() => specialDecide(g, 'a', 'buy', at(5)), GameError); // a hat nur 7 Karten → kaufen geht nicht
+  const t = at(5);
+  g = specialDecide(g, 'a', 'sell', t);
+  assert.equal(g.phase, 'special');
+  assert.equal(g.lastEvent.type, 'cant_pay');
+  assert.deepEqual(g.lastEvent.revealed, [0, 10, 50]);
+  const at2 = (n) => t + SPECIAL_DELAY_MS + (10 - n) * 1000 + 100;
+  assert.throws(() => buzz(g, 'b', at2(5)), GameError);
+  g = buzz(g, 'b', at2(3));
+  assert.equal(g.special.buzzes.b, 3);
+});
+
+test('Spezialkarte Gleichstand: Schnick-Schnack-Schnuck entscheidet', () => {
+  let g = specialGame();
+  g = buzz(g, 'b', at(6));
+  g = buzz(g, 'c', at(6) + 300);
+  assert.equal(specialStage(g, at(4)), 'rps');
+  assert.throws(() => rpsPick(g, 'd', 'stein', at(4)), GameError);
+  g = rpsPick(g, 'b', 'stein', at(4));
+  g = rpsPick(g, 'c', 'stein', at(4));                    // unentschieden → nochmal
+  assert.equal(specialStage(g, at(4)), 'rps');
+  g = rpsPick(g, 'b', 'stein', at(4));
+  g = rpsPick(g, 'c', 'papier', at(4));
+  assert.equal(specialStage(g, at(4)), 'decide');
+  assert.equal(g.special.winner, 'c');
+  g = specialDecide(g, 'a', 'sell', at(4));
+  assert.equal(g.payment.payer, 'c');
+  assert.equal(g.payment.count, 6);
+});
+
+// ---------- Wertung mit Spezialkarten und Ratten ----------
+
+test('Wertung: Spezialkarte zum Quartett zählt vor dem Malnehmen, sonst +250 danach', () => {
+  const p = { animals: { kuh: 4, pferd: 4 }, specials: ['kuh', 'esel'] };
+  assert.equal(scoreFor(p).score, (800 + 250 + 1000) * 2 + 250);
+  // Blockiertes Kuh-Quartett zählt nicht, die Kuh-Spezialkarte bringt dann +250
+  assert.equal(scoreFor(p, 'kuh').score, 1000 * 1 + 250 + 250);
+  // Nur Spezialkarten, kein Quartett
+  assert.equal(scoreFor({ animals: {}, specials: ['hahn'] }).score, 250);
+});
+
+test('Spielende: wer alle Ratten hat, blockiert ein eigenes Quartett seiner Wahl', () => {
+  let g = createGame({ players: P.slice(0, 3), seed: 5 });
+  g.deck = [];
+  const ids = ANIMALS.map((a) => a.id);
+  ids.forEach((id, i) => { g.players[i % 3].animals[id] = 4; });
+  g.players[0].animals[RAT] = 4;
+  g.players[0].specials = ['hahn'];
+  g.phase = 'payment';
+  g.payment = { payer: 'b', payee: 'a', amount: 0, animal: 'hahn', buyer: 'b' };
+  g.players[1].animals.hahn = 3; g.players[0].animals.hahn = 0; // b bekommt den letzten Hahn
+  g = pay(g, 'b', []);
+  // a hat Quartette (hund, esel, kuh … je nach Verteilung) → muss blockieren
+  assert.equal(g.phase, 'block');
+  assert.throws(() => chooseBlock(g, 'b', 'gans'), GameError);
+  const mine = ANIMALS.filter((x) => g.players[0].animals[x.id] === 4);
+  g = chooseBlock(g, 'a', mine[0].id);
+  assert.equal(g.phase, 'ended');
+  const s = scores(g);
+  assert.equal(s[0].blocked, mine[0].id);
+  assert.equal(s[0].score, scoreFor(g.players[0], mine[0].id).score);
+});
+
+test('Alter Spielstand ohne Ratten und Spezialkarten endet weiterhin normal', () => {
+  let g = createGame({ players: P.slice(0, 3), seed: 9 });
+  for (const p of g.players) { delete p.specials; delete p.animals[RAT]; }
+  g.deck = ['hahn'];
+  ANIMALS.forEach((a, i) => { if (a.id !== 'hahn') g.players[i % 3].animals[a.id] = 4; });
+  g.players[1].animals.hahn = 3;
+  g = drawForAuction(g, 'a');
+  g = bid(g, 'b', 10);
+  g = closeAuction(g, 'a', 'sell');
+  g = pay(g, 'b', [g.players[1].money.indexOf(10)]);
+  assert.equal(g.phase, 'ended');
+  assert.ok(scores(g).every((x) => Number.isFinite(x.score)));
 });

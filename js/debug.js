@@ -24,6 +24,8 @@ export function debugPanel(d) {
     <div class="dbtns">
       <button type="button" data-dbg="forward">Vorspulen (bis auf 2 Karten verteilen)</button>
       <button type="button" data-dbg="donkey">Esel als nächste Karte</button>
+      <button type="button" data-dbg="rat">Ratte als nächste Karte</button>
+      <button type="button" data-dbg="special">Spezialkarte als nächste Karte</button>
       <button type="button" data-dbg="broke">Geld von „${esc(d.viewName)}“ auf 0 + 10 setzen</button>
     </div>` : '';
   return `<div class="dpanel" role="dialog" aria-label="Debug">

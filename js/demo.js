@@ -1,6 +1,7 @@
 // Beispiel-Spielstände für Screenshots (?demo=turn, auction, …). Im echten Spiel nicht benutzt.
 import {
   createGame, drawForAuction, bid, closeAuction, startTrade, ANIMALS,
+  RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS,
 } from '../src/engine.js';
 
 const PLAYERS = [
@@ -19,6 +20,10 @@ function base() {
   set(3, { gans: 2, schwein: 1, ziege: 2, hahn: 4 });
   g.deck = g.deck.slice(0, 23);
   g.donkeysDrawn = 1;
+  g.players[0].specials = ['hund'];
+  g.players[1].animals[RAT] = 1;
+  g.players[1].specials = ['pferd', 'hahn'];
+  g.players[3].animals[RAT] = 1;
   g.players[0].money = [0, 0, 10, 10, 10, 50, 50];
   g.log.push('Mo ersteigert Gans für 30.', 'Lea nimmt den Kuhhandel an. Nico bekommt 1× Hund.');
   return g;
@@ -109,13 +114,112 @@ export function buildDemoState(kind, local) {
       g = startTrade(g, 'u2', 'u1', 'hund', [0, 2, 6]);
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
       return g;
+    case 'rat': {
+      g = base(); g.turn = 1; g.deck[0] = RAT;
+      g = drawForAuction(g, 'u2');
+      g = ratLay(g, 'u3', 0); g = ratLay(g, 'u4', 2);
+      return g;
+    }
+    case 'ratme': {
+      g = base(); g.turn = 2; g.deck[0] = RAT;
+      g = drawForAuction(g, 'u3');
+      g = ratLay(g, 'u4', 1); // dann ist Alp (u1) dran
+      g.rat.pot.push(10, 0); g.rat.laid.u4 = 1; g.rat.laid.u3 = 1; g.rat.laid.u2 = 1;
+      return g;
+    }
+    case 'special': { // Countdown läuft, Alp kann buzzern
+      const t = Date.now() - SPECIAL_DELAY_MS - 3200;
+      g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
+      g = drawForAuction(g, 'u2', t);
+      g.special.startsAt = Date.now() - 3200;
+      return g;
+    }
+    case 'specialbuzzed': {
+      const t0 = Date.now() - SPECIAL_DELAY_MS - 4500;
+      g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
+      g = drawForAuction(g, 'u2', t0);
+      g = buzz(g, 'u3', t0 + SPECIAL_DELAY_MS + 4100);
+      return g;
+    }
+    case 'specialdecide': {
+      const t0 = Date.now() - 60000;
+      g = base(); g.deck[0] = 'sp-schwein';
+      g = drawForAuction(g, 'u1', t0);
+      g = buzz(g, 'u2', t0 + SPECIAL_DELAY_MS + 3500);
+      return g;
+    }
+    case 'rps': {
+      const t0 = Date.now() - 60000;
+      g = base(); g.turn = 3; g.deck[0] = 'sp-ziege';
+      g = drawForAuction(g, 'u4', t0);
+      g = buzz(g, 'u1', t0 + SPECIAL_DELAY_MS + 5100);
+      g = buzz(g, 'u3', t0 + SPECIAL_DELAY_MS + 5600);
+      g = rpsPick(g, 'u1', 'stein', t0 + 30000); g = rpsPick(g, 'u3', 'stein', t0 + 30000);
+      return g;
+    }
+    case 'spcantpay': {
+      const t0 = Date.now() - 30000;
+      g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
+      g.players[2].money = [0, 10, 20];
+      g = drawForAuction(g, 'u2', t0);
+      g = buzz(g, 'u3', t0 + SPECIAL_DELAY_MS + 1500);
+      g = specialDecide(g, 'u2', 'sell', Date.now() - SPECIAL_DELAY_MS - 1200);
+      return g;
+    }
+    case 'spay': {
+      const t0 = Date.now() - 60000;
+      g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
+      g = drawForAuction(g, 'u2', t0);
+      g = buzz(g, 'u1', t0 + SPECIAL_DELAY_MS + 5500);
+      g = specialDecide(g, 'u2', 'sell', t0 + 30000);
+      local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [0, 1];
+      return g;
+    }
+    case 'traderat': {
+      g = base();
+      g.players[0].animals[RAT] = 2; g.players[1].animals[RAT] = 2;
+      local.key = `${g.phase}|${g.turn}|${g.log.length}`;
+      local.tradeOpen = true; local.tradeTarget = 'u2'; local.tradeAnimal = RAT; local.sel = [5, 6];
+      return g;
+    }
+    case 'traderatrespond': {
+      g = base(); g.turn = 1;
+      g.players[0].animals[RAT] = 1;
+      g = startTrade(g, 'u2', 'u1', RAT, [0, 2, 6]);
+      local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
+      return g;
+    }
+    case 'mustdraw': {
+      g = base(); g.mustDraw = true;
+      g.players[0].animals[RAT] = 1;
+      g.log.push('Alp nimmt die Ratte und bekommt 4 Karte(n).');
+      return g;
+    }
+    case 'block': {
+      g = createGame({ players: PLAYERS, seed: 7 });
+      const owner = { hahn: 0, gans: 3, katze: 0, hund: 1, schaf: 2, ziege: 3, esel: 0, schwein: 3, kuh: 2, pferd: 1 };
+      for (const a of ANIMALS) g.players[owner[a.id]].animals[a.id] = 4;
+      g.players[0].animals[RAT] = 4;
+      g.players[0].specials = ['hahn', 'kuh'];
+      g.players[1].specials = ['pferd', 'hund'];
+      g.deck = [];
+      g.phase = 'block'; g.block = { player: 'u1' };
+      return g;
+    }
     case 'ended': {
       g = createGame({ players: PLAYERS, seed: 7 });
       const owner = { hahn: 3, gans: 3, katze: 0, hund: 0, schaf: 2, ziege: 3, esel: 1, schwein: 3, kuh: 2, pferd: 1 };
       for (const a of ANIMALS) g.players[owner[a.id]].animals[a.id] = 4;
+      g.players[3].specials = ['schwein', 'ziege', 'katze'];
+      g.players[2].specials = ['kuh'];
+      g.players[1].specials = ['hund', 'pferd'];
+      g.players[0].specials = ['esel', 'hahn', 'gans', 'schaf'];
+      g.players[3].animals[RAT] = 4;
+      g.blocked = { player: 'u4', animal: 'hahn' };
       g.deck = [];
       g.phase = 'ended';
-      g.winner = ['u4'];
+      const sc = scores(g); const best = Math.max(...sc.map((x) => x.score));
+      g.winner = sc.filter((x) => x.score === best).map((x) => x.id);
       return g;
     }
     default:

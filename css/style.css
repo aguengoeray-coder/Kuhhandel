@@ -632,3 +632,94 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 @keyframes rb2 { 0% { transform: scale(.4); opacity: 0; } 12% { transform: scale(1.1); opacity: 1; } 20% { transform: scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
 .rbubble { right: 120px; top: -22px; animation-name: rb2; transform-origin: 80% 100%; }
 .rbubble::after { right: 18px; top: auto; bottom: -10px; transform: none; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 9px solid var(--ink); border-bottom: none; }
+
+/* ===== v0.9: Symbole, Werte, Ratten, Spezialkarten ===== */
+/* Tiersymbol im Kreis (Spielerspalte, Wertung, Blockieren) */
+.ci { width: 18px; height: 18px; border-radius: 50%; background: var(--a); border: 1.5px solid var(--ink); display: inline-flex; align-items: center; justify-content: center; padding: 1px; flex-shrink: 0; position: relative; }
+.ci .art { width: 100%; height: 100%; }
+.chips { max-width: 150px; gap: 3px; }
+.chip { gap: 1px; padding: 1px 3px 1px 4px; border-radius: 999px; font-size: 10.5px; }
+.chip em { font-style: normal; font-weight: 800; }
+.chip.done { outline: 2px solid var(--gold); background: #FFF6D6; }
+.chip.rat { background: #E9E5EC; }
+.chip.sp { padding: 1px 2px; position: relative; }
+.chip.sp .star { position: absolute; right: -4px; top: -5px; width: 11px; height: 11px; }
+
+/* Wert auf jeder Tierkarte */
+.acard { position: relative; }
+.cv { position: absolute; right: 1px; top: 0; font-style: normal; font-size: 8px; font-weight: 800; line-height: 1; color: var(--ink); background: rgba(255,255,255,.88); border-radius: 3px; padding: 1px 2px; }
+.myanimals .cv { font-size: 9px; }
+.atile .cv { right: 1px; top: 1px; font-size: 7.5px; padding: 0 1px; }
+.acard.sp { border-color: #B8860B; background: #FFF8DC; }
+.acard.sp .star { position: absolute; left: -1px; bottom: -1px; width: 14px; height: 14px; }
+.amini.special span { color: var(--gold); }
+.amini.rat .acard { border-color: #5B5560; }
+.myanimals.many { gap: 5px; }
+.myanimals.many .acard { width: 32px; height: 44px; }
+.myanimals.many .acard b .art { width: 28px; height: 28px; }
+.myanimals.many .amini span { font-size: 9px; }
+.deck-count.must { background: var(--gold); color: var(--ink); border-radius: 999px; padding: 1px 8px; font-weight: 800; }
+
+/* Spezialkarte / Ratte groß */
+.bigcard-head .star { width: 26px; height: 26px; }
+.spcard .bigcard-in { border-color: #B8860B; }
+.spcard .bigcard-head { background: linear-gradient(135deg, var(--a), #FFD34E); }
+.bignum { font-family: var(--font-head); font-weight: 700; font-size: 46px; line-height: 1; color: #fff; display: flex; flex-direction: column; align-items: center; text-shadow: 0 3px 0 rgba(0,0,0,.25); animation: pop .35s ease-out; }
+.bignum small { font-family: var(--font-body); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; opacity: .85; text-shadow: none; }
+.bignum.low { color: var(--gold); }
+.bignum.wait { opacity: .6; animation: none; }
+.spauc { gap: 4px; }
+.spauc .bigcard.compact .bigcard-head { height: 48px; }
+
+/* Rattenrunde: Karten in der Mitte */
+.pot { display: flex; flex-wrap: wrap; justify-content: center; width: 200px; min-height: 26px; gap: 0; }
+.pot .money { margin: 0 -6px; transform: rotate(var(--r)); box-shadow: 0 2px 4px rgba(0,0,0,.25); }
+.pot span { color: #fff; font-size: 12px; opacity: .8; }
+
+/* Buzzer */
+.buzzer { width: 140px; height: 140px; align-self: center; border-radius: 50%; border: 5px solid var(--ink); background: radial-gradient(circle at 40% 35%, #FF6B5E, #C8372D 60%, #8E1F17); color: #fff; box-shadow: 0 8px 0 #5E130E, 0 12px 18px rgba(0,0,0,.35); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-family: var(--font-head); }
+.buzzer b { font-size: 30px; letter-spacing: 1px; }
+.buzzer small { font-family: var(--font-body); font-size: 11px; font-weight: 700; }
+.buzzer:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 2px 0 #5E130E; }
+.buzzer:disabled { filter: grayscale(.85); opacity: .6; cursor: not-allowed; }
+.lnote { color: #fff; font-size: 11px; line-height: 1.35; text-align: center; opacity: .9; }
+.lhead { color: #fff; }
+
+/* Schnick-Schnack-Schnuck */
+.rpsgrid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.rpsbtn { display: flex; align-items: center; gap: 10px; border: 3px solid var(--ink); background: #fff; border-radius: 14px; padding: 5px 12px; cursor: pointer; font-family: var(--font-body); box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.rpsbtn b { font-size: 26px; }
+.rpsbtn small { font-size: 14px; font-weight: 800; }
+.rpsbtn:active { transform: translateY(3px); box-shadow: none; }
+.rpslast { background: rgba(0,0,0,.25); color: #fff; border-radius: 999px; padding: 3px 12px; font-size: 13px; font-weight: 700; }
+
+/* Blockieren am Spielende */
+.pay.block { top: 30px; right: 278px; }
+.blockgrid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.blockopt { width: 104px; border: 3px solid var(--ink); background: #fff; border-radius: 14px; padding: 8px 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: var(--font-body); box-shadow: 0 3px 0 rgba(0,0,0,.2); }
+.blockopt .ci { width: 44px; height: 44px; padding: 3px; border-width: 2px; }
+.blockopt b { font-family: var(--font-head); font-size: 15px; display: flex; align-items: center; gap: 3px; }
+.blockopt b .star { width: 14px; height: 14px; }
+.blockopt small { font-size: 12px; font-weight: 700; color: var(--muted); }
+.blockopt:hover { border-color: #C8372D; }
+
+/* Wertung */
+.squart { flex-wrap: wrap; align-items: center; }
+.squart .ci { width: 20px; height: 20px; }
+.squart .ci.blocked { opacity: .45; }
+.squart .ci.blocked::after { content: ''; position: absolute; left: -3px; right: -3px; top: 50%; height: 2.5px; background: #C8372D; transform: rotate(-35deg); }
+.squart .ci.sp .star { position: absolute; right: -5px; top: -5px; width: 11px; height: 11px; }
+.ending ol { width: 400px; }
+
+/* Reaktionen: Spieler antippen */
+.prow { cursor: pointer; }
+.reactpick { left: auto; right: 268px; }
+.rphead { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; font-family: var(--font-head); font-weight: 700; font-size: 14px; padding: 0 2px 2px; }
+.rphead button { border: none; background: none; min-height: 0; font-size: 14px; cursor: pointer; padding: 0 4px; }
+.rbubble small { display: block; font-family: var(--font-body); font-size: 9.5px; font-weight: 800; color: var(--c, var(--muted)); }
+.rbubble.to { border-color: var(--c, var(--ink)); }
+
+/* Version unten rechts */
+#appver { position: fixed; right: 6px; bottom: 3px; z-index: 100; font-size: 10px; color: rgba(128,128,128,.75); pointer-events: none; font-family: var(--font-body, sans-serif); }
+.bignum.wait { font-size: 22px; flex-direction: row; gap: 6px; align-items: baseline; }
+.spauc .reveal-row { margin-top: 2px; }

@@ -111,3 +111,19 @@
 - [x] Erste-Runde-Hilfe: Hinweise beim ersten Mal (je einmal pro Konto und Gerät)
 - [x] Supabase: „Confirm email“ ausgeschaltet
 - [x] SQL `supabase/v0.8-konten.sql` in Supabase ausgeführt
+
+## v0.9.0 – Ratten, Spezialkarten und Feinschliff (wartet auf Freigabe)
+
+- [x] 4 Ratten im Stapel: Rattenrunde (verdeckt Karte legen oder Ratte nehmen), danach nochmal aufdecken
+- [x] Rattenhandel: nur wenn beide Ratten haben, wer mehr bietet wird sie los
+- [x] Spielende: wer alle Ratten hat, wählt ein Quartett, das nicht zählt (mit Punktevorschau)
+- [x] 10 Spezialkarten (je 250, nicht handelbar): Buzzer-Countdown 10 → 1, Kaufen oder Verkaufen, Bezahlen mit Kartenanzahl
+- [x] Schnick-Schnack-Schnuck bei Gleichstand am Buzzer
+- [x] Zahlungsunfähig bei der Spezialkarte: Karten offen, Countdown neu, erst ab eigener Kartenanzahl
+- [x] Neue Wertung mit Spezialkarten und blockiertem Quartett
+- [x] Reaktionen: eigenen Platz antippen = an alle, anderen Spieler antippen = an ihn
+- [x] Version klein unten rechts
+- [x] Spielerspalte: Tiere als Symbol mit Anzahl (z. B. 2× Pferd), Ratten und Spezialkarten mit Stern
+- [x] Wert auf jeder Tierkarte, auch klein
+- [x] Spielregeln im Spiel ergänzt; Debug: Ratte / Spezialkarte als nächste Karte
+- [x] Laufende alte Spiele ohne Ratten enden weiterhin normal

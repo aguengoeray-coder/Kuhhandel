@@ -94,7 +94,19 @@ const ART = {
     <ellipse cx="50" cy="78" rx="15" ry="11" fill="#C99A72" ${S}/>
     <ellipse cx="44" cy="78" rx="2.2" ry="3.4" fill="#2A2420"/><ellipse cx="56" cy="78" rx="2.2" ry="3.4" fill="#2A2420"/>
     ${eye(40, 46)}${eye(60, 46)}`,
+  ratte: `
+    <path d="M78 74c10 2 16 8 12 16" fill="none" stroke="#C98B95" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="28" cy="30" r="13" fill="#8D8790" ${S}/><circle cx="28" cy="30" r="6.5" fill="#E9A6B2"/>
+    <circle cx="72" cy="30" r="13" fill="#8D8790" ${S}/><circle cx="72" cy="30" r="6.5" fill="#E9A6B2"/>
+    <path d="M50 30c18 0 28 14 26 30-2 14-14 24-26 30-12-6-24-16-26-30-2-16 8-30 26-30z" fill="#9B95A0" ${S}/>
+    <path d="M50 80l-5 5h10z" fill="#2A2420"/>
+    <path d="M44 86c-8 0-16-1-24-4M44 84c-8-3-14-6-20-11M56 86c8 0 16-1 24-4M56 84c8-3 14-6 20-11" fill="none" stroke="#2A2420" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M45 89h10v4h-10z" fill="#FFFDF5" ${S}/>
+    ${eye(40, 54)}${eye(60, 54)}`,
 };
+
+// Stern für Spezialkarten
+export const STAR = '<svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.6L12 17.2l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" fill="#FFD34E" stroke="#8A5A00" stroke-width="1.4" stroke-linejoin="round"/></svg>';
 
 export function art(id) {
   return `<svg class="art" viewBox="0 0 100 100" aria-hidden="true" focusable="false">${ART[id] || ''}</svg>`;

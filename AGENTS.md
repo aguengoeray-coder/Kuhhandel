@@ -49,7 +49,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 ## Spielregeln (Hausregeln, so umgesetzt)
 
-- 3–4 Spieler, 40 Tierkarten (10 Arten × 4). Werte: Hahn 10, Gans 40, Katze 90, Hund 160, Schaf 250,
+- 3–4 Spieler, 54 Karten: 40 Tierkarten (10 Arten × 4), 10 Spezialkarten (eine je Tierart), 4 Ratten. Werte: Hahn 10, Gans 40, Katze 90, Hund 160, Schaf 250,
   Ziege 350, Esel 500, Schwein 650, Kuh 800, Pferd 1000.
 - Startgeld: 2× 0, 3× 10, 1× 20, 1× 50 = 100 Taler. Fremdes Geld ist verdeckt (nur Kartenanzahl sichtbar).
 - Esel-Bonus beim Aufdecken für alle: 50 / 100 / 200 / 500.
@@ -59,7 +59,18 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 - Kuhhandel: verdecktes Angebot; annehmen (Geld nehmen, Tier abgeben) oder Gegenangebot.
   Gebote werden **immer getauscht**, höheres gewinnt, **Gleichstand → Herausforderer gewinnt**. Haben beide 2, geht es um 2.
 - Kein Spielverlauf im Spiel (man muss sich merken, was passiert ist). Kein Zug-Überspringen.
-- Wertung: Summe der Quartettwerte × Anzahl der Quartette.
+- **Ratte:** Aufgedeckt → reihum ab links vom Aufdecker (Aufdecker macht mit, mehrere Runden): eine Geldkarte verdeckt legen
+  (0er erlaubt) oder Ratte nehmen und alle gelegten Karten bekommen; ohne Karten muss man nehmen. Danach muss der Aufdecker
+  nochmal aufdecken (Stapel leer → Kuhhandel). Rattenhandel nur, wenn beide Ratten haben; umgekehrt: wer mehr bietet,
+  wird sie los; Gleichstand → Herausforderer; 2 gegen 2 → um beide. Spielende erst, wenn einer alle Ratten hat; er
+  wählt ein eigenes Quartett, das nicht zählt (weder Wert noch Anzahl).
+- **Spezialkarte** (Wert 250, nicht handelbar, kein Esel-Bonus): Nach 3 s „Achtung“ Countdown 10 → 1 (1 s pro Zahl) für alle
+  außer dem Aufdecker. Wer zuerst buzzert, bietet so viele verdeckte Karten wie die Zahl. Gleiche Zahl → Schnick-Schnack-Schnuck
+  (jeder wählt selbst). Aufdecker entscheidet: kaufen (er zahlt dem Buzzer die Karten) oder verkaufen (Buzzer zahlt ihm).
+  Der Zahler wählt die Karten selbst. Niemand buzzert → Aufdecker bekommt sie umsonst. Buzzer kann nicht zahlen → Karten offen,
+  Countdown neu, er darf erst ab seiner Kartenanzahl drücken. Aufdecker mit zu wenig Karten muss verkaufen.
+- Wertung: (Summe der Quartettwerte + 250 je passender Spezialkarte) × Anzahl der Quartette, danach + 250 je Spezialkarte
+  ohne zählendes Quartett.
 
 ## Design
 

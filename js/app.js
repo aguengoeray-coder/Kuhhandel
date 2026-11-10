@@ -7,9 +7,9 @@ import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
-import { scores, ANIMALS } from '../src/engine.js';
+import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage } from '../src/engine.js';
 
-export const APP_VERSION = '0.8.0';
+export const APP_VERSION = '0.9.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -38,7 +38,8 @@ let ui = { screen: 'start', editingName: !store.get('kh_name'), games: [], game:
 let lobbyChannel = null;
 let auth = { mode: 'login', error: '', busy: false }; // Anmelde-Bildschirm
 const profiles = new Map(); // Anmelde-ID → { name, animal, color }
-const reactions = new Map(); // Platz → { text, until }
+const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
+let lastReactAt = 0;
 const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
 const REACTIONS = ['Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!', '😂', '😱'];
 let roomChannel = null;
@@ -55,6 +56,9 @@ document.addEventListener('pointerdown', () => { if (isStandalone()) screen.orie
 
 function render() {
   renderModal();
+  let ver = document.getElementById('appver');
+  if (!ver) { ver = document.createElement('div'); ver.id = 'appver'; document.body.appendChild(ver); }
+  ver.textContent = `v${APP_VERSION}`;
   app.classList.toggle('playing', ui.screen === 'playing');
   if (ui.screen !== 'playing') app.onclick = null;
   if (ui.screen === 'login') return renderLogin();
@@ -349,6 +353,14 @@ function checkSignal() {
   if (s.phase === 'turn' && s.players[s.turn]?.id === seat) need = 'turn';
   else if (s.phase === 'payment' && s.payment?.payer === seat) need = 'pay';
   else if (s.phase === 'trade' && s.trade?.target === seat) need = 'trade';
+  else if (s.phase === 'rat' && ratCurrent(s) === seat) need = 'rat';
+  else if (s.phase === 'block' && s.block?.player === seat) need = 'block';
+  else if (s.phase === 'special') {
+    const st = specialStage(s, now());
+    if (st === 'decide' && s.special.revealer === seat) need = 'special';
+    else if (st === 'rps' && (s.special.rps ? s.special.rps.players.includes(seat) : s.special.buzzes[seat] != null)) need = `rps${s.special.rps?.round || 1}`;
+    else if (st === 'wait' && s.special.revealer !== seat) need = 'buzz';
+  }
   const key = need ? `${need}|${s.log.length}` : '';
   if (key && key !== lastNeed) beep();
   lastNeed = key;
@@ -359,6 +371,8 @@ function checkSignal() {
 
 setInterval(() => {
   if (ui.screen !== 'playing') return;
+  const w = app.querySelector('[data-wake]');
+  if (w && now() >= Number(w.dataset.wake)) { render(); return; } // Buzzer-Countdown: nächste Zahl
   const el = app.querySelector('[data-ends]');
   if (!el) return;
   const t = now();
@@ -372,7 +386,7 @@ setInterval(() => {
   const txt = el.querySelector('span');
   if (bar) bar.style.width = `${Math.min(100, (left / Number(el.dataset.total)) * 100)}%`;
   if (txt) txt.textContent = `noch ${Math.ceil(left / 1000)} s`;
-}, 200);
+}, 100);
 
 // ---------- Debug-Modus ----------
 
@@ -462,7 +476,9 @@ function debugShortcut(kind) {
         const payout = DONKEY_PAYOUTS[s.donkeysDrawn++];
         s.players.forEach((p) => { p.money.push(payout); p.money.sort((a, b) => a - b); });
       }
-      s.players[Math.floor(Math.random() * s.players.length)].animals[card] += 1;
+      const lucky = s.players[Math.floor(Math.random() * s.players.length)];
+      if (isSpecialCard(card)) (lucky.specials = lucky.specials || []).push(specialAnimal(card));
+      else lucky.animals[card] = (lucky.animals[card] || 0) + 1;
     }
     s.log.push('Debug: vorgespult.');
   } else if (kind === 'donkey') {
@@ -471,6 +487,11 @@ function debugShortcut(kind) {
     s.deck.splice(i, 1);
     s.deck.unshift('esel');
     s.log.push('Debug: Esel liegt oben.');
+  } else if (kind === 'rat' || kind === 'special') {
+    const i = s.deck.findIndex((c) => (kind === 'rat' ? c === RAT : isSpecialCard(c)));
+    if (i < 0) return toast(kind === 'rat' ? 'Keine Ratte mehr im Stapel.' : 'Keine Spezialkarte mehr im Stapel.');
+    s.deck.unshift(...s.deck.splice(i, 1));
+    s.log.push(kind === 'rat' ? 'Debug: Ratte liegt oben.' : 'Debug: Spezialkarte liegt oben.');
   } else if (kind === 'broke') {
     s.players.find((p) => p.id === dbg.viewAs).money = [0, 10];
     s.log.push('Debug: Geld geleert.');
@@ -491,7 +512,7 @@ app.addEventListener('click', async (e) => {
   else if (k === 'bots') { dbg.bots = !dbg.bots; if (dbg.bots) { dbg.viewAs = 'me'; dbg.autoView = false; } }
   else if (k === 'fast') dbg.fast = !dbg.fast;
   else if (k === 'reload') { await resync(); }
-  else if (k === 'forward' || k === 'donkey' || k === 'broke') { dbg.panel = false; return debugShortcut(k); }
+  else if (['forward', 'donkey', 'rat', 'special', 'broke'].includes(k)) { dbg.panel = false; return debugShortcut(k); }
   else if (k === 'report') {
     const text = buildReport();
     try { await navigator.clipboard.writeText(text); dbg.reportText = ''; toast('Fehlerbericht kopiert – einfach an Claude schicken.'); return; }
@@ -633,19 +654,23 @@ async function joinByCode(code) {
 function activeReactions() {
   const t = Date.now();
   const out = {};
-  for (const [seat, r] of reactions) if (r.until > t) out[seat] = r.text;
+  for (const [seat, r] of reactions) if (r.until > t) out[seat] = { text: r.text, from: r.from };
   return out;
 }
-function showReaction(seat, text) {
-  reactions.set(seat, { text, until: Date.now() + 3200 });
+// Reaktion erscheint beim Empfänger (to) – mit Absender – oder beim Absender selbst (an alle)
+function showReaction(seat, text, to = null) {
+  const at = to || seat;
+  reactions.set(at, { text, from: to ? seat : null, until: Date.now() + 3200 });
   if (soundOn() && !DEMO) playSound('react');
   render();
   setTimeout(render, 3300);
 }
-function sendReaction(text) {
+function sendReaction(text, to = null) {
+  if (Date.now() - lastReactAt < 2500) return toast('Kurz warten – nicht so schnell hintereinander.');
+  lastReactAt = Date.now();
   const seat = ui.game.local ? dbg.viewAs : seatIn(ui.game);
-  showReaction(seat, text);
-  if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'react', payload: { seat, text } });
+  showReaction(seat, text, to);
+  if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'react', payload: { seat, text, to } });
 }
 
 // ---------- Erste-Runde-Hilfe ----------
@@ -763,7 +788,8 @@ function watchRoom(id) {
     })
     .on('broadcast', { event: 'react' }, ({ payload }) => {
       if (!payload?.seat || !REACTIONS.includes(payload.text)) return;
-      showReaction(payload.seat, payload.text);
+      const to = typeof payload.to === 'string' && ui.game?.state?.players?.some((p) => p.id === payload.to) ? payload.to : null;
+      showReaction(payload.seat, payload.text, to);
     })
     .on('presence', { event: 'sync' }, () => {
       online = new Set(Object.keys(roomChannel.presenceState()));
@@ -941,15 +967,19 @@ async function loadPin() {
 }
 
 const RULES = `
-  <h3>Ziel</h3><p>Sammle Quartette (alle 4 Karten einer Tierart). Am Ende zählt: Summe deiner Quartettwerte × Anzahl deiner Quartette.</p>
-  <h3>Tiere</h3><p>Hahn 10 · Gans 40 · Katze 90 · Hund 160 · Schaf 250 · Ziege 350 · Esel 500 · Schwein 650 · Kuh 800 · Pferd 1000</p>
+  <h3>Ziel</h3><p>Sammle Quartette (alle 4 Karten einer Tierart). Am Ende zählt: (Summe deiner Quartettwerte + passende Spezialkarten) × Anzahl deiner Quartette. Spezialkarten ohne eigenes Quartett: +250 danach.</p>
+  <h3>Karten</h3><p>Hahn 10 · Gans 40 · Katze 90 · Hund 160 · Schaf 250 · Ziege 350 · Esel 500 · Schwein 650 · Kuh 800 · Pferd 1000 – dazu 10 Spezialkarten (je 250) und 4 Ratten. 54 Karten.</p>
   <h3>Start</h3><p>Jeder hat 100 Taler: 2× 0, 3× 10, 1× 20, 1× 50. Wie viel die anderen haben, siehst du nicht – nur wie viele Scheine.</p>
-  <h3>Dein Zug</h3><p><b>Versteigern:</b> Du deckst ein Tier auf, die anderen bieten. Nach jedem Gebot läuft die Uhr neu. Ist sie abgelaufen, entscheidest du: Zuschlag an den Höchstbietenden – oder du kaufst selbst zum Höchstgebot.<br>
+  <h3>Dein Zug</h3><p><b>Versteigern:</b> Du deckst eine Karte auf. Bei einem Tier bieten die anderen. Nach jedem Gebot läuft die Uhr neu. Ist sie abgelaufen, entscheidest du: Zuschlag an den Höchstbietenden – oder du kaufst selbst zum Höchstgebot.<br>
   <b>Esel:</b> Wird ein Esel aufgedeckt, bekommen alle Geld von der Bank (50, 100, 200, 500).<br>
   <b>Kein Wechselgeld:</b> Wer zahlt, wählt seine Scheine selbst. Zu viel gezahlt ist weg.<br>
   <b>Kann nicht zahlen?</b> Dann alle Scheine offen zeigen, die Auktion startet neu – du darfst höchstens dein altes Gebot minus 10 bieten.</p>
   <p><b>Kuhhandel:</b> Fordere jemanden heraus, der dieselbe Tierart hat. Du bietest verdeckt. Er nimmt dein Geld und gibt das Tier ab – oder bietet verdeckt dagegen. Die Gebote werden immer getauscht, das höhere gewinnt die Tiere, bei Gleichstand der Herausforderer. Haben beide 2 Karten, geht es um 2.</p>
-  <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind.</p>`;
+  <h3>Ratte</h3><p>Wird eine Ratte aufgedeckt, geht es reihum (links vom Aufdecker, er selbst macht mit): Jeder legt eine Karte verdeckt in die Mitte (auch ein 0er) – oder nimmt die Ratte und bekommt alle gelegten Karten. Wer keine Karten mehr hat, muss sie nehmen. Danach deckt der Aufdecker noch eine Karte auf (ist der Stapel leer: Kuhhandel).<br>
+  <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
+  Am Ende hat einer alle 4 Ratten – er wählt eines seiner Quartette, das nicht zählt.</p>
+  <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Alle außer dem Aufdecker sehen einen Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
+  <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
 
 function renderModal() {
   let el = document.getElementById('modal');
@@ -1036,7 +1066,8 @@ function demo(kind) {
   if (kind === 'testspiel') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(4); }
   me = { id: 'u1', name: 'Alp' };
   if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
-  if (params.get('react')) reactions.set(params.get('react'), { text: 'Bluff!', until: Date.now() + 600000 });
+  if (params.get('react')) reactions.set(params.get('react'), { text: 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
+  if (params.get('pick')) gameLocal.reactTo = params.get('pick');
   ui.editingName = kind === 'name';
   if (kind === 'name') me.name = '';
   ui.games = [

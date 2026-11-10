@@ -25,12 +25,31 @@ export const AUCTION_START_MS = 20000; // so lange läuft eine Versteigerung ohn
 export const AUCTION_BID_MS = 15000;   // nach jedem Gebot startet der Countdown neu
 const GRACE_MS = 800;                  // kleine Toleranz für Handys mit leicht abweichender Uhr
 
+// Ratten und Spezialkarten (feste Hausregel)
+export const RAT = 'ratte';
+export const RAT_COUNT = 4;
+export const SPECIAL_VALUE = 250;
+export const SPECIAL_PREFIX = 'sp-';          // Spezialkarte im Stapel: 'sp-kuh' usw.
+export const SPECIAL_DELAY_MS = 3000;         // „Achtung“ vor dem Buzzer-Countdown
+export const SPECIAL_TICK_MS = 1000;          // eine Sekunde pro Zahl
+export const SPECIAL_FROM = 10;               // Countdown 10 … 1
+export const RPS = ['stein', 'schere', 'papier'];
+const BEATS = { stein: 'schere', schere: 'papier', papier: 'stein' };
+
+export const isSpecialCard = (card) => typeof card === 'string' && card.startsWith(SPECIAL_PREFIX);
+export const specialAnimal = (card) => card.slice(SPECIAL_PREFIX.length);
+export function cardName(card) {
+  if (card === RAT) return 'Ratte';
+  if (isSpecialCard(card)) return `${animalName(specialAnimal(card))}-Spezialkarte`;
+  return animalName(card);
+}
+
 export class GameError extends Error {}
 
 const fail = (msg) => { throw new GameError(msg); };
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const sum = (cards) => cards.reduce((a, b) => a + b, 0);
-const animalName = (id) => ANIMAL_BY_ID[id].name;
+const animalName = (id) => (id === RAT ? 'Ratte' : ANIMAL_BY_ID[id].name);
 
 // Kleiner Zufallsgenerator mit Startwert, damit Spiele nachvollziehbar sind
 function rng(seed) {
@@ -101,14 +120,20 @@ export function createGame({ players, seed = Date.now() }) {
   }
   const ids = new Set(players.map((p) => p.id));
   if (ids.size !== players.length) fail('Spieler-IDs müssen eindeutig sein.');
-  const deck = shuffle(ANIMALS.flatMap((a) => [a.id, a.id, a.id, a.id]), seed);
+  const cards = [
+    ...ANIMALS.flatMap((a) => [a.id, a.id, a.id, a.id]),
+    ...ANIMALS.map((a) => SPECIAL_PREFIX + a.id),
+    ...Array(RAT_COUNT).fill(RAT),
+  ];
+  const deck = shuffle(cards, seed);
   const state = {
     phase: 'turn',
     players: players.map((p) => ({
       id: p.id,
       name: p.name,
       money: START_MONEY.slice(),
-      animals: Object.fromEntries(ANIMALS.map((a) => [a.id, 0])),
+      animals: { ...Object.fromEntries(ANIMALS.map((a) => [a.id, 0])), [RAT]: 0 },
+      specials: [],
     })),
     deck,
     donkeysDrawn: 0,
@@ -116,6 +141,11 @@ export function createGame({ players, seed = Date.now() }) {
     auction: null,
     payment: null,
     trade: null,
+    rat: null,
+    special: null,
+    mustDraw: false,
+    block: null,
+    blocked: null,
     lastEvent: null,
     log: [],
     winner: null,
@@ -141,11 +171,11 @@ export function possibleTrades(state, playerId) {
   const out = [];
   for (const other of state.players) {
     if (other.id === me.id) continue;
-    for (const a of ANIMALS) {
-      const mine = me.animals[a.id];
-      const theirs = other.animals[a.id];
+    for (const id of [...ANIMALS.map((a) => a.id), RAT]) {
+      const mine = me.animals[id] || 0;
+      const theirs = other.animals[id] || 0;
       if (mine > 0 && theirs > 0) {
-        out.push({ target: other.id, animal: a.id, count: mine === 2 && theirs === 2 ? 2 : 1 });
+        out.push({ target: other.id, animal: id, count: mine === 2 && theirs === 2 ? 2 : 1 });
       }
     }
   }
@@ -153,15 +183,62 @@ export function possibleTrades(state, playerId) {
 }
 
 function allQuartetsComplete(state) {
-  return ANIMALS.every((a) => isQuartetComplete(state, a.id));
+  // Ratten müssen alle bei einem liegen (alte Spielstände ohne Ratten: entfällt)
+  const rats = state.players.reduce((n, p) => n + (p.animals[RAT] || 0), 0) + state.deck.filter((c) => c === RAT).length;
+  return ANIMALS.every((a) => isQuartetComplete(state, a.id))
+    && (rats === 0 || state.players.some((p) => (p.animals[RAT] || 0) === rats));
+}
+
+// Punkte eines Spielers. blockedAnimal = Quartett, das durch die Ratten nicht zählt.
+// Spezialkarte zum (nicht blockierten) Quartett: zählt vor dem Malnehmen mit.
+// Spezialkarte ohne zählendes Quartett: +250 nach dem Malnehmen.
+export function scoreFor(p, blockedAnimal = null) {
+  const specials = p.specials || [];
+  const quartets = ANIMALS.filter((a) => p.animals[a.id] === 4 && a.id !== blockedAnimal);
+  const base = quartets.reduce((s, a) => s + a.value + (specials.includes(a.id) ? SPECIAL_VALUE : 0), 0);
+  const loose = specials.filter((id) => !quartets.some((a) => a.id === id)).length;
+  return { quartets: quartets.map((a) => a.id), score: base * quartets.length + loose * SPECIAL_VALUE };
 }
 
 export function scores(state) {
   return state.players.map((p) => {
-    const quartets = ANIMALS.filter((a) => p.animals[a.id] === 4);
-    const base = quartets.reduce((s, a) => s + a.value, 0);
-    return { id: p.id, name: p.name, quartets: quartets.map((a) => a.id), score: base * quartets.length };
+    const blocked = state.blocked && state.blocked.player === p.id ? state.blocked.animal : null;
+    const r = scoreFor(p, blocked);
+    return { id: p.id, name: p.name, quartets: r.quartets, score: r.score, specials: (p.specials || []).slice(), rats: p.animals[RAT] || 0, blocked };
   });
+}
+
+function finishGame(state) {
+  state.phase = 'ended';
+  const s = scores(state);
+  const best = Math.max(...s.map((x) => x.score));
+  state.winner = s.filter((x) => x.score === best).map((x) => x.id);
+}
+
+// Alles verteilt: Wer alle Ratten hat, blockiert ein eigenes Quartett (falls er eins hat)
+function endGame(state) {
+  state.phase = 'block';
+  const ratOwner = state.players.find((p) => (p.animals[RAT] || 0) > 0);
+  log(state, 'Alle Quartette sind vollständig – das Spiel ist vorbei.');
+  if (ratOwner && ANIMALS.some((a) => ratOwner.animals[a.id] === 4)) {
+    state.block = { player: ratOwner.id };
+    log(state, `${ratOwner.name} hat alle Ratten und muss ein Quartett blockieren.`);
+    return;
+  }
+  finishGame(state);
+}
+
+export function chooseBlock(prev, playerId, animal) {
+  const state = clone(prev);
+  if (state.phase !== 'block') fail('Gerade muss nichts blockiert werden.');
+  if (state.block.player !== playerId) fail('Nur wer die Ratten hat, blockiert.');
+  const p = player(state, playerId);
+  if (!ANIMAL_BY_ID[animal] || p.animals[animal] !== 4) fail('Du kannst nur ein eigenes Quartett blockieren.');
+  state.blocked = { player: playerId, animal };
+  state.block = null;
+  log(state, `${p.name} blockiert das ${animalName(animal)}-Quartett.`);
+  finishGame(state);
+  return state;
 }
 
 // Nächster Zug. Ist der Stapel leer und kann ein Spieler nicht handeln, wird er übersprungen.
@@ -169,12 +246,11 @@ function nextTurn(state) {
   state.auction = null;
   state.payment = null;
   state.trade = null;
+  state.rat = null;
+  state.special = null;
+  state.mustDraw = false;
   if (state.deck.length === 0 && allQuartetsComplete(state)) {
-    state.phase = 'ended';
-    const s = scores(state);
-    const best = Math.max(...s.map((x) => x.score));
-    state.winner = s.filter((x) => x.score === best).map((x) => x.id);
-    log(state, 'Alle Quartette sind vollständig – das Spiel ist vorbei.');
+    endGame(state);
     return;
   }
   for (let step = 0; step < state.players.length; step++) {
@@ -196,6 +272,24 @@ function requireTurn(state, playerId) {
   if (currentPlayer(state).id !== playerId) fail('Du bist nicht am Zug.');
 }
 
+// Nach der Ratte: Der Aufdecker muss noch eine Karte aufdecken – oder, wenn der Stapel leer ist, kuhhandeln
+function afterRat(state) {
+  state.rat = null;
+  if (state.deck.length > 0) {
+    state.phase = 'turn';
+    state.mustDraw = true;
+    return;
+  }
+  if (allQuartetsComplete(state)) { endGame(state); return; }
+  if (possibleTrades(state, currentPlayer(state).id).length > 0) {
+    state.phase = 'turn';
+    state.mustDraw = false;
+    return;
+  }
+  // Kann nicht handeln → der Nächste ist dran (nextTurn geht vom Aufdecker aus weiter)
+  nextTurn(state);
+}
+
 // ---------- Versteigerung ----------
 
 export function drawForAuction(prev, playerId, now) {
@@ -204,6 +298,26 @@ export function drawForAuction(prev, playerId, now) {
   if (state.deck.length === 0) fail('Der Stapel ist leer – nur noch Kuhhandel ist möglich.');
   const animal = state.deck.shift();
   const me = player(state, playerId);
+  state.mustDraw = false;
+  if (animal === RAT) {
+    // Rattenrunde: reihum ab links vom Aufdecker (Aufdecker macht mit) Karte legen oder Ratte nehmen
+    const n = state.players.length;
+    const order = Array.from({ length: n }, (_, k) => state.players[(state.turn + 1 + k) % n].id);
+    state.rat = { revealer: playerId, order, idx: 0, pot: [], laid: {} };
+    state.phase = 'rat';
+    state.lastEvent = { type: 'rat_drawn', player: playerId };
+    log(state, `${me.name} deckt eine Ratte auf.`);
+    return state;
+  }
+  if (isSpecialCard(animal)) {
+    const sp = specialAnimal(animal);
+    const t = now != null ? now : 0;
+    state.special = { animal: sp, revealer: playerId, startsAt: t + SPECIAL_DELAY_MS, buzzes: {}, caps: {}, rps: null, winner: null };
+    state.phase = 'special';
+    state.lastEvent = { type: 'special_drawn', animal: sp, player: playerId };
+    log(state, `${me.name} deckt die ${animalName(sp)}-Spezialkarte auf.`);
+    return state;
+  }
   log(state, `${me.name} versteigert: ${animalName(animal)}.`);
   if (animal === 'esel') {
     const payout = DONKEY_PAYOUTS[state.donkeysDrawn];
@@ -304,6 +418,17 @@ export function pay(prev, playerId, cardIndices) {
   const payer = player(state, pm.payer);
   const chosen = cardIndices.map((i) => payer.money[i]);
   if (chosen.some((v) => v === undefined)) fail('Diese Geldkarte gibt es nicht.');
+  if (pm.special) {
+    if (cardIndices.length !== pm.count) fail(`Wähle genau ${pm.count} Karte(n).`);
+    const cards = takeCards(payer, cardIndices);
+    giveCards(player(state, pm.payee), cards);
+    const buyer = player(state, pm.buyer);
+    buyer.specials.push(pm.special);
+    log(state, `${payer.name} zahlt ${cards.length} Karte(n). ${buyer.name} bekommt die ${animalName(pm.special)}-Spezialkarte.`);
+    state.lastEvent = { type: 'special_won', animal: pm.special, buyer: buyer.id, count: cards.length, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
+    nextTurn(state);
+    return state;
+  }
   if (sum(chosen) < pm.amount) fail(`Das reicht nicht – es fehlen noch ${pm.amount - sum(chosen)} Taler.`);
   const cards = takeCards(payer, cardIndices);
   giveCards(player(state, pm.payee), cards);
@@ -320,10 +445,11 @@ export function pay(prev, playerId, cardIndices) {
 export function startTrade(prev, playerId, targetId, animal, cardIndices) {
   const state = clone(prev);
   requireTurn(state, playerId);
+  if (state.mustDraw) fail('Nach der Ratte musst du noch eine Karte aufdecken.');
   if (playerId === targetId) fail('Du kannst nicht mit dir selbst handeln.');
   const me = player(state, playerId);
   const target = player(state, targetId);
-  if (!ANIMAL_BY_ID[animal]) fail('Unbekanntes Tier.');
+  if (!ANIMAL_BY_ID[animal] && animal !== RAT) fail('Unbekanntes Tier.');
   if (!(me.animals[animal] > 0 && target.animals[animal] > 0)) fail('Ihr müsst beide dieses Tier haben.');
   if (cardIndices.length === 0 && me.money.length > 0) fail('Lege mindestens eine Karte ins Angebot.');
   const count = me.animals[animal] === 2 && target.animals[animal] === 2 ? 2 : 1;
@@ -343,8 +469,14 @@ export function acceptTrade(prev, playerId) {
   const ch = player(state, t.challenger);
   const tg = player(state, t.target);
   giveCards(tg, t.offer);
-  moveAnimals(tg, ch, t.animal, t.count);
-  log(state, `${tg.name} nimmt den Kuhhandel an. ${ch.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
+  if (t.animal === RAT) {
+    // Rattenhandel: Annehmen heißt Geld nehmen und die Ratte(n) bekommen
+    moveAnimals(ch, tg, t.animal, t.count);
+    log(state, `${tg.name} nimmt das Geld und bekommt ${t.count}× Ratte von ${ch.name}.`);
+  } else {
+    moveAnimals(tg, ch, t.animal, t.count);
+    log(state, `${tg.name} nimmt den Kuhhandel an. ${ch.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
+  }
   state.lastEvent = { type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
   nextTurn(state);
   return state;
@@ -366,13 +498,191 @@ export function counterTrade(prev, playerId, cardIndices) {
   giveCards(ch, counter);
   giveCards(tg, t.offer);
   const challengerWins = offerSum >= counterSum;
-  if (challengerWins) moveAnimals(tg, ch, t.animal, t.count);
-  else moveAnimals(ch, tg, t.animal, t.count);
   const winner = challengerWins ? ch : tg;
-  // Im Protokoll (für alle sichtbar) keine Beträge – die sehen nur die beiden Beteiligten
-  log(state, `Kuhhandel ${ch.name} (${t.offer.length} Karten) gegen ${tg.name} (${counter.length} Karten): ${winner.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
+  const loser = challengerWins ? tg : ch;
+  if (t.animal === RAT) {
+    // Umgekehrt: Wer mehr bietet, wird die Ratte(n) los
+    moveAnimals(winner, loser, t.animal, t.count);
+    log(state, `Rattenhandel ${ch.name} gegen ${tg.name}: ${winner.name} wird ${t.count}× Ratte los.`);
+  } else {
+    moveAnimals(loser, winner, t.animal, t.count);
+    // Im Protokoll (für alle sichtbar) keine Beträge – die sehen nur die beiden Beteiligten
+    log(state, `Kuhhandel ${ch.name} (${t.offer.length} Karten) gegen ${tg.name} (${counter.length} Karten): ${winner.name} bekommt ${t.count}× ${animalName(t.animal)}.`);
+  }
   state.lastEvent = { type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, winner: winner.id };
   nextTurn(state);
+  return state;
+}
+
+// ---------- Ratte ----------
+
+// Wer muss in der Rattenrunde gerade legen oder nehmen?
+export function ratCurrent(state) {
+  const r = state.rat;
+  return r ? r.order[r.idx % r.order.length] : null;
+}
+
+// Eine verdeckte Geldkarte in die Mitte legen (dann ist der Nächste dran)
+export function ratLay(prev, playerId, cardIndex) {
+  const state = clone(prev);
+  if (state.phase !== 'rat') fail('Gerade ist keine Rattenrunde.');
+  if (ratCurrent(state) !== playerId) fail('Du bist gerade nicht dran.');
+  const me = player(state, playerId);
+  if (me.money.length === 0) fail('Du hast keine Karten mehr und musst die Ratte nehmen.');
+  const [card] = takeCards(me, [cardIndex]);
+  state.rat.pot.push(card);
+  state.rat.laid[playerId] = (state.rat.laid[playerId] || 0) + 1;
+  state.rat.idx += 1;
+  return state;
+}
+
+// Ratte nehmen: bekommt alle gelegten Karten
+export function ratTake(prev, playerId) {
+  const state = clone(prev);
+  if (state.phase !== 'rat') fail('Gerade ist keine Rattenrunde.');
+  if (ratCurrent(state) !== playerId) fail('Du bist gerade nicht dran.');
+  const me = player(state, playerId);
+  const pot = state.rat.pot;
+  giveCards(me, pot);
+  me.animals[RAT] = (me.animals[RAT] || 0) + 1;
+  log(state, `${me.name} nimmt die Ratte und bekommt ${pot.length} Karte(n).`);
+  state.lastEvent = { type: 'rat_taken', player: playerId, count: pot.length, cards: pot.slice(), laid: { ...state.rat.laid } };
+  afterRat(state);
+  return state;
+}
+
+// ---------- Spezialkarte (Buzzer) ----------
+
+// Welche Zahl zeigt der Countdown gerade? null = noch nicht gestartet, 0 = abgelaufen
+export function specialNumber(state, now) {
+  const sp = state.special;
+  if (!sp) return null;
+  if (now < sp.startsAt) return null;
+  const n = SPECIAL_FROM - Math.floor((now - sp.startsAt) / SPECIAL_TICK_MS);
+  return Math.max(0, n);
+}
+
+function topBuzz(sp) {
+  const vals = Object.values(sp.buzzes);
+  if (!vals.length) return null;
+  const max = Math.max(...vals);
+  return { number: max, players: Object.keys(sp.buzzes).filter((id) => sp.buzzes[id] === max) };
+}
+
+// Ab wann steht fest, wer gebuzzert hat (Zahl ist vorbei + kleine Toleranz)
+export function specialDecideAt(state) {
+  const sp = state.special;
+  const top = topBuzz(sp);
+  if (!top) return sp.startsAt + SPECIAL_FROM * SPECIAL_TICK_MS;
+  return sp.startsAt + (SPECIAL_FROM - top.number + 1) * SPECIAL_TICK_MS + GRACE_MS;
+}
+
+// Stand der Spezialkarte: 'wait' (Achtung), 'countdown', 'rps' (Schnick-Schnack-Schnuck), 'decide'
+export function specialStage(state, now) {
+  const sp = state.special;
+  if (!sp) return null;
+  if (now < sp.startsAt) return 'wait';
+  if (now < specialDecideAt(state)) return 'countdown';
+  const top = topBuzz(sp);
+  if (top && top.players.length > 1 && !sp.winner) return 'rps';
+  return 'decide';
+}
+
+// Wer hat den Buzzer gewonnen (und für wie viele Karten)?
+export function specialResult(state) {
+  const sp = state.special;
+  const top = topBuzz(sp);
+  if (!top) return null;
+  const winner = top.players.length === 1 ? top.players[0] : sp.winner;
+  return winner ? { player: winner, count: top.number } : null;
+}
+
+export function buzz(prev, playerId, now) {
+  const state = clone(prev);
+  if (state.phase !== 'special') fail('Gerade läuft keine Spezialkarte.');
+  const sp = state.special;
+  if (playerId === sp.revealer) fail('Wer die Karte aufgedeckt hat, buzzert nicht.');
+  player(state, playerId);
+  if (sp.buzzes[playerId] != null) fail('Du hast schon gebuzzert.');
+  const n = specialNumber(state, now);
+  if (n == null) fail('Der Countdown hat noch nicht begonnen.');
+  if (n <= 0) fail('Der Countdown ist schon vorbei.');
+  const top = topBuzz(sp);
+  if (top && n < top.number) fail('Zu spät – jemand war schneller.');
+  if (sp.caps[playerId] != null && n > sp.caps[playerId]) fail(`Du darfst erst bei ${sp.caps[playerId]} drücken.`);
+  sp.buzzes[playerId] = n;
+  log(state, `${player(state, playerId).name} buzzert bei ${n}.`);
+  return state;
+}
+
+// Schnick-Schnack-Schnuck bei Gleichstand: jeder wählt verdeckt, aufgedeckt wird, wenn alle gewählt haben
+export function rpsPick(prev, playerId, choice, now) {
+  const state = clone(prev);
+  if (state.phase !== 'special' || specialStage(state, now) !== 'rps') fail('Gerade gibt es kein Schnick-Schnack-Schnuck.');
+  if (!RPS.includes(choice)) fail('Stein, Schere oder Papier?');
+  const sp = state.special;
+  if (!sp.rps) sp.rps = { players: topBuzz(sp).players, picks: {}, round: 1, last: null };
+  const r = sp.rps;
+  if (!r.players.includes(playerId)) fail('Du spielst nicht mit.');
+  if (r.picks[playerId]) fail('Du hast schon gewählt.');
+  r.picks[playerId] = choice;
+  if (r.players.some((id) => !r.picks[id])) return state;
+  const used = [...new Set(r.players.map((id) => r.picks[id]))];
+  r.last = { picks: { ...r.picks }, round: r.round };
+  if (used.length !== 2) {
+    r.round += 1; // alle gleich oder alle verschieden → nochmal
+  } else {
+    const win = BEATS[used[0]] === used[1] ? used[0] : used[1];
+    const winners = r.players.filter((id) => r.picks[id] === win);
+    r.last.winners = winners;
+    if (winners.length === 1) sp.winner = winners[0];
+    else { r.players = winners; r.round += 1; }
+  }
+  r.picks = {};
+  state.lastEvent = { type: 'rps', ...r.last };
+  return state;
+}
+
+// Aufdecker entscheidet: 'buy' = er zahlt dem Buzzer-Gewinner die Karten und behält die Spezialkarte,
+// 'sell' = der Buzzer-Gewinner zahlt ihm die Karten und bekommt die Spezialkarte.
+export function specialDecide(prev, playerId, mode, now) {
+  const state = clone(prev);
+  if (state.phase !== 'special') fail('Gerade läuft keine Spezialkarte.');
+  const sp = state.special;
+  if (playerId !== sp.revealer) fail('Nur wer die Karte aufgedeckt hat, entscheidet.');
+  if (now != null && specialStage(state, now) !== 'decide') fail('Der Countdown läuft noch.');
+  const rev = player(state, sp.revealer);
+  const res = specialResult(state);
+  if (!res) {
+    rev.specials.push(sp.animal);
+    log(state, `Niemand buzzert – ${rev.name} bekommt die ${animalName(sp.animal)}-Spezialkarte umsonst.`);
+    state.lastEvent = { type: 'special_won', animal: sp.animal, buyer: rev.id, count: 0 };
+    nextTurn(state);
+    return state;
+  }
+  const other = player(state, res.player);
+  if (mode === 'buy') {
+    if (rev.money.length < res.count) fail(`Du hast keine ${res.count} Karten – du musst verkaufen.`);
+    state.payment = { payer: rev.id, payee: other.id, count: res.count, amount: 0, special: sp.animal, buyer: rev.id };
+    log(state, `${rev.name} kauft die Spezialkarte für ${res.count} Karte(n).`);
+    state.phase = 'payment';
+    return state;
+  }
+  if (mode !== 'sell') fail('Unbekannte Entscheidung.');
+  if (other.money.length < res.count) {
+    // Zahlungsunfähig: Karten offen, Countdown neu, darf höchstens bei seiner Kartenanzahl drücken
+    state.lastEvent = { type: 'cant_pay', player: other.id, count: res.count, revealed: other.money.slice(), special: true };
+    sp.caps[other.id] = other.money.length;
+    sp.buzzes = {};
+    sp.rps = null;
+    sp.winner = null;
+    sp.startsAt = (now != null ? now : 0) + SPECIAL_DELAY_MS;
+    log(state, `${other.name} hat keine ${res.count} Karten und muss alle zeigen: ${other.money.join(', ') || 'keine'}. Der Countdown beginnt neu.`);
+    return state;
+  }
+  state.payment = { payer: other.id, payee: rev.id, count: res.count, amount: 0, special: sp.animal, buyer: other.id };
+  log(state, `${rev.name} verkauft die Spezialkarte an ${other.name} für ${res.count} Karte(n).`);
+  state.phase = 'payment';
   return state;
 }
 
@@ -406,6 +716,8 @@ export function viewFor(state, playerId) {
     if (p.id !== playerId) p.money = p.money.length; // fremdes Geld: nur Kartenanzahl
   }
   if (v.trade && v.trade.challenger !== playerId) v.trade.offer = v.trade.offer.length;
+  if (v.rat) v.rat.pot = v.rat.pot.length; // gelegte Karten liegen verdeckt
+  if (v.lastEvent && v.lastEvent.type === 'rat_taken' && v.lastEvent.player !== playerId) delete v.lastEvent.cards;
   // Abgeschlossener Kuhhandel: Unbeteiligte sehen nur die Kartenanzahl, nicht die Werte.
   // Wurde angenommen, kennt nur der Herausgeforderte (und der Herausforderer) das Angebot.
   const e = v.lastEvent;
