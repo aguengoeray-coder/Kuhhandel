@@ -70,7 +70,7 @@
 
 - [x] Während der Versteigerung zeigt eine Leiste deine Geldkarten und die Summe (für Bieter und Auktionator)
 
-## v0.6.0 – Versteigerung auf dem Tisch (wartet auf Freigabe)
+## v0.6.0 – Versteigerung auf dem Tisch
 
 - [x] Die Auktion verdeckt den Tisch nicht mehr: Tierkarte, Countdown und Höchstgebot liegen mitten auf dem Tisch
 - [x] Eigenes Geld bleibt als Fächer in der Hand sichtbar (extra Geld-Leiste entfällt)
