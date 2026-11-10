@@ -9,7 +9,7 @@ import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.14.0';
+export const APP_VERSION = '0.15.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -926,6 +926,8 @@ async function loadStats() {
 async function afterLogin() {
   ui.screen = 'start';
   sb.rpc('is_admin').then(({ data }) => { if (data === true) { ui.isAdmin = true; render(); } }, () => {});
+  const autoTest = store.get('kh_dbg_autostart'); // Testspiel aus dem Admin-Bereich (nach dem Neuladen)
+  if (autoTest && DEBUG) { store.del('kh_dbg_autostart'); return startLocalGame(Number(autoTest)); }
   watchLobby();
   loadProfiles([me.id]);
   const join = params.get('join');
@@ -1271,6 +1273,13 @@ function renderModal() {
     if (modal.kind === 'admin') {
       const v = b.dataset.v;
       const nameOf = (id) => modal.adminData?.users?.find((u) => u.id === id)?.name || 'Spieler';
+      if (b.dataset.m === 'dbgToggle') { if (DEBUG) store.del('kh_debug'); else store.set('kh_debug', '1'); if (!DEMO) location.reload(); return; }
+      if (b.dataset.m === 'dbgMoney') { if (store.get('kh_dbg_money')) store.del('kh_dbg_money'); else store.set('kh_dbg_money', '1'); return render(); }
+      if (b.dataset.m === 'dbgStart') {
+        if (DEMO) return;
+        if (!DEBUG) { store.set('kh_debug', '1'); store.set('kh_dbg_autostart', v); location.reload(); return; }
+        modal = null; return startLocalGame(Number(v));
+      }
       if (b.dataset.m === 'tab') { modal.tab = v; modal.confirm = null; modal.pwFor = null; modal.okMsg = ''; modal.error = ''; render(); return loadAdmin(); }
       if (b.dataset.m === 'ask') { modal.confirm = v; return render(); }
       if (b.dataset.m === 'pwOpen') { modal.pwFor = modal.pwFor === v ? null : v; return render(); }
@@ -1337,6 +1346,7 @@ const ADMIN_DEMO = {
 const ADMIN_RPC = { users: 'admin_users', games: 'admin_games', results: 'admin_results', errors: 'admin_errors' };
 async function loadAdmin() {
   const tab = modal.tab;
+  if (tab === 'debug') return render(); // läuft nur auf diesem Gerät, nichts zu laden
   modal.adminData = modal.adminData || {};
   if (DEMO) { modal.adminData[tab] = ADMIN_DEMO[tab]; return render(); }
   const { data, error } = await sb.rpc(ADMIN_RPC[tab]);
@@ -1371,9 +1381,20 @@ const confirmBtn = (key, label, act, v) => modal.confirm === key
 function adminBody() {
   const tab = modal.tab;
   const d = modal.adminData?.[tab];
-  const tabs = [['users', 'Spieler'], ['games', 'Spiele'], ['results', 'Bestenliste'], ['errors', 'Fehler']]
+  const tabs = [['users', 'Spieler'], ['games', 'Spiele'], ['results', 'Bestenliste'], ['errors', 'Fehler'], ['debug', 'Debug']]
     .map(([k, l]) => `<button type="button" class="atab ${tab === k ? 'on' : ''}" data-m="tab" data-v="${k}">${l}</button>`).join('');
   let list = '<p class="mtext">Lädt …</p>';
+  if (tab === 'debug') {
+    const money = !!store.get('kh_dbg_money');
+    list = `<ul class="alist">
+      <li><div class="arow"><b>Debug-Modus auf diesem Gerät</b><small>Zeigt im Spiel die DEBUG-Leiste (Sicht wechseln, Test-Spieler, Abkürzungen, Infofenster). Die Seite lädt dafür kurz neu.</small></div>
+        <div class="aacts"><button type="button" class="toggle ${DEBUG ? 'on' : ''}" data-m="dbgToggle" aria-pressed="${DEBUG}" aria-label="Debug-Modus"><i></i></button></div></li>
+      <li><div class="arow"><b>Testspiel</b><small>Läuft nur auf diesem Gerät mit Test-Spielern – ohne Datenbank, echte Spiele bleiben unberührt.${DEBUG ? '' : ' Schaltet den Debug-Modus dafür mit ein.'}</small></div>
+        <div class="aacts"><button type="button" class="abtn" data-m="dbgMoney">Geld im Stapel: ${money ? 'an' : 'aus'}</button>
+          <button type="button" class="abtn primary" data-m="dbgStart" data-v="3">3 Spieler</button>
+          <button type="button" class="abtn primary" data-m="dbgStart" data-v="4">4 Spieler</button></div></li>
+    </ul>`;
+  }
   if (d && tab === 'users') {
     list = `<ul class="alist">${d.map((u) => `<li>
       <div class="arow">${avatarHtml(u.id, u.name, 'tiny')}<b>${esc(u.name)}</b>${u.is_admin ? '<span class="abadge">Admin</span>' : ''}
