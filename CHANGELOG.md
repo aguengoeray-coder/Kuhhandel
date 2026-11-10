@@ -206,3 +206,7 @@
 - [x] Beträge auf Tier- und Geldkarten nur einmal, mittig
 - [x] Ratten-Blockieren am Spielende auf dem Tisch
 - [x] Startseite und Warteraum mit Holzrahmen im Tisch-Look
+
+## v0.19.0 – Kräftige Tierfarben (wartet auf Freigabe)
+
+- [x] Jede Tierart hat eine eigene, gut unterscheidbare Farbe: Pferd rot, Kuh dunkelblau, Schwein dunkelrosa, Esel orange, Katze lila, Hund hellblau, Hahn hellgrün, Gans gelb, Schaf türkis, Ziege braun, Ratte grau

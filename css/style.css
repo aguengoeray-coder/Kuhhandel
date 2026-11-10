@@ -1088,3 +1088,13 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .start .card.games { background: #FBF7EE; }
 .games-list .game-row { background: #fff; border: 2px solid #ECE7DB; }
 .room-settings { border: 3px solid #8A5A33; }
+/* v0.19: kräftige Tierfarben – weiße Schrift auf dunklen Bändern, Bild auf hellem Kreis */
+.pcard.dark .pcname { color: #fff; }
+.pcart, .ci, .acard b { background: var(--a); }
+.pcart .art, .ci .art { filter: drop-shadow(0 0 0 #fff); }
+.pcart { background: radial-gradient(circle, #fff 0 58%, var(--a) 60%); }
+.ci { background: radial-gradient(circle, #fff 0 56%, var(--a) 58%); }
+.acard { background: var(--a); }
+.acard .cv { left: 50%; right: auto; transform: translateX(-50%); top: 2px; background: rgba(255,255,255,.92); border-radius: 4px; padding: 0 3px; }
+.acard b .art { filter: drop-shadow(0 1px 0 rgba(255,255,255,.6)); }
+.ci { background: radial-gradient(circle, #fff 0 46%, var(--a) 48%); }

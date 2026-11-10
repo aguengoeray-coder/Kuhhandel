@@ -11,10 +11,21 @@ import { art, STAR } from './animals.js';
 
 export const SEAT_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0'];
 const ANIMAL_COLORS = {
-  hahn: '#E8B04B', gans: '#C9C2AE', katze: '#C98A5B', hund: '#A7744A', schaf: '#D9CFB3',
-  ziege: '#B9B08F', esel: '#9AA6AD', schwein: '#E7A1A0', kuh: '#7FA88A', pferd: '#8C6A4F',
-  ratte: '#9B95A0',
+  // deutlich unterschiedliche Farben je Tierart
+  pferd: '#E3262E',   // knallrot
+  kuh: '#1E3A8A',     // dunkelblau
+  schwein: '#C2185B', // dunkelrosa
+  esel: '#F28C1B',    // orange
+  katze: '#8E44AD',   // lila
+  hund: '#5EC4F0',    // hellblau
+  hahn: '#8EDB5A',    // hellgrün
+  gans: '#FFD23F',    // gelb
+  schaf: '#14A39A',   // türkis
+  ziege: '#7A4E2D',   // braun
+  ratte: '#8D8790',   // grau
 };
+// Dunkle Farben bekommen weiße Schrift auf dem Namensband
+const DARK_ANIMALS = new Set(['pferd', 'kuh', 'schwein', 'katze', 'ziege', 'schaf']);
 const RPS_ICON = { stein: '✊', schere: '✌️', papier: '✋' };
 const RPS_NAME = { stein: 'Stein', schere: 'Schere', papier: 'Papier' };
 const MONEY_COLORS = { 0: '#ECE7DB', 10: '#F6D98B', 20: '#F2B880', 50: '#A8D5B5', 100: '#9FC9E8', 200: '#C9B6E4', 500: '#E7A1A0' };
@@ -133,7 +144,7 @@ function ratCard(extraRows = '', cls = '') {
 function playCard(id, kind = 'animal') {
   const val = kind === 'special' ? SPECIAL_VALUE : kind === 'rat' ? '' : ANIMAL_BY_ID[id].value;
   const name = aname(id).toUpperCase();
-  return `<div class="pcard ${kind}" style="--a:${ANIMAL_COLORS[id]}">
+  return `<div class="pcard ${kind} ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--a:${ANIMAL_COLORS[id]}">
     ${val !== '' ? `<span class="pcv">${val}</span>` : ''}
     ${kind === 'special' ? `<span class="pcstar">${STAR}</span>` : ''}
     <div class="pcart">${art(id)}</div>
