@@ -194,7 +194,7 @@
 - [x] Versteigerung: 10 s nach dem Aufdecken und nach jedem Gebot wieder 10 s (vorher 20 s / 15 s)
 - [x] Geldschein aus dem Stapel: wird allen groß in der Tischmitte gezeigt („Nico zieht 200“) und fliegt dann zum Spieler
 
-## v0.18.0 – Neues Tisch-Design (wartet auf Freigabe)
+## v0.18.0 – Neues Tisch-Design
 
 - [x] Breiterer Tisch, Infos links in einem Kasten, Spielerspalte mit Karten (Symbole unter dem Namen)
 - [x] Reaktionen/Spielerdetails nur noch beim Antippen von Bild oder Name
@@ -203,3 +203,6 @@
 - [x] Gebote: nur noch 10 / 20 / 50 / 100 – groß das Gebot, mehr bieten = mehrmals tippen; „⚠ zu viel“ über dem eigenen Geld
 - [x] Kuhhandel, Gegenangebot, Warten und Ergebnis direkt auf dem Tisch statt in eigenen Fenstern
 - [x] Warte-Ansicht beim Bezahlen repariert
+- [x] Beträge auf Tier- und Geldkarten nur einmal, mittig
+- [x] Ratten-Blockieren am Spielende auf dem Tisch
+- [x] Startseite und Warteraum mit Holzrahmen im Tisch-Look

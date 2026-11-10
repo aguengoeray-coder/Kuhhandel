@@ -552,6 +552,25 @@ export function renderGame(root, ctx) {
     H.seen = () => { local.seenEvent = state.log.length; ctx.rerender(); };
   }
 
+  // ----- Spielende mit Ratten: Quartett blockieren, auf dem Tisch -----
+  if (state.phase === 'block') {
+    const bp = v.players[idxOf(v.block.player)];
+    aucBanner = `${esc(bp.id === meId ? 'Du hast' : `${bp.name} hat`)} alle ${RAT_COUNT} Ratten`;
+    if (bp.id === meId) {
+      const opts = ANIMALS.filter((a) => me.animals[a.id] === 4);
+      aucCenter = `<div class="blockpanel ${entered ? 'pop' : ''}">
+        <p>Wähle ein Quartett, das nicht zählt. Darunter: deine Punkte danach.</p>
+        <div class="blockgrid">${opts.map((a) => `<button type="button" class="blockopt" data-a="block" data-v="${a.id}" style="--a:${ANIMAL_COLORS[a.id]}">
+          <span class="ci">${art(a.id)}</span><b>${a.name}${specialsOf(me).includes(a.id) ? ` ${STAR}` : ''}</b><small>${scoreFor(me, a.id).score} Punkte</small></button>`).join('')}</div>
+      </div>`;
+      aucLeft = `<div class="ldecide">Die Ratten blockieren eines deiner Quartette. Tippe in der Mitte auf das, das wegfallen soll.</div>`;
+      H.block = (id) => ctx.act((s) => chooseBlock(s, meId, id));
+    } else {
+      aucCenter = `<div class="auc">${ratCard('', 'compact')}<div class="aucinfo">${esc(bp.name)} wählt, welches Quartett nicht zählt …</div></div>`;
+      aucLeft = `<div class="ldecide">Gleich ist das Spiel vorbei.</div>`;
+    }
+  }
+
   // ----- Tisch -----
   const nextDonkey = v.donkeysDrawn < 4 ? DONKEY_PAYOUTS[v.donkeysDrawn] : null;
   const lastLog = v.log[v.log.length - 1] || '';
@@ -639,24 +658,7 @@ export function renderGame(root, ctx) {
 
   // Kuhhandel und sein Ergebnis laufen jetzt auf dem Tisch (siehe oben)
 
-  if (state.phase === 'block') {
-    const bp = v.players[idxOf(v.block.player)];
-    if (bp.id === meId) {
-      const opts = ANIMALS.filter((a) => me.animals[a.id] === 4);
-      overlay = `<div class="overlay light ${entered ? 'enter' : ''}"><div class="pay block">
-        <h2>Du hast alle ${RAT_COUNT} Ratten!</h2>
-        <p>Wähle ein Quartett, das nicht zählt. Deine Punkte danach:</p>
-        <div class="blockgrid">${opts.map((a) => `<button type="button" class="blockopt" data-a="block" data-v="${a.id}" style="--a:${ANIMAL_COLORS[a.id]}">
-          <span class="ci">${art(a.id)}</span><b>${a.name}${specialsOf(me).includes(a.id) ? ` ${STAR}` : ''}</b><small>${scoreFor(me, a.id).score} Punkte</small></button>`).join('')}</div>
-      </div></div>`;
-      H.block = (id) => ctx.act((s) => chooseBlock(s, meId, id));
-    } else {
-      overlay = `<div class="overlay light ${entered ? 'enter' : ''}"><div class="wait">
-        ${ratCard()}
-        <p><strong>${esc(nameOf(bp.id))}</strong> hat alle Ratten und wählt, welches Quartett nicht zählt …</p>
-      </div></div>`;
-    }
-  }
+  // Blockieren läuft jetzt auf dem Tisch (siehe oben)
 
   if (state.phase === 'ended' && local.recap) {
     const list = awards(state);
