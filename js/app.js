@@ -9,7 +9,7 @@ import { audio, playSound } from './sounds.js';
 import { art } from './animals.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.13.0';
+export const APP_VERSION = '0.14.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -220,6 +220,7 @@ function renderStart() {
           <button type="button" class="linklike light" data-modal="stats">Bestenliste</button>
           ${isStandalone() ? '' : '<button type="button" class="linklike light" data-modal="install">Als App aufs Handy</button>'}
           <button type="button" class="linklike light" data-modal="rejoin">Mit Code zurück ins Spiel</button>
+          ${ui.isAdmin ? '<button type="button" class="linklike light admin-link" data-modal="admin">⚙ Admin</button>' : ''}
         </div>
         <div class="card name-box">
           <label>Du spielst als</label>
@@ -924,6 +925,7 @@ async function loadStats() {
 
 async function afterLogin() {
   ui.screen = 'start';
+  sb.rpc('is_admin').then(({ data }) => { if (data === true) { ui.isAdmin = true; render(); } }, () => {});
   watchLobby();
   loadProfiles([me.id]);
   const join = params.get('join');
@@ -986,7 +988,7 @@ function watchRoom(id) {
         // Supabase meldet Löschungen ALLER Spiele – nur reagieren, wenn wirklich unser Spiel weg ist
         if (payload.old?.id !== id) return;
         store.del('kh_game');
-        ui.error = 'Der Gastgeber hat das Spiel geschlossen.';
+        ui.error = 'Das Spiel wurde geschlossen.';
         openStart();
         return;
       }
@@ -1168,6 +1170,7 @@ function openModal(kind) {
   gameLocal.menu = false;
   if (kind === 'pin') loadPin();
   if (kind === 'stats') loadStats();
+  if (kind === 'admin') { modal.tab = 'users'; loadAdmin(); }
   render();
 }
 async function loadPin() {
@@ -1230,6 +1233,7 @@ function renderModal() {
       </form>
       ${modal.pwMsg ? `<div class="${modal.pwOk ? 'okmsg' : 'error'}" role="status">${esc(modal.pwMsg)}</div>` : ''}`;
   }
+  if (modal.kind === 'admin') body = adminBody();
   if (modal.kind === 'stats') {
     const rows = modal.stats;
     body = `<h2>Bestenliste</h2>
@@ -1264,8 +1268,30 @@ function renderModal() {
     if (b.dataset.m === 'close') { modal = null; return render(); }
     if (b.dataset.m === 'doInstall' && installPrompt) { installPrompt.prompt(); installPrompt = null; modal = null; return render(); }
     if (b.dataset.m === 'animal') return saveProfile({ animal: b.dataset.v });
+    if (modal.kind === 'admin') {
+      const v = b.dataset.v;
+      const nameOf = (id) => modal.adminData?.users?.find((u) => u.id === id)?.name || 'Spieler';
+      if (b.dataset.m === 'tab') { modal.tab = v; modal.confirm = null; modal.pwFor = null; modal.okMsg = ''; modal.error = ''; render(); return loadAdmin(); }
+      if (b.dataset.m === 'ask') { modal.confirm = v; return render(); }
+      if (b.dataset.m === 'pwOpen') { modal.pwFor = modal.pwFor === v ? null : v; return render(); }
+      if (b.dataset.m === 'mkadmin') return adminAction('admin_set_admin', { p_user: v, p_on: true }, `${nameOf(v)} ist jetzt Admin.`);
+      if (b.dataset.m === 'unadmin') return adminAction('admin_set_admin', { p_user: v, p_on: false }, `${nameOf(v)} ist kein Admin mehr.`);
+      if (b.dataset.m === 'delUser') return adminAction('admin_delete_user', { p_user: v }, `${nameOf(v)} wurde gelöscht.`);
+      if (b.dataset.m === 'delGame') return adminAction('admin_delete_game', { p_game: v }, 'Spiel gelöscht.');
+      if (b.dataset.m === 'delResult') return adminAction('admin_delete_result', { p_game: v }, 'Ergebnis entfernt.');
+      if (b.dataset.m === 'resetResults') return adminAction('admin_reset_results', {}, 'Bestenliste zurückgesetzt.');
+      if (b.dataset.m === 'clearErrors') return adminAction('admin_clear_errors', {}, 'Fehlerberichte gelöscht.');
+    }
     if (b.dataset.m === 'color') return saveProfile({ color: b.dataset.v });
   };
+  el.querySelectorAll('form.apw').forEach((f) => { f.onsubmit = (e) => {
+    e.preventDefault();
+    const pw = String(new FormData(f).get('pw')).trim();
+    const id = f.dataset.user;
+    const name = modal.adminData?.users?.find((u) => u.id === id)?.name || 'Spieler';
+    if (pw.length < 6) { modal.error = 'Mindestens 6 Zeichen.'; return render(); }
+    adminAction('admin_set_password', { p_user: id, p_password: pw }, `Neues Passwort für ${name} gesetzt: ${pw}`);
+  }; });
   const pwForm = el.querySelector('#pw-form');
   if (pwForm) pwForm.onsubmit = async (e) => {
     e.preventDefault();
@@ -1288,6 +1314,102 @@ function renderModal() {
   };
 }
 
+// ---------- Admin-Bereich (nur Alp und Nico, geprüft in Supabase) ----------
+
+const ADMIN_DEMO = {
+  users: [
+    { id: 'u1', name: 'Alp', email: 'alp@kuhhandel.app', last_sign_in_at: new Date(Date.now() - 6e5).toISOString(), games: 9, wins: 3, is_admin: true },
+    { id: 'u2', name: 'Nico', email: 'nico@kuhhandel.app', last_sign_in_at: new Date(Date.now() - 864e5).toISOString(), games: 9, wins: 4, is_admin: true },
+    { id: 'u3', name: 'Bennet', email: 'bennet@kuhhandel.app', last_sign_in_at: new Date(Date.now() - 3 * 864e5).toISOString(), games: 7, wins: 2, is_admin: false },
+    { id: 'u5', name: 'Test', email: 'test@kuhhandel.app', last_sign_in_at: null, games: 0, wins: 0, is_admin: false },
+  ],
+  games: [
+    { id: 'g1', code: 'HOFX', status: 'playing', phase: 'special', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Bennet' }], updated_at: new Date(Date.now() - 2e5).toISOString() },
+    { id: 'g2', code: 'MUHH', status: 'lobby', phase: null, players: [{ name: 'Nico' }], updated_at: new Date(Date.now() - 36e5).toISOString() },
+  ],
+  results: [
+    { game_id: 'r1', created_at: new Date(Date.now() - 864e5).toISOString(), rows: [{ name: 'Nico', score: 4870, won: true }, { name: 'Alp', score: 3750, won: false }, { name: 'Bennet', score: 1500, won: false }] },
+  ],
+  errors: [
+    { id: 1, created_at: new Date(Date.now() - 9e5).toISOString(), name: 'Bennet', version: '0.13.0', message: 'Fehler: Cannot read properties of undefined (reading \'money\')', context: { phase: 'rat', screen: 'playing' } },
+  ],
+};
+const ADMIN_RPC = { users: 'admin_users', games: 'admin_games', results: 'admin_results', errors: 'admin_errors' };
+async function loadAdmin() {
+  const tab = modal.tab;
+  modal.adminData = modal.adminData || {};
+  if (DEMO) { modal.adminData[tab] = ADMIN_DEMO[tab]; return render(); }
+  const { data, error } = await sb.rpc(ADMIN_RPC[tab]);
+  if (!modal || modal.kind !== 'admin') return;
+  if (error) { modal.error = 'Laden hat nicht geklappt (Admin-SQL ausgeführt?).'; return render(); }
+  modal.adminData[tab] = data || [];
+  render();
+}
+async function adminAction(rpc, args, okMsg) {
+  modal.error = ''; modal.okMsg = '';
+  if (DEMO) { modal.okMsg = okMsg; modal.confirm = null; modal.pwFor = null; return render(); }
+  const { error } = await sb.rpc(rpc, args);
+  modal.confirm = null;
+  if (error) { modal.error = `Hat nicht geklappt: ${error.message}`; return render(); }
+  modal.okMsg = okMsg; modal.pwFor = null;
+  loadAdmin();
+}
+const fmtTime = (iso) => {
+  if (!iso) return 'nie';
+  const d = new Date(iso);
+  const mins = Math.round((Date.now() - d) / 60000);
+  if (mins < 60) return `vor ${Math.max(1, mins)} Min.`;
+  if (mins < 24 * 60) return `vor ${Math.round(mins / 60)} Std.`;
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+};
+const PHASE_NAMES = { turn: 'Zug', auction: 'Versteigerung', payment: 'Bezahlen', trade: 'Kuhhandel', rat: 'Rattenrunde', special: 'Spezialkarte', block: 'Blockieren', ended: 'Ende' };
+// Zweistufiges Bestätigen statt Browser-Dialog: erster Tipp → „Wirklich?“, zweiter Tipp → ausführen
+const confirmBtn = (key, label, act, v) => modal.confirm === key
+  ? `<button type="button" class="abtn danger" data-m="${act}" data-v="${esc(v)}">Wirklich ${label.toLowerCase()}?</button>`
+  : `<button type="button" class="abtn" data-m="ask" data-v="${esc(key)}">${label}</button>`;
+
+function adminBody() {
+  const tab = modal.tab;
+  const d = modal.adminData?.[tab];
+  const tabs = [['users', 'Spieler'], ['games', 'Spiele'], ['results', 'Bestenliste'], ['errors', 'Fehler']]
+    .map(([k, l]) => `<button type="button" class="atab ${tab === k ? 'on' : ''}" data-m="tab" data-v="${k}">${l}</button>`).join('');
+  let list = '<p class="mtext">Lädt …</p>';
+  if (d && tab === 'users') {
+    list = `<ul class="alist">${d.map((u) => `<li>
+      <div class="arow">${avatarHtml(u.id, u.name, 'tiny')}<b>${esc(u.name)}</b>${u.is_admin ? '<span class="abadge">Admin</span>' : ''}
+        <small>zuletzt ${fmtTime(u.last_sign_in_at)} · ${u.games} Spiele · ${u.wins} Siege</small></div>
+      <div class="aacts">
+        <button type="button" class="abtn" data-m="pwOpen" data-v="${esc(u.id)}">Passwort</button>
+        ${u.id === me.id ? '' : u.is_admin ? confirmBtn(`unadmin:${u.id}`, 'Admin weg', 'unadmin', u.id) : `<button type="button" class="abtn" data-m="mkadmin" data-v="${esc(u.id)}">Zum Admin</button>`}
+        ${u.id === me.id ? '' : confirmBtn(`del:${u.id}`, 'Löschen', 'delUser', u.id)}
+      </div>
+      ${modal.pwFor === u.id ? `<form class="apw" data-user="${esc(u.id)}"><input name="pw" type="text" minlength="6" placeholder="Neues Passwort für ${esc(u.name)}" autocomplete="off" required><button type="submit" class="abtn primary">Setzen</button></form>` : ''}
+    </li>`).join('')}</ul>`;
+  }
+  if (d && tab === 'games') {
+    list = d.length ? `<ul class="alist">${d.map((g) => `<li>
+      <div class="arow"><b>${esc(g.code)}</b><span class="abadge ${g.status}">${g.status === 'lobby' ? 'Warteraum' : g.status === 'playing' ? 'läuft' : 'beendet'}</span>
+        <small>${(g.players || []).map((p) => esc(p.name)).join(' · ')}${g.phase ? ` · ${PHASE_NAMES[g.phase] || esc(g.phase)}` : ''} · ${fmtTime(g.updated_at)}</small></div>
+      <div class="aacts">${confirmBtn(`game:${g.id}`, 'Löschen', 'delGame', g.id)}</div>
+    </li>`).join('')}</ul>` : '<p class="mtext">Gerade gibt es keine Spiele.</p>';
+  }
+  if (d && tab === 'results') {
+    list = (d.length ? `<ul class="alist">${d.map((r) => `<li>
+      <div class="arow"><b>${fmtTime(r.created_at)}</b><small>${(r.rows || []).map((x) => `${x.won ? '🏆 ' : ''}${esc(x.name)} ${x.score}`).join(' · ')}</small></div>
+      <div class="aacts">${confirmBtn(`res:${r.game_id}`, 'Entfernen', 'delResult', r.game_id)}</div>
+    </li>`).join('')}</ul>` : '<p class="mtext">Noch keine Ergebnisse.</p>')
+      + (d.length ? `<div class="afoot">${confirmBtn('resall', 'Bestenliste zurücksetzen', 'resetResults', '')}</div>` : '');
+  }
+  if (d && tab === 'errors') {
+    list = (d.length ? `<ul class="alist">${d.map((e) => `<li>
+      <div class="arow"><b>${esc(e.name)}</b><span class="abadge">v${esc(e.version || '?')}</span><small>${fmtTime(e.created_at)}${e.context?.phase ? ` · ${PHASE_NAMES[e.context.phase] || esc(e.context.phase)}` : ''}</small></div>
+      <code class="aerr">${esc(e.message)}</code>
+    </li>`).join('')}</ul><div class="afoot">${confirmBtn('errall', 'Alle löschen', 'clearErrors', '')}</div>` : '<p class="mtext">Keine Fehler gemeldet. 🎉</p>');
+  }
+  return `<h2>Admin</h2><div class="atabs">${tabs}</div>
+    ${modal.okMsg ? `<div class="okmsg">${esc(modal.okMsg)}</div>` : ''}${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}${list}`;
+}
+
 // ---------- Demo für Screenshots ----------
 
 function demo(kind) {
@@ -1300,6 +1422,7 @@ function demo(kind) {
   if (params.get('pick')) gameLocal.reactTo = params.get('pick');
   if (params.get('score')) gameLocal.scoreOpen = params.get('score');
   if (params.get('oldv')) versions = { u3: '0.11.0' };
+  if (params.get('admin')) ui.isAdmin = true;
   if (params.get('recap')) gameLocal.recap = true;
   ui.editingName = kind === 'name';
   if (kind === 'name') me.name = '';
@@ -1323,6 +1446,7 @@ function demo(kind) {
     ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'playing', version: 5, players: demoState.players, state: demoState };
   }
   if (params.get('modal')) { modal = { kind: params.get('modal'), pin: '4821', stats: params.get('modal') === 'stats' ? DEMO_STATS : undefined }; }
+  if (params.get('modal') === 'admin') { modal.tab = params.get('tab') || 'users'; modal.adminData = { ...ADMIN_DEMO }; modal.pwFor = params.get('pwfor') || null; modal.confirm = params.get('confirm') || null; }
   render();
   if (demoState) return;
   // In der Demo nichts speichern oder senden
