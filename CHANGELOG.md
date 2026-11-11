@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.32.1
+
+- [x] Spielfeld ist jetzt wirklich ein durchgehendes Bild über den ganzen Bildschirm: kein versetzter Streifen mehr oben/unten (bzw. links/rechts), Muster läuft lückenlos durch, die Spielerleiste reicht bis zum Rand. Auf allen Bildschirmgrößen und beim Drehen/Größe ändern.
+
 ## v0.32.0
 
 - [x] Ein durchgehendes Spielfeld (Variante C): kein Holzrahmen und kein roter Rand mehr im Spiel – der ganze Bildschirm ist Tisch, die Mitspieler stehen rechts auf einer leicht abgedunkelten Leiste. Alle Knöpfe, Karten und Fenster bleiben genau an ihrem Platz.

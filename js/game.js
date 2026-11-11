@@ -1160,5 +1160,8 @@ export function fitStage() {
   st.classList.toggle('small', s < 0.9 || new URLSearchParams(location.search).has('small'));
   st.parentElement.style.width = `${844 * s}px`;
   st.parentElement.style.height = `${390 * s}px`;
+  // Spielfeld läuft über den ganzen Bildschirm (Hintergrund am body): Spielerleiste rechts dort anfangen lassen, wo sie im Spiel beginnt
+  const left = st.parentElement.getBoundingClientRect().left;
+  document.body.style.setProperty('--sidex', `${Math.round(left + 628 * s)}px`);
 }
 window.addEventListener('resize', fitStage);
