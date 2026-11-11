@@ -1568,7 +1568,7 @@ html.bigtext .tlog, html.bigtext .evstrip { font-size: 15px; }
 html.bigtext .deck-count { font-size: 13px; }
 html.bigtext .ribbon-s { font-size: 15px; }
 html.bigtext .own b, html.bigtext .owners small { font-size: 14px; }
-html.bigtext .bidbtn small, html.bigtext .pill small { font-size: 12px; }
+html.bigtext .bidbtn small, html.bigtext .pill small, html.bigtext .tbtn small { font-size: 12px; }
 
 html.bigtext .fansum { font-size: 17px; }
 
@@ -2119,7 +2119,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 @keyframes lastcard { 0% { opacity: 0; transform: translateX(-50%) scale(.6); } 10% { opacity: 1; transform: translateX(-50%) scale(1.08); } 16%, 85% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
 /* Du führst: Geld-Fächer schimmert golden */
 .fan-wrap.leading .money.fan { box-shadow: -3px 3px 8px rgba(0,0,0,.25), 0 0 0 2px rgba(255,211,78,.85); }
-.fanlead { align-self: center; margin: 0 0 26px 10px; background: var(--gold); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 9px; font-weight: 800; font-size: 12px; white-space: nowrap; animation: pulse 1.4s ease-in-out infinite; }
+/* „Du führst“ steht im Gebots-Schild (nicht mehr am Geld, das verschob den Fächer) */
 /* Großes Gebot: Wow */
 .wowpop { position: absolute; left: 640px; top: 128px; z-index: 32; background: #fff; color: var(--red); border: 3px solid var(--red); border-radius: 14px; padding: 2px 12px; font-family: var(--font-head); font-weight: 700; font-size: 20px; transform: rotate(8deg); pointer-events: none; animation: wowpop 1.5s var(--e-pop) both; }
 @keyframes wowpop { 0% { opacity: 0; transform: rotate(8deg) scale(.3); } 20% { opacity: 1; transform: rotate(8deg) scale(1.15); } 30%, 80% { transform: rotate(8deg) scale(1); opacity: 1; } 100% { opacity: 0; transform: rotate(8deg) translateY(-14px); } }
@@ -2199,3 +2199,38 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 /* Geld-Summe nicht unter den schräg gestellten letzten Schein schieben */
 .fansum { margin-left: 22px; }
 .revealcard.big { z-index: 25; }
+
+/* ---------- v0.41: Aufdecken ohne Springen ---------- */
+/* Die aufgedeckte Karte liegt genau dort, wo sie danach versteigert wird (gleiche Größe, gleiche Höhe):
+   sie wächst aus dem Stapel heraus, dreht sich um und schrumpft danach an Ort und Stelle – kein Rutschen nach unten oder oben */
+.auc.aucreveal { justify-content: flex-start; }
+.aucreveal .revealcard { padding: 8px; }
+.aucreveal .revealcard .pcard { width: 82px; height: 112px; }
+@keyframes revealflip {
+  0%   { transform: translate(0, 13px) scale(.82) rotateY(180deg); filter: brightness(.4); }
+  40%  { transform: scale(1.12) rotateY(90deg); filter: brightness(.7); }
+  65%  { transform: scale(1.22) rotateY(0deg); filter: none; }
+  100% { transform: scale(1.2); }
+}
+@keyframes revealbig {
+  0%   { transform: translate(0, 13px) scale(.82) rotateY(180deg); }
+  12%  { transform: translate(-3px, 13px) scale(.86) rotateY(180deg); }
+  18%  { transform: translate(3px, 13px) scale(.86) rotateY(180deg); }
+  24%  { transform: translate(-3px, 13px) scale(.86) rotateY(180deg); }
+  48%  { transform: scale(1.15) rotateY(90deg); }
+  70%  { transform: scale(1.28) rotateY(0deg); }
+  100% { transform: scale(1.2); }
+}
+@keyframes settle { from { transform: scale(1.2); } to { transform: none; } }
+
+/* ---------- v0.41: Alle Entscheidungs-Knöpfe sehen gleich aus ---------- */
+/* Zuschlag, Verkaufen, Ratte nehmen, Annehmen, Gegenangebot: dieselbe Pillenform wie „Selbst kaufen“ / „Karte aufdecken“ unten links */
+.tbtn { border: none; border-radius: 999px; min-height: 52px; padding: 5px 22px; font-family: var(--font-head); font-size: 15px; font-weight: 700; line-height: 1.15; letter-spacing: .4px; gap: 1px; box-shadow: 0 4px 0 rgba(0,0,0,.18); transition: transform .08s, box-shadow .08s; }
+.tbtn small { font-family: var(--font-head); font-size: 10px; font-weight: 600; letter-spacing: .5px; opacity: 1; }
+.tbtn em { font-family: var(--font-head); font-weight: 600; font-size: 10px; letter-spacing: .3px; }
+.tbtn.accept { background: var(--white); color: var(--ink); }
+.tbtn.counter { background: var(--red); color: var(--white); box-shadow: 0 5px 0 var(--red-dark); }
+.tbtn:active:not([disabled]) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.18); }
+.tbtn.counter:active:not([disabled]) { box-shadow: 0 2px 0 var(--red-dark); }
+.tbtn[disabled] { border: none; background: #9A9690; color: #EFEDE8; box-shadow: 0 4px 0 #6E6A64; }
+.tbtn.sidebtn { min-width: 150px; }

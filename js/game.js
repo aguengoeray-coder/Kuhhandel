@@ -477,7 +477,7 @@ export function renderGame(root, ctx) {
         const isNew = local.bidKey !== key;
         local.bidKey = key;
         return `<div class="bidbox ${isNew ? 'pop' : ''}" style="--c:${SEAT_COLORS[bi]}">
-          ${avatar(v.players[bi], bi)}<span class="bwho">${esc(a.high.player === meId ? 'Du' : nameOf(a.high.player))}<small>${a.high.player === meId ? 'bietest' : 'bietet'}</small></span><b>${high}</b></div>`;
+          ${avatar(v.players[bi], bi)}<span class="bwho">${a.high.player === meId ? '🔨 Du<small>führst</small>' : `${esc(nameOf(a.high.player))}<small>bietet</small>`}</span><b>${high}</b></div>`;
       })();
 
     aucBanner = `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
@@ -915,7 +915,7 @@ export function renderGame(root, ctx) {
     </div>`}</div>
     <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
-    <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${iLead ? `<span class="fanlead">🔨 Du führst</span>` : ''}${handMoney.length ? `<span class="fansum">${pickMode === 'sel' ? sum(handMoney) : sum(me.money)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
+    <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${pickMode === 'sel' ? sum(handMoney) : sum(me.money)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
 
   // ----- Menü oben links in der Tischecke -----
