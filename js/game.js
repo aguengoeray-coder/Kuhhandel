@@ -33,6 +33,9 @@ const MONEY_COLORS = { 0: '#ECE7DB', 10: '#F6D98B', 20: '#F2B880', 50: '#A8D5B5'
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const sum = (a) => a.reduce((x, y) => x + y, 0);
 const aname = (id) => (id === RAT ? 'Ratte' : ANIMAL_BY_ID[id].name);
+// Tier mit Artikel im Akkusativ: „den Hahn“, „die Kuh“, „das Schwein“
+const ART_AKK = { hahn: 'den', gans: 'die', katze: 'die', hund: 'den', schaf: 'das', ziege: 'die', esel: 'den', schwein: 'das', kuh: 'die', pferd: 'das', [RAT]: 'die' };
+const theAnimal = (id) => `${ART_AKK[id] || 'die'} ${aname(id)}`;
 const aval = (id) => (id === RAT ? null : ANIMAL_BY_ID[id].value);
 const specialsOf = (p) => p.specials || [];
 const ratsOf = (p) => p.animals[RAT] || 0;
@@ -730,16 +733,32 @@ export function renderGame(root, ctx) {
   const canDraw = state.phase === 'turn' && myTurn && !local.tradeOpen && v.deck > 0 && !calmLeft;
   const lastLog = v.log[v.log.length - 1] || '';
   // Letzte Aktion als kleine Bildzeile (wer → was), sonst Textzeile
-  const who2 = (id) => { const i = idxOf(id); return i >= 0 ? `<span class="evp">${avatar(v.players[i], i)}<b>${id === meId ? 'Du' : esc(v.players[i].name)}</b></span>` : ''; };
+  // Spieler mit Bild; du = „Du“ / nach „von“ „dir“ / nach „an“ „dich“
+  const who2 = (id, du = 'Du') => { const i = idxOf(id); return i >= 0 ? `<span class="evp">${avatar(v.players[i], i)}<b>${id === meId ? du : esc(v.players[i].name)}</b></span>` : ''; };
   let evStrip = '';
   const le0 = v.lastEvent;
   if (le0 && state.phase === 'turn') {
-    if (le0.type === 'auction_won') evStrip = `${who2(le0.buyer)}<span class="eva">${le0.amount ? `kauft für <b>${le0.amount}</b>` : 'bekommt'}</span>${miniCard(le0.animal)}${le0.amount && le0.payee && le0.payee !== le0.buyer ? `<span class="eva">von</span>${who2(le0.payee)}` : ''}`;
-    else if (le0.type === 'special_won') evStrip = `${who2(le0.buyer)}<span class="eva">${le0.count ? `bekommt für <b>${le0.count}</b> Karten` : 'bekommt umsonst'}</span>${miniCard(le0.animal)}<span class="evstar">${STAR}</span>`;
-    else if (le0.type === 'trade' && le0.animal === RAT) { const loser = le0.winner === le0.challenger ? le0.target : le0.challenger; evStrip = `${who2(loser)}<span class="eva">bekommt</span>${le0.count > 1 ? `<span class="eva"><b>${le0.count}×</b></span>` : ''}${miniCard(RAT)}<span class="eva">von</span>${who2(le0.winner)}`; }
-    else if (le0.type === 'trade') { const loser = le0.winner === le0.challenger ? le0.target : le0.challenger; evStrip = `${who2(le0.winner)}<span class="eva">gewinnt</span>${le0.count > 1 ? `<span class="eva"><b>${le0.count}×</b></span>` : ''}${miniCard(le0.animal)}<span class="eva">gegen</span>${who2(loser)}`; }
-    else if (le0.type === 'money_drawn') evStrip = `${who2(le0.player)}<span class="eva">zieht einen Geldschein</span>${moneyCard(le0.value)}`;
-    else if (le0.type === 'rat_taken') evStrip = `${who2(le0.player)}<span class="eva">nimmt die Ratte</span>${miniCard(RAT)}<span class="eva">+<b>${le0.count}</b> Karten</span>`;
+    const hat = (id) => (id === meId ? 'hast' : 'hat');
+    const ea = (t) => `<span class="eva">${t}</span>`;
+    const karten = (n) => `<b>${n}</b> Karte${n === 1 ? '' : 'n'}`;
+    if (le0.type === 'auction_won') {
+      // „Nico hat Kuh [Bild] von Alp für 90 gekauft“ · Vorkaufsrecht: „Alp hat Kuh [Bild] selbst gekauft – für 90 an Nico“
+      if (!le0.amount) evStrip = `${who2(le0.buyer)}${ea(hat(le0.buyer))}${ea(aname(le0.animal))}${miniCard(le0.animal)}${ea('umsonst bekommen')}`;
+      else if (le0.self) evStrip = `${who2(le0.buyer)}${ea(hat(le0.buyer))}${ea(aname(le0.animal))}${miniCard(le0.animal)}${ea(`selbst gekauft – ${le0.buyer === meId ? 'zahlst' : 'zahlt'} <b>${le0.amount}</b> an`)}${who2(le0.payee, 'dich')}`;
+      else evStrip = `${who2(le0.buyer)}${ea(hat(le0.buyer))}${ea(aname(le0.animal))}${miniCard(le0.animal)}${ea('von')}${who2(le0.payee, 'dir')}${ea(`für <b>${le0.amount}</b> gekauft`)}`;
+    } else if (le0.type === 'special_won') {
+      const sp = `${miniCard(le0.animal)}<span class="evstar">${STAR}</span>`;
+      if (!le0.count) evStrip = `${who2(le0.buyer)}${ea(hat(le0.buyer))}${ea(`die ${aname(le0.animal)}-Spezialkarte`)}${sp}${ea('umsonst bekommen')}`;
+      else if (!le0.self) evStrip = `${who2(le0.buyer)}${ea(hat(le0.buyer))}${ea(`die ${aname(le0.animal)}-Spezialkarte`)}${sp}${ea('von')}${who2(le0.payee, 'dir')}${ea(`für ${karten(le0.count)} gekauft`)}`;
+      else evStrip = `${who2(le0.buyer)}${ea(le0.buyer === meId ? 'behältst' : 'behält')}${ea(`die ${aname(le0.animal)}-Spezialkarte`)}${sp}${ea(`und ${le0.buyer === meId ? 'zahlst' : 'zahlt'} ${karten(le0.count)} an`)}${who2(le0.payee, 'dich')}`;
+    } else if (le0.type === 'trade' && le0.animal === RAT) {
+      const loser = le0.winner === le0.challenger ? le0.target : le0.challenger;
+      evStrip = `${who2(loser)}${ea(hat(loser))}${ea(`<b>${le0.count}×</b> Ratte`)}${miniCard(RAT)}${ea('von')}${who2(le0.winner, 'dir')}${ea('bekommen')}`;
+    } else if (le0.type === 'trade') {
+      const loser = le0.winner === le0.challenger ? le0.target : le0.challenger;
+      evStrip = `${who2(le0.winner)}${ea(hat(le0.winner))}${ea(`<b>${le0.count}×</b> ${aname(le0.animal)}`)}${miniCard(le0.animal)}${ea('von')}${who2(loser, 'dir')}${ea('ertauscht')}`;
+    } else if (le0.type === 'money_drawn') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} einen Geldschein gezogen`)}${moneyCard(le0.value)}`;
+    else if (le0.type === 'rat_taken') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} die Ratte genommen`)}${miniCard(RAT)}${ea(`und ${karten(le0.count)} bekommen`)}`;
   }
   // Auslage: immer sichtbar über dem Geld. Spezialkarte steckt im Stapel ihres Tiers.
   const lev = v.lastEvent;
@@ -907,11 +926,13 @@ export function renderGame(root, ctx) {
   // Zuschlag: kurzes Schild mit Hammer in der Tischmitte
   let gavel = null;
   if (entered && state.phase === 'payment' && prev.phase === 'auction' && !v.payment.special) {
-    gavel = v.payment.buyer === v.payment.payee
-      ? `${esc(nameOf(v.payment.buyer))} ${v.payment.buyer === meId ? 'kaufst' : 'kauft'} selbst für ${v.payment.amount}!`
-      : `Verkauft an ${esc(v.payment.buyer === meId ? 'dich' : nameOf(v.payment.buyer))} für ${v.payment.amount}!`;
+    const pm = v.payment;
+    const by = pm.buyer === meId ? 'Du kaufst' : `${esc(nameOf(pm.buyer))} kauft`;
+    gavel = pm.self
+      ? `${by} ${theAnimal(pm.animal)} selbst für ${pm.amount}!`
+      : `${by} ${theAnimal(pm.animal)} von ${pm.payee === meId ? 'dir' : esc(nameOf(pm.payee))} für ${pm.amount}!`;
   }
-  if (fresh && le?.type === 'auction_won' && le.amount === 0 && prev.phase === 'auction') gavel = `Niemand bietet – ${esc(le.buyer === meId ? 'du bekommst' : `${nameOf(le.buyer)} bekommt`)} es umsonst`;
+  if (fresh && le?.type === 'auction_won' && le.amount === 0 && prev.phase === 'auction') gavel = `Niemand bietet – ${le.buyer === meId ? 'du bekommst' : `${esc(nameOf(le.buyer))} bekommt`} ${theAnimal(le.animal)} umsonst`;
   if (gavel) { keepFx(`<div class="soldsign ${state.phase === 'turn' ? 'top' : ''}" aria-live="polite"><span class="ghammer">🔨</span><b>${gavel}</b></div>`, 2500); if (!sounds.includes('gavel')) sounds.push('gavel'); }
   if (evFresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade' || le.type === 'special_won' || le.type === 'rat_taken')) {
     let to = le.type === 'trade' ? le.winner : le.type === 'rat_taken' ? le.player : le.buyer;

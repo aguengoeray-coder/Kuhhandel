@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.32.0
+
+- [x] Ein durchgehendes Spielfeld (Variante C): kein Holzrahmen und kein roter Rand mehr im Spiel – der ganze Bildschirm ist Tisch, die Mitspieler stehen rechts auf einer leicht abgedunkelten Leiste. Alle Knöpfe, Karten und Fenster bleiben genau an ihrem Platz.
+- [x] „Aussehen“ angepasst: Vorschau und Vorlagen zeigen das neue Spielfeld; „Hintergrund“ gilt jetzt für Startseite & Menüs (Punkt in der Vorlage).
+- [x] Deutlichere Texte beim Kaufen: Schild „Nico kauft das Schwein von Alp für 60!“ (bzw. „… selbst für 60!“, „Niemand bietet – Alp bekommt die Gans umsonst“). Bildzeile: „Nico hat Schwein [Bild] von Alp für 60 gekauft“, „Alp hat Schwein selbst gekauft – zahlt 60 an Nico“, „Du hast 2× Kuh von Lea ertauscht“, „Nico hat die Kuh-Spezialkarte von Mo für 3 Karten gekauft“ bzw. „Mo behält die Kuh-Spezialkarte und zahlt 3 Karten an Nico“, „… hat die Ratte genommen und 4 Karten bekommen“, „… hat einen Geldschein gezogen“. Bei dir richtig: „Du hast“, „von dir“, „an dich“.
+- [x] Fehler behoben: Beim Vorkaufsrecht stand bisher „Verkauft an …“ statt „kauft selbst“.
+- [x] Spielregeln unverändert; ein neuer Test prüft, dass Vorkaufsrecht/„behält“ richtig erkannt werden.
+
 ## v0.31.0
 
 - [x] Tiere der Mitspieler rechts als kleine Karten statt Kreise (Anzahl als Plakette, Quartett mit goldenem Rand und ✓, Spezialkarte mit Stern). Bis zu 7 Sorten pro Spieler sichtbar statt 4; bei dir selbst 5 (deine Tiere liegen ja groß unten).

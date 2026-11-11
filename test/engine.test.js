@@ -142,6 +142,24 @@ test('Ereignis-Nummer: Gebote nach „kann nicht zahlen“ ändern das Ereignis 
   assert.equal(g.lastEvent.n, n);
 });
 
+test('Vorkaufsrecht wird im Ereignis markiert (für den Text „selbst gekauft“)', () => {
+  let g = gameWithDeck(['pferd', 'hahn']);
+  g = drawForAuction(g, 'a');
+  g = bid(g, 'b', 40);
+  g = closeAuction(g, 'a', 'buy');
+  assert.equal(g.payment.self, true);
+  g = pay(g, 'a', [g.players[0].money.indexOf(50)]);
+  assert.equal(g.lastEvent.self, true);
+  assert.equal(g.lastEvent.buyer, 'a');
+  assert.equal(g.lastEvent.payee, 'b');
+  let h = gameWithDeck(['pferd', 'hahn']);
+  h = drawForAuction(h, 'a');
+  h = bid(h, 'b', 40);
+  h = closeAuction(h, 'a', 'sell');
+  h = pay(h, 'b', [h.players[1].money.indexOf(50)]);
+  assert.equal(h.lastEvent.self, false);
+});
+
 test('Kuhhandel angenommen: Herausgeforderter bekommt das Geld, gibt das Tier ab', () => {
   let g = gameWithDeck(['hahn']);
   g.players[0].animals.kuh = 1;

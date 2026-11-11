@@ -152,12 +152,12 @@ export function themeModal(t) {
     <div class="toptions">
     <h3>Vorlagen</h3>
     <div class="tpresets">${Object.entries(PRESETS).map(([id, p]) => `<button type="button" class="tpreset ${presetOn === id ? 'on' : ''}" data-m="themePreset" data-v="${id}">
-      <span class="tpp" style="background:${(PATTERNS[p.v.bgPat] || PATTERNS.glatt).css === 'none' ? '' : `${PATTERNS[p.v.bgPat].css},`} ${BACKGROUNDS[p.v.bg].c}"><i style="background:${TABLES[p.v.table].c[1]}"></i><b style="background:${BACKS[p.v.back].c[0]}"></b></span>
+      <span class="tpp" style="background:${(PATTERNS[p.v.tablePat] || PATTERNS.glatt).css === 'none' ? '' : `${PATTERNS[p.v.tablePat].css},`} ${TABLES[p.v.table].c[1]}"><i></i><b style="background:${BACKS[p.v.back].c[0]}"></b><s style="background:${BACKGROUNDS[p.v.bg].c}"></s></span>
       <small>${esc(p.name)}</small>${p.tip ? tipMark : ''}</button>`).join('')}</div>
     <h3>Spielfeld</h3>
     ${swatches('table', TABLES, t.table, (o) => `background:${o.c[1]}`)}
     ${patterns('tablePat', PATTERNS, t.tablePat, tb.c[1], 'glatt')}
-    <h3>Hintergrund</h3>
+    <h3>Hintergrund <small class="th3note">Startseite &amp; Menüs</small></h3>
     ${swatches('bg', BACKGROUNDS, t.bg, (o) => `background:${o.c}`)}
     ${patterns('bgPat', PATTERNS, t.bgPat, bg.c, 'streifen')}
     <h3>Kartenrücken</h3>

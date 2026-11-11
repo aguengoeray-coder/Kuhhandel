@@ -435,7 +435,7 @@ export function closeAuction(prev, playerId, mode, now) {
   const bidder = player(state, a.high.player);
   if (mode === 'buy') {
     if (sum(auctioneer.money) < a.high.amount) fail('Du hast nicht genug Geld für das Vorkaufsrecht.');
-    state.payment = { payer: auctioneer.id, payee: bidder.id, amount: a.high.amount, animal: a.animal, buyer: auctioneer.id };
+    state.payment = { payer: auctioneer.id, payee: bidder.id, amount: a.high.amount, animal: a.animal, buyer: auctioneer.id, self: true }; // Vorkaufsrecht
     log(state, `${auctioneer.name} nutzt das Vorkaufsrecht für ${a.high.amount}.`);
     state.phase = 'payment';
     return state;
@@ -479,7 +479,7 @@ export function pay(prev, playerId, cardIndices) {
     buyer.specials.push(pm.special);
     stat(state, buyer.id).specialsWon += 1;
     log(state, `${payer.name} zahlt ${cards.length} Karte(n). ${buyer.name} bekommt die ${animalName(pm.special)}-Spezialkarte.`);
-    state.lastEvent = { n: state.log.length, type: 'special_won', animal: pm.special, buyer: buyer.id, count: cards.length, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
+    state.lastEvent = { n: state.log.length, type: 'special_won', animal: pm.special, buyer: buyer.id, count: cards.length, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self };
     nextTurn(state);
     return state;
   }
@@ -492,7 +492,7 @@ export function pay(prev, playerId, cardIndices) {
   st.buys += 1;
   if (!st.maxBuy || pm.amount > st.maxBuy.amount) st.maxBuy = { amount: pm.amount, animal: pm.animal };
   log(state, `${payer.name} zahlt mit ${cards.length} Karte(n). ${buyer.name} bekommt ${animalName(pm.animal)}.`);
-  state.lastEvent = { n: state.log.length, type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
+  state.lastEvent = { n: state.log.length, type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self };
   nextTurn(state);
   return state;
 }
@@ -752,7 +752,7 @@ export function specialDecide(prev, playerId, mode, now) {
   const other = player(state, res.player);
   if (mode === 'buy') {
     if (rev.money.length < res.count) fail(`Du hast keine ${res.count} Karten – du musst verkaufen.`);
-    state.payment = { payer: rev.id, payee: other.id, count: res.count, amount: 0, special: sp.animal, buyer: rev.id };
+    state.payment = { payer: rev.id, payee: other.id, count: res.count, amount: 0, special: sp.animal, buyer: rev.id, self: true }; // Aufdecker behält sie
     log(state, `${rev.name} kauft die Spezialkarte für ${res.count} Karte(n).`);
     state.phase = 'payment';
     return state;
