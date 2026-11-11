@@ -2084,3 +2084,8 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .stage .dock .ehrlichbtn { align-self: flex-start; }
 .tbtn em { font-family: var(--font-body); font-style: normal; font-size: 10.5px; font-weight: 700; opacity: .75; }
 .tmidcnt { white-space: normal; text-align: center; max-width: 88px; line-height: 1.15; padding: 2px 8px; }
+
+/* v0.38: Entscheidungen dort, worum es geht – weit weg vom zweiten Knopf unten links */
+.tbtn.sidebtn { width: auto; min-width: 150px; margin-top: 8px; }
+.aside.r { display: flex; flex-direction: column; align-items: center; }
+.dock .passbtn { margin-top: 14px; min-height: 34px; font-size: 13px; width: 70%; align-self: center; opacity: .92; }
