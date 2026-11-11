@@ -136,17 +136,7 @@ button, input { font-family: inherit; }
 
 .name-box { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .name-box label { font-family: var(--font-head); font-weight: 600; font-size: 16px; }
-.name-row { display: flex; gap: 10px; }
-.name-row input {
-  flex: 1; min-width: 0;
-  height: 48px;
-  border-radius: 14px;
-  border: 3px solid var(--ink);
-  padding: 0 14px;
-  font-size: 17px;
-  font-weight: 600;
-}
-.name-row input:focus { outline: 3px solid var(--gold); outline-offset: 1px; }
+
 .me-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .me-line strong { font-family: var(--font-head); font-size: 20px; }
 .linklike { background: none; border: none; color: var(--muted); font-weight: 600; font-size: 13px; text-decoration: underline; cursor: pointer; padding: 8px; }
@@ -245,12 +235,6 @@ button, input { font-family: inherit; }
 .gleft { position: absolute; left: 12px; top: 10px; bottom: 10px; width: 150px; display: flex; flex-direction: column; gap: 10px; z-index: 5; }
 .round { width: 44px; height: 44px; border-radius: 50%; border: none; background: #2B2F36; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .menu { position: absolute; top: 52px; left: 0; width: 220px; background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); display: flex; flex-direction: column; gap: 8px; z-index: 30; font-size: 12px; color: var(--muted); }
-.infochips { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
-.ichip { background: #fff; border-radius: 10px; padding: 5px 10px; font-size: 12px; font-weight: 600; box-shadow: 0 2px 0 rgba(0,0,0,.12); }
-.ichip b { font-family: var(--font-head); font-size: 14px; }
-.lactions { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
-.lactions .pill { width: 100%; font-size: 15px; line-height: 1.05; min-height: 54px; padding: 0 10px; }
-.lactions .pill-white:disabled, .bottom-bar .pill-white:disabled { opacity: .55; cursor: not-allowed; }
 
 /* Tisch */
 .gtable {
@@ -267,7 +251,7 @@ button, input { font-family: inherit; }
 .deck { width: 56px; height: 78px; border-radius: 9px; background: #C8372D; border: 3px solid #fff; box-shadow: 3px -3px 0 #9E2A22, 6px -6px 0 #C8372D; display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-head); font-weight: 700; font-size: 18px; }
 .deck.empty { background: transparent; border: 3px dashed rgba(255,255,255,.6); box-shadow: none; }
 .deck-count { color: #fff; font-size: 11px; font-weight: 600; }
-.myanimals { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 0 10px; margin-top: 2px; }
+
 .noanimals { color: rgba(255,255,255,.75); font-size: 12px; }
 .amini { display: flex; flex-direction: column; align-items: center; gap: 1px; padding-top: 4px; }
 .amini span { font-size: 10px; font-weight: 600; color: #fff; white-space: nowrap; }
@@ -298,15 +282,11 @@ button.money.sel { transform: translateY(-10px); border-color: #C2410C; box-shad
 .pname { display: flex; flex-direction: column; margin-left: -10px; }
 .ribbon-s { background: var(--c); color: #fff; font-family: var(--font-head); font-weight: 600; font-size: 14px; padding: 2px 10px 2px 16px; border-radius: 0 6px 0 0; min-width: 84px; max-width: 110px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
 .tag-s { background: #fff; font-size: 11px; font-weight: 700; padding: 2px 10px 2px 16px; border-radius: 0 0 6px 0; box-shadow: 0 2px 0 rgba(0,0,0,.15); }
-.hightag { position: absolute; right: 166px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 0 rgba(0,0,0,.15); z-index: 3; }
-.hightag span { background: var(--red); color: #fff; font-family: var(--font-head); font-weight: 600; font-size: 12px; padding: 2px 10px; }
-.hightag b { background: #fff; font-family: var(--font-head); font-size: 20px; text-align: center; }
 
 /* Überlagerungen */
 .overlay { position: absolute; inset: 0; z-index: 10; }
 .overlay.light { background-color: #E3F0DA; background-image: linear-gradient(60deg, rgba(255,255,255,.55) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.55) 75%), linear-gradient(-60deg, rgba(255,255,255,.35) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.35) 75%); background-size: 60px 104px; }
-.overlay.green { background: rgba(28, 70, 45, .97); }
-.bottom-bar { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 12px; }
+
 .pill.big { min-height: 56px; min-width: 150px; flex-direction: column; gap: 0; font-size: 22px; line-height: 1; padding: 0 18px; }
 .pill.big small { font-size: 11px; font-weight: 600; letter-spacing: .6px; }
 
@@ -318,75 +298,46 @@ button.money.sel { transform: translateY(-10px); border-color: #C2410C; box-shad
 .gavel { width: 72px; height: 72px; border-radius: 50%; background: #fff; border: 5px solid var(--c); color: var(--c); display: flex; align-items: center; justify-content: center; margin-top: 4px; }
 .auctioneer .ribbon-s { margin-top: -14px; border-radius: 6px; padding: 10px 12px 2px; text-align: center; max-width: 170px; }
 .hint { margin: 0; font-size: 11px; text-align: center; color: var(--muted); }
-.auction-card { position: absolute; left: 210px; top: 12px; }
+
 .bigcard { width: 210px; background: #fff; padding: 7px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
-.bigcard-in { border: 2px solid var(--ink); padding: 5px; }
+
 .bigcard-head { height: 46px; background: var(--a); border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-head); font-weight: 700; font-size: 21px; letter-spacing: 1px; }
 .bigcard-head .mono { width: 30px; height: 30px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; letter-spacing: 0; }
 .bigcard .row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 4px; font-size: 12px; }
-.bigcard .row.hl { background: #E8ECEE; margin-top: 5px; font-size: 13px; }
-.bigcard .row.line { border-top: 1px solid var(--ink); margin-top: 2px; }
-.reveal { position: absolute; left: 430px; top: 14px; width: 146px; background: #FBE3E6; border-radius: 14px; padding: 8px; font-size: 11px; display: flex; flex-direction: column; gap: 6px; }
-.reveal strong { font-size: 12px; color: #8F1626; }
+
 .reveal-cards { display: flex; flex-wrap: wrap; gap: 3px; }
 
 .pay { position: absolute; left: 20px; right: 20px; top: 12px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
 .pay h2 { margin: 0; font-family: var(--font-head); font-size: 26px; }
 .pay p { margin: 0; font-size: 13px; color: var(--muted); }
-.pickrow { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; padding-top: 12px; }
+
 .paystatus { border-radius: 10px; padding: 5px 12px; font-weight: 700; font-size: 13px; }
 .paystatus.bad { background: #F3D9C9; } .paystatus.ok { background: #CFE6D4; } .paystatus.warn { background: #F6E3A8; }
 
 .wait { position: absolute; inset: 0 0 70px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 0 30px; }
 .wait p { margin: 0; font-size: 15px; }
-.light-text, .light-text p { color: #fff; }
+
 .result h2 { margin: 0; font-family: var(--font-head); font-size: 34px; color: #fff; }
 
 .trade { position: absolute; left: 0; right: 0; top: 30px; display: flex; justify-content: center; gap: 8px; }
-.tside { position: relative; width: 196px; height: 210px; background: var(--panel); border: 3px solid #fff; border-radius: 16px; padding: 30px 10px 8px; color: #fff; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.tside .who { position: absolute; top: -24px; display: flex; flex-direction: column; align-items: center; }
-.tside .who .ribbon-s, .duel .who .ribbon-s { margin-top: -8px; border-radius: 6px; padding: 8px 12px 1px; text-align: center; min-width: 70px; }
-.tside small { font-size: 10px; color: #D5DBE5; }
-.tside small.rule { text-align: center; line-height: 1.3; }
-.tside hr { width: 100%; border: none; border-top: 2px solid #5A6475; margin: 3px 0; }
-.countpill { margin-top: 10px; background: var(--red); border-radius: 999px; padding: 2px 14px; font-family: var(--font-head); font-weight: 700; font-size: 15px; }
-.slots { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; max-width: 170px; min-height: 36px; }
+
 .slot { width: 26px; height: 36px; border: 2px dashed #A9B2C2; border-radius: 5px; }
-.strips { display: flex; flex-direction: column; gap: 5px; width: 100%; }
-.strip { width: 100%; background: #fff; color: var(--ink); display: flex; align-items: center; gap: 8px; padding: 4px; border: 3px solid #fff; text-align: left; font-family: var(--font-body); }
-button.strip { cursor: pointer; }
-.strip.on { border-color: var(--gold); }
-.strip i { width: 12px; height: 28px; background: var(--a); display: block; flex-shrink: 0; }
-.strip span { display: flex; flex-direction: column; }
-.strip b { font-family: var(--font-head); font-size: 14px; }
-.strip small { font-size: 10px; color: var(--muted); }
-.strip.big { width: 220px; }
+
 .tabs { margin-top: 8px; display: flex; gap: 4px; }
 .tab { border: 2px solid #fff; background: transparent; color: #fff; border-radius: 999px; padding: 2px 10px; font-weight: 700; font-size: 11px; cursor: pointer; }
 .tab.on { background: #fff; color: var(--ink); }
-.hand-pick { position: absolute; left: 0; right: 0; top: 248px; display: flex; flex-direction: column; align-items: center; }
-.hand-pick small { color: #fff; font-weight: 600; font-size: 11px; }
-.hand-pick .pickrow { padding-top: 10px; gap: 4px; }
-.overlay.green .bottom-bar { bottom: 8px; }
-.duel { display: flex; align-items: center; gap: 22px; }
-.duel .who { display: flex; flex-direction: column; align-items: center; }
-.vs { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.vs b { font-family: var(--font-head); font-size: 18px; }
 
 .ending { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
 .ending h2 { margin: 0; font-family: var(--font-head); font-size: 30px; }
 .ending ol { list-style: none; margin: 0; padding: 0; width: 360px; display: flex; flex-direction: column; gap: 6px; }
 .ending li { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 12px; padding: 7px 12px; }
 .ending li.win { outline: 3px solid var(--gold); }
-.sname { font-family: var(--font-head); font-weight: 600; font-size: 16px; width: 90px; }
-.squart { flex: 1; display: flex; gap: 3px; }
-.squart i { width: 12px; height: 16px; border-radius: 3px; display: block; border: 1px solid var(--ink); }
-.sval { font-family: var(--font-head); font-weight: 700; font-size: 20px; }
+
 .ending small { color: var(--muted); }
 
 .toast { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: #2B2F36; color: #fff; border-radius: 12px; padding: 8px 14px; font-weight: 600; font-size: 13px; z-index: 40; max-width: 420px; text-align: center; }
 /* Inhalte der Überlagerung links von der Spielerspalte halten */
-.overlay .bottom-bar, .overlay .pay, .overlay .trade, .overlay .hand-pick { right: 258px; }
+ .overlay .pay, .overlay .trade { right: 258px; }
 .overlay .wait, .overlay .ending { right: 258px; }
 
 /* =================== Tierbilder =================== */
@@ -396,20 +347,15 @@ button.strip { cursor: pointer; }
 .acard { height: 42px; }
 .bigcard-head { height: 74px; gap: 10px; }
 .bigcard-head .mono { width: 60px; height: 60px; padding: 3px; border: 2px solid var(--ink); }
-.strip i { width: 34px; height: 34px; border-radius: 50%; background: var(--a); border: 2px solid var(--ink); padding: 2px; }
-.strip i .art { width: 100%; height: 100%; }
-.strip.big i { width: 46px; height: 46px; }
 
 /* =================== Animationen =================== */
 @keyframes deal { 0% { transform: translate(-160px, 120px) rotate(-18deg) scale(.4); opacity: 0; } 60% { transform: translate(0, -6px) rotate(3deg) scale(1.04); opacity: 1; } 100% { transform: none; } }
 .bigcard.deal { animation: deal .6s cubic-bezier(.2, .9, .3, 1.2) both; }
 @keyframes pop { 0% { transform: scale(.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
-.hightag.pop { animation: pop .35s ease-out; transform-origin: right center; }
-.hightag.pop { animation-name: popTag; }
-@keyframes popTag { 0% { transform: translateY(-50%) scale(.6); } 60% { transform: translateY(-50%) scale(1.15); } 100% { transform: translateY(-50%) scale(1); } }
+
 .bubble.pop b { display: inline-block; animation: pop .35s ease-out; }
 @keyframes shake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px) rotate(-2deg); } 40% { transform: translateX(6px) rotate(2deg); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
-.reveal.shake { animation: shake .5s ease-in-out; }
+
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 .tbanner.pulse { animation: pulse .5s ease-in-out 2; }
 @keyframes enter { from { opacity: 0; } to { opacity: 1; } }
@@ -425,12 +371,9 @@ button.strip { cursor: pointer; }
 button.money { transition: transform .12s, box-shadow .12s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .bigcard.deal, .hightag.pop, .bubble.pop b, .reveal.shake, .tbanner.pulse, .overlay.enter, .coinpop, .fly, .confetti i { animation: none !important; }
+  .bigcard.deal, .bubble.pop b, .tbanner.pulse, .overlay.enter, .coinpop, .fly, .confetti i { animation: none !important; }
   .fly, .confetti, .coinpop { display: none; }
 }
-.myanimals .acard { width: 40px; height: 54px; }
-.myanimals .acard i { height: 10px; }
-.myanimals .acard b .art { width: 36px; height: 36px; }
 
 /* Countdown, Entscheidung, Menü, laufende Spiele */
 .countdown { position: relative; margin-top: 8px; width: 224px; height: 24px; border-radius: 999px; background: #fff; border: 2px solid var(--ink); overflow: hidden; display: flex; align-items: center; justify-content: center; }
@@ -442,7 +385,7 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .game-row.resume { background: #FFF4CC; }
 
 /* Gebotsknöpfe: einer pro Scheinwert */
-.bidrow { display: flex; align-items: center; gap: 7px; }
+
 .bidbtn {
   width: 62px; height: 66px; border-radius: 10px; border: 3px solid var(--ink); background: var(--m);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
@@ -453,7 +396,6 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .bidbtn small { font-family: var(--font-body); font-size: 10px; font-weight: 700; }
 .bidbtn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
 .bidbtn:disabled { opacity: .35; cursor: not-allowed; }
-.bidrow .pill-small { margin-left: 4px; }
 
 /* =================== Debug-Modus =================== */
 .game-row.test { background: #E3EEF9; }
@@ -479,20 +421,15 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .dreport { width: 100%; height: 90px; margin-top: 8px; font-family: monospace; font-size: 10px; }
 
 /* Eigenes Geld während der Auktion */
-.wallet { position: absolute; left: 16px; right: 268px; top: 268px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.wallet > span { font-family: var(--font-head); font-weight: 600; font-size: 13px; white-space: nowrap; }
-.wallet-cards { display: flex; flex-wrap: nowrap; gap: 3px; overflow: hidden; }
-.wallet b { font-family: var(--font-head); font-size: 18px; white-space: nowrap; }
-.wallet em { font-size: 12px; color: var(--muted); }
 
 /* =================== Versteigerung auf dem Tisch =================== */
 .auc { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 2px; }
 .bigcard.compact { width: 176px; padding: 5px; }
-.bigcard.compact .bigcard-in { padding: 4px; }
+
 .bigcard.compact .bigcard-head { height: 54px; font-size: 17px; gap: 8px; }
 .bigcard.compact .bigcard-head .mono { width: 44px; height: 44px; }
 .bigcard.compact .row { font-size: 10.5px; padding: 2px 3px; }
-.bigcard.compact .row.hl { font-size: 11.5px; margin-top: 4px; }
+
 .auc .countdown { width: 196px; height: 20px; margin-top: 0; }
 .auc .countdown span { font-size: 12px; }
 .aucinfo { color: #fff; font-size: 13px; font-weight: 600; }
@@ -503,29 +440,17 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .reveal-row.shake { animation: shake .5s ease-in-out; }
 .reveal-row .reveal-cards { display: flex; gap: 2px; }
 .reveal-row .money.xs { width: 20px; height: 28px; font-size: 9px; }
-.lactions.auction { gap: 7px; }
+
 .lhead { font-family: var(--font-head); font-weight: 700; font-size: 16px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.2); }
 .bidgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .bidgrid .bidbtn { width: auto; height: 50px; border-width: 2px; border-radius: 8px; }
 .bidgrid .bidbtn b { font-size: 15px; }
 .bidgrid .bidbtn small { font-size: 9px; }
-.lactions .pill small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .5px; }
-.lactions .pill-small { min-height: 40px; }
+
 .ldecide { background: #fff; border-radius: 14px; padding: 10px; font-size: 12px; font-weight: 600; line-height: 1.35; box-shadow: 0 3px 0 rgba(0,0,0,.12); }
 
 /* =================== Geldstapel und Tier-Kacheln =================== */
-.piles { display: flex; gap: 6px; justify-content: center; padding-top: 8px; }
-.pile { position: relative; width: 46px; height: 60px; border-radius: 8px; border: 3px solid var(--ink); background: var(--m);
-  box-shadow: 3px -3px 0 -1px var(--m), 3px -3px 0 1px var(--ink); cursor: pointer; font-family: var(--font-body); color: var(--ink);
-  display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 3px 4px; }
-.pile .pv { font-weight: 800; font-size: 14px; }
-.pile .pc { align-self: flex-end; background: var(--ink); color: #fff; border-radius: 999px; padding: 0 5px; font-size: 11px; font-weight: 700; }
-.pile:active:not(:disabled) { transform: translateY(2px); }
-.pile:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
-.nomoney { color: #fff; font-size: 12px; }
-.overlay.light .nomoney { color: var(--muted); }
-.slots button.money { cursor: pointer; }
-.slots.wide { max-width: 420px; }
+
 .chosen { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .chosen small { font-size: 11px; color: var(--muted); }
 .atiles { display: grid; grid-template-columns: repeat(5, 32px); gap: 4px; justify-content: center; }
@@ -533,19 +458,15 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .atile .art { width: 100%; height: 100%; }
 .atile span { position: absolute; right: -5px; bottom: -6px; background: #fff; color: var(--ink); border: 1.5px solid var(--ink); border-radius: 999px; font-size: 9px; font-weight: 800; padding: 0 3px; }
 .atile.on { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
-.about { margin-top: 6px; color: #fff !important; font-weight: 600; }
+
 /* Platz: Stapel dürfen die Knöpfe unten nicht berühren */
-.tside { height: 200px; }
-.hand-pick { top: 236px; }
-.hand-pick .piles { padding-top: 5px; }
-.hand-pick .pile { width: 42px; height: 52px; }
 
 /* =================== Optimierungen v0.7 =================== */
 .start-links { display: flex; flex-wrap: wrap; gap: 2px 12px; }
 .linklike.light { color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.25); padding: 4px 0; }
 .logo { font-size: clamp(36px, 6vw, 56px); }
 .menu .pill { min-height: 38px; font-size: 13px; }
-.payrow { display: flex; align-items: center; gap: 10px; }
+
 .endbtns { display: flex; gap: 10px; }
 #modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; }
 .mback { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
@@ -566,7 +487,7 @@ button.money { transition: transform .12s, box-shadow .12s; }
 @keyframes qpop { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; } 15% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; } 25% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { transform: translate(-50%, -50%) scale(.9); opacity: 0; } }
 .qpop { position: absolute; left: 376px; top: 190px; z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 2px;
   background: #fff; border: 4px solid var(--gold); border-radius: 20px; padding: 12px 22px; box-shadow: 0 0 0 6px rgba(255,211,78,.35), 0 16px 30px rgba(0,0,0,.3); animation: qpop 2.8s ease-out both; }
-.qart { width: 64px; height: 64px; border-radius: 50%; background: var(--a); border: 3px solid var(--ink); padding: 4px; }
+
 .qpop b { font-family: var(--font-head); font-size: 26px; color: var(--red); }
 .qpop span { font-weight: 700; font-size: 13px; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .qpop { animation: none; display: none; } }
@@ -624,9 +545,7 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 .tip { position: absolute; z-index: 32; width: 250px; background: #2B2F36; color: #fff; border-radius: 14px; padding: 10px 12px; font-size: 12px; line-height: 1.4; box-shadow: 0 10px 24px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 6px; }
 .tip b { font-family: var(--font-head); color: var(--gold); font-size: 14px; }
 .tip button { align-self: flex-end; border: none; background: var(--gold); color: var(--ink); border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 12px; cursor: pointer; }
-.tip-left { left: 168px; bottom: 70px; }
-.tip-left::before { content: ''; position: absolute; left: -8px; bottom: 30px; border-right: 9px solid #2B2F36; border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
-.tip-top { left: 50%; top: 6px; transform: translateX(-62%); }
+
 @media (prefers-reduced-motion: reduce) { .rbubble, .mfly { animation: none; } .mfly { display: none; } }
 /* Reaktion über dem Spieler statt daneben (überdeckt kein Höchstgebot-Schild) */
 @keyframes rb2 { 0% { transform: scale(.4); opacity: 0; } 12% { transform: scale(1.1); opacity: 1; } 20% { transform: scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
@@ -648,21 +567,16 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 /* Wert auf jeder Tierkarte */
 .acard { position: relative; }
 .cv { position: absolute; right: 1px; top: 0; font-style: normal; font-size: 8px; font-weight: 800; line-height: 1; color: var(--ink); background: rgba(255,255,255,.88); border-radius: 3px; padding: 1px 2px; }
-.myanimals .cv { font-size: 9px; }
+
 .atile .cv { right: 1px; top: 1px; font-size: 7.5px; padding: 0 1px; }
 .acard.sp { border-color: #B8860B; background: #FFF8DC; }
 .acard.sp .star { position: absolute; left: -1px; bottom: -1px; width: 14px; height: 14px; }
 .amini.special span { color: var(--gold); }
 .amini.rat .acard { border-color: #5B5560; }
-.myanimals.many { gap: 5px; }
-.myanimals.many .acard { width: 32px; height: 44px; }
-.myanimals.many .acard b .art { width: 28px; height: 28px; }
-.myanimals.many .amini span { font-size: 9px; }
-.deck-count.must { background: var(--gold); color: var(--ink); border-radius: 999px; padding: 1px 8px; font-weight: 800; }
 
 /* Spezialkarte / Ratte groß */
 .bigcard-head .star { width: 26px; height: 26px; }
-.spcard .bigcard-in { border-color: #B8860B; }
+
 .spcard .bigcard-head { background: linear-gradient(135deg, var(--a), #FFD34E); }
 .bignum { font-family: var(--font-head); font-weight: 700; font-size: 46px; line-height: 1; color: #fff; display: flex; flex-direction: column; align-items: center; text-shadow: 0 3px 0 rgba(0,0,0,.25); animation: pop .35s ease-out; }
 .bignum small { font-family: var(--font-body); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; opacity: .85; text-shadow: none; }
@@ -682,7 +596,7 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 .buzzer small { font-family: var(--font-body); font-size: 11px; font-weight: 700; }
 .buzzer:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 2px 0 #5E130E; }
 .buzzer:disabled { filter: grayscale(.85); opacity: .6; cursor: not-allowed; }
-.lnote { color: #fff; font-size: 11px; line-height: 1.35; text-align: center; opacity: .9; }
+
 .lhead { color: #fff; }
 
 /* Schnick-Schnack-Schnuck */
@@ -704,11 +618,7 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 .blockopt:hover { border-color: #C8372D; }
 
 /* Wertung */
-.squart { flex-wrap: wrap; align-items: center; }
-.squart .ci { width: 20px; height: 20px; }
-.squart .ci.blocked { opacity: .45; }
-.squart .ci.blocked::after { content: ''; position: absolute; left: -3px; right: -3px; top: 50%; height: 2.5px; background: #C8372D; transform: rotate(-35deg); }
-.squart .ci.sp .star { position: absolute; right: -5px; top: -5px; width: 11px; height: 11px; }
+
 .ending ol { width: 400px; }
 
 /* Reaktionen: Spieler antippen */
@@ -730,7 +640,6 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 @keyframes nudgewig { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-6deg); } 90% { transform: rotate(6deg); } 95% { transform: rotate(-3deg); } }
 
 .ending li { flex-wrap: wrap; cursor: pointer; }
-.sform { flex-basis: 100%; font-size: 12px; font-weight: 700; color: var(--muted); padding-top: 2px; border-top: 1px dashed #D6CCB4; }
 
 .rpsshow { position: absolute; left: 182px; right: 270px; top: 70px; z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(20,30,25,.82); border-radius: 22px; padding: 14px 10px; animation: rpsfade 2.8s ease-in-out both; }
 @keyframes rpsfade { 0% { opacity: 0; transform: scale(.9); } 8%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; } }
@@ -799,7 +708,7 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 .stage.small .ci { width: 22px; height: 22px; }
 .stage.small .chips { max-width: 172px; }
 .stage.small .tag-s { font-size: 13px; }
-.stage.small .ichip { font-size: 13px; }
+
 .stage.small .tlog, .stage.small .deck-count { font-size: 13px; }
 .stage.small .amini span { font-size: 12px; }
 .stage.small .cv { font-size: 10px; }
@@ -863,7 +772,7 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 
 /* ===== v0.16: Bezahlen auf dem Tisch ===== */
 .paytable { gap: 8px; margin-top: 4px; }
-.paytable .bigcard.compact .row.hl { margin-top: 2px; }
+
 .kasse { width: 300px; background: rgba(0,0,0,.22); border: 2px dashed rgba(255,255,255,.45); border-radius: 16px; padding: 8px 10px 6px; display: flex; flex-direction: column; gap: 6px; }
 .kasse.pop { animation: pop .35s ease-out; }
 .kslots { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; min-height: 44px; }
@@ -873,9 +782,6 @@ table.stats td b { font-family: var(--font-head); font-size: 16px; }
 .kline { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 12px; font-weight: 700; gap: 8px; }
 .kline .paystatus { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; }
 .kasse.waiting .kline b { color: var(--gold); }
-.hand-row { position: absolute; left: 0; right: 0; bottom: 6px; display: flex; justify-content: center; }
-.hand-row .piles { padding-top: 0; gap: 5px; background: rgba(0,0,0,.18); border-radius: 14px; padding: 6px 8px; }
-.hand-row .pile { width: 44px; height: 56px; }
 
 /* ===== v0.16: Bedienung am iPhone (Home-Bildschirm-App) ===== */
 html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere Reaktion */
@@ -886,7 +792,7 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .dview { min-height: 34px; padding: 4px 12px; }
 .reactpick > button { min-height: 34px; }
 .rphead button { min-width: 32px; min-height: 32px; font-size: 16px; }
-.tchips button, [data-a="tTarget"] { min-height: 32px; padding: 4px 12px; }
+ [data-a="tTarget"] { min-height: 32px; padding: 4px 12px; }
 .atile { min-width: 36px; min-height: 40px; }
 .kick { min-width: 34px; min-height: 34px; }
 .mctl button { width: 28px; height: 28px; }
@@ -895,7 +801,7 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .toggle { width: 52px; height: 30px; }
 .toggle i { width: 22px; height: 22px; }
 .toggle.on i { left: 24px; }
-.lactions .pill:has(> small) { flex-direction: column; justify-content: center; line-height: 1.15; padding-top: 6px; padding-bottom: 6px; }
+
 .kline .paystatus.bad { background: #F8D7D3; color: #8E1F17; }
 .kline .paystatus.warn { background: #FFF1C2; color: #7A5200; }
 .kline .paystatus.ok { background: #D2F0DC; color: #0B5A33; }
@@ -918,17 +824,13 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .gleft { left: 10px; width: 138px; gap: 8px; }
 .gtable { left: 158px; width: 470px; }
 .gright { right: 8px; width: 206px; justify-content: space-evenly; }
-.overlay .bottom-bar, .overlay .pay, .overlay .trade, .overlay .hand-pick { right: 212px; }
+ .overlay .pay, .overlay .trade { right: 212px; }
 .reactpick { right: 214px; }
 .pay.block { right: 222px; }
 .rpsshow { left: 166px; right: 214px; }
 .moneyreveal { left: 393px; }
 
 /* Infos links als ein Kasten */
-.infobox { background: #fff; border-radius: 14px; padding: 7px 10px; gap: 3px; box-shadow: 0 3px 0 rgba(0,0,0,.12); align-items: stretch; }
-.infobox .ichip { background: none; box-shadow: none; padding: 0; border-radius: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: 11.5px; color: var(--muted); }
-.infobox .ichip b { color: var(--ink); font-size: 15px; }
-.stage.small .infobox .ichip { font-size: 12.5px; }
 
 /* Spielerspalte: Karte mit Bild + Name, Symbole darunter; nur Bild/Name antippbar */
 .prow { flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; cursor: default; }
@@ -949,27 +851,20 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
   background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,.55) 0 30%, transparent 31%), repeating-linear-gradient(135deg, rgba(255,255,255,.12) 0 4px, transparent 4px 8px);
   box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); }
 .money .mv { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-weight: 700; font-size: 17px; letter-spacing: -.5px; }
-.money .mc { position: absolute; font-size: 9px; font-weight: 800; line-height: 1; }
-.money .mc.tl { left: 3px; top: 3px; }
-.money .mc.br { right: 3px; bottom: 3px; transform: rotate(180deg); }
+
 .money.s .mv { font-size: 15px; }
 .money.xs { padding: 0; }
-.money.xs .mc { display: none; }
+
 .money.xs .mv { font-size: 11px; }
 .kslots .money.xs .mv { font-size: 13px; }
 .money.big .mv { font-size: 36px; }
-.money.big .mc { font-size: 14px; }
-.money.big .mc.tl { left: 7px; top: 6px; }
-.money.big .mc.br { right: 7px; bottom: 6px; }
+
 .money.back { background-image: repeating-linear-gradient(45deg, #C8372D 0 6px, #A82A22 6px 12px); box-shadow: inset 0 0 0 2px rgba(255,255,255,.6); }
-.money.back .mv, .money.back .mc { display: none; }
+.money.back .mv { display: none; }
 .money.fan .mv { font-size: 16px; }
-.money.fan .mc.tl { font-size: 11px; }
+
 .fan-wrap { bottom: -16px; }
 .fansum { align-self: center; margin-left: 10px; margin-bottom: 26px; background: #2B2F36; color: #fff; border-radius: 999px; padding: 2px 10px; font-family: var(--font-head); font-weight: 700; font-size: 14px; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
-.pile .pv { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 18px; }
-.pile { display: block; }
-.pile .pc { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); }
 
 /* Spielkarte (groß): Hochformat, Werte in zwei Ecken, Bild in der Mitte, Name auf Band */
 .bigcard, .bigcard.compact { width: auto; background: none; padding: 0; box-shadow: none; display: flex; align-items: center; gap: 12px; }
@@ -990,8 +885,7 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .bctitle { font-family: var(--font-head); font-weight: 700; font-size: 18px; line-height: 1.1; margin-bottom: 4px; }
 .bctitle small { display: block; font-family: var(--font-body); font-size: 11px; font-weight: 700; color: var(--muted); }
 .bcinfo .row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 2px; font-size: 12px; border-top: 1px solid #ECE7DB; }
-.bcinfo .row.line { border-top: 1px solid var(--ink); }
-.bcinfo .row.hl { background: none; margin: 0; }
+
 .bigcard.compact .pcard { width: 82px; height: 112px; }
 .bigcard.compact .pcart { margin-top: 20px; width: 52px; height: 52px; }
 .bigcard.compact .pcv { font-size: 12.5px; }
@@ -1025,19 +919,14 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .bigcard.compact .pcart { margin-top: 22px; width: 46px; height: 46px; padding: 4px; }
 .bigcard.compact .pcv.br { bottom: 26px; }
 .acard b { padding-top: 8px; }
-.myanimals .acard { height: 58px; }
-.pile .pv { inset: 0 0 auto 0; top: 8px; height: auto; display: block; text-align: center; font-size: 17px; line-height: 1; }
-.pile .pc { bottom: 5px; }
-.pile { overflow: visible; }
-.pile .pcnt { position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%); background: var(--ink); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; font-weight: 700; line-height: 16px; }
+
 /* Werte nicht mehr auf dem Kopf */
 .pcv.tr { right: 7px; top: 7px; left: auto; }
-.money .mc.br { transform: none; }
+
 /* Gebote: 4 Knöpfe in 2 Reihen, größer */
 .bidgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
 .bidgrid .bidbtn { height: 54px; }
 .bidgrid .bidbtn b { font-size: 19px; }
-.lactions .lnote { font-size: 11px; }
 
 /* ===== v0.18: Kuhhandel auf dem Tisch ===== */
 .tduel { display: flex; align-items: stretch; gap: 6px; margin-top: 6px; }
@@ -1061,15 +950,7 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .tanimal b { display: block; font-size: 13px; }
 .tanimal small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 700; }
 .tpanel .tanimal { margin-top: 0; padding: 4px 10px 4px 5px; }
-.tresult { margin-top: 18px; background: #fff; border-radius: 18px; padding: 12px 22px; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 10px 24px rgba(0,0,0,.3); border: 3px solid var(--ink); }
-.tresult.won { border-color: #2E7D4F; }
-.tresult.lost { border-color: #C8372D; }
-.tresult h3 { margin: 0; font-family: var(--font-head); font-size: 26px; }
-.tresult.won h3 { color: #2E7D4F; }
-.tresult.lost h3 { color: #C8372D; }
-.tresult p { margin: 0; font-size: 13px; font-weight: 600; text-align: center; }
-.tresult .tanimal { margin-top: 0; box-shadow: none; border: 2px solid #ECE7DB; }
-.tresult.pop { animation: pop .4s ease-out; }
+
 /* Betrag nur einmal, mittig */
 .pcv, .pcv.tl { left: 0; right: 0; top: 6px; text-align: center; font-size: 15px; }
 .bigcard.compact .pcv { font-size: 13.5px; }
@@ -1116,7 +997,7 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .ainfo div { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; }
 .ainfo span { opacity: .75; font-weight: 600; }
 .ainfo b { font-weight: 800; text-align: right; }
-.ainfo .bonus b { color: var(--gold); }
+
 .ainfo.fade { animation: infofade .5s ease-out .15s both; }
 @keyframes infofade { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .revealcard .pcard, .aucard > .pcard, .ainfo.fade { animation: none; } }
@@ -1180,17 +1061,11 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .blockpanel { margin-top: 4px; padding: 8px 12px; gap: 6px; }
 .blockpanel .blockopt { padding: 5px 4px; }
 .blockpanel .blockopt .ci { width: 34px; height: 34px; }
-.tresult { margin-top: 6px; padding: 8px 18px; gap: 5px; }
-.tresult h3 { font-size: 22px; }
+
 .auc.aucreveal { height: 190px; }
 .auc .pot { min-height: 20px; }
 
 /* Zuschlag-Schild */
-.soldsign { position: absolute; left: 393px; top: 205px; transform: translate(-50%, -50%); z-index: 32; pointer-events: none; display: flex; align-items: center; gap: 10px; background: var(--gold); color: var(--ink); border: 3px solid #8A5A00; border-radius: 999px; padding: 8px 22px 8px 14px; box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 -3px 0 rgba(0,0,0,.12); animation: gavelin 2.4s ease-out both; white-space: nowrap; }
-.soldsign b { font-family: var(--font-head); font-weight: 700; font-size: 19px; }
-.ghammer { font-size: 30px; display: inline-block; transform-origin: 80% 80%; animation: hammer .5s ease-in 2 both; }
-@keyframes gavelin { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 10% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); } 18% { transform: translate(-50%, -50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -60%); } }
-@keyframes hammer { 0% { transform: rotate(-40deg); } 70% { transform: rotate(15deg); } 100% { transform: rotate(0); } }
 
 /* Quartett für alle: vier Karten in Gold */
 .qcards { display: flex; margin-bottom: 4px; }
@@ -1198,11 +1073,10 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .qc:first-child { margin-left: 0; }
 .qc .art { width: 44px; height: 44px; }
 @keyframes qcin { from { opacity: 0; transform: translateY(30px) rotate(0); } }
-@media (prefers-reduced-motion: reduce) { .soldsign, .ghammer, .stack.bump .spile, .qc { animation: none; } }
+@media (prefers-reduced-motion: reduce) {  .stack.bump .spile, .qc { animation: none; } }
 .paycard .pcard, .spauc .pcard { width: 82px; height: 112px; }
 .paycard .pcart, .spauc .pcart { margin-top: 20px; width: 46px; height: 46px; padding: 4px; }
-.spside { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 110px; }
-.spfit { color: #fff; font-size: 11px; font-weight: 700; opacity: .85; text-align: center; }
+
 .spauc .bignum { font-size: 42px; }
 .auc.spauc .bigcard .pcard { width: 82px; height: 112px; }
 .auc.spauc .bigcard .pcart { margin-top: 20px; width: 46px; height: 46px; padding: 4px; }
@@ -1217,7 +1091,7 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .ainfo.row { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2px 12px; max-width: 360px; min-width: 0; padding: 3px 12px; border-radius: 999px; font-size: 11.5px; }
 .ainfo.row span { opacity: 1; font-weight: 600; color: rgba(255,255,255,.8); }
 .ainfo.row b { color: #fff; margin-left: 3px; }
-.ainfo.row .bonus b { color: var(--gold); }
+
 .bidbox { display: flex; align-items: center; gap: 8px; background: #fff; border: 3px solid var(--c, var(--ink)); border-radius: 999px; padding: 3px 16px 3px 4px; box-shadow: 0 6px 14px rgba(0,0,0,.25); }
 .bidbox .avatar { width: 34px; height: 34px; border-width: 3px; font-size: 14px; }
 .bwho { display: flex; flex-direction: column; line-height: 1.05; font-weight: 800; font-size: 14px; color: var(--c, var(--ink)); }
@@ -1275,14 +1149,9 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 .tstep.now i { background: var(--gold); color: var(--ink); }
 
 /* Gefordert: Rand leuchtet zweimal auf */
-.attn { position: absolute; inset: 0; z-index: 40; pointer-events: none; border-radius: 18px; box-shadow: inset 0 0 0 5px var(--gold), inset 0 0 40px rgba(255,211,78,.7); animation: attn 1.1s ease-in-out 2 both; }
-.attn.strong { box-shadow: inset 0 0 0 6px var(--red), inset 0 0 50px rgba(215,38,61,.55); }
-@keyframes attn { 0%, 100% { opacity: 0; } 40%, 60% { opacity: 1; } }
 
 /* Was ist passiert: groß in der Mitte, danach klein oben */
 .tlog { font-size: 12.5px; font-weight: 600; }
-.logpop { position: absolute; left: 393px; top: 125px; transform: translate(-50%, -50%); z-index: 31; pointer-events: none; max-width: 400px; background: #fff; color: var(--ink); border-radius: 16px; padding: 10px 18px; font-weight: 800; font-size: 16px; line-height: 1.3; text-align: center; box-shadow: 0 10px 24px rgba(0,0,0,.3); animation: logpop 3s ease-out both; }
-@keyframes logpop { 0% { opacity: 0; transform: translate(-50%, -40%) scale(.9); } 10% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -150%) scale(.7); } }
 
 /* Auslage: „noch 1“ golden */
 .slabel { font-size: 10px; white-space: nowrap; }
@@ -1301,9 +1170,7 @@ button.deck:active { transform: scale(.95); }
 @keyframes deckwiggle { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(-4deg); } 82% { transform: rotate(4deg); } 89% { transform: rotate(-2deg); } }
 
 /* Esel: eine Einblendung, Scheine fliegen zu allen */
-.donkeypop { position: absolute; left: 393px; top: 290px; transform: translate(-50%, -50%); z-index: 31; pointer-events: none; display: flex; align-items: baseline; gap: 10px; background: var(--gold); color: var(--ink); border: 3px solid #8A5A00; border-radius: 999px; padding: 6px 20px; box-shadow: 0 10px 24px rgba(0,0,0,.35); white-space: nowrap; animation: gavelin 2.6s ease-out 1.5s both; }
-.donkeypop b { font-family: var(--font-head); font-size: 22px; }
-.donkeypop span { font-weight: 800; font-size: 15px; }
+
 .mflyc { position: absolute; left: 393px; top: 275px; width: 22px; height: 32px; border-radius: 4px; background: #F6D98B; border: 2px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,.3); z-index: 25; pointer-events: none; animation: mflyc 1s ease-in-out 2.4s both; }
 @keyframes mflyc { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(320px, var(--dy)) rotate(15deg); } }
 
@@ -1321,7 +1188,7 @@ button.deck:active { transform: scale(.95); }
 .game-row .host small { font-size: 11.5px; }
 .game-row .pill-small { min-height: 40px; padding: 0 16px; }
 
-@media (prefers-reduced-motion: reduce) { button.deck, .attn, .logpop, .donkeypop, .mflyc { animation: none; } .attn, .mflyc { display: none; } }
+@media (prefers-reduced-motion: reduce) { button.deck, .mflyc { animation: none; }  .mflyc { display: none; } }
 .tsteps { gap: 3px; }
 .tstep { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 4px; border-radius: 999px; }
 .tstep i { width: 18px; height: 18px; font-size: 11px; flex: none; }
@@ -1354,18 +1221,9 @@ button.deck:active { transform: scale(.95); }
 
 /* Deine Tiere und dein Geld: zwischen Aktionsbereich und deinem Abzeichen */
 .auslage { left: 166px; right: 112px; }
-.fan-wrap, .hand-row { left: 160px; right: 104px; }
+.fan-wrap { left: 160px; right: 104px; }
 
 /* Dein Abzeichen unten rechts im Tisch */
-.mebadge { position: absolute; right: 8px; bottom: 10px; z-index: 6; display: flex; align-items: center; border: none; background: none; padding: 0; cursor: pointer; font: inherit; touch-action: manipulation; }
-.mebadge .avatar { width: 46px; height: 46px; z-index: 1; }
-.mebadge .mbtext { display: flex; flex-direction: column; align-items: flex-start; margin-left: -10px; background: #fff; border-radius: 0 10px 10px 0; padding: 3px 10px 3px 16px; box-shadow: 0 3px 0 rgba(0,0,0,.15); }
-.mebadge .mbtext b { font-family: var(--font-head); font-size: 15px; color: var(--c); line-height: 1.1; }
-.mebadge .mbtext small { font-size: 11px; font-weight: 800; white-space: nowrap; }
-.mebadge.turn .avatar { box-shadow: 0 0 0 4px var(--gold); }
-.mebadge.leader .mbtext { background: var(--gold); }
-.mebadge:active { transform: scale(.96); }
-.mebadge .rbubble { position: absolute; bottom: 52px; right: 0; }
 
 /* Gegner rechts: mehr Platz, Tiere größer */
 .prow .chips { max-width: 200px; }
@@ -1391,7 +1249,7 @@ button.deck:active { transform: scale(.95); }
 .tcenter > .tsteps .tstep { padding: 2px 10px 2px 3px; }
 
 /* Effekte: Tischmitte jetzt bei x=319 */
-.soldsign, .logpop, .donkeypop, .mflyc, .moneyreveal { left: 319px; }
+ .mflyc, .moneyreveal { left: 319px; }
 .qpop { left: 302px; }
 .fly { left: 277px; }
 .rpsshow { left: 22px; right: 220px; }
@@ -1419,7 +1277,6 @@ button.deck:active { transform: scale(.95); }
 .fan-wrap { left: 168px; right: 10px; padding-left: 0; }
 .fan-wrap .money.fan { width: 46px; }
 .fansum { margin-left: 12px; flex: none; }
-.attn { display: none; }
 
 .tcenter > .tsteps .tstep span { display: none; }
 .tduel { gap: 10px; }
@@ -1463,9 +1320,7 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .tpreset.on .tpp { box-shadow: 0 0 0 3px var(--ink); }
 .tprev { background: var(--bg-pat), var(--bg); border-radius: 14px; padding: 12px; display: flex; justify-content: center; margin: 8px 0 2px; }
 .tprev-table { position: relative; width: 220px; height: 90px; border-radius: 14px; border: 7px solid #8A5A33; background: var(--tbl-pat), radial-gradient(ellipse at 50% 40%, var(--tbl-1), var(--tbl-2) 60%, var(--tbl-3)); display: flex; align-items: center; justify-content: center; gap: 10px; }
-.tprev-card { width: 36px; height: 50px; border-radius: 6px; background: #FBF7EE; border: 2px solid var(--ink); }
-.tprev-back { width: 36px; height: 50px; border-radius: 6px; border: 2px solid #fff; background: var(--back-pat), var(--back); box-shadow: 2px -2px 0 var(--back-2); }
-.tprev-back.b2 { transform: rotate(8deg); }
+
 .tfoot { display: flex; justify-content: flex-end; margin-top: 10px; }
 
 /* v0.23: Wer hat das Tier schon */
@@ -1491,8 +1346,6 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .dock .ldecide br { display: none; }
 
 /* Rattenrunde: Scheine unten antippen */
-.hand-row.ratlay { align-items: center; gap: 8px; }
-.hrlabel { color: #fff; font-weight: 800; font-size: 12px; }
 
 /* ===================== v0.24 ===================== */
 /* Warteraum: Tisch in der gewählten Farbe */
@@ -1585,14 +1438,8 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .tanimal .mcard { width: 28px; height: 36px; }
 
 /* Ergebnis nach dem Kuhhandel: große Karte + Text */
-.tresult { flex-direction: row; align-items: center; gap: 16px; padding: 12px 20px 12px 14px; }
-.trcard { position: relative; }
-.trcard .pcard { transform: scale(.82); transform-origin: center; margin: -12px -9px; }
+
 .trcount { position: absolute; right: -6px; bottom: -4px; background: var(--ink); color: #fff; font-weight: 800; font-size: 14px; border-radius: 999px; padding: 1px 9px; border: 2px solid #fff; }
-.trtext { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 220px; }
-.trtext b { font-size: 14px; }
-.trtext p { text-align: left; color: var(--muted); font-size: 12px; }
-.trtext .pill { margin-top: 4px; }
 
 /* Schnick-Schnack-Schnuck: sauberes Fenster mitten auf dem Tisch */
 .rpsshow.v2 { left: 319px; right: auto; top: 58px; width: 380px; transform: translateX(-50%); background: var(--tbl-3); border: 4px solid var(--gold); box-shadow: 0 14px 30px rgba(0,0,0,.4); padding: 16px 14px 18px; animation: rpsfade2 2.8s ease-in-out both; }
@@ -1654,7 +1501,7 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .rcard .mcard { width: 40px; height: 52px; }
 .rcard b { font-family: var(--font-head); font-size: 15px; }
 .rcard small { font-size: 11px; color: var(--muted); font-weight: 700; }
-.stats-table th, table.stats th { color: var(--tbl-2); }
+ table.stats th { color: var(--tbl-2); }
 @media (prefers-reduced-motion: reduce) { .youturn { animation: none; } }
 .ebonus { background: var(--gold); color: var(--ink); font-weight: 800; font-size: 12.5px; padding: 3px 12px; border-radius: 999px; border: 2px solid #8A5A00; white-space: nowrap; }
 
@@ -1686,8 +1533,6 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 @media (max-width: 700px) { .tlayout { grid-template-columns: 1fr; } .tprevcol { position: sticky; top: -16px; background: #fff; z-index: 2; padding-bottom: 6px; } }
 
 /* „Niemand bietet“: Schild oben über der Bildzeile, die solange ausgeblendet ist */
-.soldsign.top { top: 92px; }
-.stage:has(.soldsign.top) .evstrip { visibility: hidden; }
 
 /* Aufdecken: Karte nicht mehr riesig */
 @keyframes revealflip {
@@ -1724,7 +1569,7 @@ html.bigtext .deck-count { font-size: 13px; }
 html.bigtext .ribbon-s { font-size: 15px; }
 html.bigtext .own b, html.bigtext .owners small { font-size: 14px; }
 html.bigtext .bidbtn small, html.bigtext .pill small { font-size: 12px; }
-html.bigtext .pile .pcnt { font-size: 12px; }
+
 html.bigtext .fansum { font-size: 17px; }
 
 /* Meine Statistik */
@@ -1838,20 +1683,10 @@ html.bigtext .fansum { font-size: 17px; }
 @keyframes rtimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 /* Ergebnis Kuhhandel / Spezialkarte: für alle, feste Zeit, Tipp schließt */
-.resultpop { position: absolute; left: 319px; top: 62px; transform: translateX(-50%); z-index: 33; display: flex; align-items: center; gap: 16px; width: 430px; background: #fff; border: 4px solid var(--ink); border-radius: 20px; padding: 12px 18px 16px 14px; box-shadow: 0 14px 30px rgba(0,0,0,.4); cursor: pointer; animation: resin .35s cubic-bezier(.2,.9,.3,1.2) both; animation-delay: min(0ms, var(--el, 0ms)); }
-.resultpop.won { border-color: #2E7D4F; }
+
 @keyframes resin { from { opacity: 0; transform: translateX(-50%) scale(.85); } to { opacity: 1; transform: translateX(-50%); } }
-.resultpop .trcard .pcard { transform: scale(.78); margin: -15px -11px; }
-.resultpop .trtext { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.resultpop .trtext small { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.resultpop .trtext b { font-family: var(--font-head); font-size: 20px; line-height: 1.15; }
-.resultpop.won .trtext b { color: #2E7D4F; }
-.resultpop .trtext p { margin: 0; font-size: 15px; font-weight: 700; }
-.resultpop .trtext p b { font-size: 20px; color: var(--red); }
-.resultpop .trtext em { font-style: normal; font-size: 12.5px; color: var(--muted); font-weight: 700; }
-.resultpop .rtimer { background: #E4DFD3; }
-.resultpop .rtimer { animation-duration: var(--dur, 6s); }
-@media (prefers-reduced-motion: reduce) { .resultpop, .rtimer { animation: none; } }
+
+@media (prefers-reduced-motion: reduce) {  .rtimer { animation: none; } }
 
 /* v0.30.1: Unehrlich-Spruch (rot) + lange Sprüche im Reaktionsfenster über die ganze Breite */
 .rbubble.unehrlich { background: #C8323C; color: #fff; border-color: #6E1218; }
@@ -1902,7 +1737,6 @@ html.bigtext .fansum { font-size: 17px; }
 
 /* v0.32: deutlichere Texte – lange Bildzeilen und Schilder dürfen umbrechen */
 .evstrip { flex-wrap: wrap; justify-content: center; row-gap: 2px; border-radius: 18px; max-width: 580px; }
-.soldsign { white-space: normal; max-width: 560px; text-align: center; line-height: 1.15; }
 
 /* v0.32 Variante C: ein durchgehendes Spielfeld, Mitspieler auf einer dezent abgedunkelten Leiste rechts.
    Der Tisch behält Größe und Rand (nur unsichtbar) – so bleibt jede Position im Spiel genau gleich. */
@@ -1946,7 +1780,7 @@ body:has(.stage) { background: var(--tbl-pat), radial-gradient(ellipse at 50% 55
 .stage .deck-wrap { position: relative; }
 .stage .deck-count { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); white-space: nowrap; background: rgba(0,0,0,.25); padding: 2px 8px; border-radius: 999px; }
 .stage .auslage, .stage .fan-wrap { right: 150px; }
-.stage .hand-row { right: 150px; }
+
 /* Plätze */
 .stage .gright { left: 0; right: 0; top: 0; bottom: 0; width: auto; display: block; pointer-events: none; z-index: 12; }
 .stage .gright > .prow { position: absolute; pointer-events: auto; gap: 5px; padding: 6px 8px 8px; border-radius: 16px; background: rgba(0,0,0,.12); order: 0; transition: background .4s, box-shadow .4s; }
@@ -1982,10 +1816,10 @@ body:has(.stage) { background: var(--tbl-pat), radial-gradient(ellipse at 50% 55
 .prow.seat-t .ratpile, .prow.seat-tl .ratpile, .prow.seat-tr .ratpile { left: 50%; top: calc(100% + 6px); transform: translateX(-50%); }
 /* Effekte: Tischmitte jetzt bei x = 422 */
 .stage { --cx: 422px; }
-.soldsign, .logpop, .donkeypop, .mflyc, .moneyreveal, .rpsshow.v2, .outbid, .resultpop, .cantpop { left: var(--cx); }
+ .mflyc, .moneyreveal, .rpsshow.v2, .outbid, .cantpop { left: var(--cx); }
 .qpop { left: calc(var(--cx) - 17px); }
 .fly { left: calc(var(--cx) - 42px); }
-.resultpop { top: 92px; }
+
 .cantpop { top: 70px; }
 .rpsshow.v2 { top: 76px; }
 .outbid { top: 70px; }
@@ -2009,7 +1843,7 @@ body:has(.stage) { background: var(--tbl-pat), radial-gradient(ellipse at 50% 55
 .stage .prow .coinpop { right: auto; left: 46px; top: -12px; }
 .stage .prow.seat-r .coinpop, .stage .prow.seat-tr .coinpop { left: auto; right: 46px; }
 .stage .prow .coinpop.bidpop { font-size: 19px; padding: 2px 13px; }
-.stage .gtable .hand-row { right: 200px; }
+
 /* Einmaliger Hinweis zur Sitzordnung */
 .seattip { position: absolute; left: var(--cx); top: 150px; transform: translateX(-50%); z-index: 34; width: 360px; background: #2B2F36; color: #fff; border-radius: 16px; padding: 10px 14px; font-size: 13px; line-height: 1.35; text-align: center; box-shadow: 0 10px 24px rgba(0,0,0,.4); cursor: pointer; animation: seattip 8s ease both; animation-delay: var(--el, 0ms); }
 .seattip b { color: var(--gold); font-family: var(--font-head); }
@@ -2160,14 +1994,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 
 /* Logo: Kurstafel-Kachel, coole Kuh mit Sonnenbrille, Rakete fliegt den Kurs hoch */
 .logorow.tb { gap: 16px; }
-.tblogo { position: relative; flex: none; width: clamp(72px, 11vw, 100px); aspect-ratio: 1; border-radius: 26px; border: 4px solid #fff; background: radial-gradient(circle at 30% 20%, #4B2D8F 0, #241A5C 55%, #12193D 100%); box-shadow: 0 6px 0 rgba(0,0,0,.25), 0 0 0 3px #FFD34E inset; transform: rotate(-5deg); overflow: hidden; margin: 4px 0 0 4px; }
-.tbchart { position: absolute; inset: 0; width: 100%; height: 100%; }
-.tbcow { position: absolute; left: 4%; bottom: -6%; width: 64%; height: 64%; }
-.tbcow .art { width: 100%; height: 100%; filter: drop-shadow(0 2px 0 rgba(0,0,0,.35)); }
-.tbshades { position: absolute; left: 22%; top: 36%; width: 56%; transform: rotate(-4deg); }
-.tbrocket { position: absolute; right: 4%; top: 2%; width: 26%; transform: rotate(32deg); filter: drop-shadow(0 2px 0 rgba(0,0,0,.3)); animation: tbfly 2.4s ease-in-out infinite; }
-@keyframes tbfly { 0%, 100% { transform: rotate(32deg) translate(0, 0); } 50% { transform: rotate(32deg) translate(0, -5px); } }
-@media (prefers-reduced-motion: reduce) { .tbrocket { animation: none; } }
+
 .tbname { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .tbteam { align-self: flex-start; background: #FF4F8B; color: #fff; font-family: var(--font-head); font-weight: 700; font-size: clamp(12px, 1.6vw, 15px); letter-spacing: .08em; text-transform: uppercase; padding: 2px 10px; border-radius: 999px; box-shadow: 0 3px 0 #A3214F; transform: rotate(-3deg); }
 .logo.tbtitle { font-size: clamp(30px, 5.2vw, 50px); line-height: .9; letter-spacing: -.01em; }
@@ -2184,3 +2011,37 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
   .logorow.tb .logocow { width: 68px; height: 68px; border-radius: 18px; border-width: 3px; }
   .logo.tbtitle { font-size: 36px; }
 }
+
+/* ===== v0.36: Börsen-Look überall, Warteraum, Börsenbericht ===== */
+/* Börsen-Rahmen (Gold) statt Holz */
+:root { --frame: #E2B33C; --frame-2: #9C7417; }
+.start .card { border: 4px solid var(--frame); box-shadow: 0 5px 0 var(--frame-2), 0 12px 26px rgba(0,0,0,.3); }
+.room .table { border: 6px solid var(--frame); box-shadow: inset 0 0 30px rgba(0,0,0,.35), 0 5px 0 var(--frame-2); }
+.room-settings { border-color: var(--frame); }
+.overlay.endtable { border: 6px solid var(--frame); box-shadow: 0 5px 0 var(--frame-2), 0 14px 30px rgba(0,0,0,.4); }
+.tpp i, .tprev-table { border-color: var(--frame); }
+/* Kurstafel: echte Zahlen etwas hervorgehoben */
+.tk.real b { color: #FFD34E; }
+.tk.real { padding: 0 2px; }
+/* Warteraum: Kurstafel neben dem Titel, Einstieg mit Einblendung */
+.room-top { gap: 12px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.room-top .ticker { flex: 1 1 0; width: 0; min-width: 0; height: 28px; }
+.room .table { position: relative; }
+.seat.joined { animation: seatjoin .6s var(--e-pop) both; animation-delay: var(--el, 0ms); }
+@keyframes seatjoin { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
+.joinpop { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 3; white-space: nowrap; background: #fff; color: var(--ink); border: 3px solid var(--frame); border-radius: 999px; padding: 4px 14px; font-family: var(--font-head); font-weight: 700; font-size: 15px; box-shadow: 0 6px 16px rgba(0,0,0,.3); pointer-events: none; animation: joinpop 3s ease both; animation-delay: var(--el, 0ms); }
+@keyframes joinpop { 0% { opacity: 0; transform: translate(-50%, -10px) scale(.9); } 10%, 85% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .seat.joined, .joinpop { animation: none; } }
+/* Spielende: größere Quartett-Symbole, Rechnung immer sichtbar */
+.picons .ci { width: 24px; height: 24px; }
+.pod.p1 .picons .ci { width: 26px; height: 26px; }
+.prow4 .picons .ci { width: 22px; height: 22px; }
+.sform2 { font-size: 13.5px; background: rgba(0,0,0,.28); border-radius: 999px; padding: 3px 14px; align-self: center; }
+/* Börsenbericht */
+.ending.recap h2 { letter-spacing: .01em; }
+.ending.recap li { border-left: 5px solid var(--frame); }
+.ending.recap .atitle { display: inline-flex; align-items: center; gap: 5px; }
+.ending.recap .atitle i { font-style: normal; }
+.ending.recap .endbtns { display: flex; gap: 10px; justify-content: center; }
+.ending.recap li { grid-template-columns: 150px 30px 66px 1fr; }
+.ending.recap .atitle { white-space: nowrap; }

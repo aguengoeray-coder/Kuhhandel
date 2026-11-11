@@ -1,5 +1,16 @@
 # Änderungsprotokoll
 
+## v0.36.0 – Börsen-Look, Börsenbericht, Rattenrunde im Ergebnis-Fenster
+
+- [x] Rattenrunde kommt ins Ergebnis-Fenster („Lea nimmt die Ratte · + 3 Karten“); die gelegten Scheine fliegen beim Schließen zum Nehmer, Aufdecken ist so lange gesperrt.
+- [x] Kurstafel zeigt echte Zahlen aus euren Spielen: letzter Sieg, Siege je Spieler (▲ zuletzt gewonnen), Rekord, teuerster Kauf – dazu die Tierpreise.
+- [x] Warteraum: Kurstafel neben dem Titel; wer einsteigt, springt auf seinen Platz und „Mo ist an der Börse eingestiegen“ wird kurz eingeblendet.
+- [x] Börsen-Rahmen in Gold statt Holz (Startseite, Warteraum, Spielende, Aussehen-Vorschau).
+- [x] Spielende: größere Quartett-Symbole, die Rechnung des Gewinners steht direkt da (Antippen zeigt die eines anderen).
+- [x] „Rückblick“ heißt jetzt **Börsenbericht** – mit Symbolen, neu „Pleitegeier“ (wer am wenigsten Geld übrig hat) und Knopf **Teilen** (schickt den Bericht als Text, z. B. in die WhatsApp-Gruppe).
+- [x] Einladungslink zeigt beim Teilen eine Vorschau („Komm an die Tier Börse! 🐮📈“ mit Kuh-Bild).
+- [x] Aufgeräumt: rund 230 ungenutzte Gestaltungsregeln entfernt – Aussehen bleibt gleich (per Bildvergleich geprüft).
+
 ## v0.35.0 – Team Rockets Tier Börse
 
 - [x] Das Spiel heißt jetzt **Team Rockets Tier Börse**: neuer Startbildschirm mit Kurstafel mit laufenden Tierpreisen, Spruch „Kaufen. Bluffen. Kuhhandeln.“ – auch Anmeldeseite, Seitentitel, App-Name auf dem Homescreen und Einladungstext.

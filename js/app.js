@@ -8,9 +8,9 @@ import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
-import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
+import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.35.0';
+export const APP_VERSION = '0.36.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -134,10 +134,11 @@ function render() {
   if (!DEMO) keepAwake(ui.screen === 'playing' || ui.screen === 'room');
   app.classList.toggle('playing', ui.screen === 'playing');
   if (ui.screen !== 'playing') app.onclick = null;
-  if (ui.screen === 'login') return renderLogin();
-  if (ui.screen === 'room' && ui.game) return renderRoom();
-  if (ui.screen === 'playing' && ui.game) return renderPlaying();
-  renderStart();
+  if (ui.screen === 'login') renderLogin();
+  else if (ui.screen === 'room' && ui.game) renderRoom();
+  else if (ui.screen === 'playing' && ui.game) renderPlaying();
+  else renderStart();
+  if (ui.screen !== 'playing' && document.getAnimations) document.getAnimations().forEach((a) => { try { if (a.effect && a.effect.getTiming().iterations === Infinity && a.startTime !== 0) a.startTime = 0; } catch { /* egal */ } });
 }
 
 // Kleines Spielerbild (Tier auf Farbe); ohne Profil: Anfangsbuchstabe
@@ -150,12 +151,64 @@ function avatarHtml(id, name, cls = '') {
 // Startseite: „Team Rockets Tier Börse“ – Kurstafel mit Tierpreisen, Logo: die Kuh
 export const GAME_NAME = 'Team Rockets Tier Börse';
 const TICK_MOVES = [12, -4, 7, 3, -9, 15, 5, -2, 8, 21];
+// Kurstafel mit echten Zahlen: Siege, Rekorde, letzter Sieg, teuerster Kauf (aus den gespeicherten Spielen)
+let tickerData = null; let tickerLoading = false;
+async function loadTicker() {
+  if (tickerLoading || tickerData) return;
+  tickerLoading = true;
+  try {
+    let rows;
+    if (DEMO) rows = DEMO_TICKER;
+    else {
+      let res = await sb.from('game_results').select('player_id, name, score, won, created_at, extras').order('created_at', { ascending: false }).limit(1000);
+      if (res.error) res = await sb.from('game_results').select('player_id, name, score, won, created_at').order('created_at', { ascending: false }).limit(1000);
+      if (res.error) throw res.error;
+      rows = res.data || [];
+    }
+    tickerData = tickerItems(rows);
+  } catch { tickerData = []; }
+  tickerLoading = false;
+  if (ui.screen === 'start' || ui.screen === 'room' || ui.screen === 'login') render();
+}
+function tickerItems(rows) {
+  const by = new Map();
+  rows.forEach((r) => { // neueste zuerst
+    const st = by.get(r.player_id) || { name: r.name, games: 0, wins: 0, best: 0, last: null };
+    st.games += 1; st.wins += r.won ? 1 : 0; st.best = Math.max(st.best, r.score || 0); if (st.last === null) st.last = !!r.won;
+    by.set(r.player_id, st);
+  });
+  const items = [];
+  const lastWin = rows.find((r) => r.won);
+  if (lastWin) items.push({ label: 'LETZTER SIEG', val: esc(lastWin.name), note: `🏆 ${lastWin.score}`, up: true });
+  [...by.values()].sort((a, b) => b.wins - a.wins || b.best - a.best).slice(0, 8).forEach((st) => {
+    items.push({ label: esc(st.name.toUpperCase()), val: `${st.wins} ${st.wins === 1 ? 'Sieg' : 'Siege'}`, note: st.last ? '▲ zuletzt gewonnen' : `▼ ${st.games} Spiele`, up: st.last });
+  });
+  const rec = [...by.values()].sort((a, b) => b.best - a.best)[0];
+  if (rec && rec.best) items.push({ label: 'REKORD', val: `${rec.best}`, note: `👑 ${esc(rec.name)}`, up: true });
+  let buy = null;
+  rows.forEach((r) => { const m = r.extras?.maxBuy; if (m && m.amount && (!buy || m.amount > buy.amount)) buy = { ...m, name: r.name }; });
+  if (buy && ANIMAL_BY_ID[buy.animal]) items.push({ animal: buy.animal, label: 'TEUERSTER KAUF', val: `${ANIMAL_BY_ID[buy.animal].name} ${buy.amount}`, note: `💸 ${esc(buy.name)}`, up: false });
+  return items;
+}
+const DEMO_TICKER = [
+  { player_id: 'u2', name: 'Nico', score: 4870, won: true, extras: { maxBuy: { animal: 'pferd', amount: 620 } } }, { player_id: 'u1', name: 'Alp', score: 3750, won: false },
+  { player_id: 'u1', name: 'Alp', score: 7150, won: true }, { player_id: 'u2', name: 'Nico', score: 2100, won: false }, { player_id: 'u3', name: 'Bennet', score: 4200, won: true },
+];
+function tickerHtml() {
+  if (!tickerData && !tickerLoading && (me.id || DEMO)) loadTicker();
+  const prices = ANIMALS.map((a, i) => { const d = TICK_MOVES[i % TICK_MOVES.length];
+    return `<span class="tk"><i>${art(a.id)}</i>${esc(a.name.toUpperCase())} <b>${a.value}</b><em class="${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d)} %</em></span>`; }).join('');
+  const real = (tickerData || []).map((x) => `<span class="tk real">${x.animal ? `<i>${art(x.animal)}</i>` : ''}${x.label} <b>${x.val}</b><em class="${x.up ? 'up' : 'dn'}">${x.note}</em></span>`).join('');
+  const all = real + prices + `<span class="tk"><i>${art(RAT)}</i>RATTE <b>0</b><em class="dn">☠ Ramsch</em></span>`;
+  return `<div class="ticker" aria-label="Kurse der Tier Börse"><div class="tkrun" style="animation-duration:${(ANIMALS.length + 1 + (tickerData || []).length) * 3.6}s">${all}${all}</div></div>`;
+}
 function brandHtml() {
   const tick = ANIMALS.map((a, i) => { const d = TICK_MOVES[i % TICK_MOVES.length];
     return `<span class="tk"><i>${art(a.id)}</i>${esc(a.name.toUpperCase())} <b>${a.value}</b><em class="${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d)} %</em></span>`; }).join('')
     + `<span class="tk"><i>${art(RAT)}</i>RATTE <b>0</b><em class="dn">☠ Ramsch</em></span><span class="tk">ESEL-BONUS <b>+50</b><em class="up">🎉 Dividende</em></span>`;
   const logo = `<span class="logocow" aria-hidden="true">${art('kuh')}</span>`;
-  return `<div class="ticker" aria-label="Kurse der Tier Börse"><div class="tkrun">${tick}${tick}</div></div>
+  void tick;
+  return `${tickerHtml()}
     <div class="logorow tb">${logo}<div class="tbname"><span class="tbteam">🚀 Team Rockets</span><h1 class="logo tbtitle">Tier<br><span class="tbb">Börse</span></h1></div></div>
     <p class="claim">Kaufen. Bluffen. Kuhhandeln. <small>Das Kartenspiel – online mit Freunden</small></p>`;
 }
@@ -275,9 +328,17 @@ function renderStart() {
   }));
 }
 
+let roomSeen = null; let roomJoin = null; // wer zuletzt eingestiegen ist (kurze Einblendung)
 function renderRoom() {
   const g = ui.game;
   const isHost = g.host === me.id;
+  const ids = g.players.map((p) => p.id);
+  if (roomSeen && roomSeen.code === g.code) {
+    const neu = g.players.find((p) => !roomSeen.ids.includes(p.id) && p.id !== me.id);
+    if (neu) { roomJoin = { id: neu.id, name: neu.name, at: Date.now() }; setTimeout(() => { if (ui.screen === 'room') render(); }, 3200); }
+  }
+  roomSeen = { code: g.code, ids };
+  const joinEl = roomJoin && Date.now() - roomJoin.at < 3000 ? roomJoin : null;
   const seats = Array.from({ length: MAX_PLAYERS }, (_, i) => {
     const p = g.players[i];
     if (!p) {
@@ -285,7 +346,7 @@ function renderRoom() {
     }
     const you = p.id === me.id ? ' (du)' : '';
     const kick = isHost && p.id !== me.id ? `<button type="button" class="kick" data-kick="${esc(p.id)}" aria-label="${esc(p.name)} entfernen">✕</button>` : '';
-    return `<div class="seat" style="--c:${SEAT_COLORS[i]}">
+    return `<div class="seat ${joinEl && joinEl.id === p.id ? 'joined' : ''}" style="--c:${SEAT_COLORS[i]}${joinEl && joinEl.id === p.id ? `;--el:-${Date.now() - joinEl.at}ms` : ''}">
       ${kick}${avatarHtml(p.id, p.name)}
       <div class="ribbon">${esc(p.name)}${you}</div>
       ${p.id === g.host ? '<span class="host-badge">Gastgeber</span>' : ''}
@@ -320,9 +381,10 @@ function renderRoom() {
     <section class="room">
       <div class="room-top">
         <h1 class="room-title">Warteraum</h1>
+        ${tickerHtml()}
         <span class="code-chip">Spiel-Code <b>${esc(g.code)}</b></span>
       </div>
-      <div class="table ${money ? 'short' : ''}" aria-label="Plätze am Tisch">${seats}</div>
+      <div class="table ${money ? 'short' : ''}" aria-label="Plätze am Tisch">${seats}${joinEl ? `<div class="joinpop" role="status" style="--el:-${Date.now() - joinEl.at}ms">📈 ${esc(joinEl.name)} ist an der Börse eingestiegen</div>` : ''}</div>
       ${settingsBox}
       ${ui.error ? `<div class="error" role="alert">${esc(ui.error)}</div>` : ''}
       <div class="room-actions">
@@ -1593,14 +1655,14 @@ function demo(kind) {
   if (kind === 'room') {
     ui.screen = 'room';
     ui.game = { id: 'g0', code: 'HOFX', host: params.get('guest') ? 'u2' : 'u1', status: 'lobby', version: 2, players: [{ id: 'u1', name: 'Alp' }, { id: 'u2', name: 'Nico' }, { id: 'u3', name: 'Lea' }],
-      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : null };
+      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : null };    if (params.get('join')) setTimeout(() => { ui.game = { ...ui.game, players: [...ui.game.players, { id: 'u4', name: 'Mo' }] }; render(); }, 300); // Screenshots: jemand steigt ein
   }
   const demoState = buildDemoState(kind, gameLocal);
   if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen
   if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }], state: { phase: 'turn', turn: 0, players: [{ id: me.id }] } }];
   if (demoState && params.get('herd')) { const me0 = demoState.players[0]; ['hahn', 'gans', 'katze', 'hund', 'schaf', 'ziege', 'esel', 'schwein', 'kuh', 'pferd'].forEach((id, k) => { me0.animals[id] = 1 + (k % 3); }); me0.rats = 2; } // Screenshots: volle Auslage
   if (demoState && params.get('cash')) { const n = Number(params.get('cash')); const vals = [0, 10, 10, 20, 50, 100, 200, 500]; demoState.players[0].money = Array.from({ length: n }, (_, k) => vals[k % vals.length]).sort((x, y) => x - y); } // Screenshots: viele Geldkarten
-  if (demoState && params.get('ev')) demoState.lastEvent = { n: 1, ...({ special: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u2', animal: 'pferd', count: 3 }, auction: { type: 'auction_won', buyer: 'u3', payee: 'u4', animal: 'schwein', amount: 130 }, self: { type: 'auction_won', buyer: 'u2', payee: 'u3', animal: 'kuh', amount: 90, self: true }, trade: { type: 'trade', accepted: true, offer: [10, 20], offerSum: 30, winner: 'u2', challenger: 'u2', target: 'u4', animal: 'ziege', count: 2 }, money: { type: 'money_drawn', player: 'u1', value: 50 } })[params.get('ev')] }; // Screenshots: Ereigniszeile
+  if (demoState && params.get('ev')) demoState.lastEvent = { n: 1, ...({ special: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u2', animal: 'pferd', count: 3 }, auction: { type: 'auction_won', buyer: 'u3', payee: 'u4', animal: 'schwein', amount: 130 }, self: { type: 'auction_won', buyer: 'u2', payee: 'u3', animal: 'kuh', amount: 90, self: true }, trade: { type: 'trade', accepted: true, offer: [10, 20], offerSum: 30, winner: 'u2', challenger: 'u2', target: 'u4', animal: 'ziege', count: 2 }, money: { type: 'money_drawn', player: 'u1', value: 50 }, rat: { type: 'rat_taken', player: 'u3', count: 3 } })[params.get('ev')] }; // Screenshots: Ereigniszeile
   if (demoState && params.get('bots')) demoState.autoplay = params.get('bots').split(',');
   if (params.get('takeover')) online = new Set(['u1', 'u2', 'u4']);
   if (demoState) {

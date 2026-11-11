@@ -54,19 +54,6 @@ function moneyCard(v, { idx = null, selected = false, size = '' } = {}) {
   return `<button type="button" class="${cls}" style="${style}" data-a="toggle" data-v="${idx}" aria-pressed="${selected}" aria-label="Geldkarte ${v}">${mIn(v)}</button>`;
 }
 
-// Geld als Stapel nach Scheinwert: Tippen legt einen Schein ins Angebot
-function moneyPiles(money, sel) {
-  const values = [...new Set(money)].sort((a, b) => a - b);
-  if (!values.length) return '<em class="nomoney">Keine Geldkarten</em>';
-  return `<div class="piles">${values.map((v) => {
-    const total = money.filter((m) => m === v).length;
-    const used = sel.filter((i) => money[i] === v).length;
-    const left = total - used;
-    return `<button type="button" class="pile" style="--m:${MONEY_COLORS[v] || '#eee'}" data-a="addv" data-v="${v}" ${left ? '' : 'disabled'} aria-label="${v}er hinzufügen, ${left} übrig">
-      <span class="pv">${v}</span><span class="pcnt">×${left}</span></button>`;
-  }).join('')}</div>`;
-}
-
 // Ausgewählte Scheine: Tippen nimmt sie wieder zurück
 function chosenCards(money, sel, empty = 4, added = null) {
   const cards = sel.map((i) => `<button type="button" class="money xs ${i === added ? 'in' : ''}" style="--m:${MONEY_COLORS[money[i]]}" data-a="remove" data-v="${i}" aria-label="${money[i]} zurücknehmen">${mIn(money[i])}</button>`).join('');
@@ -201,7 +188,7 @@ function avatar(p, idx, extra = '') {
 const AUSLAGE_MAX = 1;
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
-const EV_WAIT = { auction_won: 3500, special_won: 4000, trade: 6000 };
+const EV_WAIT = { auction_won: 3500, special_won: 4000, trade: 6000, rat_taken: 4000 };
 // Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
 export const calmFor = (type) => (EV_WAIT[type] ? EV_WAIT[type] + 500 : CALM_MS);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
@@ -935,12 +922,34 @@ export function renderGame(root, ctx) {
   // Blockieren läuft jetzt auf dem Tisch (siehe oben)
 
   const iconsOf = (r) => `${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}`;
-  if (state.phase === 'ended' && local.recap) {
+  // Börsenbericht: die Momente des Spiels im Stil eines Kurszettels (auch zum Teilen in der Gruppe)
+  const reportList = () => {
     const list = awards(state);
+    let poor = null;
+    for (const p of state.players) { const t = sum(p.money); if (!poor || t < poor.v) poor = { id: p.id, v: t }; }
+    const rich = list.find((a) => a.key === 'rich');
+    if (poor && (!rich || rich.who !== poor.id)) list.push({ key: 'poor', title: 'Pleitegeier', who: poor.id, name: state.players.find((p) => p.id === poor.id)?.name || '?', text: `nur noch ${poor.v} Taler` });
+    return list;
+  };
+  const ICON = { buy: '💸', trade: '🐮', rat: '🐀', ratcards: '🧀', special: '⭐', money: '🍀', rich: '🏦', poor: '📉' };
+  H.shareReport = async () => {
+    const sc = scores(state).sort((a, b) => b.score - a.score);
+    const text = ['📈 Börsenbericht – Team Rockets Tier Börse', `🏆 ${sc[0].name} gewinnt mit ${sc[0].score} Punkten`,
+      ...sc.slice(1).map((r, k) => `${k + 2}. ${r.name} · ${r.score}`), '',
+      ...reportList().map((a) => `${ICON[a.key] || '•'} ${a.title}: ${a.name} – ${a.text}`)].join('\n');
+    try {
+      if (navigator.share) { await navigator.share({ title: 'Börsenbericht', text }); return; }
+      await navigator.clipboard.writeText(text); local.shared = Date.now(); ctx.rerender();
+    } catch { /* abgebrochen */ }
+  };
+  if (state.phase === 'ended' && local.recap) {
+    const list = reportList();
+    const copied = local.shared && Date.now() - local.shared < 3000;
+    if (copied) wakeLocal(local.shared + 3050);
     overlay = `<div class="overlay endtable"><div class="ending recap">
-      <h2>Rückblick</h2>
-      <ul>${list.map((a) => { const i = idxOf(a.who); return `<li><span class="atitle">${esc(a.title)}</span>${i >= 0 ? avatar(v.players[i], i) : ''}<span class="awho">${esc(a.who === meId ? 'Du' : a.name)}</span><span class="atext">${esc(a.text)}</span></li>`; }).join('') || '<li>Keine besonderen Momente – ein ruhiges Spiel.</li>'}</ul>
-      <div class="endbtns"><button type="button" class="pill pill-red" data-a="recap">Zurück zur Wertung</button></div>
+      <h2>📈 Börsenbericht</h2>
+      <ul>${list.map((a) => { const i = idxOf(a.who); return `<li><span class="atitle"><i>${ICON[a.key] || '•'}</i>${esc(a.title)}</span>${i >= 0 ? avatar(v.players[i], i) : ''}<span class="awho">${esc(a.who === meId ? 'Du' : a.name)}</span><span class="atext">${esc(a.text)}</span></li>`; }).join('') || '<li>Keine besonderen Momente – ein ruhiges Spiel.</li>'}</ul>
+      <div class="endbtns"><button type="button" class="pill pill-white" data-a="shareReport">${copied ? 'Kopiert ✓' : '📤 Teilen'}</button><button type="button" class="pill pill-red" data-a="recap">Zurück zur Wertung</button></div>
     </div></div>`;
   } else if (state.phase === 'ended') {
     const s = scores(state).sort((a, b) => b.score - a.score);
@@ -957,7 +966,8 @@ export function renderGame(root, ctx) {
         <span class="pname2">${esc(r.id === meId ? 'Du' : r.name)}</span>
         <span class="pblock"><b>${r.score}</b><span class="picons">${iconsOf(r)}</span><i>${r.place}.</i></span></button>`;
     };
-    const openRow = local.scoreOpen ? ranked.find((r) => r.id === local.scoreOpen) : null;
+    // Rechnung steht immer da: erst die des Gewinners, Antippen zeigt die eines anderen
+    const openRow = ranked.find((r) => r.id === local.scoreOpen) || ranked[0];
     const cols = ['#FFD34E', '#D7263D', '#1D5FC2', '#B8285F', '#6D3FC0', '#7FA88A', '#fff'];
     const confetti = entered ? `<div class="confetti" aria-hidden="true">${Array.from({ length: 40 }, (_, k) =>
       `<i style="left:${(k * 37) % 100}%;background:${cols[k % cols.length]};animation-delay:${(k % 10) * 90}ms;animation-duration:${1600 + (k % 7) * 180}ms;transform:rotate(${k * 29}deg)"></i>`).join('')}</div>` : '';
@@ -967,7 +977,7 @@ export function renderGame(root, ctx) {
       ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
       <div class="sform2">${openRow ? `${esc(openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(v.players[idxOf(openRow.id)], openRow.blocked)}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}` : ''}</div>
       <div class="endbtns">
-        <button type="button" class="pill pill-white" data-a="recap">Rückblick</button>
+        <button type="button" class="pill pill-white" data-a="recap">📈 Börsenbericht</button>
         <button type="button" class="pill pill-red ${ctx.rematchId ? 'pulse' : ''}" data-a="rematch">${ctx.rematchId ? 'Revanche läuft – mitmachen' : 'Revanche'}</button>
         <button type="button" class="pill pill-white" data-a="exit">Zur Startseite</button>
       </div>
@@ -987,7 +997,7 @@ export function renderGame(root, ctx) {
   // Ergebnis-Fenster (ein Design für alles): Versteigerung, Spezialkarte, Kuhhandel.
   // Karte und Geld fliegen erst los, wenn das Fenster zugeht (Zeit um oder Antippen).
   const EV_DUR = EV_WAIT;
-  const receiverOf = (e) => (e.type === 'trade' ? (e.animal === RAT ? (e.winner === e.challenger ? e.target : e.challenger) : e.winner) : e.buyer);
+  const receiverOf = (e) => (e.type === 'rat_taken' ? e.player : e.type === 'trade' ? (e.animal === RAT ? (e.winner === e.challenger ? e.target : e.challenger) : e.winner) : e.buyer);
   const evSig = le && EV_DUR[le.type] ? `${le.type}|${le.n}` : null;
   let evNew = false;
   if (evSig && local.resSig !== evSig) { local.resSig = evSig; evNew = !!(evFresh || ctx.demoPop); }
@@ -1031,7 +1041,7 @@ export function renderGame(root, ctx) {
   };
   // Ratte genommen: die vor den Plätzen gelegten Karten fliegen alle zum Nehmer
   if (evFresh && le?.type === 'rat_taken' && local.ratLaid) {
-    keepFx(Object.entries(local.ratLaid).filter(([pid]) => pid !== le.player).map(([pid, n]) => moneyFly(pid, le.player, n, 150)).join(''), 1900);
+    keepFx(Object.entries(local.ratLaid).filter(([pid]) => pid !== le.player).map(([pid, n]) => moneyFly(pid, le.player, n, evDelay + 150)).join(''), evDelay + 1900, evDelay ? 'ev' : null);
   }
   if (state.phase === 'rat') local.ratLaid = { ...v.rat.laid }; else if (state.phase !== 'turn') local.ratLaid = null;
   if (evFresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
@@ -1130,7 +1140,7 @@ export function renderGame(root, ctx) {
     local.res = null;
   };
   // Neue Runde beginnt (aufdecken, Kuhhandel …): Fenster macht Platz
-  if (local.res && !evNew && entered && ['auction', 'special', 'rat', 'trade', 'payment'].includes(state.phase)) closeRes();
+  if (local.res && !evNew && entered && ['auction', 'special', 'rat', 'trade', 'payment', 'block'].includes(state.phase)) closeRes();
   if (local.res) {
     const el = Date.now() - local.res.at;
     if (el < local.res.dur) {
@@ -1155,6 +1165,12 @@ export function renderGame(root, ctx) {
         title = `${nm(e.buyer)} ${verb(e.buyer, e.count ? 'kaufst' : 'bekommst', e.count ? 'kauft' : 'bekommt')} die ${esc(aname(e.animal))}-Spezialkarte${e.count ? '' : ' umsonst'}`;
         body = e.count ? deal(e.payer, karten(e.count), e.payee, 'cards') : '<span class="ec-sub">Niemand hat gebuzzert</span>';
         tone = e.buyer === meId ? 'good' : '';
+      } else if (e.type === 'rat_taken') {
+        kind = '🐀 Rattenrunde';
+        card = playCard(RAT, 'rat');
+        title = `${nm(e.player)} ${verb(e.player, 'nimmst', 'nimmt')} die Ratte`;
+        body = `<div class="ec-deal">${ecP(e.player)}<span class="ec-arr">←</span><span class="ec-amt cards">${e.count ? `+ ${karten(e.count)}` : 'keine Karten'}</span></div>
+          <span class="ec-sub">${e.count ? `Alle gelegten Karten gehören jetzt ${e.player === meId ? 'dir' : nm(e.player)}` : 'Es lag noch nichts in der Mitte'}</span>`;
       } else {
         const isRat = e.animal === RAT;
         kind = isRat ? '🐀 Rattenhandel' : '🐮 Kuhhandel';
