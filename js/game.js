@@ -333,7 +333,11 @@ export function renderGame(root, ctx) {
   const seatOf = (id) => SEATS[seatList.findIndex((p) => p.id === id)] || null;
   const tradeMap = {};
   if (state.phase === 'turn' && myTurn && !v.mustDraw) possibleTrades(state, meId).forEach((t) => { (tradeMap[t.target] ||= new Set()).add(t.animal); });
-  const playersCol = v.players.map((p, i) => {
+  // dezente Pfeile zwischen den Plätzen: so herum wird gespielt
+  const seatArrows = SEATS.length === 3
+    ? '<span class="seatarrow" style="left:150px;top:24px" aria-hidden="true">↻</span><span class="seatarrow" style="left:676px;top:24px" aria-hidden="true">↻</span>'
+    : SEATS.length === 2 ? '<span class="seatarrow" style="left:50%;top:16px;transform:translateX(-50%)" aria-hidden="true">→</span>' : '';
+  const playersCol = seatArrows + v.players.map((p, i) => {
     const isMe = p.id === meId;
     const count = Array.isArray(p.money) ? p.money.length : p.money;
     let status = karten(count);
@@ -349,8 +353,8 @@ export function renderGame(root, ctx) {
     if (state.phase === 'special') {
       const sp = v.special;
       if (p.id === sp.revealer) status = 'Aufdecker';
-      else if (sp.buzzes[p.id] != null) status = `Buzz bei ${sp.buzzes[p.id]}`;
-      else if (sp.caps[p.id] != null) status = sp.caps[p.id] === 0 ? 'darf nicht buzzern' : `erst ab ${sp.caps[p.id]}`;
+      else if (sp.buzzes[p.id] != null) status = `Buzz ${sp.buzzes[p.id]}`;
+      else if (sp.caps[p.id] != null) status = sp.caps[p.id] === 0 ? 'kein Buzz' : `erst ab ${sp.caps[p.id]}`;
     }
     const chips = playerChips(p, tradeMap[p.id], p.id === meId ? 5 : CHIP_MAX); // deine eigenen Tiere liegen groß in der Auslage
     const isLeader = state.phase === 'auction' && auction.high && auction.high.player === p.id;
@@ -359,7 +363,7 @@ export function renderGame(root, ctx) {
     const offline = ctx.online && !isMe && !ctx.online.has(p.id);
     if (offline) status = 'offline';
     const bot = (ctx.autoplay || []).includes(p.id);
-    if (bot) status = '🤖 automatisch';
+    if (bot) status = '🤖 Bot';
     const dim = (state.phase === 'auction' && auction.passed.includes(p.id)) || offline ? ' dim' : '';
     let coin = '';
     if (evFresh && v.lastEvent?.type === 'money_drawn' && v.lastEvent.player === p.id) coin = `<span class="coinpop big">+${v.lastEvent.value}</span>`;
@@ -373,7 +377,7 @@ export function renderGame(root, ctx) {
     let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
     // du sitzt unten: kein eigener Platz – nur Sprechblasen erscheinen über deinem Geld
-    if (isMe) return said ? `<div class="mebubble">${bubble}</div>` : '';
+    if (isMe) return said ? `<div class="mebubble ${state.phase === 'payment' || state.phase === 'trade' || state.phase === 'rat' || local.tradeOpen ? 'up' : ''}">${bubble}</div>` : '';
     const laidN = state.phase === 'rat' ? (v.rat.laid[p.id] || 0) : 0;
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
     return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}">${coin}${ratPile}
@@ -453,7 +457,7 @@ export function renderGame(root, ctx) {
       if (revealing) {
         aucLeft = `<div class="ldecide">Du deckst auf …</div>`;
       } else if (running) {
-        aucLeft = `<div class="ldecide">Du versteigerst …</div>`;
+        aucLeft = ''; // „Du versteigerst“ steht schon oben im Schild
       } else if (a.high) {
         aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))}</button>
           <button type="button" class="pill pill-white" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>SELBST KAUFEN</small>${high}</button>`;
