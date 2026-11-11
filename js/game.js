@@ -10,7 +10,7 @@ import {
 import { art, STAR } from './animals.js';
 
 export const SEAT_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0'];
-const ANIMAL_COLORS = {
+export const ANIMAL_COLORS = {
   // deutlich unterschiedliche Farben je Tierart
   pferd: '#E3262E',   // knallrot
   kuh: '#1E3A8A',     // dunkelblau
@@ -163,7 +163,7 @@ function ratCard(extraRows = '', cls = '') {
 
 // Eine Spielkarte im Hochformat: Wert oben links und unten rechts, Bild in der Mitte, Name unten auf einem Band
 // Kleine Tierkarte (Strahlen, ohne Kreis) für Kacheln und Zeilen
-function miniCard(id, cls = '') {
+export function miniCard(id, cls = '') {
   return `<span class="mcard ${cls} ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>`;
 }
 
@@ -375,7 +375,8 @@ export function renderGame(root, ctx) {
       aucLeft = `<div class="ldecide">${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
     }
 
-    H.bid = (amt) => ctx.act((s) => bid(s, meId, Number(amt), ctx.now()));
+    const tick = () => { if (ctx.vibe !== false) { try { navigator.vibrate?.(15); } catch { /* egal */ } } };
+  H.bid = (amt) => { tick(); ctx.act((s) => bid(s, meId, Number(amt), ctx.now())); };
     H.pass = () => ctx.act((s) => passAuction(s, meId, ctx.now()));
     H.sell = () => ctx.act((s) => closeAuction(s, meId, 'sell', ctx.now()));
     H.buy = () => ctx.act((s) => closeAuction(s, meId, 'buy', ctx.now()));
@@ -873,7 +874,7 @@ export function renderGame(root, ctx) {
     const ty = mineM ? 150 : Math.round(posY(lem.player)) - 170;
     effects += `<div class="moneyreveal" style="--ty:${ty}px;--tx:${mineM ? 40 : 397}px">
       <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${mIn(lem.value)}</div>
-      <span>${esc(nameOf(lem.player))} ${lem.player === meId ? 'ziehst' : 'zieht'} <b>${lem.value}</b></span></div>`;
+      <span class="mrlabel">${esc(lem.player === meId ? 'Du' : nameOf(lem.player))} ${lem.player === meId ? 'ziehst' : 'zieht'} <b>${lem.value}</b></span></div>`;
   }
   if (state.phase === 'special') {
     const sp = v.special;
@@ -898,6 +899,11 @@ export function renderGame(root, ctx) {
     }
   } else {
     local.prevBuzz = undefined;
+  }
+  if (entered && state.phase === 'ended') {
+    const sc = scores(state).sort((a, b) => b.score - a.score);
+    const last = sc.length > 1 && sc[sc.length - 1].id === meId && sc[sc.length - 1].score < sc[0].score;
+    sounds.push(last ? 'boo' : 'fanfare');
   }
   if (entered && state.phase === 'auction') { sounds.push('flip'); if (v.lastEvent?.type === 'donkey') sounds.push('coins'); }
   else if (fresh && state.phase === 'auction' && auction.high) sounds.push('bid');

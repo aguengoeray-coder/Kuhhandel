@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.27.0
+
+- [x] Gezogener Geldschein sieht aus wie ein echter Schein (vorher dunkler Fleck in der Mitte).
+- [x] Startseite: Bei laufenden Spielen steht „Du bist dran!“ (rot umrandet), wenn jemand auf dich wartet.
+- [x] Regeln: alle Tierkarten mit Wert als kleine Karten; Überschriften in Tischfarbe (auch Bestenliste).
+- [x] Spielende: Fanfare für alle, „Buh“ für den letzten Platz.
+- [x] Gebotsknöpfe vibrieren kurz beim Tippen (wenn Vibration an).
+
 ## v0.26.0
 
 - [x] Kleine Tierbilder ohne Kreis: Kuhhandel-Auswahl, Ratten-Quartettwahl und Tier-Zeilen nutzen Mini-Karten mit Strahlen.

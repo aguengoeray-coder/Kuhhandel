@@ -1634,3 +1634,25 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .turnhint { left: -6px; top: -6px; }
 .trcount { top: -4px; bottom: auto; }
 .rpsshow.v2 .rpswords { font-size: 21px; gap: 8px; }
+
+/* ===================== v0.27 ===================== */
+/* Gezogener Geldschein sieht aus wie ein echter Schein */
+.moneyreveal .money.big .mv { position: absolute; inset: 0; background: none; padding: 0; border-radius: 0; color: var(--ink); font-size: 34px; font-family: var(--font-head); display: flex; align-items: center; justify-content: center; }
+.moneyreveal .money.big { padding: 0; }
+.moneyreveal > .mrlabel { background: #2B2F36; color: #fff; border-radius: 999px; padding: 5px 14px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+
+/* Startseite: du bist dran */
+.game-row.myturn { box-shadow: 0 0 0 3px var(--red); }
+.youturn { color: var(--red); font-weight: 900; animation: rpulse2 1.4s ease-in-out infinite; }
+@keyframes rpulse2 { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+/* Regeln & Bestenliste im Spiel-Look */
+.mbox h2 { font-family: var(--font-head); color: var(--tbl-3); }
+.mbox h3 { color: var(--tbl-2); }
+.rcards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 6px; margin: 4px 0 6px; }
+.rcard { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.rcard .mcard { width: 40px; height: 52px; }
+.rcard b { font-family: var(--font-head); font-size: 15px; }
+.rcard small { font-size: 11px; color: var(--muted); font-weight: 700; }
+.stats-table th, table.stats th { color: var(--tbl-2); }
+@media (prefers-reduced-motion: reduce) { .youturn { animation: none; } }

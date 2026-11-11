@@ -1,7 +1,7 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS } from '../src/engine.js';
-import { renderGame, SEAT_COLORS, fitStage } from './game.js';
+import { renderGame, SEAT_COLORS, fitStage, miniCard } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.26.0';
+export const APP_VERSION = '0.27.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -187,10 +187,15 @@ function renderStart() {
       <button class="slink sm" type="button" data-modal="profile">🐮 Spielerbild</button>
       <button class="slink sm" type="button" id="logout">Abmelden</button></div>`;
 
-  const resume = (ui.myGames || []).map((g) => `<li class="game-row resume">
-      <div class="host">Laufendes Spiel<small>${g.players.map((p) => esc(p.name)).join(' · ')}</small></div>
+  const resume = (ui.myGames || []).map((g) => {
+    let who = null;
+    try { who = g.state ? whoMustAct(g.state, Date.now()) : null; } catch { who = null; }
+    const mine = who === me.id || (Array.isArray(who) && who.includes(me.id));
+    return `<li class="game-row resume ${mine ? 'myturn' : ''}">
+      <div class="host">${mine ? '<span class="youturn">Du bist dran!</span>' : 'Laufendes Spiel'}<small>${g.players.map((p) => esc(p.name)).join(' · ')}</small></div>
       <button class="pill pill-red pill-small" type="button" data-resume="${esc(g.id)}">Weiter spielen</button>
-    </li>`).join('');
+    </li>`;
+  }).join('');
 
   const testRow = DEBUG ? `<li class="game-row test">
       <div class="host">Testspiel<small>Nur auf diesem Gerät · Debug-Modus</small></div>
@@ -974,7 +979,7 @@ async function loadGames() {
   // Laufende Spiele, in denen ich sitze (z. B. nach „Spiel verlassen“ oder Handywechsel)
   const recent = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
   const mine = await sb.from('games')
-    .select('id, code, host, status, players, updated_at')
+    .select('id, code, host, status, players, updated_at, state')
     .eq('status', 'playing').gte('updated_at', recent)
     .contains('players', [{ id: me.id }])
     .order('updated_at', { ascending: false }).limit(5);
@@ -1195,7 +1200,7 @@ async function loadPin() {
 
 const RULES = `
   <h3>Ziel</h3><p>Sammle Quartette (alle 4 Karten einer Tierart). Am Ende zählt: (Summe deiner Quartettwerte + passende Spezialkarten) × Anzahl deiner Quartette. Spezialkarten ohne eigenes Quartett: +250 danach.</p>
-  <h3>Karten</h3><p>Hahn 10 · Gans 40 · Katze 90 · Hund 160 · Schaf 250 · Ziege 350 · Esel 500 · Schwein 650 · Kuh 800 · Pferd 1000 – dazu 10 Spezialkarten (je 250) und 4 Ratten. 54 Karten.</p>
+  <h3>Karten</h3><div class="rcards">${ANIMALS.map((a) => `<span class="rcard">${miniCard(a.id)}<b>${a.value}</b><small>${a.name}</small></span>`).join('')}</div><p>Dazu 10 Spezialkarten (je 250) und 4 Ratten. 54 Karten.</p>
   <h3>Start</h3><p>Jeder hat 100 Taler: 2× 0, 3× 10, 1× 20, 1× 50. Wie viel die anderen haben, siehst du nicht – nur wie viele Scheine.</p>
   <h3>Dein Zug</h3><p><b>Versteigern:</b> Du deckst eine Karte auf. Bei einem Tier bieten die anderen. Nach jedem Gebot läuft die Uhr neu. Ist sie abgelaufen, entscheidest du: Zuschlag an den Höchstbietenden – oder du kaufst selbst zum Höchstgebot.<br>
   <b>Esel:</b> Wird ein Esel aufgedeckt, bekommen alle Geld von der Bank (50, 100, 200, 500).<br>
@@ -1476,7 +1481,7 @@ function demo(kind) {
   }
   const demoState = buildDemoState(kind, gameLocal);
   if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen
-  if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }] }];
+  if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }], state: { phase: 'turn', turn: 0, players: [{ id: me.id }] } }];
   if (demoState && params.get('herd')) { const me0 = demoState.players[0]; ['hahn', 'gans', 'katze', 'hund', 'schaf', 'ziege', 'esel', 'schwein', 'kuh', 'pferd'].forEach((id, k) => { me0.animals[id] = 1 + (k % 3); }); me0.rats = 2; } // Screenshots: volle Auslage
   if (demoState && params.get('cash')) { const n = Number(params.get('cash')); const vals = [0, 10, 10, 20, 50, 100, 200, 500]; demoState.players[0].money = Array.from({ length: n }, (_, k) => vals[k % vals.length]).sort((x, y) => x - y); } // Screenshots: viele Geldkarten
   if (demoState && params.get('bots')) demoState.autoplay = params.get('bots').split(',');
