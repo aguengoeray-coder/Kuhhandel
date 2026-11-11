@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.30.2
+
+- [x] Verschnaufpause: Nach jedem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte genommen, Geldschein gezogen) kann der Nächste 2,5 s lang nicht aufdecken oder handeln – der Knopf ist ausgegraut und füllt sich mit einem goldenen Balken. Test-Spieler warten genauso.
+- [x] Die gekaufte Karte fliegt etwas langsamer zum Käufer und immer bis zum Ende.
+- [x] Fehler behoben: Zuschlag-Schild („Verkauft an … für 90!“), Quartett-Jubel, gezogener Geldschein, fliegendes Geld und die weiße Info verschwanden, sobald irgendetwas Neues passierte (z. B. schnelles Bezahlen). Jetzt laufen sie immer ganz durch.
+- [x] Zeitgesteuerte Fenster richten sich nach der Serverzeit (wichtig, wenn die Uhr am Handy etwas falsch geht).
+
 ## v0.30.1
 
 - [x] Reaktionen: 😂 und 😱 sind raus. Neu: „Unehrliches, unmännliches Angebot! 👎“ (große rote Sprechblase mit Buh-Ton) und „Komm schon, da geht noch mehr!“.
