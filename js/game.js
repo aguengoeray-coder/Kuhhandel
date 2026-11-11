@@ -576,7 +576,7 @@ export function renderGame(root, ctx) {
       <div class="tpanel">
         ${who(target.id)}
         ${targets.length > 1 ? `<div class="tabs">${targets.map((id) => `<button type="button" class="tab ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${esc(nameOf(id))}</button>`).join('')}</div>` : ''}
-        <div class="atiles">${forTarget.map((t) => `<button type="button" class="atile ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}" aria-label="${aname(t.animal)}: es geht um ${t.count}">${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="cv">${aval(t.animal)}</em>` : ''}<span class="tcount">um ${t.count}</span></button>`).join('')}</div>
+        <div class="atiles ${forTarget.length > 4 ? 'many' : ''}">${forTarget.map((t) => `<button type="button" class="atile ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}" aria-label="${aname(t.animal)}: es geht um ${t.count}">${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="cv">${aval(t.animal)}</em>` : ''}<span class="tcount">um ${t.count}</span></button>`).join('')}</div>
         ${chosen ? animalStrip(chosen.animal, chosen.count, chosen.animal === RAT ? `wer mehr bietet, wird ${chosen.count === 2 ? 'beide' : 'sie'} los` : 'darum geht es') : ''}
       </div>
     </div>`;

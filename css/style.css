@@ -1811,3 +1811,14 @@ html.bigtext .fansum { font-size: 17px; }
 .atiles.mine .amore { align-self: center; background: rgba(255,255,255,.85); color: var(--ink); border-radius: 999px; padding: 1px 7px; font-size: 11px; font-weight: 800; }
 .tpanel:has(.atiles.mine) .kslots { margin-bottom: 0; }
 .tstriprow { margin-left: 160px; }
+
+/* v0.29.3: viele Tiere beim Gegner – kleinere Kacheln, damit alle sichtbar und antippbar bleiben */
+.tpanel .atiles.many { gap: 5px; min-height: 0; }
+.tpanel .atiles.many .atile { width: 34px; height: 40px; }
+.tpanel .atiles.many .atile.on { width: 42px; height: 50px; }
+.tpanel .atiles.many .atile .cv { font-size: 8px; }
+.tpanel .atiles.many .atile .tcount { font-size: 8.5px; padding: 0 3px; }
+
+/* Größere Tippflächen für kleine Knöpfe (Handy) */
+.chip.tradechip, .tab, .ehrlichbtn, .slink.sm, .menu-row .pill { position: relative; }
+.chip.tradechip::after, .tab::after, .ehrlichbtn::after, .slink.sm::after { content: ""; position: absolute; inset: -7px -3px; }

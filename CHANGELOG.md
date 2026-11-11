@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.29.3
+
+- [x] Fehler behoben: Beim Kuhhandel gegen jemanden mit vielen Tieren lag die dritte Reihe unter den Geldscheinen und war nicht antippbar. Ab 5 Tieren werden die Kacheln kleiner, alle bleiben sichtbar.
+- [x] Größere Tippflächen auf dem Handy für kleine Knöpfe (Tiere der Gegner, Gegner-Auswahl, „Ehrlich & männlich“, Profil-Knöpfe).
+
 ## v0.29.2
 
 - [x] Kuhhandel: In deinem Kasten siehst du jetzt deine eigenen Tiere (eine Reihe, Rest als „+N“). Das Tier, um das es geht, steht vorne, groß und golden umrandet – beim Anbieten, Warten und Antworten.
