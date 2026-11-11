@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.32.2';
+export const APP_VERSION = '0.33.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -487,6 +487,7 @@ function renderPlaying() {
     reactions: activeReactions(),
     reactionList: REACTIONS,
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
+    seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
     nudgeWho: waitingFor(),
     nudge: sendNudge,
@@ -1562,7 +1563,7 @@ function adminBody() {
 function demo(kind) {
   const demoProfiles = { u1: ['Alp', 'pferd', '#1D5FC2'], u2: ['Nico', 'schwein', '#B8285F'], u3: ['Bennet', 'esel', '#0B7A68'], u4: ['Mo', 'hahn', '#B58A00'] };
   Object.entries(demoProfiles).forEach(([id, [name, animal, color]]) => profiles.set(id, { id, name, animal, color }));
-  if (kind === 'testspiel') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(4); }
+  if (kind === 'testspiel' || kind === 'testspiel3') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(kind === 'testspiel3' ? 3 : 4); }
   me = { id: 'u1', name: 'Alp' };
   if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
   if (params.get('react')) reactions.set(params.get('react'), { text: params.get('rtext') === 'ehrlich' ? EHRLICH : params.get('rtext') === 'unehrlich' ? UNEHRLICH : params.get('rtext') === 'mehr' ? REACTIONS[2] : 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });

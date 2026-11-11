@@ -83,6 +83,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 ## Design
 
 Querformat, angelehnt an die Bedienung der Monopoly-App (eigene Gestaltung, keine fremden Grafiken/Figuren).
-Breiter Tisch (Standard: Petrol auf Bordeaux, frei wählbar unter „Aussehen“), Spieler rechts mit Farbband (du ganz unten),
-eigenes Geld als Fächer unten, deine Knöpfe unten links im Tisch (Daumen), Menü oben links in der Tischecke.
+Ein durchgehendes Spielfeld (Standard: Petrol, frei wählbar unter „Aussehen“). Sitzordnung wie am echten Tisch:
+Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten ohne eigenes Profil; Reihenfolge im Uhrzeigersinn.
+Eigenes Geld als Fächer unten, deine Knöpfe unten links (Daumen), Menü + 💬 oben links. Flugziele (Karten, Geld) werden nach
+dem Zeichnen gemessen (`data-aim-to` / `data-aim-from`, `aimFx` in `js/game.js`), nicht fest eingebaut.
 Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …), nicht fest einbauen.
