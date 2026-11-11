@@ -103,22 +103,22 @@ function specialMini(id) {
 
 // Kleine Symbole in der Spielerspalte: „2× [Tier]“, Ratten, Spezialkarten
 // Höchstens eine Reihe: Quartette zuerst, dann Ratten, Spezialkarten, dann nach Anzahl und Wert; Rest als „+N“
-const CHIP_MAX = 4;
-function playerChips(p, tradeable = new Set()) {
+const CHIP_MAX = 7; // passt in eine Reihe unter dem Profil
+function playerChips(p, tradeable = new Set(), max = CHIP_MAX) {
   const items = [];
   const chip = (id, cls, inner, title) => (tradeable.has(id)
     ? `<button type="button" class="chip ${cls} tradechip" data-a="tradeWith" data-v="${esc(p.id)}|${id}" aria-label="Kuhhandel mit ${esc(p.name)} um ${aname(id)}">${inner}</button>`
     : `<span class="chip ${cls}" title="${title}">${inner}</span>`);
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
-    if (n > 0) items.push({ rank: n === 4 ? 0 : tradeable.has(a.id) ? 1 : 3, n, val: a.value, html: chip(a.id, n === 4 ? 'done' : '', `<em>${n}×</em><span class="ci" style="--a:${ANIMAL_COLORS[a.id]}">${art(a.id)}</span>`, `${n}× ${a.name}`) });
+    if (n > 0) items.push({ rank: n === 4 ? 0 : tradeable.has(a.id) ? 1 : 3, n, val: a.value, html: chip(a.id, `card ${n === 4 ? 'done' : ''}`, `${miniCard(a.id)}<em>${n === 4 ? '✓' : `${n}×`}</em>`, `${n}× ${a.name}`) });
   }
   const r = ratsOf(p);
-  if (r > 0) items.push({ rank: tradeable.has(RAT) ? 1 : 2, n: r, val: 0, html: chip(RAT, 'rat', `<em>${r}×</em><span class="ci" style="--a:${ANIMAL_COLORS[RAT]}">${art(RAT)}</span>`, `${r}× Ratte`) });
-  for (const id of specialsOf(p)) items.push({ rank: 4, n: 1, val: SPECIAL_VALUE, html: `<span class="chip sp" title="${aname(id)}-Spezialkarte"><span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>${STAR}</span>` });
+  if (r > 0) items.push({ rank: tradeable.has(RAT) ? 1 : 2, n: r, val: 0, html: chip(RAT, 'card rat', `${miniCard(RAT)}<em>${r}×</em>`, `${r}× Ratte`) });
+  for (const id of specialsOf(p)) items.push({ rank: 4, n: 1, val: SPECIAL_VALUE, html: `<span class="chip card sp" title="${aname(id)}-Spezialkarte">${miniCard(id)}${STAR}</span>` });
   items.sort((x, y) => x.rank - y.rank || y.n - x.n || y.val - x.val);
-  if (items.length <= CHIP_MAX) return items.map((x) => x.html).join('');
-  return items.slice(0, CHIP_MAX - 1).map((x) => x.html).join('') + `<span class="chip more">+${items.length - CHIP_MAX + 1}</span>`;
+  if (items.length <= max) return items.map((x) => x.html).join('');
+  return items.slice(0, max - 1).map((x) => x.html).join('') + `<span class="chip more">+${items.length - max + 1}</span>`;
 }
 
 // Rechnung für die Wertung, z. B. „(800 + 250★ + 1000) × 2 + 250★ = 4350“
@@ -316,7 +316,7 @@ export function renderGame(root, ctx) {
       else if (sp.buzzes[p.id] != null) status = `Buzz bei ${sp.buzzes[p.id]}`;
       else if (sp.caps[p.id] != null) status = sp.caps[p.id] === 0 ? 'darf nicht buzzern' : `erst ab ${sp.caps[p.id]}`;
     }
-    const chips = playerChips(p, tradeMap[p.id]);
+    const chips = playerChips(p, tradeMap[p.id], p.id === meId ? 5 : CHIP_MAX); // deine eigenen Tiere liegen groß in der Auslage
     const isLeader = state.phase === 'auction' && auction.high && auction.high.player === p.id;
     if (isLeader) status = `🔨 ${auction.high.amount}`;
     const turnMark = (state.phase === 'rat' ? ratCurrent(v) === p.id : cur.id === p.id) && state.phase !== 'ended' ? ' turn' : '';
