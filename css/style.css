@@ -1852,3 +1852,7 @@ html.bigtext .fansum { font-size: 17px; }
 .resultpop .rtimer { background: #E4DFD3; }
 .resultpop .rtimer { animation-duration: var(--dur, 6s); }
 @media (prefers-reduced-motion: reduce) { .resultpop, .rtimer { animation: none; } }
+
+/* v0.30.1: Unehrlich-Spruch (rot) + lange Sprüche im Reaktionsfenster über die ganze Breite */
+.rbubble.unehrlich { background: #C8323C; color: #fff; border-color: #6E1218; }
+.reactpick > button.long { grid-column: 1 / -1; line-height: 1.15; padding: 3px 10px; }

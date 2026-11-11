@@ -276,7 +276,8 @@ export function renderGame(root, ctx) {
     const from = said?.from && said.from !== p.id ? said.from : null;
     const fromIdx = from ? idxOf(from) : -1;
  const isEhrlich = said?.text?.startsWith('Ehrliches, männliches');
-    const bubble = said ? `<div class="rbubble ${from ? 'to' : ''} ${isEhrlich ? 'ehrlich' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
+    const isUnehrlich = said?.text?.startsWith('Unehrliches');
+    const bubble = said ? `<div class="rbubble ${from ? 'to' : ''} ${isEhrlich ? 'ehrlich' : ''} ${isUnehrlich ? 'ehrlich unehrlich' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
     let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
     return `<div class="prow${isMe ? ' me' : ''}${turnMark}${dim}${isLeader ? ' leader' : ''}" style="order:${isMe ? 9 : 0};--c:${SEAT_COLORS[i]}">${coin}
@@ -1014,7 +1015,7 @@ export function renderGame(root, ctx) {
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick withdetail ${local.reactTo === meId ? 'self' : ''}" style="top:6px">
       <div class="rphead">${local.reactTo === meId ? 'Du · Reaktion an alle' : `An ${esc(nameOf(local.reactTo))}`}<button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
       ${playerDetail(v.players[idxOf(local.reactTo)], local.reactTo === meId)}
-      ${ctx.reactionList.map((r, i) => `<button type="button" data-a="react" data-v="${i}">${esc(r)}</button>`).join('')}</div>` : ''}
+      ${ctx.reactionList.map((r, i) => `<button type="button" data-a="react" data-v="${i}"${r.length > 16 ? ' class="long"' : ''}>${esc(r)}</button>`).join('')}</div>` : ''}
     ${ctx.toastMsg ? `<div class="toast" role="alert">${esc(ctx.toastMsg)}</div>` : ''}
   </div></div>`;
 
