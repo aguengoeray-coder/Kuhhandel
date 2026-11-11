@@ -130,6 +130,18 @@ test('Zahlungsunfähig: alle schauen erst die Scheine an – 5 s bietet niemand,
   assert.equal(g.auction.high.player, 'c');
 });
 
+test('Ereignis-Nummer: Gebote nach „kann nicht zahlen“ ändern das Ereignis nicht (Fenster kommt nur einmal)', () => {
+  let g = gameWithDeck(['schwein', 'hahn']);
+  g = drawForAuction(g, 'a', 0);
+  g = bid(g, 'b', 200, 3000);
+  g = closeAuction(g, 'a', 'sell', 20000);
+  const n = g.lastEvent.n;
+  g = bid(g, 'c', 50, 26000);
+  g = bid(g, 'b', 60, 27000);
+  assert.equal(g.lastEvent.type, 'cant_pay');
+  assert.equal(g.lastEvent.n, n);
+});
+
 test('Kuhhandel angenommen: Herausgeforderter bekommt das Geld, gibt das Tier ab', () => {
   let g = gameWithDeck(['hahn']);
   g.players[0].animals.kuh = 1;
@@ -519,7 +531,8 @@ test('Geldschein aufgedeckt: Aufdecker bekommt ihn, Betrag für alle sichtbar, Z
   assert.equal(g.phase, 'turn');
   assert.equal(currentPlayer(g).id, 'b');
   assert.equal(total(g.players[0].money), 300);
-  assert.deepEqual(g.lastEvent, { type: 'money_drawn', player: 'a', value: 200 });
+  assert.deepEqual({ ...g.lastEvent, n: undefined }, { type: 'money_drawn', player: 'a', value: 200, n: undefined });
+  assert.ok(Number.isInteger(g.lastEvent.n)); // eindeutige Nummer: Oberfläche zeigt jedes Ereignis nur einmal
   assert.deepEqual(viewFor(g, 'c').lastEvent.value, 200);
 });
 

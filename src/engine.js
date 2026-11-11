@@ -341,7 +341,7 @@ export function drawForAuction(prev, playerId, now) {
     const order = Array.from({ length: n }, (_, k) => state.players[(state.turn + 1 + k) % n].id);
     state.rat = { revealer: playerId, order, idx: 0, pot: [], laid: {} };
     state.phase = 'rat';
-    state.lastEvent = { type: 'rat_drawn', player: playerId };
+    state.lastEvent = { n: state.log.length, type: 'rat_drawn', player: playerId };
     log(state, `${me.name} deckt eine Ratte auf.`);
     return state;
   }
@@ -350,7 +350,7 @@ export function drawForAuction(prev, playerId, now) {
     const value = moneyValue(animal);
     giveCards(me, [value]);
     stat(state, playerId).moneyDrawn += value;
-    state.lastEvent = { type: 'money_drawn', player: playerId, value };
+    state.lastEvent = { n: state.log.length, type: 'money_drawn', player: playerId, value };
     log(state, `${me.name} zieht einen Geldschein: ${value}.`);
     nextTurn(state);
     return state;
@@ -362,7 +362,7 @@ export function drawForAuction(prev, playerId, now) {
     state.special = { animal: sp, revealer: playerId, startsAt: t + BATZEN_WAIT_MS + SPECIAL_DELAY_MS, buzzes: {}, caps: {}, rps: null, winner: null,
       batzen: { until: t + BATZEN_WAIT_MS, by: null, at: null, counts: null } };
     state.phase = 'special';
-    state.lastEvent = { type: 'special_drawn', animal: sp, player: playerId };
+    state.lastEvent = { n: state.log.length, type: 'special_drawn', animal: sp, player: playerId };
     log(state, `${me.name} deckt die ${animalName(sp)}-Spezialkarte auf.`);
     return state;
   }
@@ -372,9 +372,9 @@ export function drawForAuction(prev, playerId, now) {
     state.donkeysDrawn += 1;
     for (const p of state.players) giveCards(p, bankCards(payout));
     log(state, `${state.donkeysDrawn}. Esel – alle bekommen ${payout} Taler von der Bank.`);
-    state.lastEvent = { type: 'donkey', number: state.donkeysDrawn, payout };
+    state.lastEvent = { n: state.log.length, type: 'donkey', number: state.donkeysDrawn, payout };
   } else {
-    state.lastEvent = { type: 'draw', animal };
+    state.lastEvent = { n: state.log.length, type: 'draw', animal };
   }
   state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + REVEAL_MS : null, endsAt: now != null ? now + REVEAL_MS + AUCTION_START_MS : null };
   state.phase = 'auction';
@@ -427,7 +427,7 @@ export function closeAuction(prev, playerId, mode, now) {
   if (!a.high) {
     auctioneer.animals[a.animal] += 1;
     log(state, `Niemand bietet – ${auctioneer.name} bekommt ${animalName(a.animal)} umsonst.`);
-    state.lastEvent = { type: 'auction_won', animal: a.animal, buyer: auctioneer.id, amount: 0 };
+    state.lastEvent = { n: state.log.length, type: 'auction_won', animal: a.animal, buyer: auctioneer.id, amount: 0 };
     nextTurn(state);
     return state;
   }
@@ -445,7 +445,7 @@ export function closeAuction(prev, playerId, mode, now) {
   // Kann der Höchstbietende überhaupt zahlen? Sonst: Karten offenlegen, Versteigerung neu
   if (sum(bidder.money) < a.high.amount) {
     const failed = a.high.amount;
-    state.lastEvent = { type: 'cant_pay', player: bidder.id, amount: failed, revealed: bidder.money.slice() };
+    state.lastEvent = { n: state.log.length, type: 'cant_pay', player: bidder.id, amount: failed, revealed: bidder.money.slice() };
     a.caps[bidder.id] = failed - BID_STEP;
     a.high = null;
     a.passed = [];
@@ -479,7 +479,7 @@ export function pay(prev, playerId, cardIndices) {
     buyer.specials.push(pm.special);
     stat(state, buyer.id).specialsWon += 1;
     log(state, `${payer.name} zahlt ${cards.length} Karte(n). ${buyer.name} bekommt die ${animalName(pm.special)}-Spezialkarte.`);
-    state.lastEvent = { type: 'special_won', animal: pm.special, buyer: buyer.id, count: cards.length, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
+    state.lastEvent = { n: state.log.length, type: 'special_won', animal: pm.special, buyer: buyer.id, count: cards.length, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
     nextTurn(state);
     return state;
   }
@@ -492,7 +492,7 @@ export function pay(prev, playerId, cardIndices) {
   st.buys += 1;
   if (!st.maxBuy || pm.amount > st.maxBuy.amount) st.maxBuy = { amount: pm.amount, animal: pm.animal };
   log(state, `${payer.name} zahlt mit ${cards.length} Karte(n). ${buyer.name} bekommt ${animalName(pm.animal)}.`);
-  state.lastEvent = { type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
+  state.lastEvent = { n: state.log.length, type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee };
   nextTurn(state);
   return state;
 }
@@ -536,7 +536,7 @@ export function acceptTrade(prev, playerId) {
   }
   stat(state, ch.id).tradesWon += 1;
   stat(state, tg.id).tradesLost += 1;
-  state.lastEvent = { type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
+  state.lastEvent = { n: state.log.length, type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
   nextTurn(state);
   return state;
 }
@@ -570,7 +570,7 @@ export function counterTrade(prev, playerId, cardIndices) {
   }
   stat(state, winner.id).tradesWon += 1;
   stat(state, loser.id).tradesLost += 1;
-  state.lastEvent = { type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
+  state.lastEvent = { n: state.log.length, type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
   nextTurn(state);
   return state;
 }
@@ -609,7 +609,7 @@ export function ratTake(prev, playerId) {
   stat(state, playerId).ratsTaken += 1;
   stat(state, playerId).ratCards += pot.length;
   log(state, `${me.name} nimmt die Ratte und bekommt ${pot.length} Karte(n).`);
-  state.lastEvent = { type: 'rat_taken', player: playerId, count: pot.length, cards: pot.slice(), laid: { ...state.rat.laid } };
+  state.lastEvent = { n: state.log.length, type: 'rat_taken', player: playerId, count: pot.length, cards: pot.slice(), laid: { ...state.rat.laid } };
   afterRat(state);
   return state;
 }
@@ -659,7 +659,7 @@ export function showBatzen(prev, playerId, now) {
   for (const p of state.players) counts[p.id] = p.money.length;
   sp.batzen = { ...sp.batzen, by: playerId, at: now, counts };
   sp.startsAt = now + BATZEN_SHOW_MS + SPECIAL_DELAY_MS;
-  state.lastEvent = { type: 'batzen', player: playerId };
+  state.lastEvent = { n: state.log.length, type: 'batzen', player: playerId };
   log(state, `${player(state, playerId).name}: „Zeig Batzen!“`);
   return state;
 }
@@ -727,7 +727,7 @@ export function rpsPick(prev, playerId, choice, now) {
     else { r.players = winners; r.round += 1; }
   }
   r.picks = {};
-  state.lastEvent = { type: 'rps', ...r.last };
+  state.lastEvent = { n: state.log.length, type: 'rps', ...r.last };
   return state;
 }
 
@@ -745,7 +745,7 @@ export function specialDecide(prev, playerId, mode, now) {
     rev.specials.push(sp.animal);
     stat(state, rev.id).specialsWon += 1;
     log(state, `Niemand buzzert – ${rev.name} bekommt die ${animalName(sp.animal)}-Spezialkarte umsonst.`);
-    state.lastEvent = { type: 'special_won', animal: sp.animal, buyer: rev.id, count: 0 };
+    state.lastEvent = { n: state.log.length, type: 'special_won', animal: sp.animal, buyer: rev.id, count: 0 };
     nextTurn(state);
     return state;
   }
@@ -760,7 +760,7 @@ export function specialDecide(prev, playerId, mode, now) {
   if (mode !== 'sell') fail('Unbekannte Entscheidung.');
   if (other.money.length < res.count) {
     // Zahlungsunfähig: Karten offen, Countdown neu, darf höchstens bei seiner Kartenanzahl drücken
-    state.lastEvent = { type: 'cant_pay', player: other.id, count: res.count, revealed: other.money.slice(), special: true };
+    state.lastEvent = { n: state.log.length, type: 'cant_pay', player: other.id, count: res.count, revealed: other.money.slice(), special: true };
     sp.caps[other.id] = other.money.length;
     sp.buzzes = {};
     sp.rps = null;

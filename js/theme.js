@@ -91,7 +91,8 @@ export const DEFAULT_THEME = PRESETS.casino.v;
 const KEY = 'kh_theme';
 export function loadTheme(store) {
   let t;
-  try { t = { ...DEFAULT_THEME, ...JSON.parse(store.get(KEY) || '{}') }; } catch { t = { ...DEFAULT_THEME }; }
+  // Große Schrift ist Standard – aus nur, wenn man sie selbst ausgeschaltet hat (dann steht bigText: '')
+  try { t = { ...DEFAULT_THEME, bigText: '1', ...JSON.parse(store.get(KEY) || '{}') }; } catch { t = { ...DEFAULT_THEME, bigText: '1' }; }
   if (!BACK_PATTERNS[t.backPat]) t.backPat = DEFAULT_THEME.backPat; // z. B. entfernte Kuhflecken
   return t;
 }

@@ -87,7 +87,7 @@ function stackHtml(id, n, { special = false, bump = false } = {}) {
   const cards = Array.from({ length: n }, (_, k) => `<div class="scard ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--k:${n - 1 - k};--a:${ANIMAL_COLORS[id]}">${k === n - 1 ? `${v != null ? `<em>${v}</em>` : ''}<b>${art(id)}</b>` : ''}</div>`).join('');
   const near = n === 3 && id !== RAT;
   const label = id === RAT ? `${n}× Ratte` : done ? 'Quartett' : `noch ${4 - n}`;
-  return `<div class="stack ${done ? 'done' : ''} ${near ? 'near' : ''} ${id === RAT ? 'rat' : ''} ${bump ? 'bump' : ''}" style="--n:${n}" title="${n}× ${aname(id)}${special ? ' + Spezialkarte' : ''}">
+  return `<div class="stack ${done ? 'done' : ''} ${near ? 'near' : ''} ${id === RAT ? 'rat' : ''} ${bump ? 'bump' : ''}" data-animal="${id}" style="--n:${n}" title="${n}× ${aname(id)}${special ? ' + Spezialkarte' : ''}">
     <div class="spile">${cards}${special ? `<span class="sstar">${STAR}</span>` : ''}${done ? '<span class="scheck">✓</span>' : ''}</div>
     <span class="slabel">${label}</span>
   </div>`;
@@ -95,7 +95,7 @@ function stackHtml(id, n, { special = false, bump = false } = {}) {
 
 // Spezialkarte (klein): Tierbild mit Stern, Wert 250
 function specialMini(id) {
-  return `<div class="amini special" title="${aname(id)}-Spezialkarte">
+  return `<div class="amini special" data-animal="${id}" title="${aname(id)}-Spezialkarte">
     <div class="acard sp" style="--a:${ANIMAL_COLORS[id]}"><i></i><b>${art(id)}</b>${STAR}<em class="cv">${SPECIAL_VALUE}</em></div>
     <span>${aname(id)} ★</span>
   </div>`;
@@ -198,6 +198,26 @@ export const CALM_MS = 2500;
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
 
+// Eigene neue Karte: genau auf den passenden Stapel in deiner Auslage fliegen lassen (Ziel erst nach dem Zeichnen bekannt)
+function aimFly(root) {
+  const stage = root.querySelector('#stage');
+  if (!stage) return;
+  const sr = stage.getBoundingClientRect();
+  const sc = sr.width / 844 || 1;
+  root.querySelectorAll('.fly[data-flyto]').forEach((f) => {
+    const id = f.dataset.flyto;
+    const t = root.querySelector(`.auslage [data-animal="${id}"] .spile, .auslage [data-animal="${id}"] .acard`);
+    if (!t) return;
+    const r = t.getBoundingClientRect();
+    if (!r.width) return;
+    const cx = (r.left + r.width / 2 - sr.left) / sc;
+    const cy = (r.top + r.height / 2 - sr.top) / sc;
+    f.style.setProperty('--tx', `${Math.round(cx - (f.offsetLeft + f.offsetWidth / 2))}px`);
+    f.style.setProperty('--ty', `${Math.round(cy - (f.offsetTop + f.offsetHeight / 2))}px`);
+    f.style.setProperty('--fs', (r.width / sc / f.offsetWidth).toFixed(3));
+  });
+}
+
 // Einmal-Effekte, die schon laufen: Animationen auf die vergangene Zeit vorspulen (statt von vorn zu beginnen)
 function seekFx(root) {
   root.querySelectorAll('[data-fxat]').forEach((w) => {
@@ -232,8 +252,12 @@ export function renderGame(root, ctx) {
   const prev = local.prev || {};
   const fresh = prev.logLen !== undefined && state.log.length !== prev.logLen;
   const entered = prev.phase !== state.phase;
+  // Ist das letzte Ereignis wirklich neu? (Gebote, Herausforderungen usw. schreiben ins Protokoll, ändern es aber nicht)
+  const evN = v.lastEvent?.n;
+  const evFresh = fresh && evN != null && local.seenEvN !== evN;
+  if (evN != null) local.seenEvN = evN;
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
-  if (fresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) local.calmUntil = Date.now() + CALM_MS;
+  if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) local.calmUntil = Date.now() + CALM_MS;
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
   local.prev = { logLen: state.log.length, phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? state.log.length : null };
 
@@ -287,7 +311,7 @@ export function renderGame(root, ctx) {
     if (bot) status = '🤖 automatisch';
     const dim = (state.phase === 'auction' && auction.passed.includes(p.id)) || offline ? ' dim' : '';
     let coin = '';
-    if (fresh && v.lastEvent?.type === 'money_drawn' && v.lastEvent.player === p.id) coin = `<span class="coinpop big">+${v.lastEvent.value}</span>`;
+    if (evFresh && v.lastEvent?.type === 'money_drawn' && v.lastEvent.player === p.id) coin = `<span class="coinpop big">+${v.lastEvent.value}</span>`;
     if (fresh && isLeader && state.log[state.log.length - 1]?.includes('bietet')) coin = `<span class="coinpop bidpop" style="--c:${SEAT_COLORS[i]}">${auction.high.amount}!</span>`;
     const said = ctx.reactions?.[p.id];
     const from = said?.from && said.from !== p.id ? said.from : null;
@@ -704,7 +728,7 @@ export function renderGame(root, ctx) {
   // Auslage: immer sichtbar über dem Geld. Spezialkarte steckt im Stapel ihres Tiers.
   const lev = v.lastEvent;
   let bumpId = null;
-  if (fresh && lev) {
+  if (evFresh && lev) {
     if ((lev.type === 'auction_won' || lev.type === 'special_won') && lev.buyer === meId) bumpId = lev.animal;
     if (lev.type === 'trade' && lev.animal !== RAT && lev.winner === meId) bumpId = lev.animal;
     if (lev.type === 'rat_taken' && lev.player === meId) bumpId = RAT;
@@ -873,7 +897,7 @@ export function renderGame(root, ctx) {
   }
   if (fresh && le?.type === 'auction_won' && le.amount === 0 && prev.phase === 'auction') gavel = `Niemand bietet – ${esc(le.buyer === meId ? 'du bekommst' : `${nameOf(le.buyer)} bekommt`)} es umsonst`;
   if (gavel) { keepFx(`<div class="soldsign ${state.phase === 'turn' ? 'top' : ''}" aria-live="polite"><span class="ghammer">🔨</span><b>${gavel}</b></div>`, 2500); if (!sounds.includes('gavel')) sounds.push('gavel'); }
-  if (fresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade' || le.type === 'special_won' || le.type === 'rat_taken')) {
+  if (evFresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade' || le.type === 'special_won' || le.type === 'rat_taken')) {
     let to = le.type === 'trade' ? le.winner : le.type === 'rat_taken' ? le.player : le.buyer;
     if (le.type === 'trade' && le.animal === RAT) to = le.winner === le.challenger ? le.target : le.challenger;
     const flyAnimal = le.type === 'rat_taken' ? RAT : le.animal;
@@ -881,7 +905,7 @@ export function renderGame(root, ctx) {
     const ty = mine ? 125 : Math.round(posY(to) - 195);
     const tx = mine ? 30 : 716 - 319;
     const n = le.type === 'trade' ? le.count : 1;
- keepFx(Array.from({ length: n }, (_, k) => `<div class="fly" style="--tx:${tx}px;--ty:${ty}px;animation-delay:${k * 120}ms">
+ keepFx(Array.from({ length: n }, (_, k) => `<div class="fly" ${mine ? `data-flyto="${flyAnimal}"` : ''} style="--tx:${tx}px;--ty:${ty}px;animation-delay:${k * 120}ms">
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join(''), 1300 + n * 120);
   }
   // Geld fliegt (verdeckt) vom Zahler zum Empfänger
@@ -892,7 +916,7 @@ export function renderGame(root, ctx) {
     const dy = Math.round(rowY(to) - y0);
     return Array.from({ length: Math.min(count, 5) }, (_, k) => `<div class="mfly" style="top:${Math.round(y0 - 16)}px;--dy:${dy}px;animation-delay:${delay + k * 90}ms"></div>`).join('');
   };
-  if (fresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
+  if (evFresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
     if (le.type === 'auction_won' && le.amount > 0 && le.payer && le.payee) keepFx(moneyFly(le.payer, le.payee, le.cardCount || 1, 250), 1800);
     if (le.type === 'special_won' && le.count > 0 && le.payer && le.payee) keepFx(moneyFly(le.payer, le.payee, le.count, 250), 1800);
     if (le.type === 'trade') {
@@ -907,8 +931,8 @@ export function renderGame(root, ctx) {
   if (fresh && state.phase === 'rat' && !entered) sounds.push('bid');
   // Geldschein aus dem Stapel: Karte groß für alle zeigen, dann fliegt sie zum Spieler
   const lem = v.lastEvent;
-  const moneySig = lem?.type === 'money_drawn' ? `${state.log.length}|${lem.player}|${lem.value}` : null;
-  if (moneySig && fresh && local.moneySig !== moneySig) {
+  const moneySig = lem?.type === 'money_drawn' ? `${lem.n}|${lem.player}|${lem.value}` : null;
+  if (moneySig && evFresh && local.moneySig !== moneySig) {
     local.moneySig = moneySig;
     const mineM = lem.player === meId;
     const ty = mineM ? 150 : Math.round(posY(lem.player)) - 170;
@@ -932,7 +956,7 @@ export function renderGame(root, ctx) {
   } else {
     local.prevBuzz = undefined;
   }
-  if (fresh && v.lastEvent?.type === 'batzen') sounds.push('batzen');
+  if (evFresh && v.lastEvent?.type === 'batzen') sounds.push('batzen');
   if (entered && state.phase === 'ended') {
     const sc = scores(state).sort((a, b) => b.score - a.score);
     const last = sc.length > 1 && sc[sc.length - 1].id === meId && sc[sc.length - 1].score < sc[0].score;
@@ -945,7 +969,7 @@ export function renderGame(root, ctx) {
     sounds.push('outbid');
     effects += `<div class="outbid" aria-live="polite">Überboten!</div>`;
   }
-  if (fresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
+  if (evFresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
     if (le.type === 'auction_won') { sounds.push('gavel'); if (le.amount > 0) sounds.push('coins'); }
     if (le.type === 'special_won') { sounds.push('gavel'); if (le.count > 0) sounds.push('coins'); }
     if (le.type === 'rat_taken' && le.count > 0) sounds.push('coins');
@@ -977,8 +1001,8 @@ export function renderGame(root, ctx) {
 
   // Ergebnisse, über die man redet: bleiben eine feste Zeit stehen (auch wenn es weitergeht), Tipp schließt
   const rev = v.lastEvent;
-  const resSig = rev && (rev.type === 'trade' || (rev.type === 'special_won' && rev.count > 0)) ? `${rev.type}|${state.log.length}` : null;
-  if (resSig && local.resSig !== resSig) { local.resSig = resSig; if (fresh || ctx.demoPop) local.res = { ev: JSON.parse(JSON.stringify(rev)), at: Date.now(), dur: rev.type === 'trade' ? 6000 : 4000 }; }
+  const resSig = rev && (rev.type === 'trade' || (rev.type === 'special_won' && rev.count > 0)) ? `${rev.type}|${rev.n}` : null;
+  if (resSig && local.resSig !== resSig) { local.resSig = resSig; if (evFresh || ctx.demoPop) local.res = { ev: JSON.parse(JSON.stringify(rev)), at: Date.now(), dur: rev.type === 'trade' ? 6000 : 4000 }; }
   if (local.res) {
     const el = Date.now() - local.res.at;
     if (el < local.res.dur) {
@@ -1010,8 +1034,8 @@ export function renderGame(root, ctx) {
 
   // Kann nicht zahlen: alle Scheine groß für alle zeigen (5 s, Tipp schließt)
   const cpe = v.lastEvent;
-  const cpSig = cpe?.type === 'cant_pay' ? `cp|${state.log.length}|${cpe.player}` : null;
-  if (cpSig && local.cpSig !== cpSig) { local.cpSig = cpSig; if (fresh || ctx.demoPop) local.cp = { ev: JSON.parse(JSON.stringify(cpe)), at: Date.now() }; }
+  const cpSig = cpe?.type === 'cant_pay' ? `cp|${cpe.n}|${cpe.player}` : null;
+  if (cpSig && local.cpSig !== cpSig) { local.cpSig = cpSig; if (evFresh || ctx.demoPop) local.cp = { ev: JSON.parse(JSON.stringify(cpe)), at: Date.now() }; }
   if (local.cp) {
     const el = Date.now() - local.cp.at;
     if (el < CANTPAY_MS) {
@@ -1043,7 +1067,7 @@ export function renderGame(root, ctx) {
   // Esel aufgedeckt: eine große Einblendung, Scheine fliegen zu allen
   // (läuft über Neuzeichnen hinweg weiter: Startzeit merken, Animation an der richtigen Stelle fortsetzen)
   if (state.phase === 'auction' && v.lastEvent?.type === 'donkey') {
-    const dSig = `${state.log.length}|${v.lastEvent.number}`;
+    const dSig = `${v.lastEvent.n}|${v.lastEvent.number}`;
     if (local.donkeySig !== dSig) { local.donkeySig = dSig; local.donkeyAt = entered ? Date.now() : 0; }
     const el = Date.now() - (local.donkeyAt || 0);
     if (local.donkeyAt && el < 4200) {
@@ -1078,8 +1102,9 @@ export function renderGame(root, ctx) {
     const fn = H[b.dataset.a];
     if (fn) fn(b.dataset.v);
   };
-  seekFx(root);
   fitStage();
+  aimFly(root);
+  seekFx(root);
   if (ctx.playSound) [...new Set(sounds)].forEach((k, i) => setTimeout(() => ctx.playSound(k), i * 180));
 }
 
