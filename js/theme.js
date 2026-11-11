@@ -18,6 +18,7 @@ const PATTERNS = {
   zickzack: { name: 'Zickzack', css: `linear-gradient(135deg, ${W(0.07)} 25%, transparent 25%) -14px 0 / 28px 28px, linear-gradient(225deg, ${W(0.07)} 25%, transparent 25%) -14px 0 / 28px 28px` },
   kreise: { name: 'Kreise', css: `repeating-radial-gradient(circle at 50% 50%, transparent 0 10px, ${W(0.06)} 10px 12px) 0 0 / 44px 44px` },
   fischgraet: { name: 'Fischgrät', css: `repeating-linear-gradient(45deg, ${W(0.06)} 0 6px, transparent 6px 24px) 0 0 / 24px 48px, repeating-linear-gradient(-45deg, ${W(0.06)} 0 6px, transparent 6px 24px) 0 24px / 24px 48px` },
+  schnee: { name: 'Schnee', css: `radial-gradient(${W(0.55)} 1.2px, transparent 1.8px) 0 0 / 22px 22px, radial-gradient(${W(0.35)} 1px, transparent 1.5px) 11px 13px / 22px 22px, radial-gradient(${W(0.22)} 1.4px, transparent 2px) 5px 7px / 31px 31px` },
 };
 
 // Muster für die Kartenrückseiten (klein, gut erkennbar)
@@ -86,6 +87,7 @@ export const PRESETS = {
   ozean: { name: 'Ozean', v: { table: 'ozean', tablePat: 'wellen', bg: 'ozean', bgPat: 'wellen', back: 'tuerkis', backPat: 'kreise' } },
   wald: { name: 'Wald', v: { table: 'oliv', tablePat: 'filz', bg: 'wald', bgPat: 'fischgraet', back: 'orange', backPat: 'zickzack' } },
   pflaume: { name: 'Pflaume', v: { table: 'lila', tablePat: 'glatt', bg: 'pflaume', bgPat: 'kreise', back: 'gold', backPat: 'streifen' } },
+  winter: { name: 'Winter', v: { table: 'blau', tablePat: 'schnee', bg: 'nachtblau', bgPat: 'schnee', back: 'rot', backPat: 'streifen' } },
   strand: { name: 'Strand', v: { table: 'petrol', tablePat: 'wellen', bg: 'sand', bgPat: 'punkte', back: 'rosa', backPat: 'punkte' } },
 };
 export const DEFAULT_THEME = PRESETS.nachtblau.v;

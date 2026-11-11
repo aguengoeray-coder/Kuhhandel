@@ -8,6 +8,7 @@ import {
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
+import { haptic } from './haptics.js';
 
 export const SEAT_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0'];
 export const ANIMAL_COLORS = {
@@ -101,7 +102,7 @@ function playerChips(p, tradeable = new Set(), max = CHIP_MAX) {
     : `<span class="chip ${cls}" title="${title}">${inner}</span>`);
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
-    if (n > 0) items.push({ rank: n === 4 ? 0 : tradeable.has(a.id) ? 1 : 3, n, val: a.value, html: chip(a.id, `card ${n === 4 ? 'done' : ''}`, `${miniCard(a.id)}<em>${n === 4 ? '✓' : `${n}×`}</em>`, `${n}× ${a.name}`) });
+    if (n > 0) items.push({ rank: n === 4 ? 0 : tradeable.has(a.id) ? 1 : 3, n, val: a.value, html: chip(a.id, `card ${n === 4 ? 'done' : n === 3 ? 'near3' : ''}`, `${miniCard(a.id)}<em>${n === 4 ? '✓' : `${n}×`}</em>`, `${n}× ${a.name}`) });
   }
   const r = ratsOf(p);
   if (r > 0) items.push({ rank: tradeable.has(RAT) ? 1 : 2, n: r, val: 0, html: chip(RAT, 'card rat', `${miniCard(RAT)}<em>${r}×</em>`, `${r}× Ratte`) });
@@ -188,9 +189,9 @@ function avatar(p, idx, extra = '') {
 const AUSLAGE_MAX = 1;
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
-const EV_WAIT = { auction_won: 3500, special_won: 4000, trade: 4000, rat_taken: 4000 };
+const EV_WAIT = { auction_won: 3500, special_won: 4000, trade: 4800, rat_taken: 4000 }; // Kuhhandel: inkl. ~1 s Aufdecken
 // Stapel leer (nur noch Kuhhandel): Ergebnis kürzer zeigen, damit es flott weitergeht
-export const evWait = (type, deckLeft) => (type === 'trade' && deckLeft === 0 ? 3000 : EV_WAIT[type]);
+export const evWait = (type, deckLeft) => (type === 'trade' && deckLeft === 0 ? 3800 : EV_WAIT[type]);
 // Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
 export const calmFor = (type, deckLeft) => (EV_WAIT[type] ? evWait(type, deckLeft) + 500 : CALM_MS);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
@@ -281,6 +282,8 @@ export function renderGame(root, ctx) {
   const { state, meId, local } = ctx;
   avatarLookup = ctx.avatarFor || (() => null);
   const sounds = [];
+  const later = []; // Geräusche mit Verzögerung (z. B. Tierlaut, wenn die Karte umgedreht ist)
+  const feel = (k) => { if (!local.haptAt || Date.now() - local.haptAt > 300) { local.haptAt = Date.now(); haptic(k, ctx.vibe !== false); } };
   const v = viewFor(state, meId);
   const meIdx = v.players.findIndex((p) => p.id === meId);
   const me = v.players[meIdx];
@@ -310,6 +313,10 @@ export function renderGame(root, ctx) {
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
   if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = calmFor(v.lastEvent.type, v.deck); local.calmUntil = Date.now() + local.calmDur; }
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
+  if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + evWait(v.lastEvent.type, v.deck) };
+  if (local.turnHold && (Date.now() >= local.turnHold.until || state.phase !== 'turn')) local.turnHold = null;
+  const realHolder = state.phase === 'ended' || state.phase === 'block' ? null : state.phase === 'rat' ? ratCurrent(v) : currentPlayer(v).id;
+  const shownHolder = local.turnHold ? local.turnHold.id : realHolder;
   local.prev = { logLen: state.log.length, phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? state.log.length : null };
 
   const H = {}; // Klick-Aktionen dieser Darstellung
@@ -365,7 +372,7 @@ export function renderGame(root, ctx) {
     const chips = playerChips(p, tradeMap[p.id], p.id === meId ? 5 : CHIP_MAX); // deine eigenen Tiere liegen groß in der Auslage
     const isLeader = state.phase === 'auction' && auction.high && auction.high.player === p.id;
     if (isLeader) status = `🔨 ${auction.high.amount}`;
-    const turnMark = (state.phase === 'rat' ? ratCurrent(v) === p.id : cur.id === p.id) && state.phase !== 'ended' ? ' turn' : '';
+    const turnMark = shownHolder === p.id ? ' turn' : '';
     const offline = ctx.online && !isMe && !ctx.online.has(p.id);
     if (offline) status = 'offline';
     const bot = (ctx.autoplay || []).includes(p.id);
@@ -432,7 +439,7 @@ export function renderGame(root, ctx) {
     const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
     const card = revealing
-      ? `<div class="revealcard">${playCard(a.animal)}</div>`
+      ? `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}</div>`
       : `<div class="aucard center ringwrap ${infoFresh ? 'settle' : ''} ${running ? (secs <= 3 ? 'low' : '') : 'over'}" ${a.endsAt != null ? `data-ends="${a.endsAt}" data-total="${total}" data-fmt="n"` : ''}>
           ${playCard(a.animal)}
           <svg class="ring" viewBox="0 0 112 152" aria-hidden="true"><rect class="ringbg" x="4" y="4" width="104" height="144" rx="16" pathLength="100"></rect><rect class="ringp" x="4" y="4" width="104" height="144" rx="16" pathLength="100" style="stroke-dashoffset:${100 - pct}"></rect></svg>
@@ -490,7 +497,7 @@ export function renderGame(root, ctx) {
       aucLeft = `<div class="ldecide">${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
     }
 
-    const tick = () => { if (ctx.vibe !== false) { try { navigator.vibrate?.(15); } catch { /* egal */ } } };
+    const tick = () => haptic('tap', ctx.vibe !== false);
   H.bid = (amt) => { tick(); ctx.act((s) => bid(s, meId, Number(amt), ctx.now())); };
     H.pass = () => ctx.act((s) => passAuction(s, meId, ctx.now()));
     H.sell = () => ctx.act((s) => closeAuction(s, meId, 'sell', ctx.now()));
@@ -612,7 +619,7 @@ export function renderGame(root, ctx) {
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(sp.revealer))} entscheidet …</div>`;
     }
-    H.buzz = () => { const t = ctx.now(); if (ctx.vibe !== false) { try { navigator.vibrate?.(70); } catch { /* egal */ } } ctx.act((s) => buzz(s, meId, t)); };
+    H.buzz = () => { const t = ctx.now(); haptic('buzz', ctx.vibe !== false); ctx.act((s) => buzz(s, meId, t)); };
     H.rps = (c) => ctx.act((s) => rpsPick(s, meId, c, ctx.now()));
     H.spSell = () => ctx.act((s) => specialDecide(s, meId, 'sell', ctx.now()));
     H.spBuy = () => ctx.act((s) => specialDecide(s, meId, 'buy', ctx.now()));
@@ -671,7 +678,7 @@ export function renderGame(root, ctx) {
   };
   const who = (id, label) => { const i = idxOf(id); return `<div class="twho">${avatar(v.players[i], i)}<span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(label || nameOf(id))}</span></div>`; };
   // Mitte zwischen den beiden Seiten: das umkämpfte Tier groß, darunter „um 2“
-  const tmid = (animal, count) => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">um ${count}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span></div>`;
+  const tmid = (animal, count, extra = '') => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">um ${count}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span>${extra}</div>`;
   const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}">${miniCard(animal)}<span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b>${note ? `<small>${note}</small>` : ''}</span></div>`;
   if (state.phase === 'turn' && myTurn && local.tradeOpen) {
     const trades0 = possibleTrades(state, meId);
@@ -717,6 +724,16 @@ export function renderGame(root, ctx) {
 
   if (state.phase === 'trade') {
     const t = v.trade;
+    const TT = Number(state.settings?.tradeTimer) || 0;
+    let ttHtml = '';
+    if (TT) {
+      const tkey = `${state.log.length}|${t.challenger}|${t.animal}`;
+      if (local.ttKey !== tkey) { local.ttKey = tkey; local.ttAt = Date.now(); local.ttBuzzed = false; }
+      const left = Math.max(0, Math.ceil((local.ttAt + TT * 1000 - Date.now()) / 1000));
+      ttHtml = `<span class="ttimer ${left <= 5 ? 'low' : ''} ${left === 0 ? 'out' : ''}">${left ? `⏱ ${left} s` : '⏰ Zeit um!'}</span>`;
+      if (left > 0) wakeLocal(Date.now() + 1000 - ((Date.now() - local.ttAt) % 1000) + 20);
+      else if (!local.ttBuzzed) { local.ttBuzzed = true; sounds.push('nudge'); if (t.target === meId) haptic('heavy', ctx.vibe !== false); }
+    }
     const offerCount = Array.isArray(t.offer) ? t.offer.length : t.offer;
     const offerCards = Array.isArray(t.offer) ? t.offer.map((m) => moneyCard(m, { size: 'xs' })).join('') : Array.from({ length: offerCount }, () => '<div class="money xs back"></div>').join('');
     const isRat = t.animal === RAT;
@@ -733,7 +750,7 @@ export function renderGame(root, ctx) {
       const acceptBtn = `<button type="button" class="tbtn accept" data-a="accept"><small>ANNEHMEN</small>${isRat ? 'Geld + Ratte nehmen' : 'Geld nehmen'}<em>${isRat ? `${t.count}× Ratte kommt zu dir` : `${t.count}× ${esc(aname(t.animal))} geht an ${esc(nameOf(t.challenger))}`}</em></button>`;
       const counterBtn = `<button type="button" class="tbtn counter" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${canCounter ? `${karten(local.sel.length)} · ${selSum} bieten` : 'Scheine unten antippen'}</button>`;
       aucCenter = `<div class="tduel respond ${entered ? 'pop' : ''}">${challengerPanel(acceptBtn)}
-        ${tmid(t.animal, t.count)}
+        ${tmid(t.animal, t.count, ttHtml)}
         <div class="tpanel">
           ${who(meId, 'Du')}
           <div class="kslots">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
@@ -746,7 +763,7 @@ export function renderGame(root, ctx) {
       H.counter = () => ctx.act((s) => counterTrade(s, meId, local.sel));
     } else {
       aucCenter = `<div class="tduel">${challengerPanel()}
-        ${tmid(t.animal, t.count)}
+        ${tmid(t.animal, t.count, ttHtml)}
         <div class="tpanel">
           ${who(t.target)}
           <div class="kslots"><div class="slot q">?</div></div>
@@ -835,6 +852,8 @@ export function renderGame(root, ctx) {
     ...(ratsOf(me) ? [stackHtml(RAT, ratsOf(me), { bump: bumpId === RAT, tap: setTap, trade: setTrade.has(RAT) })] : []),
   ];
   const myAnimals = myItems.join('') || '<span class="noanimals">Noch keine Tiere</span>';
+  // Dein Gebot führt: Geld-Fächer schimmert golden
+  const iLead = state.phase === 'auction' && auction.high?.player === meId;
   // Viele Scheine: gleiche Werte zu einem Stapel mit „×N“ zusammenfassen, damit jeder Wert lesbar bleibt
   // Beim Auswählen (Bezahlen, Kuhhandel): ausgewählte Scheine liegen schon im Feld, im Fächer bleibt der Rest
   const handMoney = pickMode === 'sel' ? me.money.filter((_, i) => !local.sel.includes(i)) : me.money;
@@ -878,7 +897,7 @@ export function renderGame(root, ctx) {
     </div>`}</div>
     <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
-    <div class="fan-wrap ${pickMode ? 'picking' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${pickMode === 'sel' ? sum(handMoney) : sum(me.money)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
+    <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${iLead ? `<span class="fanlead">🔨 Du führst</span>` : ''}${handMoney.length ? `<span class="fansum">${pickMode === 'sel' ? sum(handMoney) : sum(me.money)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
 
   // ----- Menü oben links in der Tischecke -----
@@ -891,6 +910,7 @@ export function renderGame(root, ctx) {
     ${local.menu ? `<div class="menu">
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">🔊 Ton: ${ctx.soundName || (ctx.sound ? 'an' : 'aus')}</button>
       <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button></div>
+      ${state.settings?.standings && state.phase !== 'ended' ? '<button type="button" class="pill pill-white pill-small" data-a="standings">📊 Zwischenstand</button>' : ''}
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
       ${ctx.push != null ? `<button type="button" class="pill pill-white pill-small" data-a="push">🔔 Benachrichtigung: ${ctx.push ? 'an' : 'aus'}</button>` : ''}
@@ -900,6 +920,15 @@ export function renderGame(root, ctx) {
   </div>`;
 
   H.menu = () => { local.menu = !local.menu; local.reactOpen = false; ctx.rerender(); };
+  // Zwischenstand (nur wenn im Warteraum erlaubt): rechnet nur mit dem, was offen liegt – Geld bleibt verdeckt
+  H.standings = () => { local.standings = !local.standings; local.menu = false; ctx.rerender(); };
+  const standingsHtml = local.standings && state.settings?.standings && state.phase !== 'ended' ? (() => {
+    const rows = v.players.map((p, i) => ({ p, i, sc: scoreFor(p) })).sort((a, b) => b.sc.score - a.sc.score);
+    return `<div class="standings" data-a="standings" role="button" aria-label="Zwischenstand schließen">
+      <h3>📊 Zwischenstand <small>nur offene Quartette – Geld zählt nicht</small></h3>
+      ${rows.map((r, k) => `<div class="strow"><i>${k + 1}.</i>${avatar(r.p, r.i)}<span>${esc(r.p.id === meId ? 'Du' : r.p.name)}</span><span class="stq">${r.sc.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>`).join('') || '–'}</span><b>${r.sc.score}</b></div>`).join('')}
+      <small class="sthint">Antippen schließt</small></div>`;
+  })() : '';
   // Reaktionen: eigenen Platz antippen = an alle, anderen Spieler antippen = an ihn
   H.reactTo = (id) => {
     if (!ctx.reactionList) return;
@@ -1017,7 +1046,7 @@ export function renderGame(root, ctx) {
   if (local.prevQuartets) {
     const added = quartets.filter((q) => !local.prevQuartets.includes(q));
     const [qp, qa] = added.length ? added[0].split('|') : [];
-    if (added.length) local.qSound = true;
+    if (added.length) { local.qSound = true; if (qp === meId) local.qMine = true; }
     if (added.length && evNew && receiverOf(le) === qp && le.animal === qa) local.qBadge = `${evSig}`; // Quartett steht als Abzeichen im Ergebnis-Fenster
     else if (added.length) {
       const [pid, animal] = added[0].split('|');
@@ -1040,9 +1069,10 @@ export function renderGame(root, ctx) {
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join(''), evDelay + 1300 + n * 120, evDelay ? 'ev' : null);
   }
   // Der Zug wandert sichtbar im Uhrzeigersinn: ein goldener Schein gleitet vom alten zum neuen Platz
-  const holder = state.phase === 'ended' || state.phase === 'block' ? null : state.phase === 'rat' ? ratCurrent(v) : cur.id;
+  const holder = shownHolder;
   if (holder && local.holder && local.holder !== holder && idxOf(local.holder) >= 0) keepFx(`<div class="turnhalo" data-aim-from="${esc(local.holder)}" data-aim-to="${esc(holder)}"></div>`, 900);
   local.holder = holder;
+  if (local.turnHold) wakeLocal(local.turnHold.until + 30);
 
   // Geld fliegt (verdeckt) vom Platz des Zahlers zum Platz des Empfängers (Start und Ziel werden gemessen)
   const moneyFly = (from, to, count, delay = 0) => {
@@ -1067,6 +1097,8 @@ export function renderGame(root, ctx) {
 
   // Geräusche zu den Ereignissen
   if (entered && (state.phase === 'rat' || state.phase === 'special')) sounds.push('flip');
+  // Ratte aufgedeckt: Quieken, eine kleine Ratte huscht über den Tisch
+  if (entered && state.phase === 'rat') { later.push(['quiek', 500]); keepFx(`<div class="ratrun" aria-hidden="true">${art(RAT)}</div>`, 1900); }
   if (fresh && state.phase === 'rat' && !entered) sounds.push('bid');
   // Geldschein aus dem Stapel: Karte groß für alle zeigen, dann fliegt sie zum Spieler
   const lem = v.lastEvent;
@@ -1099,21 +1131,32 @@ export function renderGame(root, ctx) {
     const last = sc.length > 1 && sc[sc.length - 1].id === meId && sc[sc.length - 1].score < sc[0].score;
     sounds.push(last ? 'boo' : 'fanfare');
   }
-  if (entered && state.phase === 'auction') { sounds.push('flip'); if (v.lastEvent?.type === 'donkey') sounds.push('coins'); }
+  if (entered && state.phase === 'auction') {
+    sounds.push('flip');
+    if (v.lastEvent?.type === 'donkey') { sounds.push('coins'); later.push(['rain', 2300]); }
+    const VOICE = { kuh: 'muh', esel: 'iah', hahn: 'kikeriki' };
+    if (aval(auction.animal) >= 650) sounds.push('drum'); // teure Karte: Trommelwirbel
+    if (VOICE[auction.animal]) later.push([VOICE[auction.animal], 1350]);
+  }
   else if (fresh && state.phase === 'auction' && auction.high) sounds.push('bid');
   // Überboten: du lagst vorne, jetzt jemand anderes
   if (state.phase === 'auction' && prev.phase === 'auction' && prev.highMe && auction.high && auction.high.player !== meId) {
-    sounds.push('outbid');
+    sounds.push('outbid'); feel('outbid');
     effects += `<div class="outbid" aria-live="polite">Überboten!</div>`;
   }
   if (evFresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
-    if (le.type === 'auction_won') { sounds.push('gavel'); if (le.amount > 0) sounds.push('coins'); }
-    if (le.type === 'special_won') { sounds.push('gavel'); if (le.count > 0) sounds.push('coins'); }
+    if (le.type === 'auction_won') { sounds.push('gavel'); if (le.amount > 0) sounds.push('coins'); if (le.buyer === meId) feel('won'); }
+    if (le.type === 'special_won') { sounds.push('gavel'); if (le.count > 0) sounds.push('coins'); if (le.buyer === meId) feel('won'); }
     if (le.type === 'rat_taken' && le.count > 0) sounds.push('coins');
     if (le.type === 'money_drawn') { sounds.push('flip'); sounds.push('coins'); }
     if (le.type === 'trade') sounds.push('trade');
   }
   if (local.qSound || (entered && state.phase === 'ended')) sounds.push('quartet');
+  if (local.qMine) feel('quartet');
+  local.qMine = false;
+  // Kuhhandel-Herausforderung an dich / kann nicht zahlen: spürbar
+  if (entered && state.phase === 'trade' && v.trade.target === meId) feel('challenge');
+  if (evFresh && v.lastEvent?.type === 'cant_pay' && v.lastEvent.player === meId) feel('heavy');
   local.qSound = false;
 
 
@@ -1146,6 +1189,7 @@ export function renderGame(root, ctx) {
     // Flüge, die auf das Fenster warten, sofort starten
     if (left > 0) local.fx.forEach((f) => { if (f.tag === 'ev' && f.at >= local.res.at - 50) { f.at -= left; f.until -= left; } });
     if (local.stripAt > Date.now()) local.stripAt = Date.now(); // Infozeile erscheint, sobald das Fenster weg ist
+    if (local.turnHold) local.turnHold.until = Date.now(); // „dran“-Rahmen wandert jetzt weiter
     if (local.res.html) keepFx(`<div class="evout" aria-hidden="true">${local.res.html}</div>`, 280);
     local.res = null;
   };
@@ -1159,7 +1203,7 @@ export function renderGame(root, ctx) {
       const verb = (id, du, er) => (id === meId ? du : er);
       const ecP = (id) => { const i = idxOf(id); return i >= 0 ? `<span class="ec-p">${avatar(v.players[i], i)}<b>${nm(id)}</b></span>` : ''; };
       const deal = (from, amt, to, cls = '') => `<div class="ec-deal">${ecP(from)}<span class="ec-arr">→</span><span class="ec-amt ${cls}">${amt}</span><span class="ec-arr">→</span>${ecP(to)}</div>`;
-      let card = ''; let kind = ''; let title = ''; let body = ''; let tone = '';
+      let card = ''; let kind = ''; let title = ''; let body = ''; let tone = ''; let reveal = false;
       if (e.type === 'auction_won') {
         kind = '🔨 Versteigerung';
         card = playCard(e.animal);
@@ -1193,13 +1237,20 @@ export function renderGame(root, ctx) {
         } else {
           const amts = e.offerSum != null && e.counterSum != null;
           const cw = e.winner === e.challenger;
-          body = `<div class="ec-deal">${ecP(e.challenger)}${amts ? `<span class="ec-amt ${cw ? 'win' : ''}">${e.offerSum}</span>` : ''}<span class="ec-vs">gegen</span>${amts ? `<span class="ec-amt ${cw ? '' : 'win'}">${e.counterSum}</span>` : ''}${ecP(e.target)}</div>
-            <span class="ec-sub">${e.diff === 0 ? `Gleichstand – ${nm(e.challenger)} ${verb(e.challenger, 'gewinnst', 'gewinnt')}` : `Unterschied: <b>${e.diff}</b>`} · Geld wird getauscht</span>`;
+          // Aufdecken wie am Tisch: beide Stapel werden Schein für Schein umgedreht, dann steht der Gewinner fest
+          // (Unbeteiligte sehen nur die Rückseiten – Beträge bleiben verdeckt)
+          const side = (id, cards, total, win) => {
+            const list = Array.isArray(cards) ? [...cards].sort((x, y) => y - x) : Array.from({ length: cards || 0 }, () => null);
+            return `<div class="ecr-side ${win ? 'win' : ''}">${ecP(id)}<div class="ecr-cards">${list.map((m, k) => `<span class="ecr-c ${m == null ? 'back' : ''}" style="--k:${k};--m:${m == null ? '#ccc' : MONEY_COLORS[m] || '#eee'}">${m == null ? '' : m}</span>`).join('') || '<em>–</em>'}</div>${total != null ? `<b class="ecr-sum">${total}</b>` : ''}</div>`;
+          };
+          body = `<div class="ec-reveal">${side(e.challenger, e.offer, amts ? e.offerSum : null, cw)}<span class="ec-vs">gegen</span>${side(e.target, e.counter, amts ? e.counterSum : null, !cw)}</div>
+            <span class="ec-sub ecr-after">${e.diff === 0 ? `Gleichstand – ${nm(e.challenger)} ${verb(e.challenger, 'gewinnst', 'gewinnt')}` : `Unterschied: <b>${e.diff}</b>`} · Geld wird getauscht</span>`;
+          reveal = true;
         }
         tone = e.winner === meId ? 'good' : '';
       }
       const badge = local.res.quartet ? '<span class="ec-badge">Quartett!</span>' : '';
-      const html = `<div class="evcard ${tone}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
+      const html = `<div class="evcard ${tone} ${reveal ? 'reveal' : ''}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
         <div class="ec-art">${card}${badge}</div>
         <div class="ec-body"><small class="ec-kind">${kind}</small><b class="ec-title">${title}</b>${body}${local.res.quartet ? `<span class="ec-sub">${nm(receiverOf(e))} ${verb(receiverOf(e), 'hast', 'hat')} jetzt alle 4× ${esc(aname(e.animal))}</span>` : ''}</div>
         <i class="rtimer"></i></div>`;
@@ -1242,11 +1293,36 @@ export function renderGame(root, ctx) {
     const dSig = `${v.lastEvent.n}|${v.lastEvent.number}`;
     if (local.donkeySig !== dSig) { local.donkeySig = dSig; local.donkeyAt = entered ? Date.now() : 0; }
     const el = Date.now() - (local.donkeyAt || 0);
-    if (local.donkeyAt && el < 4200) {
-      if (el < 3400) effects += v.players.map((p) => `<div class="mflyc" data-aim-to="${esc(p.id)}" style="animation-delay:${2400 - el}ms;--ty:0px;--tx:0px"></div>`).join('');
-      wakeLocal(Date.now() + 4300 - el); // danach einmal aufräumen
+    if (local.donkeyAt && el < 4500) {
+      // Esel-Bonus: es regnet Scheine auf alle Plätze (je 3, leicht versetzt)
+      if (el < 3700) effects += v.players.map((p, pi) => [0, 1, 2].map((k) => `<div class="mflyc rain" data-aim-to="${esc(p.id)}" style="animation-delay:${2300 + k * 140 + pi * 40 - el}ms;--ty:0px;--tx:0px;margin-left:${(k - 1) * 14}px"></div>`).join('')).join('');
+      wakeLocal(Date.now() + 4600 - el); // danach einmal aufräumen
     }
   }
+
+  // Letzte Karte / Stapel leer: kurz groß ankündigen (ändert die Taktik)
+  if (local.prevDeck != null && v.deck !== local.prevDeck && v.deck <= 1 && state.phase !== 'ended') {
+    keepFx(`<div class="lastcard" role="status">${v.deck === 1 ? '⚡ Letzte Karte im Stapel!' : '🐮 Stapel leer – ab jetzt nur noch Kuhhandel!'}</div>`, 4300);
+    later.push(['last', 1400]);
+  }
+  local.prevDeck = v.deck;
+  // Großes Gebot (+100 oder mehr auf einmal): Wow-Effekt am Gebots-Schild
+  if (state.phase === 'auction' && auction.high) {
+    const key = `${auction.opensAt}|${auction.animal}`;
+    if (fresh && local.highKey === key && auction.high.amount - (local.highAmt || 0) >= 100 && auction.high.player !== meId) {
+      keepFx(`<div class="wowpop" aria-hidden="true">Wow! +${auction.high.amount - (local.highAmt || 0)}</div>`, 1500);
+      sounds.push('wow');
+    }
+    local.highKey = key; local.highAmt = auction.high.amount;
+  } else if (state.phase !== 'auction') { local.highKey = null; local.highAmt = 0; }
+  // Reaktionen fliegen sichtbar vom Absender zum Empfänger
+  local.reactSeen = local.reactSeen || {};
+  Object.entries(ctx.reactions || {}).forEach(([pid, r]) => {
+    const sig = `${r.until}|${r.text}`;
+    if (local.reactSeen[pid] === sig) return;
+    local.reactSeen[pid] = sig;
+    if (r.from && r.from !== pid && idxOf(r.from) >= 0 && idxOf(pid) >= 0) keepFx(`<div class="rfly" data-aim-from="${esc(r.from)}" data-aim-to="${esc(pid)}" aria-hidden="true">💬</div>`, 800);
+  });
 
   // Set angetippt, mit dem kein Kuhhandel geht: kurzer Hinweis über der Auslage
   if (local.setHint && Date.now() - local.setHint.at < 2200) {
@@ -1276,6 +1352,7 @@ export function renderGame(root, ctx) {
     ${ctx.reactionList ? '<button type="button" class="round chatbtn chat-br" data-a="reactTo" data-v="' + esc(meId) + '" aria-label="Reaktion an alle">💬</button>' : ''}
     <div class="gright">${playersCol}</div>
     ${overlay}
+    ${standingsHtml}
     ${effects}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
@@ -1300,7 +1377,10 @@ export function renderGame(root, ctx) {
   aimFx(root);
   seekFx(root);
   syncLoops();
-  if (ctx.playSound) [...new Set(sounds)].forEach((k, i) => setTimeout(() => ctx.playSound(k), i * 180));
+  if (ctx.playSound) {
+    [...new Set(sounds)].forEach((k, i) => setTimeout(() => ctx.playSound(k), i * 180));
+    later.forEach(([k, ms]) => setTimeout(() => ctx.playSound(k), ms));
+  }
 }
 
 // Bühne (844×390) passend auf den Bildschirm skalieren

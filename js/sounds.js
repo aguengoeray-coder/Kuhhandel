@@ -65,9 +65,30 @@ const SOUNDS = {
   buzz: () => { tone(110, 0, 0.45, { type: 'sawtooth', vol: 0.22 }); tone(116, 0, 0.45, { type: 'square', vol: 0.12 }); },
   rps: () => [0, 0.4, 0.8].forEach((d) => noise(d, 0.09, { freq: 600, vol: 0.4 })),
   nudge: () => [0, 0.16, 0.32].forEach((d) => tone(990, d, 0.1, { type: 'square', vol: 0.12 })),
+  // Tiergeräusche (Platzhalter – eigene Aufnahmen kommen in js/voices.js)
+  muh: () => { tone(150, 0, 0.75, { type: 'sawtooth', vol: 0.16, slide: -45 }); tone(152, 0.05, 0.7, { type: 'triangle', vol: 0.12, slide: -40 }); },
+  iah: () => { tone(620, 0, 0.32, { type: 'sawtooth', vol: 0.12, slide: 180 }); tone(260, 0.34, 0.45, { type: 'sawtooth', vol: 0.15, slide: -60 }); tone(640, 0.82, 0.28, { type: 'sawtooth', vol: 0.11, slide: 160 }); },
+  quiek: () => [0, 0.11, 0.2].forEach((d, i) => tone(2100 + i * 250, d, 0.07, { type: 'square', vol: 0.06, slide: 500 })),
+  kikeriki: () => [[700, 0, .12], [900, .13, .12], [1100, .26, .14], [880, .42, .36]].forEach(([f, d, l]) => tone(f, d, l, { type: 'sawtooth', vol: 0.08, slide: 120 })),
+  // Trommelwirbel vor teuren Karten
+  drum: () => { for (let i = 0; i < 14; i++) noise(i * 0.06, 0.05, { freq: 260 + (i % 2) * 40, vol: 0.18 + i * 0.012, q: 1.2 }); noise(0.86, 0.22, { freq: 180, vol: 0.45, q: 0.7 }); },
+  wow: () => { tone(330, 0, 0.18, { type: 'triangle', vol: 0.16, slide: 260 }); tone(660, 0.16, 0.32, { type: 'triangle', vol: 0.14, slide: -120 }); },
+  last: () => [[784, 0, .12], [988, .12, .12], [1175, .24, .3]].forEach(([f, d, l]) => tone(f, d, l, { type: 'square', vol: 0.1 })),
+  flipcard: () => noise(0, 0.05, { freq: 3800, vol: 0.18 }),
+  rain: () => { for (let i = 0; i < 9; i++) tone(1400 + ((i * 337) % 900), i * 0.06, 0.1, { type: 'sine', vol: 0.09 }); },
 };
 
+// Eigene Aufnahmen (z. B. „Muh“ von Nico) haben Vorrang vor den erzeugten Tönen
+import { VOICES } from './voices.js';
+const voiceCache = {};
+function playVoice(kind) {
+  const url = VOICES[kind];
+  if (!url || !level) return false;
+  try { const a = voiceCache[kind] || (voiceCache[kind] = new Audio(url)); a.currentTime = 0; a.volume = Math.min(1, level); a.play().catch(() => {}); return true; } catch { return false; }
+}
+
 export function playSound(kind) {
+  if (playVoice(kind)) return;
   if (!ctx || !SOUNDS[kind]) return;
   try { SOUNDS[kind](); } catch { /* egal */ }
 }
