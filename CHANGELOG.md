@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.34.1
+
+- [x] „Karte aufdecken“ und Kuhhandel (auch über die Kärtchen am Platz) sind erst frei, wenn das Ergebnis-Fenster abgelaufen ist (Versteigerung 4 s, Spezialkarte 4,5 s, Kuhhandel 6,5 s) – der Balken im Knopf zeigt die Wartezeit. Wegtippen schließt nur das eigene Fenster, die Sperre bleibt, damit alle anderen das Ergebnis sicher sehen. Test-Spieler warten genauso.
+
 ## v0.34.0 – flüssiger, ein Ergebnis-Fenster, Bezahlen im Fächer
 
 - [x] **Ein Ergebnis-Fenster für alles:** Versteigerung, Spezialkarte und Kuhhandel sehen gleich aus – Karte links, rechts Art, Ergebnis und wer wem zahlt („Du → 120 → Lea“). Grüner Rahmen = gut für dich.

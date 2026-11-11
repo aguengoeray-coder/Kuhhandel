@@ -1,7 +1,7 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
 import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS } from '../src/engine.js';
-import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_MS, CALM_TYPES } from './game.js';
+import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.34.0';
+export const APP_VERSION = '0.34.1';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -566,7 +566,7 @@ let calmLog = -1;
 let calmAt = 0;
 function botCalm(s) {
   if (s.log.length !== calmLog) { calmLog = s.log.length; calmAt = Date.now(); }
-  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < CALM_MS + 300;
+  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < calmFor(s.lastEvent.type) + 300;
 }
 // Wer lässt die Test-Spieler laufen? Der erste Spieler am Tisch, der online ist und selbst spielt.
 function botRunner() {
