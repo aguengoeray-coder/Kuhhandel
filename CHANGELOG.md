@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.32.2
+
+- [x] Dein Geld in der Hand ist weiter sichtbar (rund 90 % jeder Karte statt gut 60 %). Sonst hat sich nichts verschoben – per Bildvergleich in 36 Spielsituationen geprüft: nur der Geldfächer ist anders.
+
 ## v0.32.1
 
 - [x] Spielfeld ist jetzt wirklich ein durchgehendes Bild über den ganzen Bildschirm: kein versetzter Streifen mehr oben/unten (bzw. links/rechts), Muster läuft lückenlos durch, die Spielerleiste reicht bis zum Rand. Auf allen Bildschirmgrößen und beim Drehen/Größe ändern.

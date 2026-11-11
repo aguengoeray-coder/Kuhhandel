@@ -1930,3 +1930,8 @@ body:has(.stage) {
 }
 .stage { background: none; }
 .stage::after { display: none; }
+
+/* v0.32.2: Geld in der Hand weiter sichtbar. Der (unsichtbare) Tischrand schneidet nicht mehr ab:
+   statt overflow:hidden wird auf die Außenkante des Tisches zugeschnitten – alle Positionen bleiben gleich. */
+.stage .gtable { overflow: visible; clip-path: inset(0 round 24px); }
+.stage .fan-wrap { bottom: -8px; }
