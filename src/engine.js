@@ -36,6 +36,7 @@ export const SPECIAL_TICK_MS = 1000;          // eine Sekunde pro Zahl
 export const SPECIAL_FROM = 10;               // Countdown 10 … 1
 export const BATZEN_WAIT_MS = 5000;           // „Zeig Batzen!“: so lange kann jeder drücken
 export const BATZEN_SHOW_MS = 3000;           // so lange liegen die Stapel auf dem Tisch
+export const CANTPAY_HOLD_MS = 5000;          // „Kann nicht zahlen“: so lange sehen alle die Scheine, erst danach geht es weiter
 export const RPS = ['stein', 'schere', 'papier'];
 const BEATS = { stein: 'schere', schere: 'papier', papier: 'stein' };
 
@@ -393,6 +394,7 @@ export function bid(prev, playerId, amount, now) {
   }
   if (a.endsAt != null && now != null && now > a.endsAt + GRACE_MS) fail('Die Versteigerung ist schon vorbei.');
   if (a.opensAt != null && now != null && now < a.opensAt - GRACE_MS) fail('Die Karte wird gerade aufgedeckt – gleich geht es los.');
+  if (a.holdUntil != null && now != null && now < a.holdUntil - GRACE_MS) fail('Erst schauen alle die Scheine an – gleich geht es weiter.');
   a.high = { player: playerId, amount };
   a.passed = a.passed.filter((id) => id !== playerId);
   if (a.endsAt != null && now != null) a.endsAt = Math.max(a.endsAt, now + AUCTION_BID_MS);
@@ -447,7 +449,10 @@ export function closeAuction(prev, playerId, mode, now) {
     a.caps[bidder.id] = failed - BID_STEP;
     a.high = null;
     a.passed = [];
-    if (a.endsAt != null && now != null) a.endsAt = now + AUCTION_START_MS;
+    if (a.endsAt != null && now != null) {
+      a.holdUntil = now + CANTPAY_HOLD_MS; // alle schauen erst die Scheine an – vorher bietet niemand
+      a.endsAt = a.holdUntil + AUCTION_START_MS;
+    }
     log(state, `${bidder.name} kann ${failed} nicht zahlen und muss alle Karten zeigen: ${bidder.money.join(', ') || 'keine'}. Die Versteigerung beginnt neu.`);
     return state; // Phase bleibt 'auction'
   }
@@ -760,7 +765,7 @@ export function specialDecide(prev, playerId, mode, now) {
     sp.buzzes = {};
     sp.rps = null;
     sp.winner = null;
-    sp.startsAt = (now != null ? now : 0) + SPECIAL_DELAY_MS;
+    sp.startsAt = (now != null ? now : 0) + CANTPAY_HOLD_MS + SPECIAL_DELAY_MS; // erst Scheine anschauen, dann „Achtung“
     log(state, `${other.name} hat keine ${res.count} Karten und muss alle zeigen: ${other.money.join(', ') || 'keine'}. Der Countdown beginnt neu.`);
     return state;
   }

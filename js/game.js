@@ -1,6 +1,6 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
 import {
-  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, AUCTION_START_MS, AUCTION_BID_MS,
+  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, CANTPAY_HOLD_MS, AUCTION_START_MS, AUCTION_BID_MS,
   viewFor, possibleTrades, scores, currentPlayer,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
@@ -195,7 +195,7 @@ function avatar(p, idx, extra = '') {
 
 // Nach einem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte, Geldschein) kurz Pause, bevor aufgedeckt werden darf
 export const CALM_MS = 2500;
-const CANTPAY_MS = 5000; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß
+const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
 
 // Einmal-Effekte, die schon laufen: Animationen auf die vergangene Zeit vorspulen (statt von vorn zu beginnen)
@@ -320,8 +320,10 @@ export function renderGame(root, ctx) {
     const iAmAuctioneer = a.auctioneer === meId;
     const high = a.high ? a.high.amount : 0;
     const cap = a.caps[meId];
-    const canBid = (amt) => cap == null || amt <= cap;
     const nowR = ctx.now();
+    const held = a.holdUntil != null && nowR < a.holdUntil; // nach „kann nicht zahlen“: alle schauen erst die Scheine an
+    if (held && (!wake || wake > a.holdUntil)) wake = a.holdUntil;
+    const canBid = (amt) => !held && (cap == null || amt <= cap);
     const revealing = a.opensAt != null && nowR < a.opensAt;
     if (revealing) wake = a.opensAt; // nach der Animation neu zeichnen
     // Kleiner, dezenter Infokasten – erscheint erst nach dem Aufdecken
@@ -336,7 +338,7 @@ export function renderGame(root, ctx) {
     </div>`;
     // Countdown: Ring um die Karte – bieten nur solange er läuft, Zuschlag erst danach
     const now = ctx.now();
-    const running = a.endsAt != null && now < a.endsAt && !revealing;
+    const running = a.endsAt != null && now < a.endsAt && !revealing; // läuft auch während der Pause nach „kann nicht zahlen“ (Uhr zeigt 15 … 11, Bieten gesperrt)
     const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
     const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
@@ -386,7 +388,7 @@ export function renderGame(root, ctx) {
       // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
       const steps = [10, 20, 50, 100]; // mehr bieten = mehrmals tippen (z. B. 100, dann 20)
       const mine = sum(me.money);
-      aucLeft = `<div class="lhead">Bieten <small>mind. ${high + BID_STEP}</small></div>
+      aucLeft = `<div class="lhead">Bieten <small>${held ? 'gleich geht’s los …' : `mind. ${high + BID_STEP}`}</small></div>
         <div class="bidgrid">${steps.map((st) => {
           const amt = high + st;
           const over = amt > mine;

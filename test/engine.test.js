@@ -5,7 +5,7 @@ import {
   possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS, passAuction,
   AUCTION_START_MS, AUCTION_BID_MS, REVEAL_MS, bestPay,
   RAT, ratLay, ratTake, ratCurrent, buzz, rpsPick, specialDecide, specialStage, specialNumber, showBatzen, batzenStage, BATZEN_WAIT_MS, BATZEN_SHOW_MS,
-  chooseBlock, scoreFor, SPECIAL_DELAY_MS, moneyDeckFrom, awards,
+  chooseBlock, scoreFor, SPECIAL_DELAY_MS, CANTPAY_HOLD_MS, moneyDeckFrom, awards,
 } from '../src/engine.js';
 
 const P = [
@@ -114,6 +114,20 @@ test('Zahlungsunfähig: Karten offen, Neustart, höchstens altes Gebot minus 10'
   g = bid(g, 'b', 190); // erlaubt (Bluff bleibt möglich)
   g = bid(g, 'c', 195 + 5);
   assert.throws(() => bid(g, 'b', 210), GameError); // über der Obergrenze von 190
+});
+
+test('Zahlungsunfähig: alle schauen erst die Scheine an – 5 s bietet niemand, dann 10 s Versteigerung', () => {
+  let g = gameWithDeck(['schwein', 'hahn']);
+  g = drawForAuction(g, 'a', 0);
+  g = bid(g, 'b', 200, 3000);
+  const t = 20000;
+  g = closeAuction(g, 'a', 'sell', t);
+  assert.equal(g.lastEvent.type, 'cant_pay');
+  assert.equal(g.auction.holdUntil, t + CANTPAY_HOLD_MS);
+  assert.equal(g.auction.endsAt, t + CANTPAY_HOLD_MS + AUCTION_START_MS);
+  assert.throws(() => bid(g, 'c', 50, t + 1000), GameError); // noch gesperrt – auch wer das Fenster wegtippt
+  g = bid(g, 'c', 50, t + CANTPAY_HOLD_MS + 100);
+  assert.equal(g.auction.high.player, 'c');
 });
 
 test('Kuhhandel angenommen: Herausgeforderter bekommt das Geld, gibt das Tier ab', () => {
@@ -416,7 +430,7 @@ test('Spezialkarte zahlungsunfähig: Karten offen, Countdown neu, darf erst bei 
   assert.equal(g.phase, 'special');
   assert.equal(g.lastEvent.type, 'cant_pay');
   assert.deepEqual(g.lastEvent.revealed, [0, 10, 50]);
-  const at2 = (n) => t + SPECIAL_DELAY_MS + (10 - n) * 1000 + 100;
+  const at2 = (n) => t + CANTPAY_HOLD_MS + SPECIAL_DELAY_MS + (10 - n) * 1000 + 100; // erst 5 s Scheine anschauen
   assert.throws(() => buzz(g, 'b', at2(5)), GameError);
   g = buzz(g, 'b', at2(3));
   assert.equal(g.special.buzzes.b, 3);
