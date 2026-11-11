@@ -1919,3 +1919,14 @@ body:has(.stage) { background: var(--tbl-pat), var(--tbl-3); }
 .tpp b { left: 22px; }
 .tpp s { position: absolute; left: 4px; bottom: 4px; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #fff; }
 .th3note { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 6px; }
+
+/* v0.32.1: Spielfeld als EIN Hintergrund über den ganzen Bildschirm (kein Versatz oben/unten am Rand) */
+body:has(.stage) {
+  background:
+    linear-gradient(90deg, transparent var(--sidex, 75%), rgba(255,255,255,.08) var(--sidex, 75%), rgba(255,255,255,.08) calc(var(--sidex, 75%) + 1.5px), rgba(0,0,0,0) calc(var(--sidex, 75%) + 1.5px), rgba(0,0,0,.2) calc(var(--sidex, 75%) + 16px)),
+    var(--tbl-pat),
+    radial-gradient(ellipse at 38% 45%, var(--tbl-1) 0%, var(--tbl-2) 58%, var(--tbl-3) 100%);
+  background-attachment: fixed;
+}
+.stage { background: none; }
+.stage::after { display: none; }
