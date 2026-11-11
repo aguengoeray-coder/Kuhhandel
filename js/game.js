@@ -219,12 +219,13 @@ function fitTop(root) {
   const gt = st && st.querySelector('.gtable');
   if (!gt) return;
   const S = st.getBoundingClientRect();
-  const s = S.height / 390 || 1;
+  const s = S.height / st.offsetHeight || 1;
   const tops = [...st.querySelectorAll('.gright > .prow.seat-t, .gright > .prow.seat-tl, .gright > .prow.seat-tr')];
   if (!tops.length) return;
   const bottom = Math.max(...tops.map((e) => (e.getBoundingClientRect().bottom - S.top) / s));
   const pad = Math.round(bottom + 4 - gt.offsetTop); // 4 px Luft unter dem Platz
-  if (pad > 62) gt.style.paddingTop = `${Math.min(pad, 92)}px`;
+  const base = parseFloat(getComputedStyle(gt).paddingTop) || 62;
+  if (pad > base) gt.style.paddingTop = `${Math.min(pad, base + 30)}px`;
 }
 
 // Eigene neue Karte: genau auf den passenden Stapel in deiner Auslage fliegen lassen (Ziel erst nach dem Zeichnen bekannt)
@@ -232,7 +233,7 @@ function aimFly(root) {
   const stage = root.querySelector('#stage');
   if (!stage) return;
   const sr = stage.getBoundingClientRect();
-  const sc = sr.width / 844 || 1;
+  const sc = sr.width / stage.offsetWidth || 1;
   root.querySelectorAll('.fly[data-flyto]').forEach((f) => {
     const id = f.dataset.flyto;
     const t = root.querySelector(`.auslage [data-animal="${id}"] .spile, .auslage [data-animal="${id}"] .acard`);
@@ -254,14 +255,14 @@ function seatPoint(root, pid, sr, sc) {
   // du (kein Platz oben): Mitte deines Geldfächers – oder unten Mitte, wenn gerade keiner da ist
   const fans = [...root.querySelectorAll('.fan-wrap .money.fan')].map((e) => e.getBoundingClientRect());
   if (fans.length) { const l = Math.min(...fans.map((r) => r.left)); const rr = Math.max(...fans.map((r) => r.right)); const t = Math.min(...fans.map((r) => r.top)); return { x: ((l + rr) / 2 - sr.left) / sc, y: (t + 24 - sr.top) / sc }; }
-  return { x: 422, y: 352 };
+  return { x: sr.width / sc / 2, y: sr.height / sc - 38 };
 }
 // Effekte mit data-aim-to / data-aim-from: Start und Ziel nach dem Zeichnen messen (kein fest eingebautes Ziel mehr)
 function aimFx(root) {
   const stage = root.querySelector('#stage');
   if (!stage) return;
   const sr = stage.getBoundingClientRect();
-  const sc = sr.width / 844 || 1;
+  const sc = sr.width / stage.offsetWidth || 1;
   root.querySelectorAll('[data-aim-to]').forEach((f) => {
     if (f.dataset.aimFrom) {
       const a = seatPoint(root, f.dataset.aimFrom, sr, sc);
@@ -1411,11 +1412,20 @@ export function fitStage() {
   const cs = app ? getComputedStyle(app) : null;
   const padX = cs ? parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) : 0;
   const padY = cs ? parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) : 0;
-  const s = Math.min((window.innerWidth - padX) / 844, (window.innerHeight - padY) / 390);
+  const aw = window.innerWidth - padX, ah = window.innerHeight - padY;
+  const s = Math.min(aw / 844, ah / 390);
+  // Den ganzen Bildschirm nutzen: was in einer Richtung übrig ist, macht den Tisch breiter bzw. höher
+  // (Plätze, Knöpfe, Geld und 💬 kleben an den Rändern, die Mitte bekommt den zusätzlichen Platz)
+  const W = Math.round(Math.min(844 * 1.3, Math.max(844, aw / s)));
+  const H = Math.round(Math.min(390 * 1.25, Math.max(390, ah / s)));
+  st.style.width = `${W}px`;
+  st.style.height = `${H}px`;
+  st.style.setProperty('--cx', `${W / 2}px`);
+  st.style.setProperty('--dh', `${H - 390}px`);
   st.style.transform = `scale(${s})`;
   st.classList.toggle('small', s < 0.9 || new URLSearchParams(location.search).has('small'));
-  st.parentElement.style.width = `${844 * s}px`;
-  st.parentElement.style.height = `${390 * s}px`;
+  st.parentElement.style.width = `${W * s}px`;
+  st.parentElement.style.height = `${H * s}px`;
   // Spielfeld läuft über den ganzen Bildschirm (Hintergrund am body): Spielerleiste rechts dort anfangen lassen, wo sie im Spiel beginnt
   const left = st.parentElement.getBoundingClientRect().left;
   document.body.style.setProperty('--sidex', `${Math.round(left + 628 * s)}px`);
