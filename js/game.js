@@ -194,9 +194,24 @@ function avatar(p, idx, extra = '') {
 // ---------- Hauptfunktion ----------
 
 // Nach einem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte, Geldschein) kurz Pause, bevor aufgedeckt werden darf
+// Auslage: bei wenigen Tieren etwas größer (mehr Platz ist zwischen Stapel und Geld nicht)
+const AUSLAGE_MAX = 1;
 export const CALM_MS = 2500;
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
+
+// Auslage passt nicht in ihre Breite (viele Tiere, große Schrift)? Dann nachmessen und kleiner machen – nie unter die Knöpfe
+function fitAuslage(root) {
+  const a = root.querySelector('.auslage');
+  if (!a || !a.children.length) return;
+  const box = a.getBoundingClientRect();
+  const kids = [...a.children].map((e) => e.getBoundingClientRect()).filter((r) => r.width);
+  if (!kids.length || !box.width) return;
+  const used = Math.max(...kids.map((r) => r.right)) - Math.min(...kids.map((r) => r.left));
+  if (used <= box.width + 1) return;
+  const sc = Number(a.style.getPropertyValue('--sc')) || 1;
+  a.style.setProperty('--sc', (sc * (box.width / used) * 0.97).toFixed(3));
+}
 
 // Eigene neue Karte: genau auf den passenden Stapel in deiner Auslage fliegen lassen (Ziel erst nach dem Zeichnen bekannt)
 function aimFly(root) {
@@ -723,6 +738,7 @@ export function renderGame(root, ctx) {
     else if (le0.type === 'special_won') evStrip = `${who2(le0.buyer)}<span class="eva">${le0.count ? `bekommt für <b>${le0.count}</b> Karten` : 'bekommt umsonst'}</span>${miniCard(le0.animal)}<span class="evstar">${STAR}</span>`;
     else if (le0.type === 'trade' && le0.animal === RAT) { const loser = le0.winner === le0.challenger ? le0.target : le0.challenger; evStrip = `${who2(loser)}<span class="eva">bekommt</span>${le0.count > 1 ? `<span class="eva"><b>${le0.count}×</b></span>` : ''}${miniCard(RAT)}<span class="eva">von</span>${who2(le0.winner)}`; }
     else if (le0.type === 'trade') { const loser = le0.winner === le0.challenger ? le0.target : le0.challenger; evStrip = `${who2(le0.winner)}<span class="eva">gewinnt</span>${le0.count > 1 ? `<span class="eva"><b>${le0.count}×</b></span>` : ''}${miniCard(le0.animal)}<span class="eva">gegen</span>${who2(loser)}`; }
+    else if (le0.type === 'money_drawn') evStrip = `${who2(le0.player)}<span class="eva">zieht einen Geldschein</span>${moneyCard(le0.value)}`;
     else if (le0.type === 'rat_taken') evStrip = `${who2(le0.player)}<span class="eva">nimmt die Ratte</span>${miniCard(RAT)}<span class="eva">+<b>${le0.count}</b> Karten</span>`;
   }
   // Auslage: immer sichtbar über dem Geld. Spezialkarte steckt im Stapel ihres Tiers.
@@ -754,7 +770,7 @@ export function renderGame(root, ctx) {
 
   const trades = possibleTrades(state, meId);
   let leftActionsHtml = aucLeft;
-  if (state.phase === 'turn' && !myTurn) leftActionsHtml = `<div class="ldecide">${esc(cur.name)} ist dran …</div>`;
+  // Nicht dran: unten links bleibt frei (wer dran ist, steht oben im Schild und an der Sanduhr)
   if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
     leftActionsHtml = `
       <button type="button" class="pill pill-red ${calmLeft ? 'calm' : ''}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${CALM_MS - calmLeft}ms"` : ''}>KARTE<br>AUFDECKEN</button>
@@ -771,7 +787,7 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}</span>
     </div>`}</div>
-    <div class="auslage ${myItems.length > 6 ? 'many' : ''} ${handPick ? 'up' : ''} ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(1, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage ${myItems.length > 6 ? 'many' : ''} ${handPick ? 'up' : ''} ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     ${handPick || `<div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${me.money.length ? `<span class="fansum">${sum(me.money)}</span>` : ''}</div>`}
   </div>`;
@@ -1103,6 +1119,7 @@ export function renderGame(root, ctx) {
     if (fn) fn(b.dataset.v);
   };
   fitStage();
+  fitAuslage(root);
   aimFly(root);
   seekFx(root);
   if (ctx.playSound) [...new Set(sounds)].forEach((k, i) => setTimeout(() => ctx.playSound(k), i * 180));

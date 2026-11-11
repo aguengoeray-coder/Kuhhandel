@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.30.5
+
+- [x] Unten links steht nicht mehr doppelt „X ist dran …“ – wer dran ist, zeigen schon das Schild oben und die Sanduhr. Die Fläche bleibt frei, solange du nicht dran bist.
+- [x] „Zieht einen Geldschein“ erscheint jetzt wie Kauf und Kuhhandel als Bildzeile (Spieler + kleiner Schein).
+- [x] Fehler behoben: Mit sehr vielen Tieren (und großer Schrift) ragte deine Auslage ein paar Pixel unter die Knöpfe links. Sie wird jetzt nachgemessen und passt immer.
+
 ## v0.30.4
 
 - [x] Fehler behoben: Das Fenster „Kann nicht zahlen“ kam nach jedem weiteren Gebot erneut. Jetzt kommt es genau einmal, danach läuft die Versteigerung neu. Gleiche Ursache, ebenfalls behoben: Das Kuhhandel-Ergebnis konnte beim nächsten Kuhhandel nochmal auftauchen, der Geldschein beim nächsten Zug, und der Esel-Hinweis verschwand beim ersten Gebot. (Jedes Ereignis hat jetzt eine eigene Nummer.)
