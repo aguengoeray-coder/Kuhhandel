@@ -399,7 +399,7 @@ export function renderGame(root, ctx) {
       const values = [...new Set(me.money)].sort((a, b) => a - b);
       aucLeft = `<button type="button" class="pill pill-red" data-a="ratTake"><small>RATTE NEHMEN</small>+ ${karten(potCount)}</button>`;
       if (values.length) {
-        handPick = `<div class="hand-row ratlay"><span class="hrlabel">Karte verdeckt legen:</span><div class="piles">${values.map((val) => `<button type="button" class="pile" style="--m:${MONEY_COLORS[val] || '#eee'}" data-a="ratLay" data-v="${val}" aria-label="${val} verdeckt legen"><span class="pv">${val}</span><span class="pcnt">×${me.money.filter((m) => m === val).length}</span></button>`).join('')}</div></div>`;
+        handPick = `<div class="hand-row ratlay"><span class="hrlabel">Legen:</span><div class="piles">${values.map((val) => `<button type="button" class="pile" style="--m:${MONEY_COLORS[val] || '#eee'}" data-a="ratLay" data-v="${val}" aria-label="${val} verdeckt legen"><span class="pv">${val}</span><span class="pcnt">×${me.money.filter((m) => m === val).length}</span></button>`).join('')}</div></div>`;
       }
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(turnId))} überlegt …</div>`;
@@ -726,10 +726,11 @@ export function renderGame(root, ctx) {
       </button>
     </div>
     ${local.menu ? `<div class="menu">
-      <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">Ton: ${ctx.sound ? 'an' : 'aus'}</button>
+      <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">🔊 Ton: ${ctx.soundName || (ctx.sound ? 'an' : 'aus')}</button>
       <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button></div>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
+      ${ctx.push != null ? `<button type="button" class="pill pill-white pill-small" data-a="push">🔔 Benachrichtigung: ${ctx.push ? 'an' : 'aus'}</button>` : ''}
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="pin">Wiedereinstieg-Code</button>
       ${ctx.standalone ? '' : '<button type="button" class="pill pill-white pill-small" data-a="modal" data-v="install">Als App aufs Handy</button>'}
       <button type="button" class="pill pill-white pill-small" data-a="exit">Spiel verlassen</button></div>` : ''}
@@ -751,6 +752,7 @@ export function renderGame(root, ctx) {
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
   H.vibe = () => ctx.toggleVibe && ctx.toggleVibe();
+  H.push = () => ctx.togglePush && ctx.togglePush();
   H.modal = (kind) => ctx.openModal(kind);
   H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
   H.tradeOpen = () => { local.tradeOpen = true; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
@@ -833,7 +835,7 @@ export function renderGame(root, ctx) {
       : `Verkauft an ${esc(v.payment.buyer === meId ? 'dich' : nameOf(v.payment.buyer))} für ${v.payment.amount}!`;
   }
   if (fresh && le?.type === 'auction_won' && le.amount === 0 && prev.phase === 'auction') gavel = `Niemand bietet – ${esc(le.buyer === meId ? 'du bekommst' : `${nameOf(le.buyer)} bekommt`)} es umsonst`;
-  if (gavel) { effects += `<div class="soldsign" aria-live="polite"><span class="ghammer">🔨</span><b>${gavel}</b></div>`; if (!sounds.includes('gavel')) sounds.push('gavel'); }
+  if (gavel) { effects += `<div class="soldsign ${state.phase === 'turn' ? 'top' : ''}" aria-live="polite"><span class="ghammer">🔨</span><b>${gavel}</b></div>`; if (!sounds.includes('gavel')) sounds.push('gavel'); }
   if (fresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade' || le.type === 'special_won' || le.type === 'rat_taken')) {
     let to = le.type === 'trade' ? le.winner : le.type === 'rat_taken' ? le.player : le.buyer;
     if (le.type === 'trade' && le.animal === RAT) to = le.winner === le.challenger ? le.target : le.challenger;

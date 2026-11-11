@@ -1,5 +1,17 @@
 # Änderungsprotokoll
 
+## v0.28.0
+
+- [x] Aussehen: Vorschau-Tisch links bleibt stehen, beim Durchprobieren springt nichts mehr nach oben.
+- [x] Aussehen: Kuhflecken entfernt; neu: 4 Tischfarben (Ozean, Pflaume, Oliv, Schoko), 6 Hintergründe (Ozean, Wald, Pflaume, Sand, Koralle, Himmel), 4 Kartenrücken (Türkis, Orange, Pink, Weiß), Muster Wellen/Zickzack/Kreise/Fischgrät/Gitter, Vorlagen Ozean/Wald/Pflaume/Strand.
+- [x] Aussehen: Schalter „Große Schrift“ für die kleinen Beschriftungen.
+- [x] Ton in 4 Stufen: aus / leise / mittel / laut (Menü).
+- [x] „Niemand bietet“-Schild sitzt höher und verdeckt den Stapel nicht mehr; die Bildzeile ist solange ausgeblendet.
+- [x] Rattenrunde: kurz „Legen:“ neben den Scheinen.
+- [x] Aufdecken: Karte wird nicht mehr riesig.
+- [x] Neu: „📊 Statistik“ auf der Startseite – Spiele, Siege, Quote, Rekord, Ø Punkte, Ø Quartette, letzte Spiele; ab jetzt auch Lieblingstier, teuerster Kauf und Kuhhandel-Bilanz (SQL v0.28).
+- [x] Neu: Push-Benachrichtigung „Du bist dran“, auch wenn die App zu ist (Startseite „🔔 Benachrichtigen“ oder Menü). Braucht SQL v0.28 + zwei Secrets im Cloudflare Worker. iPhone: nur als App vom Homescreen.
+
 ## v0.27.0
 
 - [x] Gezogener Geldschein sieht aus wie ein echter Schein (vorher dunkler Fleck in der Mitte).

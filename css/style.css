@@ -1657,3 +1657,99 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .stats-table th, table.stats th { color: var(--tbl-2); }
 @media (prefers-reduced-motion: reduce) { .youturn { animation: none; } }
 .ebonus { background: var(--gold); color: var(--ink); font-weight: 800; font-size: 12.5px; padding: 3px 12px; border-radius: 999px; border: 2px solid #8A5A00; white-space: nowrap; }
+
+/* ===================== v0.28: Aussehen – Vorschau bleibt stehen ===================== */
+.mbox:has(.tlayout) { width: min(800px, 96vw); }
+.tlayout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: start; }
+.tprevcol { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; }
+.tprevcol .tfoot { justify-content: flex-start; margin-top: 0; }
+.toptions h3:first-child { margin-top: 0; }
+.tprev { position: relative; margin: 0; padding: 14px 12px 12px; border-radius: 14px; }
+.tprev-table { position: relative; width: 100%; height: 150px; border-radius: 16px; border: 7px solid #8A5A33; box-shadow: inset 0 0 18px rgba(0,0,0,.35); display: block; }
+.tpv-banner { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); background: var(--gold); color: var(--ink); font-family: var(--font-head); font-weight: 700; font-size: 10px; padding: 1px 10px; border-radius: 999px; white-space: nowrap; }
+.tpv-deck { position: absolute; left: 28px; top: 32px; width: 36px; height: 50px; }
+.tpv-deck i { position: absolute; inset: 0; border-radius: 5px; border: 2px solid #fff; background: var(--back-pat), var(--back); box-shadow: 0 2px 4px rgba(0,0,0,.3); }
+.tpv-deck i:nth-child(2) { transform: translate(3px, -3px); }
+.tpv-deck i:nth-child(3) { transform: translate(6px, -6px); }
+.tpv-card { position: absolute; left: 50%; top: 26px; transform: translateX(-50%); width: 44px; height: 60px; border-radius: 6px; border: 2px solid var(--ink); background: repeating-conic-gradient(from 0deg at 50% 45%, #3550A0 0 10deg, #1E3A8A 10deg 20deg); box-shadow: 0 0 0 3px var(--gold), 0 4px 8px rgba(0,0,0,.35); }
+.tpv-card::after { content: "800"; position: absolute; left: 50%; top: 3px; transform: translateX(-50%); background: #fff; border: 1.5px solid var(--ink); border-radius: 999px; font-size: 8px; font-weight: 800; padding: 0 4px; }
+.tpv-money { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); display: flex; }
+.tpv-money i { width: 24px; height: 34px; margin-left: -6px; border-radius: 4px; border: 2px solid var(--ink); background: var(--m); font-style: normal; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.tpv-money i:nth-child(1) { transform: rotate(-8deg); }
+.tpv-money i:nth-child(3) { transform: rotate(8deg); }
+.tpv-player { position: absolute; right: 2px; top: 30px; display: flex; align-items: center; }
+.tpv-player b { width: 26px; height: 26px; border-radius: 50%; background: #1D5FC2; border: 3px solid #fff; z-index: 1; }
+.tpv-player em { font-style: normal; background: #fff; font-size: 10px; font-weight: 800; padding: 1px 8px 1px 10px; margin-left: -6px; border-radius: 0 6px 6px 0; }
+.tsw { gap: 6px; }
+.sw { min-width: 52px; }
+.swc { width: 40px; height: 40px; }
+@media (max-width: 700px) { .tlayout { grid-template-columns: 1fr; } .tprevcol { position: sticky; top: -16px; background: #fff; z-index: 2; padding-bottom: 6px; } }
+
+/* „Niemand bietet“: Schild oben über der Bildzeile, die solange ausgeblendet ist */
+.soldsign.top { top: 92px; }
+.stage:has(.soldsign.top) .evstrip { visibility: hidden; }
+
+/* Aufdecken: Karte nicht mehr riesig */
+@keyframes revealflip {
+  0%   { transform: translate(0, 30px) scale(.5) rotateY(180deg); filter: brightness(.4); }
+  40%  { transform: translate(0, 0) scale(1) rotateY(90deg); filter: brightness(.7); }
+  65%  { transform: scale(1.06) rotateY(0deg); filter: none; }
+  100% { transform: scale(1); }
+}
+@keyframes revealflip2 {
+  0%   { transform: translate(0, 30px) scale(.5) rotateY(180deg); filter: brightness(.4); }
+  45%  { transform: scale(1) rotateY(90deg); filter: brightness(.7); }
+  75%  { transform: scale(1.04) rotateY(0deg); filter: none; }
+  100% { transform: none; }
+}
+
+/* Vorschau: Kuh auf der Karte */
+.tpv-card { display: flex; align-items: center; justify-content: center; }
+.tpv-card .art { width: 38px; height: 38px; margin-top: 8px; filter: drop-shadow(0 0 1.5px #fff); }
+
+/* Große Schrift (Einstellung unter „Aussehen“) */
+.tbig { display: flex; align-items: center; gap: 10px; border: none; background: #F3F1EA; border-radius: 12px; padding: 8px 12px; font: inherit; font-weight: 800; font-size: 14px; cursor: pointer; }
+.tgl { width: 38px; height: 22px; border-radius: 999px; background: #CFC8B8; position: relative; transition: background .15s; flex: none; }
+.tgl i { position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.tbig.on .tgl { background: #2E7D4F; }
+.tbig.on .tgl i { transform: translateX(16px); }
+html.bigtext .slabel { font-size: 13.5px; }
+html.bigtext .stack.near .slabel { font-size: 14px; }
+html.bigtext .tag-s, html.bigtext .tag-s .mcnt { font-size: 14px; }
+html.bigtext .chip em { font-size: 12.5px; }
+html.bigtext .chip.more { font-size: 13px; }
+html.bigtext .dock .ldecide { font-size: 14.5px; }
+html.bigtext .tlog, html.bigtext .evstrip { font-size: 15px; }
+html.bigtext .deck-count { font-size: 13px; }
+html.bigtext .ribbon-s { font-size: 15px; }
+html.bigtext .own b, html.bigtext .owners small { font-size: 14px; }
+html.bigtext .bidbtn small, html.bigtext .pill small { font-size: 12px; }
+html.bigtext .pile .pcnt { font-size: 12px; }
+html.bigtext .fansum { font-size: 17px; }
+
+/* Meine Statistik */
+.mys { display: flex; flex-direction: column; gap: 6px; }
+.mysnums { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.mysnums div { background: #F3F1EA; border-radius: 12px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; }
+.mysnums b { font-family: var(--font-head); font-size: 20px; color: var(--tbl-3); font-variant-numeric: tabular-nums; }
+.mysnums small { font-size: 11px; font-weight: 700; color: var(--muted); }
+.myslast { display: flex; align-items: flex-end; gap: 6px; height: 64px; padding: 0 2px; border-bottom: 2px solid #E4DFD3; }
+.myslast span { display: flex; flex-direction: column-reverse; align-items: center; gap: 2px; flex: 1; max-width: 26px; }
+.myslast i { display: block; width: 100%; border-radius: 4px 4px 0 0; background: #CFC8B8; }
+.myslast span.w i { background: var(--gold); }
+.myslast small { font-size: 11px; line-height: 1; height: 12px; }
+.mysfacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+.mysfacts > div { display: flex; align-items: center; gap: 8px; background: #F3F1EA; border-radius: 12px; padding: 8px; min-width: 0; }
+.mysfacts span { display: flex; flex-direction: column; min-width: 0; }
+.mysfacts small { font-size: 11px; font-weight: 700; color: var(--muted); }
+.mysfacts b { font-size: 14px; }
+.mysfacts em { font-style: normal; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.mysvs { width: 30px; height: 40px; border-radius: 6px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex: none; }
+/* Startseite: Profilzeile – Knöpfe in einer Reihe */
+.me-line { flex-wrap: nowrap; gap: 6px; }
+.me-line strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-line .slink.sm { padding: 6px 9px; font-size: 12px; white-space: nowrap; }
+/* Menü etwas breiter, damit „Ton: mittel“ in eine Zeile passt */
+.menu { width: 250px; }
+.menu-row .pill { white-space: nowrap; }
+.slink.on { background: #2E7D4F; color: #fff; }

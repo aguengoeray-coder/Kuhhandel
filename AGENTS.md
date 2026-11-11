@@ -24,7 +24,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 - **Hosting:** Cloudflare Worker `kuhhandel` (statische Dateien, `wrangler.jsonc` + `.assetsignore`).
   Live: https://kuhhandel.a-guengoeray.workers.dev – jeder Push auf `main` baut automatisch neu.
-- **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results`, `seat_pins`, `error_reports` (automatische Fehlerberichte), `admins` (Alp + Nico).
+- **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results` (mit `extras` für die eigene Statistik), `seat_pins`, `error_reports` (automatische Fehlerberichte), `admins` (Alp + Nico),
+  `push_subscriptions` + `push_settings` (Push „Du bist dran“: Trigger `kh_push` auf `games` meldet per pg_net an den Worker `/push`).
   Admin-Bereich: Startseite → „⚙ Admin“ (nur für Admins; jede Admin-Funktion `admin_*` prüft in Supabase, ob der Aufrufer Admin ist).
   Konten: Name + Passwort (intern als `name@kuhhandel.app`, E-Mail-Bestätigung ist aus).
   SQL-Stand: `supabase/schema.sql` + spätere Dateien in `supabase/`.
@@ -42,7 +43,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `js/theme.js` | Aussehen: Farben/Muster für Spielfeld, Hintergrund, Kartenrücken (CSS-Variablen, pro Gerät gespeichert) |
 | `js/demo.js` | Beispiel-Spielstände für Screenshots (`?demo=turn`, `auction`, `tradesetup` …) |
 | `css/style.css` | Gestaltung |
-| `worker/index.js` | Cloudflare Worker: liefert die Dateien aus + weckt Supabase täglich (Zeitplan in `wrangler.jsonc`) |
+| `worker/index.js` | Cloudflare Worker: liefert die Dateien aus, weckt Supabase täglich (Zeitplan in `wrangler.jsonc`), verschickt Push (`POST /push`, Secrets `PUSH_SECRET` + `VAPID_PRIVATE_JWK` nur im Cloudflare-Dashboard) |
+| `sw.js` | Service Worker: zeigt die Push-Benachrichtigung (speichert nichts zwischen) |
 | `.github/workflows/` | `tests.yml` (Tests bei jedem Pull Request), `supabase-wach.yml` (zweite Absicherung gegen Pausieren) |
 | `supabase/passwort-zuruecksetzen.md` | Anleitung: Passwort eines Spielers neu setzen |
 

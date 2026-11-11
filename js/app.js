@@ -1,16 +1,16 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
 import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS } from '../src/engine.js';
 import { renderGame, SEAT_COLORS, fitStage, miniCard } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
-import { audio, playSound } from './sounds.js';
+import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.27.0';
+export const APP_VERSION = '0.28.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -184,7 +184,8 @@ const moneyNote = (g) => {
 
 function renderStart() {
   const nameBlock = `<div class="me-line">${avatarHtml(me.id, me.name, 'small')}<strong>${esc(me.name)}</strong>
-      <button class="slink sm" type="button" data-modal="profile">🐮 Spielerbild</button>
+      <button class="slink sm" type="button" data-modal="profile">🐮 Bild</button>
+      <button class="slink sm" type="button" data-modal="mystats">📊 Statistik</button>
       <button class="slink sm" type="button" id="logout">Abmelden</button></div>`;
 
   const resume = (ui.myGames || []).map((g) => {
@@ -228,6 +229,7 @@ function renderStart() {
           <button type="button" class="slink" data-modal="stats">🏆 Bestenliste</button>
           <button type="button" class="slink" data-modal="rejoin">🔑 Mit Code zurück</button>
           <button type="button" class="slink" data-modal="design">🎨 Aussehen</button>
+          ${PUSH_PUBLIC_KEY ? `<button type="button" class="slink ${pushOn() ? 'on' : ''}" id="push-btn">🔔 ${pushOn() ? 'Benachrichtigung an' : 'Benachrichtigen'}</button>` : ''}
           ${isStandalone() ? '' : '<button type="button" class="slink" data-modal="install">📲 Als App</button>'}
           ${ui.isAdmin ? '<button type="button" class="slink admin-link" data-modal="admin">⚙ Admin</button>' : ''}
         </div>
@@ -247,6 +249,7 @@ function renderStart() {
     </section>`;
 
   document.getElementById('logout')?.addEventListener('click', doLogout);
+  document.getElementById('push-btn')?.addEventListener('click', togglePush);
   document.getElementById('create')?.addEventListener('click', onCreate);
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
@@ -367,6 +370,38 @@ let demoClock = 0;      // nur Demo: Uhr vor-/zurückstellen
 let toastTimer = null;
 let busy = false;
 
+// ---------- Push-Benachrichtigungen („Du bist dran“, auch wenn die App zu ist) ----------
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+const pushSupported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const pushOn = () => store.get('kh_push') === 'on' && typeof Notification !== 'undefined' && Notification.permission === 'granted';
+if (!DEMO && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+function keyBytes(b64) {
+  const s = atob(b64.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (b64.length % 4)) % 4));
+  return Uint8Array.from(s, (c) => c.charCodeAt(0));
+}
+async function togglePush() {
+  if (!PUSH_PUBLIC_KEY || DEMO) return;
+  if (!pushSupported()) {
+    return toast(isIOS ? 'Auf dem iPhone geht das nur, wenn Kuhhandel als App auf dem Homescreen liegt (Teilen → „Zum Home-Bildschirm“). Dann dort nochmal tippen.' : 'Dieses Gerät kann leider keine Benachrichtigungen.');
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if (pushOn()) {
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) { await sb.rpc('delete_push', { p_endpoint: sub.endpoint }); await sub.unsubscribe(); }
+      store.set('kh_push', 'off'); toast('Benachrichtigungen aus.'); return render();
+    }
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return toast('Benachrichtigungen wurden nicht erlaubt (in den Handy-Einstellungen änderbar).');
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(PUSH_PUBLIC_KEY) });
+    const { error } = await sb.rpc('save_push', { p_sub: sub.toJSON() });
+    if (error) { logError(`Push: ${error.message}`); return toast('Konnte nicht gespeichert werden – bitte später nochmal.'); }
+    store.set('kh_push', 'on'); toast('Benachrichtigungen an – du bekommst Bescheid, wenn du dran bist.'); render();
+  } catch (e) {
+    logError(`Push: ${e.message}`); toast('Benachrichtigungen gehen hier gerade nicht.');
+  }
+}
+
 function toast(msg) {
   toastMsg = msg;
   clearTimeout(toastTimer);
@@ -430,9 +465,12 @@ function renderPlaying() {
     act,
     now,
     sound: soundOn(),
-    toggleSound: () => { store.set('kh_sound', soundOn() ? 'off' : 'on'); render(); },
+    soundName: SOUND_NAMES[soundLevel()],
+    toggleSound: () => { const order = ['off', 'low', 'on', 'high']; const next = order[(order.indexOf(soundLevel()) + 1) % order.length]; store.set('kh_sound', next); setVolume(SOUND_LEVELS[next]); if (next !== 'off') playSound('bid'); render(); },
     vibe: vibeOn(),
     toggleVibe: () => { store.set('kh_vibe', vibeOn() ? 'off' : 'on'); render(); },
+    push: PUSH_PUBLIC_KEY ? pushOn() : null,
+    togglePush,
     online: local ? null : onlineForDisplay(),
     standalone: isStandalone(),
     openModal,
@@ -535,6 +573,11 @@ setInterval(() => {
 // ---------- Signal, wenn man gefragt ist (Ton + Vibration) ----------
 
 const soundOn = () => store.get('kh_sound') !== 'off';
+// Lautstärke: aus / leise / mittel / laut (alte Einstellung „on“ = mittel)
+const SOUND_LEVELS = { off: 0, low: 0.35, on: 1, high: 1.8 };
+const SOUND_NAMES = { off: 'aus', low: 'leise', on: 'mittel', high: 'laut' };
+const soundLevel = () => (SOUND_LEVELS[store.get('kh_sound')] != null ? store.get('kh_sound') : 'on');
+setVolume(SOUND_LEVELS[soundLevel()]);
 const vibeOn = () => store.get('kh_vibe') !== 'off';
 let lastNeed = '';
 const baseTitle = document.title;
@@ -911,7 +954,9 @@ function maybeRecordResults() {
   recorded.add(g.id);
   const rows = scores(g.state).map((r) => {
     const pl = g.players.find((x) => (x.seat || x.id) === r.id);
-    return pl ? { player_id: pl.id, name: r.name, score: r.score, quartets: r.quartets.length, won: (g.state.winner || []).includes(r.id) } : null;
+    const st = g.state.stats?.[r.id] || {};
+    const extras = { animals: r.quartets, maxBuy: st.maxBuy || null, tradesWon: st.tradesWon || 0, tradesLost: st.tradesLost || 0, ratsTaken: st.ratsTaken || 0, specialsWon: st.specialsWon || 0 };
+    return pl ? { player_id: pl.id, name: r.name, score: r.score, quartets: r.quartets.length, won: (g.state.winner || []).includes(r.id), extras } : null;
   }).filter(Boolean);
   sb.rpc('record_results', { p_game: g.id, p_rows: rows }).then(({ error }) => { if (error) logError(`Ergebnisse: ${error.message}`); });
 }
@@ -936,6 +981,47 @@ async function loadStats() {
   modal.stats = [...by.values()].sort((a, b) => b.wins - a.wins || b.wins / b.games - a.wins / a.games || b.best - a.best);
   loadProfiles(modal.stats.map((x) => x.id));
   render();
+}
+
+// Eigene Statistik (Startseite → „Meine Statistik“)
+const DEMO_MYSTATS = Array.from({ length: 12 }, (_, k) => ({ score: [1500, 4870, 3200, 900, 7150, 2600, 3900, 1200, 5400, 2100, 3300, 4100][k], quartets: [3, 5, 4, 2, 6, 3, 4, 2, 5, 3, 4, 4][k], won: [0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1][k] === 1,
+  extras: k < 8 ? { animals: [['kuh', 'hund', 'katze'], ['kuh', 'pferd', 'esel', 'gans', 'hahn'], ['kuh', 'schaf', 'hund', 'ziege']][k % 3], maxBuy: { animal: ['pferd', 'kuh', 'schwein'][k % 3], amount: [620, 410, 380][k % 3] }, tradesWon: k % 3 + 1, tradesLost: k % 2 } : null }));
+async function loadMyStats() {
+  if (DEMO) { modal.mine = DEMO_MYSTATS; return render(); }
+  let res = await sb.from('game_results').select('score, quartets, won, created_at, extras').eq('player_id', me.id).order('created_at', { ascending: false }).limit(500);
+  if (res.error) res = await sb.from('game_results').select('score, quartets, won, created_at').eq('player_id', me.id).order('created_at', { ascending: false }).limit(500);
+  if (res.error) { modal.error = 'Statistik konnte nicht geladen werden.'; return render(); }
+  modal.mine = res.data || [];
+  render();
+}
+function myStatsBody(rows) {
+  if (!rows) return '<p class="mtext">Lädt …</p>';
+  if (!rows.length) return '<p class="mtext">Noch keine fertigen Spiele. Nach deinem ersten Spielende steht hier deine Statistik.</p>';
+  const n = rows.length; const wins = rows.filter((r) => r.won).length;
+  const avg = (k) => Math.round(rows.reduce((a, r) => a + r[k], 0) / n * (k === 'quartets' ? 10 : 1)) / (k === 'quartets' ? 10 : 1);
+  const best = Math.max(...rows.map((r) => r.score));
+  const ex = rows.map((r) => r.extras).filter(Boolean);
+  const count = {};
+  ex.forEach((e) => (e.animals || []).forEach((a) => { count[a] = (count[a] || 0) + 1; }));
+  const fav = Object.entries(count).sort((a, b) => b[1] - a[1])[0];
+  const buy = ex.map((e) => e.maxBuy).filter(Boolean).sort((a, b) => b.amount - a.amount)[0];
+  const tw = ex.reduce((a, e) => a + (e.tradesWon || 0), 0); const tl = ex.reduce((a, e) => a + (e.tradesLost || 0), 0);
+  const aname = (id) => ANIMALS.find((a) => a.id === id)?.name || id;
+  const last = rows.slice(0, 12).reverse();
+  return `<div class="mys">
+    <div class="mysnums">
+      <div><b>${n}</b><small>Spiele</small></div><div><b>${wins}</b><small>Siege</small></div><div><b>${Math.round((wins / n) * 100)} %</b><small>Quote</small></div>
+      <div><b>${best}</b><small>Rekord</small></div><div><b>${avg('score')}</b><small>Ø Punkte</small></div><div><b>${String(avg('quartets')).replace('.', ',')}</b><small>Ø Quartette</small></div>
+    </div>
+    <h3>Letzte Spiele</h3>
+    <div class="myslast">${last.map((r) => `<span class="${r.won ? 'w' : ''}" title="${r.score} Punkte"><i style="height:${Math.max(8, Math.round((r.score / best) * 46))}px"></i><small>${r.won ? '🏆' : ''}</small></span>`).join('')}</div>
+    <div class="mysfacts">
+      ${fav ? `<div>${miniCard(fav[0])}<span><small>Lieblingstier</small><b>${esc(aname(fav[0]))}</b><em>${fav[1]}× als Quartett</em></span></div>` : ''}
+      ${buy ? `<div>${miniCard(buy.animal)}<span><small>Teuerster Kauf</small><b>${esc(aname(buy.animal))} für ${buy.amount}</b></span></div>` : ''}
+      ${ex.length ? `<div><span class="mysvs">⇄</span><span><small>Kuhhandel</small><b>${tw} gewonnen · ${tl} verloren</b></span></div>` : ''}
+    </div>
+    ${ex.length < n ? `<p class="tnote">Lieblingstier, teuerster Kauf und Kuhhandel werden seit v0.28 gezählt.</p>` : ''}
+  </div>`;
 }
 
 async function afterLogin() {
@@ -1187,6 +1273,7 @@ function openModal(kind) {
   gameLocal.menu = false;
   if (kind === 'pin') loadPin();
   if (kind === 'stats') loadStats();
+  if (kind === 'mystats') loadMyStats();
   if (kind === 'admin') { modal.tab = 'users'; loadAdmin(); }
   render();
 }
@@ -1252,6 +1339,7 @@ function renderModal() {
       ${modal.pwMsg ? `<div class="${modal.pwOk ? 'okmsg' : 'error'}" role="status">${esc(modal.pwMsg)}</div>` : ''}`;
   }
   if (modal.kind === 'admin') body = adminBody();
+  if (modal.kind === 'mystats') body = `<h2>Meine Statistik</h2>${myStatsBody(modal.mine)}`;
   if (modal.kind === 'stats') {
     const rows = modal.stats;
     body = `<h2>Bestenliste</h2>
@@ -1279,7 +1367,12 @@ function renderModal() {
     <button type="button" class="mclose" data-m="close" aria-label="Schließen">✕</button>${body}</div>`;
   if (el._html === html) return; // nichts geändert: Eingaben nicht wegwerfen
   el._html = html;
+  // Scrollstand behalten (z. B. beim Durchprobieren im Fenster „Aussehen“)
+  const keep = el.querySelector('.mbox')?.scrollTop || 0;
+  const sameKind = el._kind === modal.kind;
+  el._kind = modal.kind;
   el.innerHTML = html;
+  if (sameKind && keep) { const box = el.querySelector('.mbox'); if (box) box.scrollTop = keep; }
   el.onclick = async (e) => {
     const b = e.target.closest('[data-m]');
     if (!b) return;
@@ -1288,8 +1381,8 @@ function renderModal() {
     if (b.dataset.m === 'animal') return saveProfile({ animal: b.dataset.v });
     if (b.dataset.m === 'theme' || b.dataset.m === 'themePreset' || b.dataset.m === 'themeReset') {
       if (b.dataset.m === 'theme') theme = { ...theme, [b.dataset.k]: b.dataset.v };
-      if (b.dataset.m === 'themePreset') theme = { ...PRESETS[b.dataset.v].v };
-      if (b.dataset.m === 'themeReset') theme = { ...DEFAULT_THEME };
+      if (b.dataset.m === 'themePreset') theme = { ...PRESETS[b.dataset.v].v, bigText: theme.bigText };
+      if (b.dataset.m === 'themeReset') theme = { ...DEFAULT_THEME, bigText: theme.bigText };
       saveTheme(store, theme); applyTheme(theme); return render();
     }
     if (modal.kind === 'admin') {
@@ -1491,6 +1584,7 @@ function demo(kind) {
     ui.game = { id: 'g0', code: 'HOFX', host: 'u1', status: 'playing', version: 5, players: demoState.players, state: demoState };
   }
   if (params.get('modal')) { modal = { kind: params.get('modal'), pin: '4821', stats: params.get('modal') === 'stats' ? DEMO_STATS : undefined }; }
+  if (params.get('modal') === 'mystats') modal.mine = DEMO_MYSTATS;
   if (params.get('modal') === 'admin') { modal.tab = params.get('tab') || 'users'; modal.adminData = { ...ADMIN_DEMO }; modal.pwFor = params.get('pwfor') || null; modal.confirm = params.get('confirm') || null; }
   render();
   if (demoState) return;

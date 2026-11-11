@@ -11,6 +11,10 @@ document.addEventListener('pointerdown', () => {
 
 export const audio = () => ctx;
 
+// Lautstärke: 0 = aus, sonst Faktor für alle Geräusche
+let level = 1;
+export function setVolume(v) { level = v; }
+
 function tone(freq, start, dur, { type = 'triangle', vol = 0.2, slide = 0 } = {}) {
   const t = ctx.currentTime + start;
   const o = ctx.createOscillator();
@@ -19,7 +23,7 @@ function tone(freq, start, dur, { type = 'triangle', vol = 0.2, slide = 0 } = {}
   o.frequency.setValueAtTime(freq, t);
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(40, freq + slide), t + dur);
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol * level), t + 0.01);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   o.connect(g).connect(ctx.destination);
   o.start(t);
@@ -39,7 +43,7 @@ function noise(start, dur, { vol = 0.25, freq = 1800, q = 0.8 } = {}) {
   f.frequency.value = freq;
   f.Q.value = q;
   const g = ctx.createGain();
-  g.gain.value = vol;
+  g.gain.value = vol * level;
   src.connect(f).connect(g).connect(ctx.destination);
   src.start(t);
 }
