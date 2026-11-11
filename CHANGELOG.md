@@ -1,5 +1,19 @@
 # Änderungsprotokoll
 
+## v0.26.0
+
+- [x] Kleine Tierbilder ohne Kreis: Kuhhandel-Auswahl, Ratten-Quartettwahl und Tier-Zeilen nutzen Mini-Karten mit Strahlen.
+- [x] Kuhhandel-Ergebnis mit großer Tierkarte und Anzahl.
+- [x] Schnick-Schnack-Schnuck als sauberes Fenster in der Tischmitte.
+- [x] Geldschein aus dem Stapel: „N im Stapel“ wird solange ausgeblendet.
+- [x] Warte-Text kurz: „Mo entscheidet …“.
+- [x] Startseite: Logo mit Comic-Kuh.
+- [x] Wer dran ist, hat eine kleine Sanduhr am Bild.
+- [x] Letzte Aktion als Bildzeile (z. B. Bild „Nico“ kauft für 120 [Kuh-Karte] von Bild „Lea“).
+- [x] „Überboten!“-Hinweis mit eigenem Ton, wenn dich jemand überbietet.
+- [x] Revanche-Knopf leuchtet „Revanche läuft – mitmachen“, sobald jemand eine gestartet hat.
+- [x] Fehler behoben: Spielerfarbe in der Spalte rechts ging verloren (doppelte Stilangabe).
+
 ## v0.25.0
 
 - [x] Neues Kartendesign: Tier groß ohne Kreis, Sonnenstrahlen in der Tierfarbe, Wert oben und Name unten auf Weiß. Gilt für alle großen Karten und die eigenen Tierstapel.

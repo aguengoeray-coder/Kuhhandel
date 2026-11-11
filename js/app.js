@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.25.0';
+export const APP_VERSION = '0.26.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -149,7 +149,7 @@ function renderLogin() {
   app.innerHTML = `
     <section class="start">
       <div class="brand">
-        <h1 class="logo">Kuh<br>handel<span>.</span></h1>
+        <div class="logorow"><h1 class="logo">Kuh<br>handel<span>.</span></h1><span class="logocow" aria-hidden="true">${art('kuh')}</span></div>
         <p class="claim">Das Kartenspiel – online mit Freunden</p>
         <div class="start-links"><button type="button" class="linklike light" data-modal="rules">Spielregeln</button></div>
       </div>
@@ -216,7 +216,7 @@ function renderStart() {
   app.innerHTML = `
     <section class="start">
       <div class="brand">
-        <h1 class="logo">Kuh<br>handel<span>.</span></h1>
+        <div class="logorow"><h1 class="logo">Kuh<br>handel<span>.</span></h1><span class="logocow" aria-hidden="true">${art('kuh')}</span></div>
         <p class="claim">Das Kartenspiel – online mit Freunden</p>
         <div class="start-links btns">
           <button type="button" class="slink" data-modal="rules">📖 Regeln</button>
