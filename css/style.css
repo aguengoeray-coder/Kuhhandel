@@ -2045,3 +2045,29 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .ending.recap .endbtns { display: flex; gap: 10px; justify-content: center; }
 .ending.recap li { grid-template-columns: 150px 30px 66px 1fr; }
 .ending.recap .atitle { white-space: nowrap; }
+
+/* ===== v0.37: Kuhhandel deutlicher, Set antippen, kein Text-Markieren im Spiel ===== */
+/* Im Spiel lässt sich kein Text markieren (kein „Kopieren/Nachschlagen“-Menü beim langen Drücken) */
+.stage, .stage * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* Das umkämpfte Tier groß in der Mitte zwischen den beiden Seiten */
+.stage .tduel { align-items: center; gap: 6px; margin-left: 10px; }
+.stage .tpanel { width: 196px; }
+.stage .gtable .tstriprow { bottom: 50px; }
+.tmid { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: none; width: 84px; }
+.tmidcard { width: 78px; height: 108px; display: flex; align-items: center; justify-content: center; border-radius: 12px; box-shadow: 0 0 0 4px var(--gold), 0 10px 22px rgba(0,0,0,.4); }
+.tmidcard .pcard { transform: scale(.6); flex: none; }
+.tmidcard.empty { background: rgba(0,0,0,.25); border: 2px dashed rgba(255,255,255,.55); box-shadow: none; color: #fff; font-family: var(--font-head); font-size: 34px; }
+.tmidcnt { background: var(--gold); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 0 10px; font-family: var(--font-head); font-weight: 700; font-size: 15px; line-height: 22px; white-space: nowrap; margin-top: 4px; }
+.tmid .tvs { width: 28px; height: 28px; font-size: 12px; }
+.tduel.pop .tmidcard { animation: tmidin .45s var(--e-pop) both; }
+@keyframes tmidin { from { transform: scale(.5) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.tnote { font-size: 11px; font-weight: 700; opacity: .85; text-align: center; }
+/* Geld: Anzahl groß */
+.tline.big b { font-family: var(--font-head); font-size: 18px; }
+.tline.big small { font-size: 11px; }
+/* Eigene Sets: handelbare leuchten, antippen öffnet den Kuhhandel */
+.auslage .stack[data-a] { cursor: pointer; }
+.auslage .stack.cantrade .spile { filter: drop-shadow(0 0 0 var(--gold)) drop-shadow(0 0 5px rgba(255,211,78,.9)); }
+.auslage .stack.cantrade .slabel { color: var(--gold); }
+.auslage .stack[data-a]:active .spile { transform: translateY(-4px); }
+.sethint { position: absolute; left: var(--cx); bottom: 112px; transform: translateX(-50%); z-index: 30; background: #fff; color: var(--ink); border: 3px solid var(--gold); border-radius: 999px; padding: 4px 14px; font-weight: 800; font-size: 13.5px; white-space: nowrap; box-shadow: 0 6px 16px rgba(0,0,0,.35); pointer-events: none; animation: joinpop 2.2s ease both; animation-delay: var(--el, 0ms); }
