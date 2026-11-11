@@ -1784,3 +1784,16 @@ html.bigtext .fansum { font-size: 17px; }
 .bzp > span .avatar { width: 22px; height: 22px; border-width: 2px; font-size: 10px; }
 @media (prefers-reduced-motion: reduce) { .batzenbtn, .batzen.in .bzp { animation: none; } }
 .stage:has(.batzen) .auslage { visibility: hidden; }
+
+/* v0.29.1 */
+/* Reaktionsfenster: Tipp daneben schließt es */
+.rpback { position: absolute; inset: 0; z-index: 34; background: rgba(0,0,0,.12); }
+.reactpick { z-index: 35; }
+/* Detailfenster mit Mini-Karten */
+.pd .mcard { width: 34px; height: 44px; }
+.pdsp { position: relative; display: inline-flex; }
+.pdsp .star { position: absolute; right: -6px; top: -6px; width: 16px; height: 16px; }
+/* Kuhhandel: „um 1“ statt Anzahl beim Gegner */
+.atile .tcount { white-space: nowrap; padding: 0 5px; }
+.atile.on .tcount { background: var(--gold); }
+.reactpick.withdetail { max-height: 376px; overflow-y: auto; } .reactpick.self { top: 6px !important; bottom: auto; }

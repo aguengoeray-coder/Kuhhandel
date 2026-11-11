@@ -139,11 +139,11 @@ function playerDetail(p, withScore = false) {
   const items = [];
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
-    if (n) items.push(`<span class="pd ${n === 4 ? 'done' : ''}"><span class="ci" style="--a:${ANIMAL_COLORS[a.id]}">${art(a.id)}</span><b>${n}×</b><small>${a.value}</small></span>`);
+    if (n) items.push(`<span class="pd ${n === 4 ? 'done' : ''}">${miniCard(a.id)}<b>${n}×</b><small>${a.value}</small></span>`);
   }
   const r = ratsOf(p);
-  if (r) items.push(`<span class="pd"><span class="ci" style="--a:${ANIMAL_COLORS[RAT]}">${art(RAT)}</span><b>${r}×</b><small>Ratte</small></span>`);
-  for (const id of specialsOf(p)) items.push(`<span class="pd sp"><span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}${STAR}</span><b>★</b><small>${SPECIAL_VALUE}</small></span>`);
+  if (r) items.push(`<span class="pd">${miniCard(RAT)}<b>${r}×</b><small>Ratte</small></span>`);
+  for (const id of specialsOf(p)) items.push(`<span class="pd sp"><span class="pdsp">${miniCard(id)}${STAR}</span><b>★</b><small>${SPECIAL_VALUE}</small></span>`);
   const count = Array.isArray(p.money) ? p.money.length : p.money;
   const pts = withScore ? `<div class="pdscore"><span>Punkte</span><b>${scoreFor(p).score}</b><small>${scoreFormula(p)}</small></div>` : '';
   return `<div class="pdetail">${pts}<div class="pdgrid">${items.join('') || '<em>Noch keine Karten</em>'}</div>${withScore ? '' : `<small>${karten(count)} Geld</small>`}</div>`;
@@ -565,7 +565,7 @@ export function renderGame(root, ctx) {
       <div class="tpanel">
         ${who(target.id)}
         ${targets.length > 1 ? `<div class="tabs">${targets.map((id) => `<button type="button" class="tab ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${esc(nameOf(id))}</button>`).join('')}</div>` : ''}
-        <div class="atiles">${forTarget.map((t) => `<button type="button" class="atile ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}" aria-label="${aname(t.animal)}, ${esc(target.name)} hat ${target.animals[t.animal]}">${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="cv">${aval(t.animal)}</em>` : ''}<span>×${target.animals[t.animal]}</span></button>`).join('')}</div>
+        <div class="atiles">${forTarget.map((t) => `<button type="button" class="atile ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}" aria-label="${aname(t.animal)}: es geht um ${t.count}">${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="cv">${aval(t.animal)}</em>` : ''}<span class="tcount">um ${t.count}</span></button>`).join('')}</div>
         ${chosen ? animalStrip(chosen.animal, chosen.count, chosen.animal === RAT ? `wer mehr bietet, wird ${chosen.count === 2 ? 'beide' : 'sie'} los` : 'darum geht es') : ''}
       </div>
     </div>`;
@@ -573,7 +573,7 @@ export function renderGame(root, ctx) {
     const moneyDone = local.sel.length > 0;
     const steps = `<div class="tsteps">
         ${step(1, 'Gegner', esc(target.name), 'done')}
-        ${step(2, 'Tier', chosen ? esc(aname(chosen.animal)) : '–', chosen ? 'done' : 'now')}
+        ${step(2, 'Tier', chosen ? `${chosen.count}× ${esc(aname(chosen.animal))}` : '–', chosen ? 'done' : 'now')}
         ${step(3, 'Geld', moneyDone ? karten(local.sel.length) : 'unten antippen', moneyDone ? 'done' : chosen ? 'now' : '')}
       </div>`;
     aucCenter = steps + aucCenter;
@@ -948,7 +948,7 @@ export function renderGame(root, ctx) {
 
 
   // Was ist passiert: kurz groß in der Tischmitte, danach klein oben
-  const ownEffect = /class="(qpop|soldsign|moneyreveal)"/.test(effects) || (aucCenter && state.phase === 'turn');
+  const ownEffect = /class="(qpop|soldsign|moneyreveal|gavel|donkeypop)[ "]/.test(effects) || (aucCenter && state.phase === 'turn') || !!evStrip;
   if (fresh && state.phase === 'turn' && lastLog && !ownEffect && !(le?.type === 'money_drawn')) {
     effects += `<div class="logpop" aria-live="polite">${esc(lastLog)}</div>`;
   }
@@ -974,6 +974,7 @@ export function renderGame(root, ctx) {
     ${effects}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
+    ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? '<div class="rpback" data-a="reactClose" aria-hidden="true"></div>' : ''}
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick withdetail ${local.reactTo === meId ? 'self' : ''}" style="top:6px">
       <div class="rphead">${local.reactTo === meId ? 'Du · Reaktion an alle' : `An ${esc(nameOf(local.reactTo))}`}<button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
       ${playerDetail(v.players[idxOf(local.reactTo)], local.reactTo === meId)}

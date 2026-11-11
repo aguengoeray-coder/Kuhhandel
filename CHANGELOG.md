@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.29.1
+
+- [x] Kuhhandel: Statt der Anzahl beim Gegner („×3“) steht am Tier jetzt, worum es geht („um 1“ bzw. „um 2“); oben „1× Kuh“.
+- [x] Reaktionsfenster schließt sich mit einem Tipp aufs Spielfeld; passt jetzt immer ganz auf den Bildschirm; Tiere darin als Mini-Karten.
+- [x] Keine doppelten Hinweise mehr: Wenn schon ein Schild (z. B. „Niemand bietet …“) oder die Bildzeile die Aktion zeigt, kommt kein zusätzliches weißes Fenster.
+
 ## v0.29.0
 
 - [x] Neue Reaktion „Ehrliches, männliches Angebot! 💪“ – große goldene Sprechblase mit eigenem Ton. Beim Kuhhandel als Schnellknopf „💪 Ehrlich & männlich!“ direkt am Duell.
