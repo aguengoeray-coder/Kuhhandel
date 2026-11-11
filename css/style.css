@@ -1753,3 +1753,4 @@ html.bigtext .fansum { font-size: 17px; }
 .menu { width: 250px; }
 .menu-row .pill { white-space: nowrap; }
 .slink.on { background: #2E7D4F; color: #fff; }
+.menu { max-height: 318px; overflow-y: auto; gap: 6px; } .menu .pill { min-height: 34px; }
