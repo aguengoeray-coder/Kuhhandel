@@ -75,6 +75,7 @@ const SOUNDS = {
   wow: () => { tone(330, 0, 0.18, { type: 'triangle', vol: 0.16, slide: 260 }); tone(660, 0.16, 0.32, { type: 'triangle', vol: 0.14, slide: -120 }); },
   last: () => [[784, 0, .12], [988, .12, .12], [1175, .24, .3]].forEach(([f, d, l]) => tone(f, d, l, { type: 'square', vol: 0.1 })),
   flipcard: () => noise(0, 0.05, { freq: 3800, vol: 0.18 }),
+  glitz: () => [2093, 2637, 3136, 2637, 3520].forEach((f, i) => tone(f, i * 0.07, 0.16, { type: 'sine', vol: 0.06 })), // Glitzern: helles Funkeln
   rain: () => { for (let i = 0; i < 9; i++) tone(1400 + ((i * 337) % 900), i * 0.06, 0.1, { type: 'sine', vol: 0.09 }); },
 };
 

@@ -624,3 +624,15 @@ test('Kuhhandel-Ergebnis: alle sehen den Unterschied, die Beträge bleiben verde
   assert.equal(v.lastEvent.diff, 30);
   assert.equal(v.lastEvent.offerSum, undefined);
 });
+
+test('Ereignis-Nummer zeigt auf die eigene Protokoll-Zeile (auch bei „umsonst“) – danach gezogener Geldschein ist ein neues Ereignis', () => {
+  let g = gameWithDeck(['hahn', 'geld-500', 'gans']);
+  g = drawForAuction(g, 'a');
+  g = closeAuction(g, 'a', 'sell'); // niemand bietet → umsonst
+  assert.match(g.log[g.lastEvent.n], /umsonst/);
+  const free = g.lastEvent.n;
+  g = drawForAuction(g, 'b');
+  assert.equal(g.lastEvent.type, 'money_drawn');
+  assert.notEqual(g.lastEvent.n, free);
+  assert.match(g.log[g.lastEvent.n], /Geldschein: 500/);
+});

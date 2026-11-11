@@ -34,6 +34,24 @@ export function buildDemoState(kind, local) {
   switch (kind) {
     case 'turn':
       return base();
+    case 'auction3': { // 3 Spieler, volle Plätze (wie im echten Spiel spät in der Partie)
+      const t = Date.now() - 4100;
+      g = createGame({ players: PLAYERS.slice(0, 3).map((p, i) => (i ? { ...p, name: `Test ${i}` } : p)), seed: 7 });
+      Object.assign(g.players[0].animals, { hahn: 2, gans: 2, katze: 1, hund: 1, schaf: 1, esel: 2, schwein: 3, kuh: 1, pferd: 2 });
+      Object.assign(g.players[1].animals, { hund: 3, ziege: 2, schaf: 2, pferd: 1, kuh: 1, katze: 1, gans: 1, hahn: 1, [RAT]: 2 });
+      Object.assign(g.players[2].animals, { kuh: 2, ziege: 2, katze: 2, hahn: 2, pferd: 1, hund: 1, gans: 1, [RAT]: 1 });
+      g.players[0].animals[RAT] = 1; g.players[0].specials = ['ziege'];
+      g.players[0].money = [0, 0, 10, 10, 10, 10, 20, 50, 50, 100, 100, 200, 200, 500];
+      g.donkeysDrawn = 3; g.turn = 1; g.deck = g.deck.filter((c) => c !== 'esel'); g.deck.unshift('esel');
+      g = drawForAuction(g, 'u2', t); g = bid(g, 'u3', 10, t + 3200);
+      return g;
+    }
+    case 'revealbig': { // teure Karte wird gerade aufgedeckt (Glitzer)
+      g = base(); g.turn = 1; g.deck[0] = new URLSearchParams(location.search).get('a') || 'pferd';
+      g = drawForAuction(g, 'u2', Date.now());
+      local.prev = { logLen: g.log.length - 1, phase: 'turn' };
+      return g;
+    }
     case 'auction': {
       const t = Date.now() - 4100;
       g = base(); g.turn = 1; g.deck[0] = 'esel';
@@ -228,7 +246,7 @@ export function buildDemoState(kind, local) {
       return g;
     }
     case 'moneydrawn': {
-      g = base(); g.turn = 1; g.deck[0] = 'geld-200';
+      g = base(); g.turn = 1; g.deck[0] = `geld-${new URLSearchParams(location.search).get('v') || 200}`;
       g = drawForAuction(g, 'u2');
       local.prev = { logLen: g.log.length - 1, phase: 'turn' };
       return g;

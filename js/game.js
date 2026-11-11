@@ -47,6 +47,9 @@ const initial = (n) => esc((n || '?').trim().charAt(0).toUpperCase());
 
 // Innenleben eines Geldscheins: große Zahl in der Mitte, kleine Zahlen oben links und unten rechts
 const mIn = (v) => `<span class="mv">${v}</span>`;
+// Glitzer: funkelnde Sterne über wertvollen Karten (große Scheine, Schwein/Kuh/Pferd)
+const GLITZ = [[12, 18], [86, 10], [50, 4], [94, 52], [6, 60], [70, 90], [24, 94], [58, 40], [36, 66], [80, 72], [16, 38], [44, 22], [66, 14], [92, 88]];
+const glitz = (n, cls = '') => `<span class="glitz ${cls}" aria-hidden="true">${GLITZ.slice(0, n).map(([x, y], k) => `<i style="--x:${x}%;--y:${y}%;--d:${(k * 263) % 1300}ms;--s:${(0.6 + ((k * 37) % 50) / 100).toFixed(2)}"></i>`).join('')}</span>`;
 
 function moneyCard(v, { idx = null, selected = false, size = '' } = {}) {
   const cls = `money ${size} ${selected ? 'sel' : ''}`;
@@ -210,6 +213,20 @@ function fitAuslage(root) {
   a.style.setProperty('--sc', (sc * (box.width / used) * 0.97).toFixed(3));
 }
 
+// Hohe Plätze oben (3 Spieler, viele Tiere): Tischmitte nach unten rücken, damit die Zeile „… versteigert“ nicht in den Platz ragt
+function fitTop(root) {
+  const st = root.querySelector('.stage');
+  const gt = st && st.querySelector('.gtable');
+  if (!gt) return;
+  const S = st.getBoundingClientRect();
+  const s = S.height / 390 || 1;
+  const tops = [...st.querySelectorAll('.gright > .prow.seat-t, .gright > .prow.seat-tl, .gright > .prow.seat-tr')];
+  if (!tops.length) return;
+  const bottom = Math.max(...tops.map((e) => (e.getBoundingClientRect().bottom - S.top) / s));
+  const pad = Math.round(bottom + 4 - gt.offsetTop); // 4 px Luft unter dem Platz
+  if (pad > 62) gt.style.paddingTop = `${Math.min(pad, 92)}px`;
+}
+
 // Eigene neue Karte: genau auf den passenden Stapel in deiner Auslage fliegen lassen (Ziel erst nach dem Zeichnen bekannt)
 function aimFly(root) {
   const stage = root.querySelector('#stage');
@@ -307,7 +324,8 @@ export function renderGame(root, ctx) {
   const fresh = prev.logLen !== undefined && state.log.length !== prev.logLen;
   const entered = prev.phase !== state.phase;
   // Ist das letzte Ereignis wirklich neu? (Gebote, Herausforderungen usw. schreiben ins Protokoll, ändern es aber nicht)
-  const evN = v.lastEvent?.n;
+  // Kennung aus Nummer und Art: zwei Ereignisse mit derselben Nummer (z. B. „umsonst“ und danach Geldschein) gelten trotzdem beide als neu
+  const evN = v.lastEvent ? `${v.lastEvent.n}|${v.lastEvent.type}` : null;
   const evFresh = fresh && evN != null && local.seenEvN !== evN;
   if (evN != null) local.seenEvN = evN;
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
@@ -439,9 +457,9 @@ export function renderGame(root, ctx) {
     const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
     const card = revealing
-      ? `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}</div>`
+      ? `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`
       : `<div class="aucard center ringwrap ${infoFresh ? 'settle' : ''} ${running ? (secs <= 3 ? 'low' : '') : 'over'}" ${a.endsAt != null ? `data-ends="${a.endsAt}" data-total="${total}" data-fmt="n"` : ''}>
-          ${playCard(a.animal)}
+          ${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(7, 'calm') : ''}
           <svg class="ring" viewBox="0 0 112 152" aria-hidden="true"><rect class="ringbg" x="4" y="4" width="104" height="144" rx="16" pathLength="100"></rect><rect class="ringp" x="4" y="4" width="104" height="144" rx="16" pathLength="100" style="stroke-dashoffset:${100 - pct}"></rect></svg>
           <span class="ringsec">${running ? secs : '✓'}</span></div>`;
     const countdown = !revealing && !running && a.endsAt != null ? '<div class="timeup">Zeit abgelaufen</div>' : '';
@@ -1106,7 +1124,7 @@ export function renderGame(root, ctx) {
   if (moneySig && evFresh && local.moneySig !== moneySig) {
     local.moneySig = moneySig;
     keepFx(`<div class="moneyreveal" data-aim-to="${esc(lem.player)}" data-aim-anchor="center" style="--ty:0px;--tx:0px">
-      <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${mIn(lem.value)}</div>
+      <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${mIn(lem.value)}${lem.value >= 100 ? glitz(lem.value >= 500 ? 14 : lem.value >= 200 ? 10 : 6, lem.value >= 500 ? 'gold' : '') : ''}</div>
       <span class="mrlabel">${esc(lem.player === meId ? 'Du' : nameOf(lem.player))} ${lem.player === meId ? 'ziehst' : 'zieht'} <b>${lem.value}</b></span></div>`, 2700);
   }
   if (state.phase === 'special') {
@@ -1135,7 +1153,7 @@ export function renderGame(root, ctx) {
     sounds.push('flip');
     if (v.lastEvent?.type === 'donkey') { sounds.push('coins'); later.push(['rain', 2300]); }
     const VOICE = { kuh: 'muh', esel: 'iah', hahn: 'kikeriki' };
-    if (aval(auction.animal) >= 650) sounds.push('drum'); // teure Karte: Trommelwirbel
+    if (aval(auction.animal) >= 650) { sounds.push('drum'); later.push(['glitz', 1050]); } // teure Karte: Trommelwirbel, nach dem Umdrehen Glitzern
     if (VOICE[auction.animal]) later.push([VOICE[auction.animal], 1350]);
   }
   else if (fresh && state.phase === 'auction' && auction.high) sounds.push('bid');
@@ -1148,7 +1166,7 @@ export function renderGame(root, ctx) {
     if (le.type === 'auction_won') { sounds.push('gavel'); if (le.amount > 0) sounds.push('coins'); if (le.buyer === meId) feel('won'); }
     if (le.type === 'special_won') { sounds.push('gavel'); if (le.count > 0) sounds.push('coins'); if (le.buyer === meId) feel('won'); }
     if (le.type === 'rat_taken' && le.count > 0) sounds.push('coins');
-    if (le.type === 'money_drawn') { sounds.push('flip'); sounds.push('coins'); }
+    if (le.type === 'money_drawn') { sounds.push('flip'); sounds.push('coins'); if (le.value >= 100) later.push(['glitz', 300]); }
     if (le.type === 'trade') sounds.push('trade');
   }
   if (local.qSound || (entered && state.phase === 'ended')) sounds.push('quartet');
@@ -1372,6 +1390,7 @@ export function renderGame(root, ctx) {
   };
   local.justAdded = null;
   fitStage();
+  fitTop(root);
   fitAuslage(root);
   aimFly(root);
   aimFx(root);

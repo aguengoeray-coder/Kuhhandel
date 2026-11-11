@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.40.0 – Glitzer
+
+- [x] **Gezogener Geldschein wird wieder groß gezeigt:** Nach „Niemand bietet – … umsonst“ (oder Spezialkarte umsonst) wurde der nächste Geldschein nicht mehr angezeigt. Behoben.
+- [x] **Glitzer:** 100er, 200er und 500er funkeln beim Ziehen (Glanzstreifen, Sterne, 500er golden umrandet, helles Funkel-Geräusch).
+- [x] Schwein, Kuh und Pferd: nach dem Umdrehen ein Funkenregen, während der Versteigerung glitzern sie ruhig weiter. Die große Karte liegt beim Aufdecken jetzt über deinen Tieren.
+- [x] Bei 3 Spielern mit vielen Tieren ragte „… versteigert“ in den Platz oben – die Tischmitte rückt jetzt automatisch nach unten.
+- [x] Geld-Summe rutscht nicht mehr unter den schräg liegenden letzten Schein.
+
 ## v0.39.0 – Spielgefühl
 
 - [x] **Kuhhandel aufdecken wie am Tisch:** Im Ergebnis-Fenster drehen sich beide Stapel Schein für Schein um, erst dann steht der Gewinner fest (Unbeteiligte sehen nur die Rückseiten).
