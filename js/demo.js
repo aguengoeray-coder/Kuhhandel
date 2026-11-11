@@ -1,6 +1,6 @@
 // Beispiel-Spielstände für Screenshots (?demo=turn, auction, …). Im echten Spiel nicht benutzt.
 import {
-  createGame, drawForAuction, bid, closeAuction, startTrade, counterTrade, ANIMALS,
+  createGame, drawForAuction, bid, closeAuction, startTrade, counterTrade, acceptTrade, ANIMALS,
   RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS, showBatzen,
 } from '../src/engine.js';
 
@@ -117,6 +117,12 @@ export function buildDemoState(kind, local) {
     case 'tradewait': {
       g = base(); g.turn = 1;
       g = startTrade(g, 'u2', 'u3', 'kuh', [0, 2, 6]);
+      return g;
+    }
+    case 'tradeaccept': {
+      g = base(); g.turn = 1;
+      g = startTrade(g, 'u2', 'u1', 'hund', [0, 2, 6]);
+      g = acceptTrade(g, 'u1');
       return g;
     }
     case 'traderesult': {

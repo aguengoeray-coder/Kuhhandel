@@ -566,3 +566,16 @@ test('Zeig Batzen: drückt keiner, geht es nach 5 s von selbst weiter', () => {
   assert.throws(() => showBatzen(g, 'b', BATZEN_WAIT_MS + 1), GameError);
   assert.equal(specialNumber(g, BATZEN_WAIT_MS + SPECIAL_DELAY_MS + 100), 10);
 });
+
+test('Kuhhandel-Ergebnis: alle sehen den Unterschied, die Beträge bleiben verdeckt', () => {
+  let g = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }], seed: 3 });
+  g.players[0].animals.kuh = 1; g.players[1].animals.kuh = 1;
+  g.players[0].money = [50, 10]; g.players[1].money = [20, 0];
+  g.turn = 0; g.phase = 'turn';
+  g = startTrade(g, 'a', 'b', 'kuh', [0]);
+  g = counterTrade(g, 'b', [0]);
+  assert.equal(g.lastEvent.diff, 30);
+  const v = viewFor(g, 'c');
+  assert.equal(v.lastEvent.diff, 30);
+  assert.equal(v.lastEvent.offerSum, undefined);
+});
