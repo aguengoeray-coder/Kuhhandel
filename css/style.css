@@ -1595,7 +1595,7 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .trtext .pill { margin-top: 4px; }
 
 /* Schnick-Schnack-Schnuck: sauberes Fenster mitten auf dem Tisch */
-.rpsshow.v2 { left: 319px; right: auto; top: 58px; width: 380px; transform: translateX(-50%); background: var(--tbl-3); border: 4px solid var(--gold); box-shadow: 0 0 0 9999px rgba(0,0,0,.25), 0 14px 30px rgba(0,0,0,.4); padding: 16px 14px 18px; animation: rpsfade2 2.8s ease-in-out both; }
+.rpsshow.v2 { left: 319px; right: auto; top: 58px; width: 380px; transform: translateX(-50%); background: var(--tbl-3); border: 4px solid var(--gold); box-shadow: 0 14px 30px rgba(0,0,0,.4); padding: 16px 14px 18px; animation: rpsfade2 2.8s ease-in-out both; }
 @keyframes rpsfade2 { 0% { opacity: 0; transform: translateX(-50%) scale(.9); } 8%, 88% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%); } }
 .rpsshow.v2 .rpswords { font-size: 24px; }
 .rpsshow.v2 .rpsresult { font-size: 18px; }
@@ -1838,7 +1838,7 @@ html.bigtext .fansum { font-size: 17px; }
 @keyframes rtimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 /* Ergebnis Kuhhandel / Spezialkarte: für alle, feste Zeit, Tipp schließt */
-.resultpop { position: absolute; left: 319px; top: 62px; transform: translateX(-50%); z-index: 33; display: flex; align-items: center; gap: 16px; width: 430px; background: #fff; border: 4px solid var(--ink); border-radius: 20px; padding: 12px 18px 16px 14px; box-shadow: 0 0 0 9999px rgba(0,0,0,.22), 0 14px 30px rgba(0,0,0,.4); cursor: pointer; animation: resin .35s cubic-bezier(.2,.9,.3,1.2) both; animation-delay: min(0ms, var(--el, 0ms)); }
+.resultpop { position: absolute; left: 319px; top: 62px; transform: translateX(-50%); z-index: 33; display: flex; align-items: center; gap: 16px; width: 430px; background: #fff; border: 4px solid var(--ink); border-radius: 20px; padding: 12px 18px 16px 14px; box-shadow: 0 14px 30px rgba(0,0,0,.4); cursor: pointer; animation: resin .35s cubic-bezier(.2,.9,.3,1.2) both; animation-delay: min(0ms, var(--el, 0ms)); }
 .resultpop.won { border-color: #2E7D4F; }
 @keyframes resin { from { opacity: 0; transform: translateX(-50%) scale(.85); } to { opacity: 1; transform: translateX(-50%); } }
 .resultpop .trcard .pcard { transform: scale(.78); margin: -15px -11px; }
@@ -1866,7 +1866,7 @@ html.bigtext .fansum { font-size: 17px; }
 @keyframes calmbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* v0.30.3: Kann nicht zahlen – alle Scheine groß für alle */
-.cantpop { position: absolute; left: 319px; top: 40px; transform: translateX(-50%); z-index: 33; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 470px; max-width: calc(100% - 20px); background: #fff; border: 4px solid var(--red); border-radius: 20px; padding: 10px 16px 18px; box-shadow: 0 0 0 9999px rgba(0,0,0,.22), 0 14px 30px rgba(0,0,0,.4); cursor: pointer; text-align: center; animation: resin .35s cubic-bezier(.2,.9,.3,1.2) both; animation-delay: min(0ms, var(--el, 0ms)); }
+.cantpop { position: absolute; left: 319px; top: 40px; transform: translateX(-50%); z-index: 33; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 470px; max-width: calc(100% - 20px); background: #fff; border: 4px solid var(--red); border-radius: 20px; padding: 10px 16px 18px; box-shadow: 0 14px 30px rgba(0,0,0,.4); cursor: pointer; text-align: center; animation: resin .35s cubic-bezier(.2,.9,.3,1.2) both; animation-delay: min(0ms, var(--el, 0ms)); }
 .cantpop small { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--red); }
 .cantpop > b { font-family: var(--font-head); font-size: 20px; line-height: 1.15; }
 .cantpop .cpbills { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 4px 0; }
@@ -2069,7 +2069,7 @@ html.bigtext .stage .evstrip { font-size: 12.5px; }
 @keyframes coinbump { 0% { transform: scale(1.25); opacity: 1; } 18% { transform: none; } 80% { opacity: 1; } 100% { transform: translateY(-10px); opacity: 0; } }
 
 /* Ein Ergebnis-Fenster für alles: links die Karte, rechts Art · Ergebnis · wer zahlt wem */
-.evcard { position: absolute; left: var(--cx); top: 96px; transform: translateX(-50%); z-index: 33; width: 430px; display: flex; align-items: center; gap: 14px; background: #fff; color: var(--ink); border: 4px solid #E2B33C; border-radius: 20px; padding: 12px 16px 16px 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,.18), 0 14px 30px rgba(0,0,0,.4); cursor: pointer; animation: evin .32s var(--e-pop) both; animation-delay: var(--el, 0ms); }
+.evcard { position: absolute; left: var(--cx); top: 96px; transform: translateX(-50%); z-index: 33; width: 430px; display: flex; align-items: center; gap: 14px; background: #fff; color: var(--ink); border: 4px solid #E2B33C; border-radius: 20px; padding: 12px 16px 16px 12px; box-shadow: 0 14px 30px rgba(0,0,0,.4); cursor: pointer; animation: evin .32s var(--e-pop) both; animation-delay: var(--el, 0ms); }
 .evcard.good { border-color: #2E7D4F; }
 @keyframes evin { from { opacity: 0; transform: translateX(-50%) scale(.9); } to { opacity: 1; transform: translateX(-50%); } }
 .evout { display: contents; }
@@ -2100,7 +2100,7 @@ html.bigtext .stage .evstrip { font-size: 12.5px; }
 /* Karte fliegt beim Schließen aus dem Fenster ins Set */
 .fly.fromev { left: calc(var(--cx) - 182px); top: 134px; z-index: 34; }
 /* Kann nicht zahlen: gleicher Rahmen wie das Ergebnis-Fenster */
-.cantpop { left: var(--cx); animation: evin .32s var(--e-pop) both; animation-delay: var(--el, 0ms); box-shadow: 0 0 0 9999px rgba(0,0,0,.18), 0 14px 30px rgba(0,0,0,.4); }
+.cantpop { left: var(--cx); animation: evin .32s var(--e-pop) both; animation-delay: var(--el, 0ms); box-shadow: 0 14px 30px rgba(0,0,0,.4); }
 .cantpop small { letter-spacing: .07em; }
 @media (prefers-reduced-motion: reduce) { .evcard, .evout .evcard, .ec-badge, .stamp.in, .evstrip.flash, .evstrip.flash::after, .tlog.flash { animation: none !important; } }
 
