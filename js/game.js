@@ -54,19 +54,6 @@ function moneyCard(v, { idx = null, selected = false, size = '' } = {}) {
   return `<button type="button" class="${cls}" style="${style}" data-a="toggle" data-v="${idx}" aria-pressed="${selected}" aria-label="Geldkarte ${v}">${mIn(v)}</button>`;
 }
 
-// Geld als Stapel nach Scheinwert: Tippen legt einen Schein ins Angebot
-function moneyPiles(money, sel) {
-  const values = [...new Set(money)].sort((a, b) => a - b);
-  if (!values.length) return '<em class="nomoney">Keine Geldkarten</em>';
-  return `<div class="piles">${values.map((v) => {
-    const total = money.filter((m) => m === v).length;
-    const used = sel.filter((i) => money[i] === v).length;
-    const left = total - used;
-    return `<button type="button" class="pile" style="--m:${MONEY_COLORS[v] || '#eee'}" data-a="addv" data-v="${v}" ${left ? '' : 'disabled'} aria-label="${v}er hinzufügen, ${left} übrig">
-      <span class="pv">${v}</span><span class="pcnt">×${left}</span></button>`;
-  }).join('')}</div>`;
-}
-
 // Ausgewählte Scheine: Tippen nimmt sie wieder zurück
 function chosenCards(money, sel, empty = 4, added = null) {
   const cards = sel.map((i) => `<button type="button" class="money xs ${i === added ? 'in' : ''}" style="--m:${MONEY_COLORS[money[i]]}" data-a="remove" data-v="${i}" aria-label="${money[i]} zurücknehmen">${mIn(money[i])}</button>`).join('');
