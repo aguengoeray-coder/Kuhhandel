@@ -670,7 +670,7 @@ export function renderGame(root, ctx) {
   };
   const who = (id, label) => { const i = idxOf(id); return `<div class="twho">${avatar(v.players[i], i)}<span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(label || nameOf(id))}</span></div>`; };
   // Mitte zwischen den beiden Seiten: das umkämpfte Tier groß, darunter „um 2“
-  const tmid = (animal, count) => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">${animal === RAT ? `${count}× loswerden` : `um ${count}`}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span></div>`;
+  const tmid = (animal, count) => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">um ${count}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span></div>`;
   const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}">${miniCard(animal)}<span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b>${note ? `<small>${note}</small>` : ''}</span></div>`;
   if (state.phase === 'turn' && myTurn && local.tradeOpen) {
     const trades0 = possibleTrades(state, meId);
@@ -720,34 +720,31 @@ export function renderGame(root, ctx) {
     const offerCards = Array.isArray(t.offer) ? t.offer.map((m) => moneyCard(m, { size: 'xs' })).join('') : Array.from({ length: offerCount }, () => '<div class="money xs back"></div>').join('');
     const isRat = t.animal === RAT;
     aucBanner = `${isRat ? 'Rattenhandel' : 'Kuhhandel'}: ${esc(nameOf(t.challenger))} gegen ${esc(nameOf(t.target))}`;
-    // Euer Insider: Angebot mit einem Tipp „ehrlich und männlich“ nennen
-    const ehrlichBtn = ctx.reactionList ? '<button type="button" class="ehrlichbtn" data-a="ehrlich">💪 Ehrlich &amp; männlich!</button>' : '';
-    H.ehrlich = () => ctx.react(ctx.reactionList.find((r) => r.startsWith('Ehrliches')) || ctx.reactionList[0], null);
-    const challengerPanel = `<div class="tpanel">
+    const challengerPanel = (extra = '') => `<div class="tpanel">
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
         <div class="kslots">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
         <div class="tline big"><b>${karten(offerCount)}${Array.isArray(t.offer) ? ` · ${sum(t.offer)}` : ''}</b><small>${Array.isArray(t.offer) ? 'dein Angebot' : 'verdeckt geboten'}</small></div>
         ${t.challenger === meId ? myTiles(t.animal) : ''}
+        ${extra}
       </div>`;
     if (t.target === meId) {
       const canCounter = local.sel.length > 0 || me.money.length === 0;
-      aucCenter = `<div class="tduel ${entered ? 'pop' : ''}">${challengerPanel}
+      const acceptBtn = `<button type="button" class="tbtn accept" data-a="accept"><small>ANNEHMEN</small>${isRat ? 'Geld + Ratte nehmen' : 'Geld nehmen'}<em>${isRat ? `${t.count}× Ratte kommt zu dir` : `${t.count}× ${esc(aname(t.animal))} geht an ${esc(nameOf(t.challenger))}`}</em></button>`;
+      const counterBtn = `<button type="button" class="tbtn counter" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${canCounter ? `${karten(local.sel.length)} · ${selSum} bieten` : 'Scheine unten antippen'}</button>`;
+      aucCenter = `<div class="tduel respond ${entered ? 'pop' : ''}">${challengerPanel(acceptBtn)}
         ${tmid(t.animal, t.count)}
         <div class="tpanel">
           ${who(meId, 'Du')}
           <div class="kslots">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
-          <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
-          ${myTiles(t.animal)}
+          ${counterBtn}
         </div>
-      </div>
-      ${ehrlichBtn ? `<div class="tstriprow">${ehrlichBtn}</div>` : ''}`;
-      aucLeft = `<button type="button" class="pill pill-white" data-a="accept"><small>ANNEHMEN</small>${isRat ? 'Geld + Ratte' : 'Geld nehmen'}</button>
-        <button type="button" class="pill pill-red" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${karten(local.sel.length)}</button>`;
+      </div>`;
+      aucLeft = '';
       pickMode = 'sel';
       H.accept = () => ctx.act((s) => acceptTrade(s, meId));
       H.counter = () => ctx.act((s) => counterTrade(s, meId, local.sel));
     } else {
-      aucCenter = `<div class="tduel">${challengerPanel}
+      aucCenter = `<div class="tduel">${challengerPanel()}
         ${tmid(t.animal, t.count)}
         <div class="tpanel">
           ${who(t.target)}
@@ -755,7 +752,7 @@ export function renderGame(root, ctx) {
           <div class="tline"><b>überlegt …</b></div>
         </div>
       </div>
-      ${ehrlichBtn ? `<div class="tstriprow">${ehrlichBtn}</div>` : ''}`;
+`;
       aucLeft = `<div class="ldecide">${t.challenger === meId ? `Warte auf die Antwort von ${esc(nameOf(t.target))} …` : `${esc(nameOf(t.target))} überlegt …`}</div>`;
     }
   }
