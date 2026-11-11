@@ -456,7 +456,10 @@ export function renderGame(root, ctx) {
       })();
 
     aucBanner = `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
-    aucCenter = revealing ? `<div class="auc aucreveal">${card}</div>` : `<div class="auc aucmain"><div class="aucrow"><div class="aside l">${ainfo}</div>${card}<div class="aside r">${info}</div></div>${countdown}</div>`;
+    // Nach Ablauf entscheidet der Auktionator: „Zuschlag“ sitzt beim Gebot des Höchstbietenden, „Selbst kaufen“ unten links – weit auseinander
+    const decideHere = iAmAuctioneer && !revealing && !running && a.high;
+    const sellBtn = decideHere ? `<button type="button" class="tbtn accept sidebtn" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))} · ${high}</button>` : '';
+    aucCenter = revealing ? `<div class="auc aucreveal">${card}</div>` : `<div class="auc aucmain"><div class="aucrow"><div class="aside l">${ainfo}</div>${card}<div class="aside r">${info}${sellBtn}</div></div>${countdown}</div>`;
 
     if (iAmAuctioneer) {
       const myTotal = sum(me.money);
@@ -465,8 +468,7 @@ export function renderGame(root, ctx) {
       } else if (running) {
         aucLeft = ''; // „Du versteigerst“ steht schon oben im Schild
       } else if (a.high) {
-        aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))}</button>
-          <button type="button" class="pill pill-white" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>SELBST KAUFEN</small>${high}</button>`;
+        aucLeft = `<button type="button" class="pill pill-white" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>${myTotal >= high ? 'SELBST KAUFEN' : 'ZU WENIG GELD'}</small>${high}</button>`;
       } else {
         aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>Tier nehmen</button>`;
       }
@@ -483,7 +485,7 @@ export function renderGame(root, ctx) {
           const over = amt > mine;
           return `<button type="button" class="bidbtn ${over ? 'over' : ''}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten${over ? ', mehr als du hast' : ''}"><b>${amt}</b><small>${over ? '⚠ zu viel' : `+${st}`}</small></button>`;
         }).join('')}</div>
-        <button type="button" class="pill pill-white pill-small" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
+        <button type="button" class="pill pill-white pill-small passbtn" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
     }
@@ -505,13 +507,12 @@ export function renderGame(root, ctx) {
     aucCenter = `<div class="auc aucmain"><div class="aucrow">
       <div class="aside l"><div class="ratnow ${turnId === meId ? 'me' : ''}">${turnId === meId ? 'Du bist dran' : `${esc(nameOf(turnId))} ist dran`}</div></div>
       <div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(RAT, 'rat')}</div>
-      <div class="aside r"><div class="potbox">${pot}<small>Gelegt: <b>${karten(potCount)}</b></small></div></div>
+      <div class="aside r"><div class="potbox">${pot}<small>Gelegt: <b>${karten(potCount)}</b></small></div>${turnId === meId ? `<button type="button" class="tbtn counter sidebtn" data-a="ratTake"><small>RATTE NEHMEN</small>+ ${karten(potCount)}</button>` : ''}</div>
     </div></div>`;
     if (turnId === meId) {
       const values = [...new Set(me.money)].sort((a, b) => a - b);
       if (local.ratSel != null && !values.includes(local.ratSel)) local.ratSel = null;
-      aucLeft = `<button type="button" class="pill pill-red" data-a="ratTake"><small>RATTE NEHMEN</small>+ ${karten(potCount)}</button>
-        ${values.length ? `<button type="button" class="pill pill-white" data-a="ratGo" ${local.ratSel != null ? '' : 'disabled'}><small>VERDECKT LEGEN</small>${local.ratSel != null ? `${local.ratSel}er legen` : 'Schein antippen'}</button>` : ''}`;
+      aucLeft = `${values.length ? `<button type="button" class="pill pill-white" data-a="ratGo" ${local.ratSel != null ? '' : 'disabled'}><small>VERDECKT LEGEN</small>${local.ratSel != null ? `${local.ratSel}er legen` : 'Schein antippen'}</button>` : ''}`;
       if (values.length) pickMode = 'rat';
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(turnId))} überlegt …</div>`;
@@ -554,6 +555,8 @@ export function renderGame(root, ctx) {
     } else if (stage === 'decide') {
       info = '<div class="aucinfo">Niemand hat gebuzzert</div>';
     }
+    // Aufdecker entscheidet: „Verkaufen“ sitzt neben der Karte (beim Buzzer-Gewinner), „Selbst kaufen“ unten links
+    if (!big && stage !== 'wait' && stage !== 'countdown' && stage !== 'rps' && iRevealed && res) big = `<button type="button" class="tbtn accept sidebtn" data-a="spSell"><small>VERKAUFEN</small>${esc(nameOf(res.player))} zahlt dir ${karten(res.count)}</button>`;
     aucBanner = `${esc(nameOf(sp.revealer))} ${iRevealed ? 'hast' : 'hat'} eine Spezialkarte`;
     aucCenter = `<div class="auc aucmain"><div class="aucrow">
       <div class="aside l">${(() => { const hs = v.players.map((p, i) => [p, i]).filter(([p]) => p.animals[sp.animal] > 0); return `<div class="owners">${hs.length ? `<small>${esc(aname(sp.animal))} haben</small><div class="olist">${hs.map(([p, i]) => `<span class="own ${p.id === meId ? 'me' : ''}">${avatar(p, i)}<b>${p.id === meId ? 'Du' : esc(p.name)} ×${p.animals[sp.animal]}</b></span>`).join('')}</div>` : `<span class="onew">Noch keiner hat ${esc(aname(sp.animal))}</span>`}</div>`; })()}</div>
@@ -604,9 +607,7 @@ export function renderGame(root, ctx) {
         aucLeft = `<button type="button" class="pill pill-red" data-a="spSell"><small>NIEMAND HAT GEBUZZERT</small>Karte nehmen</button>`;
       } else {
         const canBuy = me.money.length >= res.count;
-        aucLeft = `<div class="lhead">${esc(nameOf(res.player))} · ${karten(res.count)}</div>
-          <button type="button" class="pill pill-red" data-a="spSell"><small>VERKAUFEN</small>${esc(nameOf(res.player))} zahlt dir ${res.count}</button>
-          <button type="button" class="pill pill-white" data-a="spBuy" ${canBuy ? '' : 'disabled'}><small>${canBuy ? 'SELBST KAUFEN' : 'ZU WENIG KARTEN'}</small>Du zahlst ${res.count}</button>`;
+        aucLeft = `<button type="button" class="pill pill-white" data-a="spBuy" ${canBuy ? '' : 'disabled'}><small>${canBuy ? 'SELBST KAUFEN' : 'ZU WENIG KARTEN'}</small>Du zahlst ${res.count}</button>`;
       }
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(sp.revealer))} entscheidet …</div>`;

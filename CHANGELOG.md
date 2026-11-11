@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.38.0 – Knöpfe dort, worum es geht
+
+- [x] Versteigerung (Auktionator nach Ablauf): „Zuschlag an Nico · 130“ sitzt beim Gebots-Schild rechts neben der Karte, „Selbst kaufen“ bleibt unten links – weit auseinander.
+- [x] Spezialkarte (Aufdecker entscheidet): „Verkaufen – Nico zahlt dir 7 Karten“ sitzt neben der Karte, „Selbst kaufen“ unten links.
+- [x] Rattenrunde: „Ratte nehmen“ sitzt beim Stapel der gelegten Karten in der Mitte, „Verdeckt legen“ unten links beim Geld.
+- [x] Bieten: „Passen“ ist kleiner und deutlich abgesetzt von den Gebotsknöpfen.
+
 ## v0.37.1
 
 - [x] Kuhhandel beantworten: „Annehmen – Geld nehmen“ sitzt jetzt beim Geld des Herausforderers, „Gegenangebot“ bei deinem eigenen Geld – weit auseinander, kein Vertippen mehr. Auf dem Knopf steht, was passiert („1× Hund geht an Nico“ bzw. „1 Karte · 50 bieten“). Der Knopf „Ehrlich & männlich!“ im Kuhhandel ist weg – den Spruch gibt es weiter über 💬.
