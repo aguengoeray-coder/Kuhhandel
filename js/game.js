@@ -202,6 +202,8 @@ const AUSLAGE_MAX = 1;
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
 const EV_WAIT = { auction_won: 3500, special_won: 4000, trade: 6000 };
+// Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
+export const calmFor = (type) => (EV_WAIT[type] ? EV_WAIT[type] + 500 : CALM_MS);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
 
@@ -317,7 +319,7 @@ export function renderGame(root, ctx) {
   const evFresh = fresh && evN != null && local.seenEvN !== evN;
   if (evN != null) local.seenEvN = evN;
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
-  if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) local.calmUntil = Date.now() + CALM_MS;
+  if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = calmFor(v.lastEvent.type); local.calmUntil = Date.now() + local.calmDur; }
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
   local.prev = { logLen: state.log.length, phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? state.log.length : null };
 
@@ -343,7 +345,7 @@ export function renderGame(root, ctx) {
   const SEATS = seatList.length >= 3 ? ['l', 't', 'r'] : seatList.length === 2 ? ['tl', 'tr'] : ['t'];
   const seatOf = (id) => SEATS[seatList.findIndex((p) => p.id === id)] || null;
   const tradeMap = {};
-  if (state.phase === 'turn' && myTurn && !v.mustDraw) possibleTrades(state, meId).forEach((t) => { (tradeMap[t.target] ||= new Set()).add(t.animal); });
+  if (state.phase === 'turn' && myTurn && !v.mustDraw && !calmLeft) possibleTrades(state, meId).forEach((t) => { (tradeMap[t.target] ||= new Set()).add(t.animal); });
   // dezente Pfeile zwischen den Plätzen: so herum wird gespielt
   const seatArrows = SEATS.length === 3
     ? '<span class="seatarrow" style="left:150px;top:24px" aria-hidden="true">↻</span><span class="seatarrow" style="left:676px;top:24px" aria-hidden="true">↻</span>'
@@ -863,7 +865,7 @@ export function renderGame(root, ctx) {
   // Nicht dran: unten links bleibt frei (wer dran ist, steht oben im Schild und an der Sanduhr)
   if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
     leftActionsHtml = `
-      <button type="button" class="pill pill-red ${calmLeft ? 'calm' : ''}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${CALM_MS - calmLeft}ms"` : ''}>KARTE<br>AUFDECKEN</button>
+      <button type="button" class="pill pill-red ${calmLeft ? 'calm' : ''}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>KARTE<br>AUFDECKEN</button>
       <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>`;
   }
   const askMe = (state.phase === 'turn' && myTurn && !local.tradeOpen) || (state.phase === 'payment' && v.payment.payer === meId)

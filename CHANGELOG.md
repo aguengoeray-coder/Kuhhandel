@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.35.0 – Team Rockets Tier Börse
+
+- [x] Das Spiel heißt jetzt **Team Rockets Tier Börse**: neuer Startbildschirm mit Kurstafel mit laufenden Tierpreisen, Spruch „Kaufen. Bluffen. Kuhhandeln.“ – auch Anmeldeseite, Seitentitel, App-Name auf dem Homescreen und Einladungstext.
+- [x] „Karte aufdecken“ und Kuhhandel (auch über die Kärtchen am Platz) sind erst frei, wenn das Ergebnis-Fenster abgelaufen ist (Versteigerung 4 s, Spezialkarte 4,5 s, Kuhhandel 6,5 s) – der Balken im Knopf zeigt die Wartezeit. Wegtippen schließt nur das eigene Fenster, die Sperre bleibt, damit alle anderen das Ergebnis sicher sehen. Test-Spieler warten genauso.
+- [x] Ergebnis-Fenster dunkeln den Tisch nicht mehr ab – vorher wurde nur das Spielfeld dunkel und oben/unten blieb ein heller Rand stehen.
+
 ## v0.34.0 – flüssiger, ein Ergebnis-Fenster, Bezahlen im Fächer
 
 - [x] **Ein Ergebnis-Fenster für alles:** Versteigerung, Spezialkarte und Kuhhandel sehen gleich aus – Karte links, rechts Art, Ergebnis und wer wem zahlt („Du → 120 → Lea“). Grüner Rahmen = gut für dich.
