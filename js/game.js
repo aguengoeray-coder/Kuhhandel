@@ -195,6 +195,7 @@ function avatar(p, idx, extra = '') {
 
 // Nach einem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte, Geldschein) kurz Pause, bevor aufgedeckt werden darf
 export const CALM_MS = 2500;
+const CANTPAY_MS = 5000; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
 
 // Einmal-Effekte, die schon laufen: Animationen auf die vergangene Zeit vorspulen (statt von vorn zu beginnen)
@@ -1005,8 +1006,34 @@ export function renderGame(root, ctx) {
   }
   H.resClose = () => { local.res = null; ctx.rerender(); };
 
+  // Kann nicht zahlen: alle Scheine groß für alle zeigen (5 s, Tipp schließt)
+  const cpe = v.lastEvent;
+  const cpSig = cpe?.type === 'cant_pay' ? `cp|${state.log.length}|${cpe.player}` : null;
+  if (cpSig && local.cpSig !== cpSig) { local.cpSig = cpSig; if (fresh || ctx.demoPop) local.cp = { ev: JSON.parse(JSON.stringify(cpe)), at: Date.now() }; }
+  if (local.cp) {
+    const el = Date.now() - local.cp.at;
+    if (el < CANTPAY_MS) {
+      const e = local.cp.ev;
+      const mine = e.player === meId;
+      const bills = [...e.revealed].sort((x, y) => x - y);
+      const sum = bills.reduce((t, m) => t + m, 0);
+      const need = e.special ? `${e.count} Karte${e.count === 1 ? '' : 'n'}` : `${e.amount} Taler`;
+      const after = e.special ? `→ darf erst ab ${bills.length} buzzern` : `→ darf jetzt höchstens ${e.amount - BID_STEP} bieten`;
+      const w = Math.max(30, Math.min(58, Math.floor(400 / Math.max(1, bills.length)) - 6));
+      effects += `<div class="cantpop" data-a="cpClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${CANTPAY_MS}ms;--bw:${w}px">
+        <small>Kann nicht zahlen</small>
+        <b>${esc(mine ? 'Du' : nameOf(e.player))} ${mine ? 'kannst' : 'kann'} ${need} nicht zahlen</b>
+        <div class="cpbills">${bills.map((m) => moneyCard(m)).join('') || '<span class="cpnone">keine Scheine</span>'}</div>
+        <p><b>${bills.length}</b> Schein${bills.length === 1 ? '' : 'e'} · zusammen <b>${sum}</b> Taler</p>
+        <em>${after}</em>
+        <i class="rtimer"></i></div>`;
+      wakeLocal(local.cp.at + CANTPAY_MS + 50);
+    } else local.cp = null;
+  }
+  H.cpClose = () => { local.cp = null; ctx.rerender(); };
+
   // Was ist passiert: kurz groß in der Tischmitte, danach klein oben
-  const ownEffect = /class="(qpop|soldsign|moneyreveal|gavel|donkeypop|resultpop|rpsshow)[ "]/.test(effects + local.fx.map((f) => f.html).join('')) || (aucCenter && state.phase === 'turn') || !!evStrip;
+  const ownEffect = /class="(qpop|soldsign|moneyreveal|gavel|donkeypop|resultpop|rpsshow|cantpop)[ "]/.test(effects + local.fx.map((f) => f.html).join('')) || (aucCenter && state.phase === 'turn') || !!evStrip;
   if (fresh && state.phase === 'turn' && lastLog && !ownEffect && !(le?.type === 'money_drawn')) {
     keepFx(`<div class="logpop" aria-live="polite">${esc(lastLog)}</div>`, 3100);
   }

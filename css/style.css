@@ -1864,3 +1864,16 @@ html.bigtext .fansum { font-size: 17px; }
 .pill.calm[disabled] { opacity: .75; }
 .pill.calm::before { content: ""; position: absolute; left: 0; bottom: 0; height: 6px; width: 100%; background: var(--gold); transform-origin: left; animation: calmbar 2.5s linear both; animation-delay: var(--el, 0ms); }
 @keyframes calmbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* v0.30.3: Kann nicht zahlen – alle Scheine groß für alle */
+.cantpop { position: absolute; left: 319px; top: 40px; transform: translateX(-50%); z-index: 33; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 470px; max-width: calc(100% - 20px); background: #fff; border: 4px solid var(--red); border-radius: 20px; padding: 10px 16px 18px; box-shadow: 0 0 0 9999px rgba(0,0,0,.22), 0 14px 30px rgba(0,0,0,.4); cursor: pointer; text-align: center; animation: resin .35s cubic-bezier(.2,.9,.3,1.2) both; animation-delay: min(0ms, var(--el, 0ms)); }
+.cantpop small { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--red); }
+.cantpop > b { font-family: var(--font-head); font-size: 20px; line-height: 1.15; }
+.cantpop .cpbills { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 4px 0; }
+.cantpop .cpbills .money { width: var(--bw, 54px); height: calc(var(--bw, 54px) * 1.41); border-radius: 9px; }
+.cantpop .cpbills .money .mv { font-size: calc(var(--bw, 54px) * .42); }
+.cantpop .cpnone { font-weight: 700; color: var(--muted); }
+.cantpop p { margin: 0; font-size: 15px; font-weight: 700; }
+.cantpop p b { font-family: var(--font-head); font-size: 20px; color: var(--red); }
+.cantpop em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--muted); }
+.cantpop .rtimer { background: #E4DFD3; animation-duration: var(--dur, 5s); }

@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.30.3
+
+- [x] Kann jemand nicht zahlen, sehen jetzt **alle** 5 s lang groß in der Mitte jeden einzelnen seiner Scheine, dazu Anzahl und Summe („7 Scheine · zusammen 80 Taler“) und was jetzt gilt („darf höchstens 80 bieten“ bzw. bei der Spezialkarte „darf erst ab 7 buzzern“). Antippen schließt das Fenster; die kleine Zeile auf dem Tisch bleibt wie bisher.
+
 ## v0.30.2
 
 - [x] Verschnaufpause: Nach jedem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte genommen, Geldschein gezogen) kann der Nächste 2,5 s lang nicht aufdecken oder handeln – der Knopf ist ausgegraut und füllt sich mit einem goldenen Balken. Test-Spieler warten genauso.
