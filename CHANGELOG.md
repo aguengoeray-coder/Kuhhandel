@@ -10,6 +10,8 @@
 - [x] Infozeile leuchtet kurz auf, wenn etwas Neues drinsteht.
 - [x] **Bezahlen, Kuhhandel und Ratte direkt im Geld-Fächer:** Schein antippen → er springt ins Feld, im Feld antippen → zurück. Ratte: Schein antippen (hebt sich), dann „Verdeckt legen“.
 - [x] Gebots-Blasen der oberen Plätze erscheinen neben dem Profil statt oben abgeschnitten; bietet jemand gleich nochmal, hüpft seine Blase nur.
+- [x] Profile am Tisch einheitlich: Name und Status immer gleich breit, das Band kommt ohne Lücke aus dem Kreis (auch bei „versteigert“, „Aufdecker“ usw.). Wer dran ist, zeigt der goldene Rahmen um den ganzen Platz.
+- [x] Standard-Aussehen jetzt Nachtblau mit Filz (wer sein Aussehen schon selbst gewählt hat, behält es; „Zurück auf Empfehlung“ unter Aussehen holt den neuen Standard).
 - [x] Flüssiger: Dauer-Animationen (Wackeln am Stapel, Leuchten, Sanduhr) springen beim Neuzeichnen nicht mehr auf Anfang; Konfetti und Leuchten laufen auf dem Grafikchip; einheitliche Bewegungen.
 
 ## v0.33.2

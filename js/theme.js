@@ -33,10 +33,10 @@ const BACK_PATTERNS = {
 };
 
 const TABLES = {
-  petrol: { name: 'Petrol', c: ['#1F7A80', '#16626A', '#0F4D55'], tip: true },
+  petrol: { name: 'Petrol', c: ['#1F7A80', '#16626A', '#0F4D55'] },
   gruen: { name: 'Grün', c: ['#3E9461', '#2E7D4F', '#256A42'] },
   dunkelgruen: { name: 'Tannengrün', c: ['#2F8556', '#226B43', '#1A5535'] },
-  blau: { name: 'Nachtblau', c: ['#2C4F8A', '#213E70', '#172E55'] },
+  blau: { name: 'Nachtblau', c: ['#2C4F8A', '#213E70', '#172E55'], tip: true },
   bordeaux: { name: 'Bordeaux', c: ['#8E2D3D', '#74212F', '#5A1824'] },
   holz: { name: 'Holz', c: ['#9A6B3F', '#7F5530', '#664222'] },
   anthrazit: { name: 'Anthrazit', c: ['#4A4F56', '#3A3E44', '#2B2E33'] },
@@ -47,11 +47,11 @@ const TABLES = {
 };
 
 const BACKGROUNDS = {
-  bordeaux: { name: 'Bordeaux', c: '#7A1F2E', tip: true },
+  bordeaux: { name: 'Bordeaux', c: '#7A1F2E' },
   wiese: { name: 'Wiese', c: '#6FB552' },
   heu: { name: 'Heu', c: '#C8962E' },
   scheune: { name: 'Scheune', c: '#B5452F' },
-  nachtblau: { name: 'Nachtblau', c: '#1E2A44' },
+  nachtblau: { name: 'Nachtblau', c: '#1E2A44', tip: true },
   anthrazit: { name: 'Anthrazit', c: '#2E3136' },
   ozean: { name: 'Ozean', c: '#1B4F72' },
   wald: { name: 'Wald', c: '#2F5D3A' },
@@ -76,7 +76,9 @@ const BACKS = {
 
 // Fertige Zusammenstellungen
 export const PRESETS = {
-  casino: { name: 'Casino', tip: true, v: { table: 'petrol', tablePat: 'glatt', bg: 'bordeaux', bgPat: 'streifen', back: 'rot', backPat: 'streifen' } },
+  // Standard: Nachtblau mit Filz
+  nachtblau: { name: 'Nachtblau', tip: true, v: { table: 'blau', tablePat: 'filz', bg: 'nachtblau', bgPat: 'filz', back: 'rot', backPat: 'streifen' } },
+  casino: { name: 'Casino', v: { table: 'petrol', tablePat: 'glatt', bg: 'bordeaux', bgPat: 'streifen', back: 'rot', backPat: 'streifen' } },
   bauernhof: { name: 'Bauernhof', v: { table: 'dunkelgruen', tablePat: 'filz', bg: 'heu', bgPat: 'dielen', back: 'rot', backPat: 'karo' } },
   klassisch: { name: 'Klassisch', v: { table: 'gruen', tablePat: 'glatt', bg: 'wiese', bgPat: 'streifen', back: 'rot', backPat: 'streifen' } },
   scheune: { name: 'Scheune', v: { table: 'dunkelgruen', tablePat: 'glatt', bg: 'scheune', bgPat: 'dielen', back: 'blau', backPat: 'karo' } },
@@ -86,7 +88,7 @@ export const PRESETS = {
   pflaume: { name: 'Pflaume', v: { table: 'lila', tablePat: 'glatt', bg: 'pflaume', bgPat: 'kreise', back: 'gold', backPat: 'streifen' } },
   strand: { name: 'Strand', v: { table: 'petrol', tablePat: 'wellen', bg: 'sand', bgPat: 'punkte', back: 'rosa', backPat: 'punkte' } },
 };
-export const DEFAULT_THEME = PRESETS.casino.v;
+export const DEFAULT_THEME = PRESETS.nachtblau.v;
 
 const KEY = 'kh_theme';
 export function loadTheme(store) {
@@ -156,10 +158,10 @@ export function themeModal(t) {
       <small>${esc(p.name)}</small>${p.tip ? tipMark : ''}</button>`).join('')}</div>
     <h3>Spielfeld</h3>
     ${swatches('table', TABLES, t.table, (o) => `background:${o.c[1]}`)}
-    ${patterns('tablePat', PATTERNS, t.tablePat, tb.c[1], 'glatt')}
+    ${patterns('tablePat', PATTERNS, t.tablePat, tb.c[1], 'filz')}
     <h3>Hintergrund <small class="th3note">Startseite &amp; Menüs</small></h3>
     ${swatches('bg', BACKGROUNDS, t.bg, (o) => `background:${o.c}`)}
-    ${patterns('bgPat', PATTERNS, t.bgPat, bg.c, 'streifen')}
+    ${patterns('bgPat', PATTERNS, t.bgPat, bg.c, 'filz')}
     <h3>Kartenrücken</h3>
     ${swatches('back', BACKS, t.back, (o) => `background:${o.c[0]}`)}
     ${patterns('backPat', BACK_PATTERNS, t.backPat, bk.c[0], 'streifen')}

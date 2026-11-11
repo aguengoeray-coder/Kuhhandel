@@ -1436,7 +1436,7 @@ button.deck:active { transform: scale(.95); }
 .money.fan .mcount { position: absolute; left: 50%; top: -4px; transform: translateX(-50%); background: var(--ink); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; font-weight: 800; line-height: 16px; }
 
 /* ===================== v0.23: Aussehen (Farben aus den Einstellungen) ===================== */
-:root { --tbl-1: #1F7A80; --tbl-2: #16626A; --tbl-3: #0F4D55; --tbl-pat: none; --bg: #7A1F2E; --bg-pat: repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 24px, transparent 24px 48px); --back: #C8372D; --back-2: #9E2A22; --back-pat: repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0 5px, transparent 5px 10px); }
+:root { --tbl-1: #2C4F8A; --tbl-2: #213E70; --tbl-3: #172E55; --tbl-pat: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1.5px) 0 0 / 6px 6px; --bg: #1E2A44; --bg-pat: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1.5px) 0 0 / 6px 6px; --back: #C8372D; --back-2: #9E2A22; --back-pat: repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0 5px, transparent 5px 10px); }
 body, .stage { background: var(--bg-pat), var(--bg); }
 .gtable { background: var(--tbl-pat), radial-gradient(ellipse at 50% 40%, var(--tbl-1) 0%, var(--tbl-2) 60%, var(--tbl-3) 100%); }
 .deck, .money.back, .kslots .money.xs.back, .mfly { background: var(--back-pat), var(--back); }
@@ -2106,7 +2106,7 @@ html.bigtext .stage .evstrip { font-size: 12.5px; }
 
 /* Zuschlag: „Verkauft!“-Stempel auf der Karte beim Bezahlen */
 .paycard { position: relative; }
-.stamp { position: absolute; left: 50%; top: 64%; transform: translate(-50%, -50%) rotate(-14deg); z-index: 2; border: 3px solid #C8323C; color: #C8323C; background: rgba(255,255,255,.88); font-family: var(--font-head); font-weight: 700; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; padding: 0 7px; border-radius: 6px; pointer-events: none; white-space: nowrap; }
+.stamp { position: absolute; left: 50%; top: 64%; transform: translate(-50%, -50%) rotate(-14deg); z-index: 2; border: 3px solid #C8323C; color: #C8323C; background: rgba(255,255,255,.88); font-family: var(--font-head); font-weight: 700; font-size: 11px; letter-spacing: .03em; text-transform: uppercase; padding: 0 6px; border-radius: 6px; pointer-events: none; white-space: nowrap; }
 .stamp.in { animation: stampin .4s var(--e-pop) .1s both; }
 @keyframes stampin { from { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(2.2); } to { opacity: 1; transform: translate(-50%, -50%) rotate(-14deg); } }
 
@@ -2131,3 +2131,14 @@ button.money.fan.pick:active { transform: rotate(var(--rot, 0deg)) translateY(ca
 /* Flug aus dem Ergebnis-Fenster: unsichtbar, bis das Fenster zugeht */
 .fly.fromev { animation-name: flyev; }
 @keyframes flyev { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 6% { opacity: 1; } 88% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(var(--fs, .25)); opacity: 0; } }
+
+/* Profile am Tisch: Name und Status immer gleich breit, das Band kommt ohne Lücke aus dem Kreis
+   (dran sein zeigt der goldene Rahmen um den ganzen Platz + Sanduhr – der Kreis bleibt gleich groß) */
+.stage .prow .pname { width: 92px; flex: none; }
+.stage .prow.seat-l, .stage .prow.seat-r { width: 142px; }
+html.bigtext .stage .prow .tag-s { font-size: 13px; }
+.stage .prow .ribbon-s, .stage .prow .tag-s { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage .prow .ribbon-s { padding-right: 8px; }
+.stage .prow .tag-s { padding-left: 13px; padding-right: 4px; }
+.stage .prow .ribbon-s { padding-left: 13px; }
+.stage .prow.turn .avatar { box-shadow: none; }
