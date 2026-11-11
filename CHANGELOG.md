@@ -2,7 +2,7 @@
 
 ## v0.37.1
 
-- [x] Kuhhandel beantworten: „Annehmen – Geld nehmen“ sitzt jetzt beim Geld des Herausforderers, „Gegenangebot“ bei deinem eigenen Geld – weit auseinander, kein Vertippen mehr. Auf dem Knopf steht, was passiert („1× Hund geht an Nico“ bzw. „1 Karte · 50 bieten“). „Ehrlich & männlich!“ sitzt dafür unten links.
+- [x] Kuhhandel beantworten: „Annehmen – Geld nehmen“ sitzt jetzt beim Geld des Herausforderers, „Gegenangebot“ bei deinem eigenen Geld – weit auseinander, kein Vertippen mehr. Auf dem Knopf steht, was passiert („1× Hund geht an Nico“ bzw. „1 Karte · 50 bieten“). Der Knopf „Ehrlich & männlich!“ im Kuhhandel ist weg – den Spruch gibt es weiter über 💬.
 - [x] Rattenhandel: In der Mitte steht wieder „um 1“ (der Text „loswerden“ passte nicht auf das Schild).
 
 ## v0.37.0 – Kuhhandel deutlicher und schneller
