@@ -543,6 +543,16 @@ export function renderGame(root, ctx) {
   }
 
   // ----- Kuhhandel: auf dem Tisch statt in einem eigenen Fenster -----
+  // Eigene Tiere im Kuhhandel (zum Nachsehen, das Tier, um das es geht, leuchtet)
+  const myTiles = (focus) => {
+    let ids = [...ANIMALS.map((a) => a.id), RAT].filter((id) => (me.animals[id] || 0) > 0);
+    if (!ids.length) return '';
+    // eine Reihe: das umkämpfte Tier zuerst, dann nach Anzahl; Rest als „+N“
+    ids = ids.sort((x, y) => (y === focus) - (x === focus) || me.animals[y] - me.animals[x]);
+    const more = ids.length > 6 ? ids.length - 5 : 0;
+    if (more) ids = ids.slice(0, 5);
+    return `<div class="atiles mine">${ids.map((id) => `<span class="atile ${id === focus ? 'on' : focus ? 'dim' : ''}" style="--a:${ANIMAL_COLORS[id]}" title="${me.animals[id]}× ${aname(id)}">${miniCard(id, 'fill')}${aval(id) != null ? `<em class="cv">${aval(id)}</em>` : ''}<span class="tcount">×${me.animals[id]}</span></span>`).join('')}${more ? `<span class="amore">+${more}</span>` : ''}</div>`;
+  };
   const who = (id, label) => { const i = idxOf(id); return `<div class="twho">${avatar(v.players[i], i)}<span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(label || nameOf(id))}</span></div>`; };
   const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}">${miniCard(animal)}<span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b>${note ? `<small>${note}</small>` : ''}</span></div>`;
   if (state.phase === 'turn' && myTurn && local.tradeOpen) {
@@ -560,6 +570,7 @@ export function renderGame(root, ctx) {
         ${who(meId, 'Du')}
         <div class="kslots">${chosenCards(me.money, local.sel, 3)}</div>
         <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
+        ${myTiles(chosen?.animal)}
       </div>
       <div class="tvs">VS</div>
       <div class="tpanel">
@@ -600,6 +611,7 @@ export function renderGame(root, ctx) {
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
         <div class="kslots">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
         <div class="tline"><b>${karten(offerCount)}</b></div>
+        ${t.challenger === meId ? myTiles(t.animal) : ''}
       </div>`;
     if (t.target === meId) {
       const canCounter = local.sel.length > 0 || me.money.length === 0;
@@ -609,6 +621,7 @@ export function renderGame(root, ctx) {
           ${who(meId, 'Du')}
           <div class="kslots">${chosenCards(me.money, local.sel, 3)}</div>
           <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
+          ${myTiles(t.animal)}
         </div>
       </div>
       <div class="tstriprow">${animalStrip(t.animal, t.count, '')}${ehrlichBtn}</div>`;

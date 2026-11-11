@@ -1797,3 +1797,17 @@ html.bigtext .fansum { font-size: 17px; }
 .atile .tcount { white-space: nowrap; padding: 0 5px; }
 .atile.on .tcount { background: var(--gold); }
 .reactpick.withdetail { max-height: 376px; overflow-y: auto; } .reactpick.self { top: 6px !important; bottom: auto; }
+
+/* v0.29.2: eigene Tiere im Kuhhandel */
+.atiles.mine { margin-top: 4px; gap: 6px; }
+.atiles.mine .atile { width: 34px; height: 40px; opacity: 1; cursor: default; }
+.atiles.mine .atile.dim { opacity: .5; }
+.atiles.mine .atile.on { width: 44px; height: 52px; }
+.atiles.mine .atile .cv { font-size: 8px; }
+.atiles.mine .atile .tcount { font-size: 9px; }
+.atiles.mine { flex-wrap: nowrap; min-height: 0; align-items: flex-end; }
+.atiles.mine .atile { width: 28px; height: 34px; }
+.atiles.mine .atile.on { width: 36px; height: 44px; }
+.atiles.mine .amore { align-self: center; background: rgba(255,255,255,.85); color: var(--ink); border-radius: 999px; padding: 1px 7px; font-size: 11px; font-weight: 800; }
+.tpanel:has(.atiles.mine) .kslots { margin-bottom: 0; }
+.tstriprow { margin-left: 160px; }

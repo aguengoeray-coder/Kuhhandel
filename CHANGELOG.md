@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.29.2
+
+- [x] Kuhhandel: In deinem Kasten siehst du jetzt deine eigenen Tiere (eine Reihe, Rest als „+N“). Das Tier, um das es geht, steht vorne, groß und golden umrandet – beim Anbieten, Warten und Antworten.
+
 ## v0.29.1
 
 - [x] Kuhhandel: Statt der Anzahl beim Gegner („×3“) steht am Tier jetzt, worum es geht („um 1“ bzw. „um 2“); oben „1× Kuh“.
