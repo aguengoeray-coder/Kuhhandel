@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.30.4
+
+- [x] Fehler behoben: Das Fenster „Kann nicht zahlen“ kam nach jedem weiteren Gebot erneut. Jetzt kommt es genau einmal, danach läuft die Versteigerung neu. Gleiche Ursache, ebenfalls behoben: Das Kuhhandel-Ergebnis konnte beim nächsten Kuhhandel nochmal auftauchen, der Geldschein beim nächsten Zug, und der Esel-Hinweis verschwand beim ersten Gebot. (Jedes Ereignis hat jetzt eine eigene Nummer.)
+- [x] Deine neue Karte fliegt jetzt genau auf den passenden Stapel in deiner Auslage (und wird dabei so klein wie die Karten dort); der Stapel wackelt, wenn sie ankommt.
+- [x] Große Schrift ist jetzt Standard. Wer sie unter „Aussehen“ selbst ausgeschaltet hat, behält seine Wahl.
+
 ## v0.30.3
 
 - [x] Kann jemand nicht zahlen, sehen jetzt **alle** 5 s lang groß in der Mitte jeden einzelnen seiner Scheine, dazu Anzahl und Summe („7 Scheine · zusammen 80 Taler“) und was jetzt gilt („darf höchstens 80 bieten“ bzw. bei der Spezialkarte „darf erst ab 7 buzzern“). Antippen schließt das Fenster; die kleine Zeile auf dem Tisch bleibt wie bisher.
