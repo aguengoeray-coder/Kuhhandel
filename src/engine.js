@@ -426,8 +426,8 @@ export function closeAuction(prev, playerId, mode, now) {
 
   if (!a.high) {
     auctioneer.animals[a.animal] += 1;
-    log(state, `Niemand bietet – ${auctioneer.name} bekommt ${animalName(a.animal)} umsonst.`);
     state.lastEvent = { n: state.log.length, type: 'auction_won', animal: a.animal, buyer: auctioneer.id, amount: 0 };
+    log(state, `Niemand bietet – ${auctioneer.name} bekommt ${animalName(a.animal)} umsonst.`);
     nextTurn(state);
     return state;
   }
@@ -744,8 +744,8 @@ export function specialDecide(prev, playerId, mode, now) {
   if (!res) {
     rev.specials.push(sp.animal);
     stat(state, rev.id).specialsWon += 1;
-    log(state, `Niemand buzzert – ${rev.name} bekommt die ${animalName(sp.animal)}-Spezialkarte umsonst.`);
     state.lastEvent = { n: state.log.length, type: 'special_won', animal: sp.animal, buyer: rev.id, count: 0 };
+    log(state, `Niemand buzzert – ${rev.name} bekommt die ${animalName(sp.animal)}-Spezialkarte umsonst.`);
     nextTurn(state);
     return state;
   }

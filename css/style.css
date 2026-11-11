@@ -809,8 +809,8 @@ html, body { touch-action: manipulation; } /* kein Doppeltipp-Zoom, schnellere R
 /* ===== v0.17: Geldschein aus dem Stapel für alle zeigen ===== */
 .moneyreveal { position: absolute; left: 376px; top: 170px; transform: translate(-50%, -50%); z-index: 30; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: mrfly 2.6s ease-in-out both; }
 .moneyreveal .money.big { width: 92px; height: 130px; font-size: 30px; border-width: 4px; border-radius: 14px; padding: 8px 10px; box-shadow: 0 12px 30px rgba(0,0,0,.4); animation: mrflip .45s ease-out both; }
-.moneyreveal span { background: #2B2F36; color: #fff; border-radius: 999px; padding: 5px 14px; font-weight: 700; font-size: 14px; white-space: nowrap; }
-.moneyreveal span b { color: var(--gold); font-family: var(--font-head); font-size: 17px; }
+.moneyreveal .mrlabel { background: #2B2F36; color: #fff; border-radius: 999px; padding: 5px 14px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.moneyreveal .mrlabel b { color: var(--gold); font-family: var(--font-head); font-size: 17px; }
 @keyframes mrflip { from { transform: rotateY(90deg) scale(.6); } to { transform: none; } }
 @keyframes mrfly {
   0% { opacity: 0; }
@@ -2178,3 +2178,24 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .rs-chip { line-height: 16px; white-space: nowrap; }
 .room .table.short { max-height: 112px; }
 .room .table.short .seat .avatar { width: 46px; height: 46px; }
+
+/* ---------- v0.40: Glitzer ---------- */
+/* Funkelnde Sterne über wertvollen Karten: große Geldscheine (100/200/500) und Schwein/Kuh/Pferd */
+.glitz { position: absolute; inset: -12px; pointer-events: none; z-index: 4; }
+.glitz i { position: absolute; left: var(--x); top: var(--y); width: calc(24px * var(--s)); height: calc(24px * var(--s)); margin: calc(-12px * var(--s)); background: radial-gradient(circle, #fff 0 22%, #FFF6C8 40%, transparent 72%); clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); filter: drop-shadow(0 0 2px rgba(255, 255, 255, 1)) drop-shadow(0 0 4px rgba(255, 200, 60, .8)); opacity: 0; animation: twinkle 1.3s ease-in-out var(--d) infinite; }
+.glitz.gold i { background: radial-gradient(circle, #fff 0 20%, #FFD34E 45%, transparent 75%); filter: drop-shadow(0 0 4px rgba(255, 196, 0, .95)); }
+@keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.2) rotate(0deg); } 45% { opacity: 1; transform: scale(1) rotate(45deg); } 70% { opacity: .7; transform: scale(.8) rotate(80deg); } }
+/* Geldschein: Glanzstreifen läuft einmal über den Schein */
+.moneyreveal .money.big { position: relative; overflow: visible; }
+.moneyreveal .money.big:has(.glitz)::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, .75) 48%, transparent 66%) no-repeat; background-size: 250% 100%; animation: glanz 1.1s ease-out .35s both; pointer-events: none; }
+@keyframes glanz { from { background-position: 120% 0; } to { background-position: -40% 0; } }
+.moneyreveal .money.big:has(.glitz.gold) { box-shadow: 0 0 0 3px #FFD34E, 0 0 28px rgba(255, 211, 78, .8), 0 12px 30px rgba(0,0,0,.4); }
+/* Teure Tierkarte: nach dem Umdrehen ein Funkenregen, danach glitzert sie ruhig weiter, solange sie versteigert wird */
+.revealcard .glitz.burst { inset: -26px; animation: glitzin 1.5s linear both; }
+@keyframes glitzin { 0%, 62% { opacity: 0; } 72%, 100% { opacity: 1; } }
+.aucard .glitz.calm i { animation-duration: 2.4s; }
+@media (prefers-reduced-motion: reduce) { .glitz { display: none; } .moneyreveal .money.big::after { animation: none; opacity: 0; } }
+
+/* Geld-Summe nicht unter den schräg gestellten letzten Schein schieben */
+.fansum { margin-left: 22px; }
+.revealcard.big { z-index: 25; }
