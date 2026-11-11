@@ -101,7 +101,7 @@ export function buildDemoState(kind, local) {
       g = base(); g.turn = 1; g.deck[0] = 'kuh';
       g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u4', 200, t + 2600);
-      g = closeAuction(g, 'u2', 'sell', t + 20500);
+      g = closeAuction(g, 'u2', 'sell', Date.now() - 800); // gerade eben: Pause zum Anschauen läuft noch
       return g;
     }
     case 'tradesetup':

@@ -1,6 +1,6 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
 import {
-  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, AUCTION_START_MS, AUCTION_BID_MS,
+  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, CANTPAY_HOLD_MS, AUCTION_START_MS, AUCTION_BID_MS,
   viewFor, possibleTrades, scores, currentPlayer,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
@@ -195,6 +195,7 @@ function avatar(p, idx, extra = '') {
 
 // Nach einem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte, Geldschein) kurz Pause, bevor aufgedeckt werden darf
 export const CALM_MS = 2500;
+const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
 
 // Einmal-Effekte, die schon laufen: Animationen auf die vergangene Zeit vorspulen (statt von vorn zu beginnen)
@@ -319,8 +320,10 @@ export function renderGame(root, ctx) {
     const iAmAuctioneer = a.auctioneer === meId;
     const high = a.high ? a.high.amount : 0;
     const cap = a.caps[meId];
-    const canBid = (amt) => cap == null || amt <= cap;
     const nowR = ctx.now();
+    const held = a.holdUntil != null && nowR < a.holdUntil; // nach „kann nicht zahlen“: alle schauen erst die Scheine an
+    if (held && (!wake || wake > a.holdUntil)) wake = a.holdUntil;
+    const canBid = (amt) => !held && (cap == null || amt <= cap);
     const revealing = a.opensAt != null && nowR < a.opensAt;
     if (revealing) wake = a.opensAt; // nach der Animation neu zeichnen
     // Kleiner, dezenter Infokasten – erscheint erst nach dem Aufdecken
@@ -335,7 +338,7 @@ export function renderGame(root, ctx) {
     </div>`;
     // Countdown: Ring um die Karte – bieten nur solange er läuft, Zuschlag erst danach
     const now = ctx.now();
-    const running = a.endsAt != null && now < a.endsAt && !revealing;
+    const running = a.endsAt != null && now < a.endsAt && !revealing; // läuft auch während der Pause nach „kann nicht zahlen“ (Uhr zeigt 15 … 11, Bieten gesperrt)
     const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
     const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
@@ -385,7 +388,7 @@ export function renderGame(root, ctx) {
       // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
       const steps = [10, 20, 50, 100]; // mehr bieten = mehrmals tippen (z. B. 100, dann 20)
       const mine = sum(me.money);
-      aucLeft = `<div class="lhead">Bieten <small>mind. ${high + BID_STEP}</small></div>
+      aucLeft = `<div class="lhead">Bieten <small>${held ? 'gleich geht’s los …' : `mind. ${high + BID_STEP}`}</small></div>
         <div class="bidgrid">${steps.map((st) => {
           const amt = high + st;
           const over = amt > mine;
@@ -1005,8 +1008,34 @@ export function renderGame(root, ctx) {
   }
   H.resClose = () => { local.res = null; ctx.rerender(); };
 
+  // Kann nicht zahlen: alle Scheine groß für alle zeigen (5 s, Tipp schließt)
+  const cpe = v.lastEvent;
+  const cpSig = cpe?.type === 'cant_pay' ? `cp|${state.log.length}|${cpe.player}` : null;
+  if (cpSig && local.cpSig !== cpSig) { local.cpSig = cpSig; if (fresh || ctx.demoPop) local.cp = { ev: JSON.parse(JSON.stringify(cpe)), at: Date.now() }; }
+  if (local.cp) {
+    const el = Date.now() - local.cp.at;
+    if (el < CANTPAY_MS) {
+      const e = local.cp.ev;
+      const mine = e.player === meId;
+      const bills = [...e.revealed].sort((x, y) => x - y);
+      const sum = bills.reduce((t, m) => t + m, 0);
+      const need = e.special ? `${e.count} Karte${e.count === 1 ? '' : 'n'}` : `${e.amount} Taler`;
+      const after = e.special ? `→ darf erst ab ${bills.length} buzzern` : `→ darf jetzt höchstens ${e.amount - BID_STEP} bieten`;
+      const w = Math.max(30, Math.min(58, Math.floor(400 / Math.max(1, bills.length)) - 6));
+      effects += `<div class="cantpop" data-a="cpClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${CANTPAY_MS}ms;--bw:${w}px">
+        <small>Kann nicht zahlen</small>
+        <b>${esc(mine ? 'Du' : nameOf(e.player))} ${mine ? 'kannst' : 'kann'} ${need} nicht zahlen</b>
+        <div class="cpbills">${bills.map((m) => moneyCard(m)).join('') || '<span class="cpnone">keine Scheine</span>'}</div>
+        <p><b>${bills.length}</b> Schein${bills.length === 1 ? '' : 'e'} · zusammen <b>${sum}</b> Taler</p>
+        <em>${after}</em>
+        <i class="rtimer"></i></div>`;
+      wakeLocal(local.cp.at + CANTPAY_MS + 50);
+    } else local.cp = null;
+  }
+  H.cpClose = () => { local.cp = null; ctx.rerender(); };
+
   // Was ist passiert: kurz groß in der Tischmitte, danach klein oben
-  const ownEffect = /class="(qpop|soldsign|moneyreveal|gavel|donkeypop|resultpop|rpsshow)[ "]/.test(effects + local.fx.map((f) => f.html).join('')) || (aucCenter && state.phase === 'turn') || !!evStrip;
+  const ownEffect = /class="(qpop|soldsign|moneyreveal|gavel|donkeypop|resultpop|rpsshow|cantpop)[ "]/.test(effects + local.fx.map((f) => f.html).join('')) || (aucCenter && state.phase === 'turn') || !!evStrip;
   if (fresh && state.phase === 'turn' && lastLog && !ownEffect && !(le?.type === 'money_drawn')) {
     keepFx(`<div class="logpop" aria-live="polite">${esc(lastLog)}</div>`, 3100);
   }
