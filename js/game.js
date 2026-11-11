@@ -311,6 +311,7 @@ export function renderGame(root, ctx) {
     const ainfo = `<div class="owners ${infoFresh ? 'fade' : ''}">
       ${holders.length ? `<small>Haben schon</small><div class="olist">${holders.map(([p, i]) => `<span class="own ${p.id === meId ? 'me' : ''}">${avatar(p, i)}<b>${p.id === meId ? 'Du' : esc(p.name)} ×${p.animals[a.animal]}</b></span>`).join('')}</div>`
         : '<span class="onew">Neu im Spiel</span>'}
+      ${a.animal === 'esel' && v.lastEvent?.type === 'donkey' ? `<span class="ebonus">Esel-Bonus: alle +${v.lastEvent.payout}</span>` : ''}
     </div>`;
     // Countdown: Ring um die Karte – bieten nur solange er läuft, Zuschlag erst danach
     const now = ctx.now();
@@ -931,9 +932,16 @@ export function renderGame(root, ctx) {
   }
 
   // Esel aufgedeckt: eine große Einblendung, Scheine fliegen zu allen
-  if (entered && state.phase === 'auction' && v.lastEvent?.type === 'donkey') {
-    effects += `<div class="donkeypop" aria-live="polite"><b>Esel!</b><span>Alle bekommen +${v.lastEvent.payout}</span></div>`;
-    effects += v.players.map((p) => `<div class="mflyc" style="--dy:${Math.round(p.id === meId ? 60 : rowY(p.id) - 275)}px;--tx:${p.id === meId ? 40 : 397}px"></div>`).join('');
+  // (läuft über Neuzeichnen hinweg weiter: Startzeit merken, Animation an der richtigen Stelle fortsetzen)
+  if (state.phase === 'auction' && v.lastEvent?.type === 'donkey') {
+    const dSig = `${state.log.length}|${v.lastEvent.number}`;
+    if (local.donkeySig !== dSig) { local.donkeySig = dSig; local.donkeyAt = entered ? Date.now() : 0; }
+    const el = Date.now() - (local.donkeyAt || 0);
+    if (local.donkeyAt && el < 4200) {
+      effects += `<div class="donkeypop" aria-live="polite" style="animation-delay:${1500 - el}ms"><b>Esel!</b><span>Alle bekommen +${v.lastEvent.payout}</span></div>`;
+      if (el < 3400) effects += v.players.map((p) => `<div class="mflyc" style="animation-delay:${2400 - el}ms;--dy:${Math.round(p.id === meId ? 60 : rowY(p.id) - 275)}px;--tx:${p.id === meId ? 40 : 397}px"></div>`).join('');
+      if (!wake || wake > Date.now() + 4300 - el) wake = Date.now() + 4300 - el; // danach einmal aufräumen
+    }
   }
 
   root.innerHTML = `<div class="stage-wrap"><div class="stage" id="stage">

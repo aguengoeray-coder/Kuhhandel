@@ -7,6 +7,7 @@
 - [x] Regeln: alle Tierkarten mit Wert als kleine Karten; Überschriften in Tischfarbe (auch Bestenliste).
 - [x] Spielende: Fanfare für alle, „Buh“ für den letzten Platz.
 - [x] Gebotsknöpfe vibrieren kurz beim Tippen (wenn Vibration an).
+- [x] Fehler behoben: Die Esel-Einblendung „Alle bekommen +N“ verschwand beim Neuzeichnen nach dem Aufdecken, bevor man sie sah. Jetzt läuft sie zu Ende, und an der Karte steht dauerhaft „Esel-Bonus: alle +N“.
 
 ## v0.26.0
 
