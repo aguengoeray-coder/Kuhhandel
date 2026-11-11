@@ -313,6 +313,10 @@ export function renderGame(root, ctx) {
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
   if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = calmFor(v.lastEvent.type, v.deck); local.calmUntil = Date.now() + local.calmDur; }
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
+  if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + evWait(v.lastEvent.type, v.deck) };
+  if (local.turnHold && (Date.now() >= local.turnHold.until || state.phase !== 'turn')) local.turnHold = null;
+  const realHolder = state.phase === 'ended' || state.phase === 'block' ? null : state.phase === 'rat' ? ratCurrent(v) : currentPlayer(v).id;
+  const shownHolder = local.turnHold ? local.turnHold.id : realHolder;
   local.prev = { logLen: state.log.length, phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? state.log.length : null };
 
   const H = {}; // Klick-Aktionen dieser Darstellung
@@ -368,7 +372,7 @@ export function renderGame(root, ctx) {
     const chips = playerChips(p, tradeMap[p.id], p.id === meId ? 5 : CHIP_MAX); // deine eigenen Tiere liegen groß in der Auslage
     const isLeader = state.phase === 'auction' && auction.high && auction.high.player === p.id;
     if (isLeader) status = `🔨 ${auction.high.amount}`;
-    const turnMark = (state.phase === 'rat' ? ratCurrent(v) === p.id : cur.id === p.id) && state.phase !== 'ended' ? ' turn' : '';
+    const turnMark = shownHolder === p.id ? ' turn' : '';
     const offline = ctx.online && !isMe && !ctx.online.has(p.id);
     if (offline) status = 'offline';
     const bot = (ctx.autoplay || []).includes(p.id);
@@ -1065,9 +1069,10 @@ export function renderGame(root, ctx) {
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join(''), evDelay + 1300 + n * 120, evDelay ? 'ev' : null);
   }
   // Der Zug wandert sichtbar im Uhrzeigersinn: ein goldener Schein gleitet vom alten zum neuen Platz
-  const holder = state.phase === 'ended' || state.phase === 'block' ? null : state.phase === 'rat' ? ratCurrent(v) : cur.id;
+  const holder = shownHolder;
   if (holder && local.holder && local.holder !== holder && idxOf(local.holder) >= 0) keepFx(`<div class="turnhalo" data-aim-from="${esc(local.holder)}" data-aim-to="${esc(holder)}"></div>`, 900);
   local.holder = holder;
+  if (local.turnHold) wakeLocal(local.turnHold.until + 30);
 
   // Geld fliegt (verdeckt) vom Platz des Zahlers zum Platz des Empfängers (Start und Ziel werden gemessen)
   const moneyFly = (from, to, count, delay = 0) => {
@@ -1184,6 +1189,7 @@ export function renderGame(root, ctx) {
     // Flüge, die auf das Fenster warten, sofort starten
     if (left > 0) local.fx.forEach((f) => { if (f.tag === 'ev' && f.at >= local.res.at - 50) { f.at -= left; f.until -= left; } });
     if (local.stripAt > Date.now()) local.stripAt = Date.now(); // Infozeile erscheint, sobald das Fenster weg ist
+    if (local.turnHold) local.turnHold.until = Date.now(); // „dran“-Rahmen wandert jetzt weiter
     if (local.res.html) keepFx(`<div class="evout" aria-hidden="true">${local.res.html}</div>`, 280);
     local.res = null;
   };

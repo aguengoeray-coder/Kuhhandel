@@ -2170,3 +2170,11 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .wowpop { left: 560px; top: 236px; }
 /* Ansage erst, wenn die Karte umgedreht ist – und unten, damit sie die Versteigerung nicht verdeckt */
 .lastcard { top: 286px; animation-delay: 1.4s; font-size: 17px; }
+.rs-head { flex-wrap: wrap; row-gap: 4px; }
+.rs-head .rs-extra { margin: 0 0 0 auto; justify-content: flex-end; }
+.rs-chip { padding: 2px 8px; font-size: 11.5px; }
+.rs-head { flex-wrap: nowrap; }
+.rs-head .rs-extra { flex-direction: column; align-items: flex-end; gap: 3px; flex-wrap: nowrap; }
+.rs-chip { line-height: 16px; white-space: nowrap; }
+.room .table.short { max-height: 112px; }
+.room .table.short .seat .avatar { width: 46px; height: 46px; }

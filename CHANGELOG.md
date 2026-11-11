@@ -16,6 +16,8 @@
 - [x] Neue Schalter im Warteraum (Gastgeber, standardmäßig aus): **Bedenkzeit im Kuhhandel** (20 s Uhr, keine automatische Entscheidung) und **Zwischenstand im Menü** (nur offene Quartette, Geld zählt nicht).
 - [x] Neues Aussehen „Winter“ mit Schnee-Muster.
 - [x] Revanche: Wer zuletzt war, fängt an.
+- [x] Der goldene „dran“-Rahmen wandert erst weiter, wenn das Ergebnis-Fenster zu ist und Karte und Geld geflogen sind (vorher sprang er zu früh).
+- [x] Warteraum mit „Geldscheine im Stapel“ passt wieder ohne Scrollen aufs Handy (Schalter sitzen rechts neben der Überschrift).
 - [x] Spürbarer: eigene Vibrations-Muster (überboten, Zuschlag, Herausforderung, Quartett, kann nicht zahlen, du bist dran); auf dem iPhone ein kurzer Impuls über einen Trick (iOS 18+, noch auf echten Geräten zu testen).
 
 ## v0.38.0 – Knöpfe dort, worum es geht

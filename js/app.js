@@ -369,12 +369,12 @@ function renderRoom() {
     <div class="rs-head">
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
-    </div>
-    ${money ? `<div class="msteps">${steppers}</div>` : ''}
-    <div class="rs-extra">
+      <div class="rs-extra">
       ${[['tradeTimer', '⏱ Bedenkzeit im Kuhhandel (20 s)'], ['standings', '📊 Zwischenstand im Menü']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
     </div>
+    </div>
+    ${money ? `<div class="msteps">${steppers}</div>` : ''}
   </div>`;
   const hint = outdated.length
     ? `${outdated.map((p) => esc(p.name)).join(', ')} ${outdated.length > 1 ? 'haben' : 'hat'} eine alte Version – bitte App neu laden.`
