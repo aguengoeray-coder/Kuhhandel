@@ -3,6 +3,7 @@
 ## v0.25.0
 
 - [x] Neues Kartendesign: Tier groß ohne Kreis, Sonnenstrahlen in der Tierfarbe, Wert oben und Name unten auf Weiß. Gilt für alle großen Karten und die eigenen Tierstapel.
+- [x] Viele Tierarten: deine Stapel bleiben rechts neben den Knöpfen und werden kleiner, statt unter die Knöpfe zu rutschen. Kartenstapel in der Mitte etwas kleiner.
 
 ## v0.24.0
 

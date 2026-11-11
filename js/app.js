@@ -1477,6 +1477,7 @@ function demo(kind) {
   const demoState = buildDemoState(kind, gameLocal);
   if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen
   if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }] }];
+  if (demoState && params.get('herd')) { const me0 = demoState.players[0]; ['hahn', 'gans', 'katze', 'hund', 'schaf', 'ziege', 'esel', 'schwein', 'kuh', 'pferd'].forEach((id, k) => { me0.animals[id] = 1 + (k % 3); }); me0.rats = 2; } // Screenshots: volle Auslage
   if (demoState && params.get('cash')) { const n = Number(params.get('cash')); const vals = [0, 10, 10, 20, 50, 100, 200, 500]; demoState.players[0].money = Array.from({ length: n }, (_, k) => vals[k % vals.length]).sort((x, y) => x - y); } // Screenshots: viele Geldkarten
   if (demoState && params.get('bots')) demoState.autoplay = params.get('bots').split(',');
   if (params.get('takeover')) online = new Set(['u1', 'u2', 'u4']);

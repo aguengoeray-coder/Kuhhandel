@@ -1567,3 +1567,9 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .scard { background: repeating-conic-gradient(from 0deg at 50% 55%, color-mix(in srgb, var(--a) 82%, #fff) 0 12deg, var(--a) 12deg 24deg); }
 .scard b .art { width: 32px; height: 32px; filter: drop-shadow(0 0 1.5px #fff); }
 .pcard.rat { background: repeating-conic-gradient(from 0deg at 50% 45%, #B9B4BD 0 10deg, #A39EA8 10deg 20deg); }
+/* Viele Tierarten: Auslage bleibt rechts vom Knopfbereich und wird kleiner statt überzulaufen */
+.auslage { left: 168px; right: 10px; }
+.auslage > * { zoom: var(--sc, 1); }
+.deck { width: 68px; height: 94px; }
+.deckcow { width: 44px; height: 44px; }
+.deck-wrap { gap: 4px; }

@@ -692,7 +692,7 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}</span>
     </div>`}</div>
-    <div class="auslage ${myItems.length > 6 ? 'many' : ''} ${handPick ? 'up' : ''} ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage ${myItems.length > 6 ? 'many' : ''} ${handPick ? 'up' : ''} ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(1, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     ${handPick || `<div class="fan-wrap" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${me.money.length ? `<span class="fansum">${sum(me.money)}</span>` : ''}</div>`}
   </div>`;
