@@ -434,6 +434,8 @@ export function renderGame(root, ctx) {
     if (ev?.type === 'cant_pay' && ev.special && !Object.keys(sp.buzzes).length) {
       info = `<div class="reveal-row ${fresh ? 'shake' : ''}"><strong>${esc(nameOf(ev.player))} ${ev.player === meId ? 'hast' : 'hat'} keine ${ev.count} Karten:</strong>
         <span class="reveal-cards">${ev.revealed.map((m) => moneyCard(m, { size: 'xs' })).join('') || 'keine Karten'}</span><span>→ erst ab ${ev.revealed.length}</span></div>`;
+    } else if (top != null && sp.winner && buzzed.length > 1) {
+      info = `<div class="aucinfo">${esc(sp.winner === meId ? 'Du gewinnst' : `${nameOf(sp.winner)} gewinnt`)} Schnick-Schnack-Schnuck · bei <b>${top}</b></div>`;
     } else if (top != null) {
       info = `<div class="aucinfo pop">${buzzed.map((id) => esc(nameOf(id))).join(' & ')} ${buzzed.length > 1 ? 'buzzern' : buzzed[0] === meId ? 'buzzerst' : 'buzzert'} bei <b>${top}</b></div>`;
     } else if (stage === 'decide') {
@@ -642,28 +644,6 @@ export function renderGame(root, ctx) {
       <div class="tstriprow">${animalStrip(t.animal, t.count, '')}${ehrlichBtn}</div>`;
       aucLeft = `<div class="ldecide">${t.challenger === meId ? `Warte auf die Antwort von ${esc(nameOf(t.target))} …` : `${esc(nameOf(t.target))} überlegt …`}</div>`;
     }
-  }
-
-  // Ergebnis des letzten Kuhhandels für die Beteiligten (mit Beträgen) – als Kasten auf dem Tisch
-  const tev = v.lastEvent;
-  if (state.phase === 'turn' && !local.tradeOpen && tev?.type === 'trade' && local.seenEvent !== state.log.length && (tev.challenger === meId || tev.target === meId)) {
-    const won = tev.winner === meId;
-    const detail = tev.accepted
-      ? `${esc(nameOf(tev.target))} hat angenommen${tev.offerSum != null ? ` (${tev.offerSum} Taler)` : ''}.`
-      : `${esc(nameOf(tev.challenger))}: ${tev.offerSum} · ${esc(nameOf(tev.target))}: ${tev.counterSum}${tev.offerSum === tev.counterSum ? ' – Gleichstand, Herausforderer gewinnt' : ''}`;
-    const isRat = tev.animal === RAT;
-    const ratWhere = won ? `bist du los – ${esc(nameOf(tev.winner === tev.challenger ? tev.target : tev.challenger))} hat sie` : 'gehören jetzt dir';
-    aucBanner = isRat ? 'Rattenhandel' : 'Kuhhandel';
-    aucCenter = `<div class="tresult ${won ? 'won' : 'lost'} ${fresh ? 'pop' : ''}">
-      <div class="trcard">${isRat ? playCard(RAT, 'rat') : playCard(tev.animal)}<span class="trcount">×${tev.count}</span></div>
-      <div class="trtext">
-        <h3>${won ? 'Gewonnen!' : 'Verloren'}</h3>
-        <b>${tev.count}× ${esc(aname(tev.animal))} ${isRat ? ratWhere : won ? 'gehören jetzt dir' : `gehen an ${esc(nameOf(tev.winner))}`}</b>
-        <p>${detail}</p>
-        <button type="button" class="pill pill-red pill-small" data-a="seen">Weiter</button>
-      </div>
-    </div>`;
-    H.seen = () => { local.seenEvent = state.log.length; ctx.rerender(); };
   }
 
   // ----- Spielende mit Ratten: Quartett blockieren, auf dem Tisch -----
@@ -923,15 +903,7 @@ export function renderGame(root, ctx) {
     // Schnick-Schnack-Schnuck: Hände schütteln, dann aufdecken
     const le2 = v.lastEvent;
     const sig = le2?.type === 'rps' ? JSON.stringify(le2) : null;
-    if (sig && local.rpsSig !== sig) { local.rpsSig = sig; local.rpsUntil = Date.now() + 2800; sounds.push('rps'); }
-    if (sig && Date.now() < (local.rpsUntil || 0)) {
-      const names = Object.keys(le2.picks);
-      const result = le2.winners ? (le2.winners.length === 1 ? `${esc(nameOf(le2.winners[0]))} ${le2.winners[0] === meId ? 'gewinnst' : 'gewinnt'}!` : 'Weiter geht’s!') : 'Unentschieden – nochmal!';
-      effects += `<div class="rpsshow v2" aria-live="polite">
-        <div class="rpswords"><span>Schnick</span><span>Schnack</span><span>Schnuck!</span></div>
-        <div class="rpshands">${names.map((id) => `<div class="rh"><div class="hand"><b class="shake">✊</b><b class="real">${RPS_ICON[le2.picks[id]]}</b></div><small>${esc(nameOf(id))}</small></div>`).join('')}</div>
-        <div class="rpsresult">${result}</div></div>`;
-    }
+    if (sig && local.rpsSig !== sig) { local.rpsSig = sig; local.rpsShow = { ev: JSON.parse(sig), at: Date.now() }; sounds.push('rps'); }
   } else {
     local.prevBuzz = undefined;
   }
@@ -960,8 +932,59 @@ export function renderGame(root, ctx) {
 
 
 
+  // Schnick-Schnack-Schnuck: 1,5 s Hände schütteln, dann 4 s Ergebnis – auch wenn es schon weitergeht
+  const RPS_MS = 5500;
+  if (local.rpsShow) {
+    const el = Date.now() - local.rpsShow.at;
+    if (el < RPS_MS) {
+      const le2 = local.rpsShow.ev;
+      const names = Object.keys(le2.picks);
+      const nm = (id) => esc(id === meId ? 'Du' : nameOf(id));
+      const result = le2.winners ? (le2.winners.length === 1 ? `${nm(le2.winners[0])} ${le2.winners[0] === meId ? 'gewinnst' : 'gewinnt'}!` : 'Weiter geht’s!') : 'Unentschieden – nochmal!';
+      effects += `<div class="rpsshow v2" data-a="rpsClose" role="button" aria-live="polite" style="--el:-${el}ms">
+        <div class="rpswords"><span>Schnick</span><span>Schnack</span><span>Schnuck!</span></div>
+        <div class="rpshands">${names.map((id) => `<div class="rh"><div class="hand"><b class="shake">✊</b><b class="real">${RPS_ICON[le2.picks[id]]}</b></div><small>${nm(id)}</small></div>`).join('')}</div>
+        <div class="rpsresult">${result}</div><i class="rtimer"></i></div>`;
+      const end = local.rpsShow.at + RPS_MS + 50; if (!wake || wake > end) wake = end;
+    } else local.rpsShow = null;
+  }
+  H.rpsClose = () => { local.rpsShow = null; ctx.rerender(); };
+
+  // Ergebnisse, über die man redet: bleiben eine feste Zeit stehen (auch wenn es weitergeht), Tipp schließt
+  const rev = v.lastEvent;
+  const resSig = rev && (rev.type === 'trade' || (rev.type === 'special_won' && rev.count > 0)) ? `${rev.type}|${state.log.length}` : null;
+  if (resSig && local.resSig !== resSig) { local.resSig = resSig; if (fresh || ctx.demoPop) local.res = { ev: JSON.parse(JSON.stringify(rev)), at: Date.now(), dur: rev.type === 'trade' ? 6000 : 4000 }; }
+  if (local.res) {
+    const el = Date.now() - local.res.at;
+    if (el < local.res.dur) {
+      const e = local.res.ev;
+      const nm = (id) => esc(id === meId ? 'Du' : nameOf(id));
+      let card = ''; let title = ''; let line = ''; let mine = '';
+      if (e.type === 'trade') {
+        const isRat = e.animal === RAT;
+        const loser = e.winner === e.challenger ? e.target : e.challenger;
+        card = `${isRat ? playCard(RAT, 'rat') : playCard(e.animal)}<span class="trcount">×${e.count}</span>`;
+        title = isRat ? `${nm(loser)} ${loser === meId ? 'bekommst' : 'bekommt'} ${e.count}× Ratte` : `${nm(e.winner)} ${e.winner === meId ? 'gewinnst' : 'gewinnt'} ${e.count}× ${esc(aname(e.animal))}`;
+        line = e.accepted ? `${nm(e.target)} ${e.target === meId ? 'nimmst' : 'nimmt'} das Angebot an`
+          : e.diff === 0 ? `Gleichstand – ${nm(e.challenger)} ${e.challenger === meId ? 'gewinnst' : 'gewinnt'}` : `Unterschied: <b>${e.diff}</b>`;
+        if (e.offerSum != null) mine = e.accepted ? `Angebot: ${e.offerSum} Taler` : `${nm(e.challenger)}: ${e.offerSum} · ${nm(e.target)}: ${e.counterSum}`;
+      } else {
+        card = playCard(e.animal, 'special');
+        title = `${nm(e.buyer)} ${e.buyer === meId ? 'bekommst' : 'bekommt'} die Spezialkarte`;
+        line = `${nm(e.payer)} ${e.payer === meId ? 'zahlst' : 'zahlt'} ${e.payee === meId ? 'dir' : nm(e.payee)} <b>${e.count}</b> Karte${e.count === 1 ? '' : 'n'}`;
+      }
+      const won = e.type === 'trade' ? e.winner === meId : e.buyer === meId;
+      effects += `<div class="resultpop ${won ? 'won' : ''}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
+        <div class="trcard">${card}</div>
+        <div class="trtext"><small>${e.type === 'trade' ? (e.animal === RAT ? 'Rattenhandel' : 'Kuhhandel') : 'Spezialkarte'}</small><b>${title}</b><p>${line}</p>${mine ? `<em>${mine}</em>` : ''}</div>
+        <i class="rtimer"></i></div>`;
+      const end = local.res.at + local.res.dur + 50; if (!wake || wake > end) wake = end;
+    } else local.res = null;
+  }
+  H.resClose = () => { local.res = null; ctx.rerender(); };
+
   // Was ist passiert: kurz groß in der Tischmitte, danach klein oben
-  const ownEffect = /class="(qpop|soldsign|moneyreveal|gavel|donkeypop)[ "]/.test(effects) || (aucCenter && state.phase === 'turn') || !!evStrip;
+  const ownEffect = /class="(qpop|soldsign|moneyreveal|gavel|donkeypop|resultpop|rpsshow)[ "]/.test(effects) || (aucCenter && state.phase === 'turn') || !!evStrip;
   if (fresh && state.phase === 'turn' && lastLog && !ownEffect && !(le?.type === 'money_drawn')) {
     effects += `<div class="logpop" aria-live="polite">${esc(lastLog)}</div>`;
   }

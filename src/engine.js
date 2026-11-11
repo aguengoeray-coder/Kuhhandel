@@ -565,7 +565,7 @@ export function counterTrade(prev, playerId, cardIndices) {
   }
   stat(state, winner.id).tradesWon += 1;
   stat(state, loser.id).tradesLost += 1;
-  state.lastEvent = { type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, winner: winner.id };
+  state.lastEvent = { type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
   nextTurn(state);
   return state;
 }

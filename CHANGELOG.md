@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.30.0
+
+- [x] Schnick-Schnack-Schnuck: Ergebnis bleibt jetzt 5,5 s stehen (erst Schütteln, dann groß „Du gewinnst!“), mit Zeitbalken; danach steht oben „X gewinnt Schnick-Schnack-Schnuck · bei N“.
+- [x] Kuhhandel-Ergebnis sehen jetzt **alle** 6 s lang: „X gewinnt 1× Hund“ + „Unterschied: 40“ (bzw. „nimmt das Angebot an“ / „Gleichstand – Herausforderer gewinnt“). Die genauen Beträge sehen nur die beiden Beteiligten.
+- [x] Spezialkarte: Ergebnis („X bekommt die Spezialkarte · Y zahlt Z 4 Karten“) bleibt 4 s stehen.
+- [x] Antippen schließt die Ergebnis-Fenster sofort; das alte „Weiter“-Fenster nach dem Kuhhandel ist weg.
+
 ## v0.29.3
 
 - [x] Fehler behoben: Beim Kuhhandel gegen jemanden mit vielen Tieren lag die dritte Reihe unter den Geldscheinen und war nicht antippbar. Ab 5 Tieren werden die Kacheln kleiner, alle bleiben sichtbar.
