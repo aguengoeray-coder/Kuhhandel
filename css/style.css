@@ -2011,3 +2011,37 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
   .logorow.tb .logocow { width: 68px; height: 68px; border-radius: 18px; border-width: 3px; }
   .logo.tbtitle { font-size: 36px; }
 }
+
+/* ===== v0.36: Börsen-Look überall, Warteraum, Börsenbericht ===== */
+/* Börsen-Rahmen (Gold) statt Holz */
+:root { --frame: #E2B33C; --frame-2: #9C7417; }
+.start .card { border: 4px solid var(--frame); box-shadow: 0 5px 0 var(--frame-2), 0 12px 26px rgba(0,0,0,.3); }
+.room .table { border: 6px solid var(--frame); box-shadow: inset 0 0 30px rgba(0,0,0,.35), 0 5px 0 var(--frame-2); }
+.room-settings { border-color: var(--frame); }
+.overlay.endtable { border: 6px solid var(--frame); box-shadow: 0 5px 0 var(--frame-2), 0 14px 30px rgba(0,0,0,.4); }
+.tpp i, .tprev-table { border-color: var(--frame); }
+/* Kurstafel: echte Zahlen etwas hervorgehoben */
+.tk.real b { color: #FFD34E; }
+.tk.real { padding: 0 2px; }
+/* Warteraum: Kurstafel neben dem Titel, Einstieg mit Einblendung */
+.room-top { gap: 12px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.room-top .ticker { flex: 1 1 0; width: 0; min-width: 0; height: 28px; }
+.room .table { position: relative; }
+.seat.joined { animation: seatjoin .6s var(--e-pop) both; animation-delay: var(--el, 0ms); }
+@keyframes seatjoin { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
+.joinpop { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 3; white-space: nowrap; background: #fff; color: var(--ink); border: 3px solid var(--frame); border-radius: 999px; padding: 4px 14px; font-family: var(--font-head); font-weight: 700; font-size: 15px; box-shadow: 0 6px 16px rgba(0,0,0,.3); pointer-events: none; animation: joinpop 3s ease both; animation-delay: var(--el, 0ms); }
+@keyframes joinpop { 0% { opacity: 0; transform: translate(-50%, -10px) scale(.9); } 10%, 85% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .seat.joined, .joinpop { animation: none; } }
+/* Spielende: größere Quartett-Symbole, Rechnung immer sichtbar */
+.picons .ci { width: 24px; height: 24px; }
+.pod.p1 .picons .ci { width: 26px; height: 26px; }
+.prow4 .picons .ci { width: 22px; height: 22px; }
+.sform2 { font-size: 13.5px; background: rgba(0,0,0,.28); border-radius: 999px; padding: 3px 14px; align-self: center; }
+/* Börsenbericht */
+.ending.recap h2 { letter-spacing: .01em; }
+.ending.recap li { border-left: 5px solid var(--frame); }
+.ending.recap .atitle { display: inline-flex; align-items: center; gap: 5px; }
+.ending.recap .atitle i { font-style: normal; }
+.ending.recap .endbtns { display: flex; gap: 10px; justify-content: center; }
+.ending.recap li { grid-template-columns: 150px 30px 66px 1fr; }
+.ending.recap .atitle { white-space: nowrap; }
