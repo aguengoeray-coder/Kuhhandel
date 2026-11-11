@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.25.0
+
+- [x] Neues Kartendesign: Tier groß ohne Kreis, Sonnenstrahlen in der Tierfarbe, Wert oben und Name unten auf Weiß. Gilt für alle großen Karten und die eigenen Tierstapel.
+
 ## v0.24.0
 
 - [x] Warteraum: Tisch in der gewählten Spielfeld-Farbe.

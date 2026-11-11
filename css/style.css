@@ -1553,3 +1553,17 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .pod.p1 .pblock b { font-size: 26px; }
 .pblock b { font-size: 21px; }
 .overlay.endtable .endbtns { margin-top: auto; padding-bottom: 6px; }
+
+/* ===================== v0.25: Tierkarten „Strahlen“ – großes Tier ohne Kreis ===================== */
+.pcard { background: repeating-conic-gradient(from 0deg at 50% 45%, color-mix(in srgb, var(--a) 82%, #fff) 0 10deg, var(--a) 10deg 20deg); }
+.pcard.special { background: repeating-conic-gradient(from 0deg at 50% 45%, color-mix(in srgb, var(--a) 82%, #fff) 0 10deg, var(--a) 10deg 20deg); }
+.pcard .pcart.pcart.pcart { background: none; border: none; border-radius: 0; padding: 0; width: 78px; height: 78px; margin-top: 16px; }
+.pcard .pcart .art { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 4px 0 rgba(0,0,0,.25)); }
+.pcard .pcv.pcv { left: 0; right: 0; width: max-content; margin: 0 auto; top: 5px; background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 1px 7px; font-size: 14px; }
+.pcard .pcname.pcname { position: absolute; left: 0; bottom: 0; background: #fff; color: var(--ink); }
+.pcard.special .pcname.pcname { background: linear-gradient(90deg, #FFD34E, #F2B33D); }
+.pcard.special .pcstar { z-index: 3; }
+/* Eigene Tierstapel: gleiche Strahlen, Tier größer */
+.scard { background: repeating-conic-gradient(from 0deg at 50% 55%, color-mix(in srgb, var(--a) 82%, #fff) 0 12deg, var(--a) 12deg 24deg); }
+.scard b .art { width: 32px; height: 32px; filter: drop-shadow(0 0 1.5px #fff); }
+.pcard.rat { background: repeating-conic-gradient(from 0deg at 50% 45%, #B9B4BD 0 10deg, #A39EA8 10deg 20deg); }
