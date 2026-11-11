@@ -2071,3 +2071,16 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .auslage .stack.cantrade .slabel { color: var(--gold); }
 .auslage .stack[data-a]:active .spile { transform: translateY(-4px); }
 .sethint { position: absolute; left: var(--cx); bottom: 112px; transform: translateX(-50%); z-index: 30; background: #fff; color: var(--ink); border: 3px solid var(--gold); border-radius: 999px; padding: 4px 14px; font-weight: 800; font-size: 13.5px; white-space: nowrap; box-shadow: 0 6px 16px rgba(0,0,0,.35); pointer-events: none; animation: joinpop 2.2s ease both; animation-delay: var(--el, 0ms); }
+
+/* v0.37.1: Annehmen beim Geld des Herausforderers, Gegenangebot bei deinem Geld – weit auseinander */
+.tbtn { width: 100%; min-height: 46px; border-radius: 14px; border: 3px solid var(--ink); font: inherit; font-family: var(--font-head); font-weight: 700; font-size: 14.5px; line-height: 1.1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 8px; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.tbtn small { font-family: var(--font-body); font-size: 10.5px; font-weight: 800; letter-spacing: .06em; opacity: .85; }
+.tbtn:active:not([disabled]) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.tbtn.accept { background: #fff; color: var(--ink); }
+.tbtn.counter { background: var(--red); color: #fff; }
+.tbtn[disabled] { background: rgba(255,255,255,.18); color: rgba(255,255,255,.8); border-color: rgba(255,255,255,.4); box-shadow: none; cursor: default; }
+.stage .tduel.respond .tpanel { justify-content: flex-start; }
+.stage .tduel.respond .tpanel .tbtn { margin-top: auto; }
+.stage .dock .ehrlichbtn { align-self: flex-start; }
+.tbtn em { font-family: var(--font-body); font-style: normal; font-size: 10.5px; font-weight: 700; opacity: .75; }
+.tmidcnt { white-space: normal; text-align: center; max-width: 88px; line-height: 1.15; padding: 2px 8px; }

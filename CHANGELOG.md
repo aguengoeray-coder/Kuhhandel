@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.37.1
+
+- [x] Kuhhandel beantworten: „Annehmen – Geld nehmen“ sitzt jetzt beim Geld des Herausforderers, „Gegenangebot“ bei deinem eigenen Geld – weit auseinander, kein Vertippen mehr. Auf dem Knopf steht, was passiert („1× Hund geht an Nico“ bzw. „1 Karte · 50 bieten“). „Ehrlich & männlich!“ sitzt dafür unten links.
+- [x] Rattenhandel: In der Mitte steht wieder „um 1“ (der Text „loswerden“ passte nicht auf das Schild).
+
 ## v0.37.0 – Kuhhandel deutlicher und schneller
 
 - [x] Kuhhandel: Das umkämpfte Tier steht groß in der Mitte zwischen beiden Seiten („um 2“, bei Ratten „2× loswerden“) – für Herausforderer, Gegner und Zuschauer gleich. Das gebotene Geld steht groß da („3 Karten · verdeckt geboten“).
