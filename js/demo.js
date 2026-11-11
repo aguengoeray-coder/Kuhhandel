@@ -52,6 +52,12 @@ export function buildDemoState(kind, local) {
       local.prev = { logLen: g.log.length - 1, phase: 'turn' };
       return g;
     }
+    case 'auctionlead': { // du führst
+      const t = Date.now() - 4100;
+      g = base(); g.turn = 1; g.deck[0] = 'kuh';
+      g = drawForAuction(g, 'u2', t); g = bid(g, 'u3', 120, t + 3200); g = bid(g, 'u1', 200, t + 3300);
+      return g;
+    }
     case 'auction': {
       const t = Date.now() - 4100;
       g = base(); g.turn = 1; g.deck[0] = 'esel';

@@ -2119,7 +2119,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 @keyframes lastcard { 0% { opacity: 0; transform: translateX(-50%) scale(.6); } 10% { opacity: 1; transform: translateX(-50%) scale(1.08); } 16%, 85% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
 /* Du führst: Geld-Fächer schimmert golden */
 .fan-wrap.leading .money.fan { box-shadow: -3px 3px 8px rgba(0,0,0,.25), 0 0 0 2px rgba(255,211,78,.85); }
-.fanlead { align-self: center; margin: 0 0 26px 10px; background: var(--gold); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 9px; font-weight: 800; font-size: 12px; white-space: nowrap; animation: pulse 1.4s ease-in-out infinite; }
+/* „Du führst“ steht im Gebots-Schild (nicht mehr am Geld, das verschob den Fächer) */
 /* Großes Gebot: Wow */
 .wowpop { position: absolute; left: 640px; top: 128px; z-index: 32; background: #fff; color: var(--red); border: 3px solid var(--red); border-radius: 14px; padding: 2px 12px; font-family: var(--font-head); font-weight: 700; font-size: 20px; transform: rotate(8deg); pointer-events: none; animation: wowpop 1.5s var(--e-pop) both; }
 @keyframes wowpop { 0% { opacity: 0; transform: rotate(8deg) scale(.3); } 20% { opacity: 1; transform: rotate(8deg) scale(1.15); } 30%, 80% { transform: rotate(8deg) scale(1); opacity: 1; } 100% { opacity: 0; transform: rotate(8deg) translateY(-14px); } }
