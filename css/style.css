@@ -2019,3 +2019,7 @@ body:has(.stage) { background: var(--tbl-pat), radial-gradient(ellipse at 50% 55
 .stage .overlay.endtable { left: 132px; width: 580px; z-index: 13; }
 /* Mitspieler links: Gebot/Geldschein-Plakette nicht über den 💬-Knopf */
 .stage .prow.seat-l .coinpop { left: 88px; }
+/* Anstupsen / Übernehmen: direkt unter dem Platz, gut antippbar */
+.stage .prow .nudge { left: 50%; right: auto; top: calc(100% + 4px); bottom: auto; transform: translateX(-50%); white-space: nowrap; z-index: 8; }
+.stage .prow.seat-t .nudge, .stage .prow.seat-tl .nudge { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+.stage .prow.seat-tr .nudge { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }

@@ -12,6 +12,7 @@
 - [x] „Erst ab N“ steht beim Buzzer auch schon während „Gleich …“; nach „keine N Karten“ bei der Spezialkarte kurze Zeile statt großer Scheinreihe (die Scheine zeigt das große Fenster).
 - [x] Debug-Knöpfe unten rechts. Einmaliger Hinweis zur neuen Sitzordnung beim ersten Spiel.
 - [x] Fehler behoben: „Achtung … 10“ lag als unsichtbare Fläche über dem ganzen Tisch.
+- [x] „Anstupsen“ / „Für X übernehmen“ sitzen jetzt direkt unter bzw. neben dem Platz und verdecken keinen Namen; lange Namen werden mit „…“ gekürzt.
 
 ## v0.32.2
 
