@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.30.1
+
+- [x] Reaktionen: 😂 und 😱 sind raus. Neu: „Unehrliches, unmännliches Angebot! 👎“ (große rote Sprechblase mit Buh-Ton) und „Komm schon, da geht noch mehr!“.
+- [x] Lange Sprüche gehen im Reaktionsfenster über die ganze Breite, damit sie lesbar bleiben.
+
 ## v0.30.0
 
 - [x] Schnick-Schnack-Schnuck: Ergebnis bleibt jetzt 5,5 s stehen (erst Schütteln, dann groß „Du gewinnst!“), mit Zeitbalken; danach steht oben „X gewinnt Schnick-Schnack-Schnuck · bei N“.

@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.30.0';
+export const APP_VERSION = '0.30.1';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -64,7 +64,8 @@ let lastReactAt = 0;
 const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
 // EHRLICH: euer Insider – kommt als großer Spruch mit eigenem Ton
 const EHRLICH = 'Ehrliches, männliches Angebot! 💪';
-const REACTIONS = [EHRLICH, 'Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!', '😂', '😱'];
+const UNEHRLICH = 'Unehrliches, unmännliches Angebot! 👎';
+const REACTIONS = [EHRLICH, UNEHRLICH, 'Komm schon, da geht noch mehr!', 'Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!'];
 let roomChannel = null;
 let versions = {}; // Platz → App-Version (aus der Live-Verbindung)
 
@@ -933,7 +934,7 @@ function activeReactions() {
 function showReaction(seat, text, to = null) {
   const at = to || seat;
   reactions.set(at, { text, from: to ? seat : null, until: Date.now() + 3200 });
-  if (soundOn() && !DEMO) playSound(text === EHRLICH ? 'ehrlich' : 'react');
+  if (soundOn() && !DEMO) playSound(text === EHRLICH ? 'ehrlich' : text === UNEHRLICH ? 'boo' : 'react');
   render();
   setTimeout(render, 3300);
 }
@@ -1557,7 +1558,7 @@ function demo(kind) {
   if (kind === 'testspiel') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(4); }
   me = { id: 'u1', name: 'Alp' };
   if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
-  if (params.get('react')) reactions.set(params.get('react'), { text: params.get('rtext') === 'ehrlich' ? EHRLICH : 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
+  if (params.get('react')) reactions.set(params.get('react'), { text: params.get('rtext') === 'ehrlich' ? EHRLICH : params.get('rtext') === 'unehrlich' ? UNEHRLICH : params.get('rtext') === 'mehr' ? REACTIONS[2] : 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
   if (params.get('pick')) gameLocal.reactTo = params.get('pick');
   if (params.get('score')) gameLocal.scoreOpen = params.get('score');
   if (params.get('oldv')) versions = { u3: '0.11.0' };
