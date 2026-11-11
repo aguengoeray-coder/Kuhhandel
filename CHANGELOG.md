@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.41.0 – Ruhiger aufdecken, einheitliche Knöpfe
+
+- [x] **Aufdecken ohne Springen:** Die Karte wächst direkt aus dem Stapel, dreht sich um und bleibt genau dort liegen, wo sie versteigert wird (vorher rutschte sie erst nach unten und sprang dann nach oben).
+- [x] **Alle Entscheidungs-Knöpfe in derselben Form:** Zuschlag, Verkaufen, Ratte nehmen, Annehmen und Gegenangebot sehen jetzt aus wie „Selbst kaufen“ und „Karte aufdecken“ (weiße bzw. rote Pille, kleine Überschrift, Betrag darunter).
+
 ## v0.40.0 – Glitzer
 
 - [x] **Gezogener Geldschein wird wieder groß gezeigt:** Nach „Niemand bietet – … umsonst“ (oder Spezialkarte umsonst) wurde der nächste Geldschein nicht mehr angezeigt. Behoben.
