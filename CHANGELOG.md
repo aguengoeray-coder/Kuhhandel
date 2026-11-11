@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.33.2
+
+- [x] Zeile „Was zuletzt passiert ist“ deutlich kleiner und immer einzeilig – der Ziehstapel rutscht nach oben und überdeckt deine Tier-Sets nicht mehr.
+- [x] 💬-Knopf (Reaktionen) sitzt jetzt unten rechts statt oben links neben dem Menü – wirkt nicht mehr wie ein Teil von Nicos/linkem Platz.
+
 ## v0.33.1
 
 - [x] Dezente Pfeile ↻ zwischen den Plätzen zeigen dauerhaft die Spielrichtung.
