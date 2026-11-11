@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v0.33.1
+
+- [x] Dezente Pfeile ↻ zwischen den Plätzen zeigen dauerhaft die Spielrichtung.
+- [x] „+200“ (Geldschein) beim linken Platz verdeckt den 💬-Knopf nicht mehr.
+- [x] Kürzere Statuszeilen am Platz, bleiben einzeilig: „Buzz 6“, „kein Buzz“, „🤖 Bot“.
+- [x] Unten links kein doppeltes „Du versteigerst …“ mehr (steht schon oben im Schild).
+- [x] Sprechblase an dich rutscht beim Bezahlen, Kuhhandel und in der Rattenrunde neben deine Geldauswahl statt darüber.
+- [x] Kleine Handys (z. B. iPhone SE): Tier-Kärtchen der Mitspieler etwas größer.
+
 ## v0.33.0 – Sitzordnung wie am echten Tisch
 
 - [x] Mitspieler sitzen jetzt um den Tisch: links, oben, rechts (bei 3 Spielern oben links und oben rechts), du unten. Gespielt wird im Uhrzeigersinn – links von dir ist als Nächstes dran.

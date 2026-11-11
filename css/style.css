@@ -2023,3 +2023,11 @@ body:has(.stage) { background: var(--tbl-pat), radial-gradient(ellipse at 50% 55
 .stage .prow .nudge { left: 50%; right: auto; top: calc(100% + 4px); bottom: auto; transform: translateX(-50%); white-space: nowrap; z-index: 8; }
 .stage .prow.seat-t .nudge, .stage .prow.seat-tl .nudge { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
 .stage .prow.seat-tr .nudge { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+
+/* v0.33.1 Feinschliff */
+.stage .prow.seat-l .coinpop { left: calc(100% + 6px); top: 6px; }
+.stage .prow .tag-s { white-space: nowrap; }
+.seatarrow { position: absolute; font: 700 20px var(--font-head); color: rgba(255,255,255,.28); pointer-events: none; }
+.stage .mebubble.up { top: 318px; left: 505px; }
+.stage.small .gright .prow .chip.card .mcard { width: 24px; height: 33px; }
+.stage.small .gright .prow.seat-l .chips, .stage.small .gright .prow.seat-r .chips { max-width: 124px; gap: 5px; }
