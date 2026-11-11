@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.34.1';
+export const APP_VERSION = '0.35.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -147,13 +147,31 @@ function avatarHtml(id, name, cls = '') {
   return `<div class="avatar ${cls}" aria-hidden="true">${initial(name)}</div>`;
 }
 
+// Startseite: „Team Rockets Tier Börse“ – Kurstafel mit Tierpreisen, eigenes Logo (Kuh mit Sonnenbrille auf der Kursrakete)
+export const GAME_NAME = 'Team Rockets Tier Börse';
+const TICK_MOVES = [12, -4, 7, 3, -9, 15, 5, -2, 8, 21];
+function brandHtml() {
+  const tick = ANIMALS.map((a, i) => { const d = TICK_MOVES[i % TICK_MOVES.length];
+    return `<span class="tk"><i>${art(a.id)}</i>${esc(a.name.toUpperCase())} <b>${a.value}</b><em class="${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d)} %</em></span>`; }).join('')
+    + `<span class="tk"><i>${art(RAT)}</i>RATTE <b>0</b><em class="dn">☠ Ramsch</em></span><span class="tk">ESEL-BONUS <b>+50</b><em class="up">🎉 Dividende</em></span>`;
+  const logo = `<div class="tblogo" aria-hidden="true">
+    <svg class="tbchart" viewBox="0 0 120 120"><g opacity=".22" stroke="#fff" stroke-width="1"><path d="M0 30H120M0 60H120M0 90H120"/></g>
+      <g><rect x="14" y="74" width="9" height="22" rx="2" fill="#3DDC97"/><rect x="30" y="80" width="9" height="16" rx="2" fill="#FF5C7A"/><rect x="46" y="62" width="9" height="34" rx="2" fill="#3DDC97"/><rect x="62" y="70" width="9" height="26" rx="2" fill="#FF5C7A"/><rect x="78" y="48" width="9" height="48" rx="2" fill="#3DDC97"/></g>
+      <path d="M8 92 L34 70 L50 78 L72 52 L86 60 L104 26" fill="none" stroke="#FFD34E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="tbcow">${art('kuh')}<svg class="tbshades" viewBox="0 0 60 20"><path d="M2 4H58" stroke="#111" stroke-width="3" stroke-linecap="round"/><rect x="6" y="3" width="20" height="13" rx="6" fill="#111"/><rect x="34" y="3" width="20" height="13" rx="6" fill="#111"/><path d="M10 7l6 0" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/><path d="M38 7l6 0" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/></svg></span>
+    <svg class="tbrocket" viewBox="0 0 40 64"><path d="M14 50 Q20 64 26 50 Z" fill="#FF8A1F"/><path d="M16 50 Q20 58 24 50 Z" fill="#FFE066"/><path d="M20 2 C31 12 32 30 28 50 H12 C8 30 9 12 20 2 Z" fill="#fff" stroke="#14213D" stroke-width="2.5"/><circle cx="20" cy="24" r="6" fill="#5EC4F0" stroke="#14213D" stroke-width="2.5"/><path d="M12 36 L4 50 L12 48 Z M28 36 L36 50 L28 48 Z" fill="#FF4F8B" stroke="#14213D" stroke-width="2.5" stroke-linejoin="round"/></svg>
+  </div>`;
+  return `<div class="ticker" aria-label="Kurse der Tier Börse"><div class="tkrun">${tick}${tick}</div></div>
+    <div class="logorow tb">${logo}<div class="tbname"><span class="tbteam">🚀 Team Rockets</span><h1 class="logo tbtitle">Tier<br><span class="tbb">Börse</span></h1></div></div>
+    <p class="claim">Kaufen. Bluffen. Kuhhandeln. <small>Das Kartenspiel – online mit Freunden</small></p>`;
+}
+
 function renderLogin() {
   const create = auth.mode === 'create';
   app.innerHTML = `
     <section class="start">
       <div class="brand">
-        <div class="logorow"><h1 class="logo">Kuh<br>handel<span>.</span></h1><span class="logocow" aria-hidden="true">${art('kuh')}</span></div>
-        <p class="claim">Das Kartenspiel – online mit Freunden</p>
+        ${brandHtml()}
         <div class="start-links"><button type="button" class="linklike light" data-modal="rules">Spielregeln</button></div>
       </div>
       <div class="card games login">
@@ -225,8 +243,7 @@ function renderStart() {
   app.innerHTML = `
     <section class="start">
       <div class="brand">
-        <div class="logorow"><h1 class="logo">Kuh<br>handel<span>.</span></h1><span class="logocow" aria-hidden="true">${art('kuh')}</span></div>
-        <p class="claim">Das Kartenspiel – online mit Freunden</p>
+        ${brandHtml()}
         <div class="start-links btns">
           <button type="button" class="slink" data-modal="rules">📖 Regeln</button>
           <button type="button" class="slink" data-modal="stats">🏆 Bestenliste</button>
@@ -385,7 +402,7 @@ function keyBytes(b64) {
 async function togglePush() {
   if (!PUSH_PUBLIC_KEY || DEMO) return;
   if (!pushSupported()) {
-    return toast(isIOS ? 'Auf dem iPhone geht das nur, wenn Kuhhandel als App auf dem Homescreen liegt (Teilen → „Zum Home-Bildschirm“). Dann dort nochmal tippen.' : 'Dieses Gerät kann leider keine Benachrichtigungen.');
+    return toast(isIOS ? 'Auf dem iPhone geht das nur, wenn die Tier Börse als App auf dem Homescreen liegt (Teilen → „Zum Home-Bildschirm“). Dann dort nochmal tippen.' : 'Dieses Gerät kann leider keine Benachrichtigungen.');
   }
   try {
     const reg = await navigator.serviceWorker.ready;
@@ -634,7 +651,7 @@ function checkSignal() {
   const key = need ? `${need}|${s.log.length}` : '';
   if (key && key !== lastNeed) beep();
   lastNeed = key;
-  document.title = need ? '● Du bist dran – Kuhhandel' : baseTitle;
+  document.title = need ? '● Du bist dran – Tier Börse' : baseTitle;
 }
 
 // ---------- Countdown der Versteigerung ticken lassen ----------
@@ -912,9 +929,9 @@ async function saveProfile(change) {
 
 async function onInvite() {
   const url = `${location.origin}${location.pathname}?join=${encodeURIComponent(ui.game.code)}`;
-  const text = `Komm zu Kuhhandel! Spiel-Code ${ui.game.code}`;
+  const text = `Komm zur ${GAME_NAME}! Spiel-Code ${ui.game.code}`;
   try {
-    if (navigator.share) { await navigator.share({ title: 'Kuhhandel', text, url }); return; }
+    if (navigator.share) { await navigator.share({ title: GAME_NAME, text, url }); return; }
     await navigator.clipboard.writeText(`${text}: ${url}`);
     toastRoom('Link kopiert – jetzt in WhatsApp einfügen.');
   } catch { /* abgebrochen */ }
@@ -1326,7 +1343,7 @@ function renderModal() {
       <div class="rules">
         <h3>iPhone (Safari)</h3><p>Unten auf das Teilen-Symbol (Quadrat mit Pfeil) tippen → „Zum Home-Bildschirm“ → „Hinzufügen“.</p>
         <h3>Android (Chrome)</h3><p>Oben rechts auf ⋮ tippen → „App installieren“ oder „Zum Startbildschirm hinzufügen“.</p>
-        <p>Danach startest du Kuhhandel über das Kuh-Symbol – im Vollbild, ohne Browserleisten.</p>
+        <p>Danach startest du die Tier Börse über das Kuh-Symbol – im Vollbild, ohne Browserleisten.</p>
       </div>`;
   }
   if (modal.kind === 'pin') {
@@ -1609,7 +1626,7 @@ function demo(kind) {
 
 async function main() {
   if (DEMO) return demo(DEMO);
-  app.innerHTML = '<section class="center-msg"><h2>Kuhhandel</h2><p>Verbinde …</p></section>';
+  app.innerHTML = '<section class="center-msg"><h2>Team Rockets Tier Börse</h2><p>Verbinde …</p></section>';
   let loggedIn;
   try {
     loggedIn = await connect();
