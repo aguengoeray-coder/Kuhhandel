@@ -1436,7 +1436,7 @@ button.deck:active { transform: scale(.95); }
 .money.fan .mcount { position: absolute; left: 50%; top: -4px; transform: translateX(-50%); background: var(--ink); color: #fff; border-radius: 999px; padding: 0 6px; font-size: 11px; font-weight: 800; line-height: 16px; }
 
 /* ===================== v0.23: Aussehen (Farben aus den Einstellungen) ===================== */
-:root { --tbl-1: #1F7A80; --tbl-2: #16626A; --tbl-3: #0F4D55; --tbl-pat: none; --bg: #7A1F2E; --bg-pat: repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0 24px, transparent 24px 48px); --back: #C8372D; --back-2: #9E2A22; --back-pat: repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0 5px, transparent 5px 10px); }
+:root { --tbl-1: #2C4F8A; --tbl-2: #213E70; --tbl-3: #172E55; --tbl-pat: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1.5px) 0 0 / 6px 6px; --bg: #1E2A44; --bg-pat: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1.5px) 0 0 / 6px 6px; --back: #C8372D; --back-2: #9E2A22; --back-pat: repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0 5px, transparent 5px 10px); }
 body, .stage { background: var(--bg-pat), var(--bg); }
 .gtable { background: var(--tbl-pat), radial-gradient(ellipse at 50% 40%, var(--tbl-1) 0%, var(--tbl-2) 60%, var(--tbl-3) 100%); }
 .deck, .money.back, .kslots .money.xs.back, .mfly { background: var(--back-pat), var(--back); }
@@ -2044,3 +2044,101 @@ html.bigtext .stage .evstrip { font-size: 12.5px; }
 .stage .chatbtn.chat-br { position: absolute; right: 14px; bottom: 20px; z-index: 14; width: 40px; height: 40px; font-size: 18px; background: rgba(0,0,0,.35); box-shadow: none; }
 .stage .gtable .tstriprow { bottom: 58px; }
 .stage .dchips { right: 62px; }
+
+/* ===== v0.34: flüssiger, ein Ergebnis-Fenster, Bezahlen im Fächer ===== */
+/* drei Bewegungsarten für das ganze Spiel: erscheinen (federnd), verschwinden (schnell), fliegen (weich) */
+:root { --e-pop: cubic-bezier(.2, 1.3, .4, 1); --e-out: cubic-bezier(.4, 0, 1, 1); --e-fly: cubic-bezier(.45, 0, .2, 1); }
+.fly, .mfly, .mflyc { animation-timing-function: var(--e-fly); }
+
+/* Konfetti: nur noch transform (statt „top“) – läuft auf dem Grafikchip */
+.confetti i { top: -14px; animation-name: fall2; }
+@keyframes fall2 { from { transform: translate(0, 0) rotate(0deg); } to { transform: translate(30px, 430px) rotate(540deg); } }
+/* Leuchten: Ring als eigene Ebene, die nur ein- und ausblendet (statt Schatten neu zu malen) */
+.chip.tradechip { animation: none; position: relative; }
+.chip.tradechip::after { content: ""; position: absolute; inset: -3px; border-radius: 999px; box-shadow: 0 0 0 2.5px rgba(255,211,78,.75); opacity: 0; animation: glowring 1.6s ease-in-out infinite; pointer-events: none; }
+@keyframes glowring { 50% { opacity: 1; } }
+.pill.pulse { animation: none; position: relative; }
+.pill.pulse::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 4px rgba(255,211,78,.8); opacity: 0; animation: pillring 1.4s ease-out infinite; pointer-events: none; }
+@keyframes pillring { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.08, 1.25); } }
+
+/* Gebots-Blasen: obere Plätze blasen seitlich neben dem Profil auf (nicht über den Rand hinaus) */
+.stage .prow.seat-t .coinpop, .stage .prow.seat-tl .coinpop { left: calc(100% + 6px); right: auto; top: 26px; animation-name: coinside; }
+.stage .prow.seat-tr .coinpop { right: calc(100% + 6px); left: auto; top: 26px; animation-name: coinside; }
+@keyframes coinside { 0% { transform: scale(.6); opacity: 0; } 22% { transform: scale(1.12); opacity: 1; } 35% { transform: none; } 80% { opacity: 1; } 100% { transform: translateY(-12px); opacity: 0; } }
+.stage .prow .coinpop.bidpop.again { animation-name: coinbump; }
+@keyframes coinbump { 0% { transform: scale(1.25); opacity: 1; } 18% { transform: none; } 80% { opacity: 1; } 100% { transform: translateY(-10px); opacity: 0; } }
+
+/* Ein Ergebnis-Fenster für alles: links die Karte, rechts Art · Ergebnis · wer zahlt wem */
+.evcard { position: absolute; left: var(--cx); top: 96px; transform: translateX(-50%); z-index: 33; width: 430px; display: flex; align-items: center; gap: 14px; background: #fff; color: var(--ink); border: 4px solid #E2B33C; border-radius: 20px; padding: 12px 16px 16px 12px; box-shadow: 0 0 0 9999px rgba(0,0,0,.18), 0 14px 30px rgba(0,0,0,.4); cursor: pointer; animation: evin .32s var(--e-pop) both; animation-delay: var(--el, 0ms); }
+.evcard.good { border-color: #2E7D4F; }
+@keyframes evin { from { opacity: 0; transform: translateX(-50%) scale(.9); } to { opacity: 1; transform: translateX(-50%); } }
+.evout { display: contents; }
+.evout .evcard { pointer-events: none; animation: evout .26s var(--e-out) both; }
+.evout .evcard .rtimer { display: none; }
+@keyframes evout { from { opacity: 1; transform: translateX(-50%); } to { opacity: 0; transform: translateX(-50%) scale(.94); } }
+.ec-art { position: relative; flex: none; width: 86px; height: 118px; display: flex; align-items: center; justify-content: center; }
+.ec-art .pcard { transform: scale(.66); flex: none; }
+.ec-art .trcount { position: absolute; right: -4px; top: 0; background: var(--ink); color: #fff; border-radius: 999px; padding: 0 7px; font-family: var(--font-head); font-weight: 700; font-size: 14px; line-height: 22px; border: 2px solid #fff; }
+.ec-badge { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); background: var(--red); color: #fff; border: 2px solid #fff; border-radius: 999px; padding: 0 9px; font-family: var(--font-head); font-weight: 700; font-size: 13px; white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.2); animation: badgein .4s var(--e-pop) both; animation-delay: calc(var(--el, 0ms) + .35s); }
+@keyframes badgein { from { transform: translateX(-50%) scale(0); } to { transform: translateX(-50%); } }
+.ec-body { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; }
+.ec-kind { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: #7A7468; }
+.ec-title { font-family: var(--font-head); font-size: 20px; line-height: 1.12; font-weight: 700; text-wrap: balance; }
+.evcard.good .ec-title { color: #2E7D4F; }
+.ec-deal { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin-top: 1px; }
+.ec-p { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; }
+.ec-p b { font-weight: 800; }
+.ec-p .avatar { width: 28px; height: 28px; border-width: 2px; font-size: 11px; flex: none; }
+.ec-arr { color: #B5AD9C; font-weight: 900; font-size: 17px; }
+.ec-vs { color: #7A7468; font-weight: 800; font-size: 12.5px; }
+.ec-amt { background: #FFE7A3; border: 2px solid var(--ink); border-radius: 999px; padding: 0 9px; font-family: var(--font-head); font-weight: 700; font-size: 16px; line-height: 23px; white-space: nowrap; }
+.ec-amt.cards { background: #fff; }
+.ec-amt.win { background: #CFEBD8; border-color: #2E7D4F; }
+.ec-sub { font-size: 12.5px; font-weight: 700; color: #7A7468; }
+.ec-sub b { color: var(--ink); }
+.evcard .rtimer { background: #E4DFD3; animation-duration: var(--dur, 4s); }
+/* Karte fliegt beim Schließen aus dem Fenster ins Set */
+.fly.fromev { left: calc(var(--cx) - 182px); top: 134px; z-index: 34; }
+/* Kann nicht zahlen: gleicher Rahmen wie das Ergebnis-Fenster */
+.cantpop { left: var(--cx); animation: evin .32s var(--e-pop) both; animation-delay: var(--el, 0ms); box-shadow: 0 0 0 9999px rgba(0,0,0,.18), 0 14px 30px rgba(0,0,0,.4); }
+.cantpop small { letter-spacing: .07em; }
+@media (prefers-reduced-motion: reduce) { .evcard, .evout .evcard, .ec-badge, .stamp.in, .evstrip.flash, .evstrip.flash::after, .tlog.flash { animation: none !important; } }
+
+/* Zuschlag: „Verkauft!“-Stempel auf der Karte beim Bezahlen */
+.paycard { position: relative; }
+.stamp { position: absolute; left: 50%; top: 64%; transform: translate(-50%, -50%) rotate(-14deg); z-index: 2; border: 3px solid #C8323C; color: #C8323C; background: rgba(255,255,255,.88); font-family: var(--font-head); font-weight: 700; font-size: 11px; letter-spacing: .03em; text-transform: uppercase; padding: 0 6px; border-radius: 6px; pointer-events: none; white-space: nowrap; }
+.stamp.in { animation: stampin .4s var(--e-pop) .1s both; }
+@keyframes stampin { from { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(2.2); } to { opacity: 1; transform: translate(-50%, -50%) rotate(-14deg); } }
+
+/* Infozeile: kommt weich herein und leuchtet kurz, wenn etwas Neues drinsteht */
+.stage .evstrip, .stage .tlog { position: relative; }
+.evstrip.flash, .tlog.flash { animation: stripin .35s var(--e-pop) both; animation-delay: var(--el, 0ms); }
+.evstrip.flash::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: 0 0 0 2px var(--gold); background: rgba(255,211,78,.22); pointer-events: none; animation: stripglow 1.4s ease-out both; animation-delay: var(--el, 0ms); }
+@keyframes stripin { from { opacity: 0; transform: translateY(-6px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes stripglow { 0%, 35% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Bezahlen, Kuhhandel, Ratte: direkt im Fächer antippen */
+.money.fan { transform: rotate(var(--rot, 0deg)) translateY(var(--dy, 0px)); }
+button.money.fan.pick { cursor: pointer; font: inherit; padding: 0; -webkit-tap-highlight-color: transparent; }
+button.money.fan.pick:active { transform: rotate(var(--rot, 0deg)) translateY(calc(var(--dy, 0px) - 10px)); }
+.money.fan.lift { z-index: 3; box-shadow: 0 0 0 3px var(--gold), 0 12px 20px rgba(0,0,0,.35); animation: liftup .22s var(--e-pop) both; transform: translateY(-24px); }
+@keyframes liftup { from { transform: rotate(var(--rot, 0deg)) translateY(var(--dy, 0px)); } to { transform: translateY(-24px); } }
+.fan-wrap.picking .money.fan { box-shadow: -3px 3px 8px rgba(0,0,0,.25), 0 0 0 1px rgba(255,255,255,.5); }
+.fan-wrap.picking .money.fan.multi { box-shadow: 3px -3px 0 -1px #fff, 3px -3px 0 1px var(--ink), -3px 3px 8px rgba(0,0,0,.25); }
+.fanempty { align-self: center; margin-bottom: 22px; background: rgba(0,0,0,.25); color: #fff; border-radius: 999px; padding: 3px 12px; font-weight: 700; font-size: 12.5px; }
+.kslots .money.in { animation: slotin .3s var(--e-pop) both; }
+@keyframes slotin { from { transform: translateY(80px) scale(.8); opacity: .2; } to { transform: none; opacity: 1; } }
+/* Flug aus dem Ergebnis-Fenster: unsichtbar, bis das Fenster zugeht */
+.fly.fromev { animation-name: flyev; }
+@keyframes flyev { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 6% { opacity: 1; } 88% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(var(--fs, .25)); opacity: 0; } }
+
+/* Profile am Tisch: Name und Status immer gleich breit, das Band kommt ohne Lücke aus dem Kreis
+   (dran sein zeigt der goldene Rahmen um den ganzen Platz + Sanduhr – der Kreis bleibt gleich groß) */
+.stage .prow .pname { width: 92px; flex: none; }
+.stage .prow.seat-l, .stage .prow.seat-r { width: 142px; }
+html.bigtext .stage .prow .tag-s { font-size: 13px; }
+.stage .prow .ribbon-s, .stage .prow .tag-s { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage .prow .ribbon-s { padding-right: 8px; }
+.stage .prow .tag-s { padding-left: 13px; padding-right: 4px; }
+.stage .prow .ribbon-s { padding-left: 13px; }
+.stage .prow.turn .avatar { box-shadow: none; }

@@ -1,5 +1,19 @@
 # Änderungsprotokoll
 
+## v0.34.0 – flüssiger, ein Ergebnis-Fenster, Bezahlen im Fächer
+
+- [x] **Ein Ergebnis-Fenster für alles:** Versteigerung, Spezialkarte und Kuhhandel sehen gleich aus – Karte links, rechts Art, Ergebnis und wer wem zahlt („Du → 120 → Lea“). Grüner Rahmen = gut für dich.
+- [x] Quartett steht als Abzeichen direkt im Fenster (kein zweites Fenster mehr).
+- [x] Beim Schließen fliegt die Karte aus dem Fenster ins Set, das Geld vom Zahler zum Empfänger. Antippen schließt sofort; deckt jemand die nächste Karte auf, macht das Fenster Platz.
+- [x] „Kann nicht zahlen“ im gleichen Rahmen (rot).
+- [x] Weg: gelbes Zuschlag-Schild, weißes „Was ist passiert“-Fenster, gelbes Esel-Fenster (steht alles schon in der Infozeile bzw. am Tisch). Beim Bezahlen liegt ein „Verkauft!“-Stempel auf der Karte.
+- [x] Infozeile leuchtet kurz auf, wenn etwas Neues drinsteht.
+- [x] **Bezahlen, Kuhhandel und Ratte direkt im Geld-Fächer:** Schein antippen → er springt ins Feld, im Feld antippen → zurück. Ratte: Schein antippen (hebt sich), dann „Verdeckt legen“.
+- [x] Gebots-Blasen der oberen Plätze erscheinen neben dem Profil statt oben abgeschnitten; bietet jemand gleich nochmal, hüpft seine Blase nur.
+- [x] Profile am Tisch einheitlich: Name und Status immer gleich breit, das Band kommt ohne Lücke aus dem Kreis (auch bei „versteigert“, „Aufdecker“ usw.). Wer dran ist, zeigt der goldene Rahmen um den ganzen Platz.
+- [x] Standard-Aussehen jetzt Nachtblau mit Filz (wer sein Aussehen schon selbst gewählt hat, behält es; „Zurück auf Empfehlung“ unter Aussehen holt den neuen Standard).
+- [x] Flüssiger: Dauer-Animationen (Wackeln am Stapel, Leuchten, Sanduhr) springen beim Neuzeichnen nicht mehr auf Anfang; Konfetti und Leuchten laufen auf dem Grafikchip; einheitliche Bewegungen.
+
 ## v0.33.2
 
 - [x] Zeile „Was zuletzt passiert ist“ deutlich kleiner und immer einzeilig – der Ziehstapel rutscht nach oben und überdeckt deine Tier-Sets nicht mehr.
