@@ -855,7 +855,6 @@ export function renderGame(root, ctx) {
   // ----- Menü oben links in der Tischecke -----
   const left = `<div class="gleft">
     <div class="lround">
-      ${ctx.reactionList ? '<button type="button" class="round chatbtn" data-a="reactTo" data-v="' + esc(meId) + '" aria-label="Reaktion an alle">💬</button>' : ''}
       <button type="button" class="round" data-a="menu" aria-label="Menü">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
       </button>
@@ -1178,6 +1177,7 @@ export function renderGame(root, ctx) {
   root.innerHTML = `<div class="stage-wrap"><div class="stage" id="stage">
     ${left}
     ${table}
+    ${ctx.reactionList ? '<button type="button" class="round chatbtn chat-br" data-a="reactTo" data-v="' + esc(meId) + '" aria-label="Reaktion an alle">💬</button>' : ''}
     <div class="gright">${playersCol}</div>
     ${overlay}
     ${effects}

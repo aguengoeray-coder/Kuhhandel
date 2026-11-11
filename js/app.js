@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.33.1';
+export const APP_VERSION = '0.33.2';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1589,6 +1589,7 @@ function demo(kind) {
   if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }], state: { phase: 'turn', turn: 0, players: [{ id: me.id }] } }];
   if (demoState && params.get('herd')) { const me0 = demoState.players[0]; ['hahn', 'gans', 'katze', 'hund', 'schaf', 'ziege', 'esel', 'schwein', 'kuh', 'pferd'].forEach((id, k) => { me0.animals[id] = 1 + (k % 3); }); me0.rats = 2; } // Screenshots: volle Auslage
   if (demoState && params.get('cash')) { const n = Number(params.get('cash')); const vals = [0, 10, 10, 20, 50, 100, 200, 500]; demoState.players[0].money = Array.from({ length: n }, (_, k) => vals[k % vals.length]).sort((x, y) => x - y); } // Screenshots: viele Geldkarten
+  if (demoState && params.get('ev')) demoState.lastEvent = { n: 1, ...({ special: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u2', animal: 'pferd', count: 3 }, auction: { type: 'auction_won', buyer: 'u3', payee: 'u4', animal: 'schwein', amount: 130 }, self: { type: 'auction_won', buyer: 'u2', payee: 'u3', animal: 'kuh', amount: 90, self: true }, trade: { type: 'trade', accepted: true, offer: [10, 20], offerSum: 30, winner: 'u2', challenger: 'u2', target: 'u4', animal: 'ziege', count: 2 }, money: { type: 'money_drawn', player: 'u1', value: 50 } })[params.get('ev')] }; // Screenshots: Ereigniszeile
   if (demoState && params.get('bots')) demoState.autoplay = params.get('bots').split(',');
   if (params.get('takeover')) online = new Set(['u1', 'u2', 'u4']);
   if (demoState) {
