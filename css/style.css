@@ -2181,6 +2181,6 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
   .claim small { display: none; }
   .ticker { height: 22px; }
   .tk { font-size: 12px; }
-  .tblogo { width: 68px; border-radius: 20px; border-width: 3px; }
+  .logorow.tb .logocow { width: 68px; height: 68px; border-radius: 18px; border-width: 3px; }
   .logo.tbtitle { font-size: 36px; }
 }
