@@ -1754,3 +1754,33 @@ html.bigtext .fansum { font-size: 17px; }
 .menu-row .pill { white-space: nowrap; }
 .slink.on { background: #2E7D4F; color: #fff; }
 .menu { max-height: 318px; overflow-y: auto; gap: 6px; } .menu .pill { min-height: 34px; }
+
+/* ===================== v0.29: Insider ===================== */
+/* „Ehrliches, männliches Angebot!“ – größer, golden, mit Muskeln */
+.rbubble.ehrlich { background: var(--gold); border-color: #8A5A00; font-size: 16px; padding: 6px 14px; white-space: normal; width: 190px; text-align: center; line-height: 1.15; box-shadow: 0 6px 16px rgba(0,0,0,.35); animation-duration: 3.2s; }
+.tstriprow { display: flex; align-items: center; gap: 10px; }
+.ehrlichbtn { border: 3px solid #8A5A00; background: var(--gold); color: var(--ink); border-radius: 999px; padding: 5px 14px; font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; box-shadow: 0 3px 0 #8A5A00; white-space: nowrap; touch-action: manipulation; }
+.ehrlichbtn:active { transform: translateY(2px); box-shadow: 0 1px 0 #8A5A00; }
+
+/* „Zeig Batzen!“ */
+.batzenbtn { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 4px solid #fff; background: var(--red); color: #fff; border-radius: 18px; padding: 10px 16px; font: inherit; cursor: pointer; box-shadow: 0 6px 0 #8F1C1C, 0 10px 20px rgba(0,0,0,.3); animation: bzpulse 1s ease-in-out infinite; touch-action: manipulation; }
+.batzenbtn b { font-family: var(--font-head); font-size: 22px; line-height: 1; white-space: nowrap; }
+.batzenbtn small { font-size: 11px; font-weight: 700; opacity: .9; }
+.batzenbtn:active { transform: translateY(3px); box-shadow: 0 3px 0 #8F1C1C; }
+@keyframes bzpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+.batzen { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 6px; }
+.batzen.in .bzp { animation: bzin .5s cubic-bezier(.2, .9, .3, 1.2) both; }
+.batzen.in .bzp:nth-child(2) { animation-delay: .12s; } .batzen.in .bzp:nth-child(3) { animation-delay: .24s; } .batzen.in .bzp:nth-child(4) { animation-delay: .36s; }
+@keyframes bzin { from { opacity: 0; transform: translateY(80px) scale(.6); } to { opacity: 1; transform: none; } }
+.bztitle { background: var(--red); color: #fff; font-family: var(--font-head); font-weight: 700; font-size: 20px; padding: 3px 20px; border-radius: 999px; border: 3px solid #fff; box-shadow: 0 6px 14px rgba(0,0,0,.3); }
+.bztitle span { opacity: .85; font-size: 15px; }
+.bzrow { display: flex; gap: 22px; align-items: flex-end; }
+.bzp { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bzstack { position: relative; width: 40px; height: calc(56px + var(--n) * 3px); }
+.bzstack i { position: absolute; left: 0; bottom: calc(var(--k) * 3px); width: 40px; height: 56px; border-radius: 6px; border: 2px solid #fff; background: var(--back-pat), var(--back); box-shadow: 0 2px 3px rgba(0,0,0,.35); transform: rotate(calc((var(--k) - 5) * 1.2deg)); }
+.bzstack em { position: absolute; inset: auto 0 0 0; height: 56px; border: 2px dashed rgba(255,255,255,.5); border-radius: 6px; color: #fff; font-style: normal; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.bzp > b { font-family: var(--font-head); font-size: 26px; color: #fff; line-height: 1; text-shadow: 0 2px 0 rgba(0,0,0,.3); }
+.bzp > span { display: flex; align-items: center; gap: 4px; background: #fff; border-radius: 999px; padding: 2px 10px 2px 2px; font-weight: 800; font-size: 12px; border: 2px solid var(--c); }
+.bzp > span .avatar { width: 22px; height: 22px; border-width: 2px; font-size: 10px; }
+@media (prefers-reduced-motion: reduce) { .batzenbtn, .batzen.in .bzp { animation: none; } }
+.stage:has(.batzen) .auslage { visibility: hidden; }

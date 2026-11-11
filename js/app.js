@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.28.0';
+export const APP_VERSION = '0.29.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -62,7 +62,9 @@ const profiles = new Map(); // Anmelde-ID → { name, animal, color }
 const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
 let lastReactAt = 0;
 const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
-const REACTIONS = ['Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!', '😂', '😱'];
+// EHRLICH: euer Insider – kommt als großer Spruch mit eigenem Ton
+const EHRLICH = 'Ehrliches, männliches Angebot! 💪';
+const REACTIONS = [EHRLICH, 'Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!', '😂', '😱'];
 let roomChannel = null;
 let versions = {}; // Platz → App-Version (aus der Live-Verbindung)
 
@@ -930,7 +932,7 @@ function activeReactions() {
 function showReaction(seat, text, to = null) {
   const at = to || seat;
   reactions.set(at, { text, from: to ? seat : null, until: Date.now() + 3200 });
-  if (soundOn() && !DEMO) playSound('react');
+  if (soundOn() && !DEMO) playSound(text === EHRLICH ? 'ehrlich' : 'react');
   render();
   setTimeout(render, 3300);
 }
@@ -1554,7 +1556,7 @@ function demo(kind) {
   if (kind === 'testspiel') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(4); }
   me = { id: 'u1', name: 'Alp' };
   if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
-  if (params.get('react')) reactions.set(params.get('react'), { text: 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
+  if (params.get('react')) reactions.set(params.get('react'), { text: params.get('rtext') === 'ehrlich' ? EHRLICH : 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
   if (params.get('pick')) gameLocal.reactTo = params.get('pick');
   if (params.get('score')) gameLocal.scoreOpen = params.get('score');
   if (params.get('oldv')) versions = { u3: '0.11.0' };

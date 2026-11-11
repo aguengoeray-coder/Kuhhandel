@@ -1,7 +1,7 @@
 // Beispiel-Spielstände für Screenshots (?demo=turn, auction, …). Im echten Spiel nicht benutzt.
 import {
   createGame, drawForAuction, bid, closeAuction, startTrade, counterTrade, ANIMALS,
-  RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS,
+  RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS, showBatzen,
 } from '../src/engine.js';
 
 const PLAYERS = [
@@ -37,28 +37,28 @@ export function buildDemoState(kind, local) {
     case 'auction': {
       const t = Date.now() - 4100;
       g = base(); g.turn = 1; g.deck[0] = 'esel';
-      g = drawForAuction(g, 'u2', t);
+      g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u4', 60, t + 3200); g = bid(g, 'u1', 100, t + 3200); g = bid(g, 'u3', 120, t + 3200);
       return g;
     }
     case 'auctionrun': {
       const t = Date.now() - 3600;
       g = base(); g.deck[0] = 'pferd';
-      g = drawForAuction(g, 'u1', t);
+      g = drawForAuction(g, 'u1', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u3', 90, t + 3200); g = bid(g, 'u2', 130, t + 3200);
       return g;
     }
     case 'auctioneer': {
       const t = Date.now() - 30000;
       g = base(); g.deck[0] = 'pferd';
-      g = drawForAuction(g, 'u1', t);
+      g = drawForAuction(g, 'u1', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u3', 90, t + 2600); g = bid(g, 'u2', 130, t + 3600);
       return g;
     }
     case 'bidderover': {
       const t = Date.now() - 30000;
       g = base(); g.turn = 1; g.deck[0] = 'kuh';
-      g = drawForAuction(g, 'u2', t);
+      g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u1', 100, t + 2600); g = bid(g, 'u3', 120, t + 3600);
       return g;
     }
@@ -75,7 +75,7 @@ export function buildDemoState(kind, local) {
       const t = Date.now() - 60000;
       g = base(); g.turn = 1; g.deck[0] = 'schwein';
       g.players[0].money = [0, 0, 10, 10, 10, 10, 50, 50, 100, 200, 500, 500];
-      g = drawForAuction(g, 'u2', t);
+      g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u1', 270, t + 2600);
       g = closeAuction(g, 'u2', 'sell', t + 30000);
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [9, 6, 2];
@@ -99,7 +99,7 @@ export function buildDemoState(kind, local) {
     case 'cantpay': {
       const t = Date.now() - 25000;
       g = base(); g.turn = 1; g.deck[0] = 'kuh';
-      g = drawForAuction(g, 'u2', t);
+      g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u4', 200, t + 2600);
       g = closeAuction(g, 'u2', 'sell', t + 20500);
       return g;
@@ -141,28 +141,40 @@ export function buildDemoState(kind, local) {
     case 'special': { // Countdown läuft, Alp kann buzzern
       const t = Date.now() - SPECIAL_DELAY_MS - 3200;
       g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
-      g = drawForAuction(g, 'u2', t);
+      g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g.special.startsAt = Date.now() - 3200;
+      return g;
+    }
+    case 'batzen': { // „Zeig Batzen!“ – Knopf
+      g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
+      g = drawForAuction(g, 'u2', Date.now() - 1200);
+      return g;
+    }
+    case 'batzenshow': { // Stapel liegen auf dem Tisch
+      g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
+      g.players[2].money = [0, 10, 10, 20, 50]; g.players[3].money = [0, 0, 10, 10, 10, 20, 50, 50, 100, 200];
+      g = drawForAuction(g, 'u2', Date.now() - 1500);
+      g = showBatzen(g, 'u4', Date.now() - 400);
       return g;
     }
     case 'specialbuzzed': {
       const t0 = Date.now() - SPECIAL_DELAY_MS - 4500;
       g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
-      g = drawForAuction(g, 'u2', t0);
+      g = drawForAuction(g, 'u2', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
       g = buzz(g, 'u3', t0 + SPECIAL_DELAY_MS + 4100);
       return g;
     }
     case 'specialdecide': {
       const t0 = Date.now() - 60000;
       g = base(); g.deck[0] = 'sp-schwein';
-      g = drawForAuction(g, 'u1', t0);
+      g = drawForAuction(g, 'u1', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
       g = buzz(g, 'u2', t0 + SPECIAL_DELAY_MS + 3500);
       return g;
     }
     case 'rps': {
       const t0 = Date.now() - 60000;
       g = base(); g.turn = 3; g.deck[0] = 'sp-ziege';
-      g = drawForAuction(g, 'u4', t0);
+      g = drawForAuction(g, 'u4', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
       g = buzz(g, 'u1', t0 + SPECIAL_DELAY_MS + 5100);
       g = buzz(g, 'u3', t0 + SPECIAL_DELAY_MS + 5600);
       g = rpsPick(g, 'u1', 'stein', t0 + 30000); g = rpsPick(g, 'u3', 'stein', t0 + 30000);
@@ -171,7 +183,7 @@ export function buildDemoState(kind, local) {
     case 'rpsshow': {
       const t0 = Date.now() - 60000;
       g = base(); g.turn = 3; g.deck[0] = 'sp-ziege';
-      g = drawForAuction(g, 'u4', t0);
+      g = drawForAuction(g, 'u4', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
       g = buzz(g, 'u1', t0 + SPECIAL_DELAY_MS + 5100);
       g = buzz(g, 'u3', t0 + SPECIAL_DELAY_MS + 5600);
       g = rpsPick(g, 'u1', 'papier', t0 + 30000); g = rpsPick(g, 'u3', 'stein', t0 + 30000);
@@ -181,7 +193,7 @@ export function buildDemoState(kind, local) {
       const t0 = Date.now() - 30000;
       g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
       g.players[2].money = [0, 10, 20];
-      g = drawForAuction(g, 'u2', t0);
+      g = drawForAuction(g, 'u2', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
       g = buzz(g, 'u3', t0 + SPECIAL_DELAY_MS + 1500);
       g = specialDecide(g, 'u2', 'sell', Date.now() - SPECIAL_DELAY_MS - 1200);
       return g;
@@ -189,7 +201,7 @@ export function buildDemoState(kind, local) {
     case 'spay': {
       const t0 = Date.now() - 60000;
       g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
-      g = drawForAuction(g, 'u2', t0);
+      g = drawForAuction(g, 'u2', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
       g = buzz(g, 'u1', t0 + SPECIAL_DELAY_MS + 5500);
       g = specialDecide(g, 'u2', 'sell', t0 + 30000);
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [0, 1];

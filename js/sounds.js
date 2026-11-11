@@ -53,6 +53,8 @@ const SOUNDS = {
   bid: () => tone(880, 0, 0.09, { vol: 0.12 }),
   fanfare: () => { [[523, 0, .14], [659, .14, .14], [784, .28, .14], [1047, .42, .5]].forEach(([f, d, l]) => tone(f, d, l, { vol: 0.16, type: 'square' })); },
   boo: () => { tone(220, 0, 0.5, { vol: 0.16, type: 'sawtooth', slide: -80 }); tone(196, 0.45, 0.7, { vol: 0.14, type: 'sawtooth', slide: -90 }); },
+  ehrlich: () => { [[196, 0, .16], [262, .16, .16], [330, .32, .16], [392, .48, .45]].forEach(([f, d, l]) => tone(f, d, l, { vol: 0.2, type: 'sawtooth' })); },
+  batzen: () => { noise(0, 0.08, { freq: 2600, vol: 0.3 }); [0.05, 0.12, 0.19, 0.26, 0.33].forEach((d) => noise(d, 0.06, { freq: 2000 + d * 2000, vol: 0.22 })); },
   outbid: () => { tone(520, 0, 0.12, { vol: 0.14, type: 'square' }); tone(390, 0.12, 0.18, { vol: 0.14, type: 'square' }); },
   gavel: () => { tone(160, 0, 0.18, { type: 'square', vol: 0.18, slide: -60 }); noise(0, 0.06, { freq: 900, vol: 0.4 }); },
   coins: () => [0, 0.07, 0.14, 0.2].forEach((d, i) => tone(1500 + i * 220, d, 0.12, { type: 'sine', vol: 0.12 })),

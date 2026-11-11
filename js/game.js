@@ -4,8 +4,8 @@ import {
   viewFor, possibleTrades, scores, currentPlayer,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
-  RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, scoreFor,
-  ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock,
+  RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
+  ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
 
@@ -275,7 +275,8 @@ export function renderGame(root, ctx) {
     const said = ctx.reactions?.[p.id];
     const from = said?.from && said.from !== p.id ? said.from : null;
     const fromIdx = from ? idxOf(from) : -1;
-    const bubble = said ? `<div class="rbubble ${from ? 'to' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
+ const isEhrlich = said?.text?.startsWith('Ehrliches, männliches');
+    const bubble = said ? `<div class="rbubble ${from ? 'to' : ''} ${isEhrlich ? 'ehrlich' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
     let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
     return `<div class="prow${isMe ? ' me' : ''}${turnMark}${dim}${isLeader ? ' leader' : ''}" style="order:${isMe ? 9 : 0};--c:${SEAT_COLORS[i]}">${coin}
@@ -418,11 +419,15 @@ export function renderGame(root, ctx) {
     const res = specialResult(v);
     const top = Object.values(sp.buzzes).length ? Math.max(...Object.values(sp.buzzes)) : null;
     const buzzed = Object.keys(sp.buzzes).filter((id) => sp.buzzes[id] === top);
-    if (stage === 'wait') wake = sp.startsAt;
+    const bz = batzenStage(v, now);
+    if (bz === 'ask') wake = sp.batzen.until;
+    else if (bz === 'show') wake = sp.batzen.at + BATZEN_SHOW_MS;
+    else if (stage === 'wait') wake = sp.startsAt;
     else if (stage === 'countdown') wake = Math.min(sp.startsAt + Math.floor((now - sp.startsAt) / SPECIAL_TICK_MS + 1) * SPECIAL_TICK_MS, specialDecideAt(v));
 
     let big = '';
-    if (stage === 'wait') big = `<div class="bignum wait"><small>Achtung …</small>${SPECIAL_FROM}</div>`;
+    if (bz === 'ask') big = `<button type="button" class="batzenbtn" data-a="batzen"><b>Zeig Batzen!</b><small>noch ${Math.max(1, Math.ceil((sp.batzen.until - now) / 1000))} s</small></button>`;
+    else if (stage === 'wait') big = `<div class="bignum wait"><small>Achtung …</small>${SPECIAL_FROM}</div>`;
     else if (stage === 'countdown') big = `<div class="bignum ${num <= 3 ? 'low' : ''}" ${fresh ? '' : ''}><small>Karten</small>${num}</div>`;
     const ev = v.lastEvent;
     let info = '';
@@ -440,6 +445,17 @@ export function renderGame(root, ctx) {
       <div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(sp.animal, 'special')}</div>
       <div class="aside r">${big || ''}</div>
     </div>${info}</div>`;
+    // Batzen liegen auf dem Tisch: jeder Geldstapel verdeckt mit Anzahl
+    if (bz === 'show') {
+      const cnt = sp.batzen.counts || {};
+      aucCenter = `<div class="batzen ${fresh ? 'in' : ''}">
+        <div class="bztitle"><span>${esc(sp.batzen.by === meId ? 'Du' : nameOf(sp.batzen.by))}:</span> „Zeig Batzen!“</div>
+        <div class="bzrow">${v.players.map((p, i) => { const n = cnt[p.id] ?? 0; return `<div class="bzp" style="--c:${SEAT_COLORS[i]}">
+          <div class="bzstack" style="--n:${Math.min(n, 12)}">${Array.from({ length: Math.min(n, 12) }, (_, k) => `<i style="--k:${k}"></i>`).join('')}${n ? '' : '<em>leer</em>'}</div>
+          <b>${n}</b><span>${avatar(p, i)}${esc(p.id === meId ? 'Du' : p.name)}</span></div>`; }).join('')}</div>
+      </div>`;
+    }
+    H.batzen = () => ctx.act((s) => showBatzen(s, meId, ctx.now()));
 
     if (stage === 'wait' || stage === 'countdown') {
       if (iRevealed) {
@@ -577,6 +593,9 @@ export function renderGame(root, ctx) {
     const offerCards = Array.isArray(t.offer) ? t.offer.map((m) => moneyCard(m, { size: 'xs' })).join('') : Array.from({ length: offerCount }, () => '<div class="money xs back"></div>').join('');
     const isRat = t.animal === RAT;
     aucBanner = `${isRat ? 'Rattenhandel' : 'Kuhhandel'}: ${esc(nameOf(t.challenger))} gegen ${esc(nameOf(t.target))}`;
+    // Euer Insider: Angebot mit einem Tipp „ehrlich und männlich“ nennen
+    const ehrlichBtn = ctx.reactionList ? '<button type="button" class="ehrlichbtn" data-a="ehrlich">💪 Ehrlich &amp; männlich!</button>' : '';
+    H.ehrlich = () => ctx.react(ctx.reactionList.find((r) => r.startsWith('Ehrliches')) || ctx.reactionList[0], null);
     const challengerPanel = `<div class="tpanel">
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
         <div class="kslots">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
@@ -592,7 +611,7 @@ export function renderGame(root, ctx) {
           <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
         </div>
       </div>
-      ${animalStrip(t.animal, t.count, '')}`;
+      <div class="tstriprow">${animalStrip(t.animal, t.count, '')}${ehrlichBtn}</div>`;
       aucLeft = `<button type="button" class="pill pill-white" data-a="accept"><small>ANNEHMEN</small>${isRat ? 'Geld + Ratte' : 'Geld nehmen'}</button>
         <button type="button" class="pill pill-red" data-a="counter" ${canCounter ? '' : 'disabled'}><small>GEGENANGEBOT</small>${karten(local.sel.length)}</button>`;
       handPick = `<div class="hand-row">${moneyPiles(me.money, local.sel)}</div>`;
@@ -607,7 +626,7 @@ export function renderGame(root, ctx) {
           <div class="tline"><b>überlegt …</b></div>
         </div>
       </div>
-      ${animalStrip(t.animal, t.count, '')}`;
+      <div class="tstriprow">${animalStrip(t.animal, t.count, '')}${ehrlichBtn}</div>`;
       aucLeft = `<div class="ldecide">${t.challenger === meId ? `Warte auf die Antwort von ${esc(nameOf(t.target))} …` : `${esc(nameOf(t.target))} überlegt …`}</div>`;
     }
   }
@@ -903,6 +922,7 @@ export function renderGame(root, ctx) {
   } else {
     local.prevBuzz = undefined;
   }
+  if (fresh && v.lastEvent?.type === 'batzen') sounds.push('batzen');
   if (entered && state.phase === 'ended') {
     const sc = scores(state).sort((a, b) => b.score - a.score);
     const last = sc.length > 1 && sc[sc.length - 1].id === meId && sc[sc.length - 1].score < sc[0].score;

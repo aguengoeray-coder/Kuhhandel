@@ -34,6 +34,8 @@ export const SPECIAL_PREFIX = 'sp-';          // Spezialkarte im Stapel: 'sp-kuh
 export const SPECIAL_DELAY_MS = 3000;         // „Achtung“ vor dem Buzzer-Countdown
 export const SPECIAL_TICK_MS = 1000;          // eine Sekunde pro Zahl
 export const SPECIAL_FROM = 10;               // Countdown 10 … 1
+export const BATZEN_WAIT_MS = 5000;           // „Zeig Batzen!“: so lange kann jeder drücken
+export const BATZEN_SHOW_MS = 3000;           // so lange liegen die Stapel auf dem Tisch
 export const RPS = ['stein', 'schere', 'papier'];
 const BEATS = { stein: 'schere', schere: 'papier', papier: 'stein' };
 
@@ -355,7 +357,9 @@ export function drawForAuction(prev, playerId, now) {
   if (isSpecialCard(animal)) {
     const sp = specialAnimal(animal);
     const t = now != null ? now : 0;
-    state.special = { animal: sp, revealer: playerId, startsAt: t + SPECIAL_DELAY_MS, buzzes: {}, caps: {}, rps: null, winner: null };
+    // Erst „Zeig Batzen!“ (5 s, jeder darf drücken), dann „Achtung“, dann Countdown
+    state.special = { animal: sp, revealer: playerId, startsAt: t + BATZEN_WAIT_MS + SPECIAL_DELAY_MS, buzzes: {}, caps: {}, rps: null, winner: null,
+      batzen: { until: t + BATZEN_WAIT_MS, by: null, at: null, counts: null } };
     state.phase = 'special';
     state.lastEvent = { type: 'special_drawn', animal: sp, player: playerId };
     log(state, `${me.name} deckt die ${animalName(sp)}-Spezialkarte auf.`);
@@ -629,6 +633,30 @@ export function specialDecideAt(state) {
   const top = topBuzz(sp);
   if (!top) return sp.startsAt + SPECIAL_FROM * SPECIAL_TICK_MS;
   return sp.startsAt + (SPECIAL_FROM - top.number + 1) * SPECIAL_TICK_MS + GRACE_MS;
+}
+
+// „Zeig Batzen!“: 'ask' (Knopf), 'show' (Stapel liegen auf dem Tisch) oder null
+export function batzenStage(state, now) {
+  const b = state.special?.batzen;
+  if (!b) return null;
+  if (!b.by) return now < b.until ? 'ask' : null;
+  return now < b.at + BATZEN_SHOW_MS ? 'show' : null;
+}
+
+// Jemand ruft „Zeig Batzen!“: alle Geldstapel (Anzahl) werden kurz gezeigt, danach „Achtung“ und Countdown
+export function showBatzen(prev, playerId, now) {
+  const state = clone(prev);
+  if (state.phase !== 'special') fail('Gerade läuft keine Spezialkarte.');
+  player(state, playerId);
+  const sp = state.special;
+  if (batzenStage(state, now) !== 'ask') fail('Zu spät – es geht schon los.');
+  const counts = {};
+  for (const p of state.players) counts[p.id] = p.money.length;
+  sp.batzen = { ...sp.batzen, by: playerId, at: now, counts };
+  sp.startsAt = now + BATZEN_SHOW_MS + SPECIAL_DELAY_MS;
+  state.lastEvent = { type: 'batzen', player: playerId };
+  log(state, `${player(state, playerId).name}: „Zeig Batzen!“`);
+  return state;
 }
 
 // Stand der Spezialkarte: 'wait' (Achtung), 'countdown', 'rps' (Schnick-Schnack-Schnuck), 'decide'

@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.29.0
+
+- [x] Neue Reaktion „Ehrliches, männliches Angebot! 💪“ – große goldene Sprechblase mit eigenem Ton. Beim Kuhhandel als Schnellknopf „💪 Ehrlich & männlich!“ direkt am Duell.
+- [x] „Zeig Batzen!“: Bei jeder Spezialkarte gibt es 5 Sekunden lang einen großen Knopf – jeder darf drücken. Dann liegen alle Geldstapel verdeckt mit Anzahl auf dem Tisch (3 s), danach „Achtung“ und Countdown. Drückt keiner, geht es nach 5 s normal weiter.
+
 ## v0.28.0
 
 - [x] Aussehen: Vorschau-Tisch links bleibt stehen, beim Durchprobieren springt nichts mehr nach oben.

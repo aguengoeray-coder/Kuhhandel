@@ -72,7 +72,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   nochmal aufdecken (Stapel leer → Kuhhandel). Rattenhandel nur, wenn beide Ratten haben; umgekehrt: wer mehr bietet,
   wird sie los; Gleichstand → Herausforderer; 2 gegen 2 → um beide. Spielende erst, wenn einer alle Ratten hat; er
   wählt ein eigenes Quartett, das nicht zählt (weder Wert noch Anzahl).
-- **Spezialkarte** (Wert 250, nicht handelbar, kein Esel-Bonus): Nach 3 s „Achtung“ Countdown 10 → 1 (1 s pro Zahl) für alle
+- **Spezialkarte** (Wert 250, nicht handelbar, kein Esel-Bonus): Erst 5 s „Zeig Batzen!“ (jeder darf drücken → alle Geldstapel mit Anzahl 3 s auf dem Tisch), dann 3 s „Achtung“ Countdown 10 → 1 (1 s pro Zahl) für alle
   außer dem Aufdecker. Wer zuerst buzzert, bietet so viele verdeckte Karten wie die Zahl. Gleiche Zahl → Schnick-Schnack-Schnuck
   (jeder wählt selbst). Aufdecker entscheidet: kaufen (er zahlt dem Buzzer die Karten) oder verkaufen (Buzzer zahlt ihm).
   Der Zahler wählt die Karten selbst. Niemand buzzert → Aufdecker bekommt sie umsonst. Buzzer kann nicht zahlen → Karten offen,

@@ -4,7 +4,7 @@ import {
   createGame, drawForAuction, bid, closeAuction, pay, startTrade, acceptTrade, counterTrade,
   possibleTrades, scores, viewFor, currentPlayer, GameError, ANIMALS, passAuction,
   AUCTION_START_MS, AUCTION_BID_MS, REVEAL_MS, bestPay,
-  RAT, ratLay, ratTake, ratCurrent, buzz, rpsPick, specialDecide, specialStage, specialNumber,
+  RAT, ratLay, ratTake, ratCurrent, buzz, rpsPick, specialDecide, specialStage, specialNumber, showBatzen, batzenStage, BATZEN_WAIT_MS, BATZEN_SHOW_MS,
   chooseBlock, scoreFor, SPECIAL_DELAY_MS, moneyDeckFrom, awards,
 } from '../src/engine.js';
 
@@ -368,7 +368,7 @@ function specialGame() {
   assert.equal(g.phase, 'special');
   return g;
 }
-const at = (n) => SPECIAL_DELAY_MS + (10 - n) * 1000 + 100; // Zeitpunkt, an dem der Countdown n zeigt
+const at = (n) => BATZEN_WAIT_MS + SPECIAL_DELAY_MS + (10 - n) * 1000 + 100; // Zeitpunkt, an dem der Countdown n zeigt (ohne „Zeig Batzen!“)
 
 test('Spezialkarte: Countdown 10 → 1, wer zuerst buzzert bietet so viele Karten', () => {
   let g = specialGame();
@@ -547,4 +547,22 @@ test('Aufdecken: Countdown startet erst nach der Animation, vorher kein Gebot', 
   assert.throws(() => bid(g, 'b', 10, 100), GameError);
   g = bid(g, 'b', 10, REVEAL_MS);
   assert.equal(g.auction.high.amount, 10);
+});
+
+test('Zeig Batzen: jeder darf drücken, Stapel werden gezeigt, danach Achtung und Countdown', () => {
+  let g = specialGame();
+  assert.equal(batzenStage(g, 1000), 'ask');
+  g = showBatzen(g, 'c', 2000);                         // auch wer nicht aufgedeckt hat
+  assert.equal(batzenStage(g, 2500), 'show');
+  assert.equal(g.special.batzen.counts.b, g.players[1].money.length);
+  assert.throws(() => showBatzen(g, 'b', 2600), GameError); // nur einmal
+  assert.equal(specialStage(g, 2000 + BATZEN_SHOW_MS + 100), 'wait'); // Achtung
+  assert.equal(specialNumber(g, 2000 + BATZEN_SHOW_MS + SPECIAL_DELAY_MS + 100), 10);
+});
+
+test('Zeig Batzen: drückt keiner, geht es nach 5 s von selbst weiter', () => {
+  const g = specialGame();
+  assert.equal(batzenStage(g, BATZEN_WAIT_MS + 1), null);
+  assert.throws(() => showBatzen(g, 'b', BATZEN_WAIT_MS + 1), GameError);
+  assert.equal(specialNumber(g, BATZEN_WAIT_MS + SPECIAL_DELAY_MS + 100), 10);
 });
