@@ -1885,3 +1885,17 @@ html.bigtext .fansum { font-size: 17px; }
 /* v0.30.5: Geldschein in der Bildzeile */
 .evstrip .money { width: 24px; height: 34px; border-width: 2px; border-radius: 5px; flex-shrink: 0; }
 .evstrip .money .mv { font-size: 11px; }
+
+/* v0.31: Tiere der Mitspieler als kleine Karten statt Kreise */
+.prow .chips { gap: 6px; max-width: 206px; }
+.chip.card { position: relative; padding: 0; background: none; border-radius: 5px; }
+.chip.card .mcard { width: 21px; height: 29px; border-width: 1.5px; border-radius: 5px; }
+.chip.card em { position: absolute; right: -3px; bottom: -4px; min-width: 14px; text-align: center; background: var(--ink); color: #fff; font-size: 9.5px; line-height: 13px; border-radius: 999px; padding: 0 3px; box-shadow: 0 0 0 1.5px #fff; }
+.chip.card.done { outline: none; background: none; }
+.chip.card.done .mcard { box-shadow: 0 0 0 2px var(--gold); }
+.chip.card.done em { background: var(--gold); color: var(--ink); }
+.chip.card.rat { background: none; }
+.chip.card.sp .star { right: -5px; top: -6px; }
+.chip.card.tradechip { box-shadow: none; }
+.chip.card.tradechip .mcard { box-shadow: 0 0 0 2.5px var(--gold); animation: chipglow 1.6s ease-in-out infinite; }
+.stage .prow .chip.card { padding: 0; font-size: 10px; }

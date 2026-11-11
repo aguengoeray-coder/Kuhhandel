@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.31.0
+
+- [x] Tiere der Mitspieler rechts als kleine Karten statt Kreise (Anzahl als Plakette, Quartett mit goldenem Rand und ✓, Spezialkarte mit Stern). Bis zu 7 Sorten pro Spieler sichtbar statt 4; bei dir selbst 5 (deine Tiere liegen ja groß unten).
+- [x] Spielfeld bleibt gleich groß – alles passt in die bisherige Spalte (geprüft auf allen Handygrößen und am Laptop).
+
 ## v0.30.5
 
 - [x] Unten links steht nicht mehr doppelt „X ist dran …“ – wer dran ist, zeigen schon das Schild oben und die Sanduhr. Die Fläche bleibt frei, solange du nicht dran bist.
