@@ -2089,3 +2089,84 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .tbtn.sidebtn { width: auto; min-width: 150px; margin-top: 8px; }
 .aside.r { display: flex; flex-direction: column; align-items: center; }
 .dock .passbtn { margin-top: 14px; min-height: 34px; font-size: 13px; width: 70%; align-self: center; opacity: .92; }
+
+/* ===== v0.39: Spielgefühl ===== */
+/* Letzte 3 Sekunden der Versteigerung: Ring pulsiert */
+.aucard.low .ring { animation: ringpulse .5s ease-in-out infinite alternate; }
+@keyframes ringpulse { from { transform: scale(1); } to { transform: scale(1.04); } }
+/* Teure Karte: Aufdecken mit mehr Spannung (erst zittern, dann umdrehen, dann Glanz) */
+.revealcard.big .pcard { animation-name: revealbig; }
+@keyframes revealbig {
+  0% { transform: translate(0, 40px) scale(.55) rotateY(180deg); }
+  12% { transform: translate(-3px, 36px) scale(.6) rotateY(180deg); }
+  18% { transform: translate(3px, 36px) scale(.6) rotateY(180deg); }
+  24% { transform: translate(-3px, 36px) scale(.6) rotateY(180deg); }
+  48% { transform: scale(1.35) rotateY(90deg); }
+  70% { transform: scale(1.5) rotateY(0deg); }
+  100% { transform: scale(1.4); }
+}
+.revealcard.big::after { content: ""; position: absolute; inset: -30px; border-radius: 50%; background: radial-gradient(circle, rgba(255,211,78,.55), transparent 65%); opacity: 0; animation: bigglow 1.5s ease-out both; pointer-events: none; }
+.revealcard { position: relative; }
+@keyframes bigglow { 0%, 60% { opacity: 0; transform: scale(.6); } 75% { opacity: 1; } 100% { opacity: 0; transform: scale(1.2); } }
+/* Ratte huscht über den Tisch */
+.ratrun { position: absolute; left: -70px; top: 250px; width: 56px; height: 56px; z-index: 31; pointer-events: none; animation: ratrun 1.8s cubic-bezier(.4, .1, .6, .9) both; }
+.ratrun .art { width: 100%; height: 100%; filter: drop-shadow(0 4px 4px rgba(0,0,0,.4)); }
+@keyframes ratrun { 0% { transform: translate(0, 0) scaleX(-1); } 25% { transform: translate(240px, -18px) scaleX(-1) rotate(-6deg); } 50% { transform: translate(470px, 6px) scaleX(-1) rotate(4deg); } 100% { transform: translate(990px, -12px) scaleX(-1); } }
+/* Esel-Bonus: Scheine regnen */
+.mflyc.rain { width: 18px; height: 26px; }
+/* Letzte Karte / Stapel leer */
+.lastcard { position: absolute; left: var(--cx); top: 150px; transform: translateX(-50%); z-index: 32; background: var(--red); color: #fff; border: 3px solid #fff; border-radius: 999px; padding: 6px 20px; font-family: var(--font-head); font-weight: 700; font-size: 19px; white-space: nowrap; box-shadow: 0 8px 20px rgba(0,0,0,.4); pointer-events: none; animation: lastcard 2.8s ease both; }
+@keyframes lastcard { 0% { opacity: 0; transform: translateX(-50%) scale(.6); } 10% { opacity: 1; transform: translateX(-50%) scale(1.08); } 16%, 85% { opacity: 1; transform: translateX(-50%); } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
+/* Du führst: Geld-Fächer schimmert golden */
+.fan-wrap.leading .money.fan { box-shadow: -3px 3px 8px rgba(0,0,0,.25), 0 0 0 2px rgba(255,211,78,.85); }
+.fanlead { align-self: center; margin: 0 0 26px 10px; background: var(--gold); color: var(--ink); border: 2px solid var(--ink); border-radius: 999px; padding: 1px 9px; font-weight: 800; font-size: 12px; white-space: nowrap; animation: pulse 1.4s ease-in-out infinite; }
+/* Großes Gebot: Wow */
+.wowpop { position: absolute; left: 640px; top: 128px; z-index: 32; background: #fff; color: var(--red); border: 3px solid var(--red); border-radius: 14px; padding: 2px 12px; font-family: var(--font-head); font-weight: 700; font-size: 20px; transform: rotate(8deg); pointer-events: none; animation: wowpop 1.5s var(--e-pop) both; }
+@keyframes wowpop { 0% { opacity: 0; transform: rotate(8deg) scale(.3); } 20% { opacity: 1; transform: rotate(8deg) scale(1.15); } 30%, 80% { transform: rotate(8deg) scale(1); opacity: 1; } 100% { opacity: 0; transform: rotate(8deg) translateY(-14px); } }
+/* Reaktion fliegt vom Absender zum Empfänger */
+.rfly { position: absolute; left: 0; top: 0; width: 34px; height: 34px; margin: -17px 0 0 -17px; z-index: 33; display: flex; align-items: center; justify-content: center; font-size: 22px; background: #fff; border: 2px solid var(--ink); border-radius: 50%; pointer-events: none; animation: rfly .75s var(--e-fly) both; }
+@keyframes rfly { 0% { transform: translate(0, 0) scale(.5); opacity: 0; } 15% { opacity: 1; transform: scale(1.1); } 85% { opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(.7); opacity: 0; } }
+/* Fast-Quartett der Gegner (3 von 4) glimmt */
+.chip.near3 { box-shadow: 0 0 0 2px rgba(255,211,78,.7), 0 0 8px rgba(255,211,78,.7); }
+/* Kuhhandel aufdecken: Scheine drehen sich nacheinander um, dann steht der Gewinner fest */
+.ec-reveal { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ecr-side { display: flex; align-items: center; gap: 5px; padding: 2px 6px 2px 2px; border-radius: 12px; }
+.ecr-cards { display: flex; gap: 2px; }
+.ecr-cards em { font-style: normal; color: #7A7468; font-weight: 700; }
+.ecr-c { position: relative; width: 22px; height: 30px; border-radius: 4px; border: 1.5px solid var(--ink); background: var(--m); display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-weight: 700; font-size: 11px; animation: ecrflip .3s ease both; animation-delay: calc(var(--el, 0ms) + 250ms + var(--k) * 160ms); }
+.ecr-c::after { content: ""; position: absolute; inset: -1px; border-radius: 4px; background: var(--back-pat), var(--back); animation: ecrback .3s steps(1) both; animation-delay: calc(var(--el, 0ms) + 250ms + var(--k) * 160ms + 150ms); }
+.ecr-c.back::after { animation: none; }
+.ecr-c.back { animation: none; }
+@keyframes ecrflip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+@keyframes ecrback { from { opacity: 1; } to { opacity: 0; } }
+.ecr-sum { font-family: var(--font-head); font-size: 16px; opacity: 0; animation: ecrin .3s ease both; animation-delay: calc(var(--el, 0ms) + 1000ms); }
+.ecr-side.win { animation: ecrwin .4s ease both; animation-delay: calc(var(--el, 0ms) + 1100ms); }
+@keyframes ecrwin { to { background: #CFEBD8; box-shadow: 0 0 0 2px #2E7D4F; } }
+@keyframes ecrin { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+.evcard.reveal .ec-title, .evcard.reveal .ecr-after { opacity: 0; animation: ecrin .35s var(--e-pop) both; animation-delay: calc(var(--el, 0ms) + 1150ms); }
+/* Bedenkzeit im Kuhhandel */
+.ttimer { margin-top: 4px; background: rgba(0,0,0,.35); color: #fff; border-radius: 999px; padding: 1px 9px; font-weight: 800; font-size: 13px; white-space: nowrap; }
+.ttimer.low { background: var(--red); animation: pulse .8s ease-in-out infinite; }
+.ttimer.out { background: #fff; color: var(--red); border: 2px solid var(--red); }
+/* Zwischenstand */
+.standings { position: absolute; left: var(--cx); top: 70px; transform: translateX(-50%); z-index: 36; width: 380px; background: #fff; color: var(--ink); border: 4px solid var(--frame, #E2B33C); border-radius: 18px; padding: 10px 14px; box-shadow: 0 14px 30px rgba(0,0,0,.45); cursor: pointer; animation: evin .28s var(--e-pop) both; }
+.standings h3 { margin: 0 0 6px; font-family: var(--font-head); font-size: 18px; display: flex; flex-direction: column; }
+.standings h3 small { font-family: var(--font-body); font-size: 11px; color: #7A7468; font-weight: 700; }
+.strow { display: grid; grid-template-columns: 22px 30px 1fr auto 52px; align-items: center; gap: 6px; padding: 4px 0; border-top: 1px solid #EEE7D8; }
+.strow i { font-style: normal; font-weight: 800; color: #7A7468; }
+.strow .avatar { width: 28px; height: 28px; border-width: 2px; font-size: 11px; }
+.strow span { font-weight: 800; font-size: 14px; }
+.strow .stq { display: flex; gap: 2px; }
+.strow .stq .ci { width: 20px; height: 20px; }
+.strow b { font-family: var(--font-head); font-size: 18px; text-align: right; }
+.sthint { display: block; text-align: center; color: #7A7468; font-size: 11px; margin-top: 4px; }
+/* Warteraum: Schalter für Hausregel-Optionen */
+.rs-extra { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.rs-chip { border: 2px solid var(--ink); background: #fff; color: var(--ink); border-radius: 999px; padding: 2px 10px; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.rs-chip.on { background: var(--gold); }
+@media (prefers-reduced-motion: reduce) { .ratrun, .lastcard, .wowpop, .rfly, .ecr-c, .ecr-c::after, .ecr-sum, .ecr-side.win, .evcard.reveal .ec-title, .evcard.reveal .ecr-after, .aucard.low .ring, .fanlead { animation: none !important; opacity: 1 !important; } .ratrun, .rfly { display: none; } }
+.ec-reveal { flex-direction: column; align-items: flex-start; gap: 2px; }
+.ec-reveal .ec-vs { padding-left: 34px; font-size: 11px; line-height: 1; }
+.wowpop { left: 560px; top: 236px; }
+/* Ansage erst, wenn die Karte umgedreht ist – und unten, damit sie die Versteigerung nicht verdeckt */
+.lastcard { top: 286px; animation-delay: 1.4s; font-size: 17px; }

@@ -7,10 +7,11 @@ import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
+import { haptic } from './haptics.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.38.0';
+export const APP_VERSION = '0.39.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -370,6 +371,10 @@ function renderRoom() {
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
     </div>
     ${money ? `<div class="msteps">${steppers}</div>` : ''}
+    <div class="rs-extra">
+      ${[['tradeTimer', '⏱ Bedenkzeit im Kuhhandel (20 s)'], ['standings', '📊 Zwischenstand im Menü']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+        return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
+    </div>
   </div>`;
   const hint = outdated.length
     ? `${outdated.map((p) => esc(p.name)).join(', ')} ${outdated.length > 1 ? 'haben' : 'hat'} eine alte Version – bitte App neu laden.`
@@ -402,6 +407,7 @@ function renderRoom() {
   }));
   document.getElementById('start')?.addEventListener('click', onStart);
   document.getElementById('moneyToggle')?.addEventListener('click', () => saveSettings({ money: money ? null : { ...DEFAULT_MONEY } }));
+  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true) }); }));
   app.querySelectorAll('[data-money]').forEach((b) => b.addEventListener('click', () => {
     const v = b.dataset.money;
     const next = { ...money, [v]: Math.max(0, (money[v] || 0) + Number(b.dataset.d)) };
@@ -414,8 +420,9 @@ const MONEY_CARD_COLORS = { 0: '#ECE7DB', 10: '#F6D98B', 20: '#F2B880', 50: '#A8
 const DEFAULT_MONEY = { 0: 3, 10: 2, 50: 2, 100: 1, 200: 1, 500: 1 };
 
 // Einstellungen im Warteraum speichern (nur Gastgeber). Liegen bis zum Start in games.state.settings.
-async function saveSettings(settings) {
+async function saveSettings(patch) {
   const g = ui.game;
+  const settings = { ...(g.state?.settings || {}), ...patch };
   const count = settings.money ? Object.values(settings.money).reduce((a, b) => a + b, 0) : 0;
   if (count > MAX_MONEY_CARDS) return;
   ui.game = { ...g, state: { ...(g.state || {}), settings } };
@@ -668,7 +675,7 @@ let lastNeed = '';
 const baseTitle = document.title;
 
 function beep() {
-  if (vibeOn()) { try { navigator.vibrate?.([120, 70, 120]); } catch { /* egal */ } }
+  haptic('turn', vibeOn());
   if (!soundOn()) return;
   const ac = audio();
   if (!ac) return;
@@ -711,6 +718,7 @@ function checkSignal() {
 }
 
 // ---------- Countdown der Versteigerung ticken lassen ----------
+let lastAucTick = '';
 
 setInterval(() => {
   if (ui.screen !== 'playing') return;
@@ -733,6 +741,9 @@ setInterval(() => {
     const sec = el.querySelector('.ringsec');
     if (sec) sec.textContent = String(secs);
     el.classList.toggle('low', secs <= 3);
+    // letzte 3 Sekunden: Tick-Ton, damit Last-Second-Gebote spannend werden
+    const tk = `${ends}|${secs}`;
+    if (secs <= 3 && lastAucTick !== tk) { lastAucTick = tk; if (soundOn()) playSound('tick'); }
     return;
   }
   const bar = el.querySelector('i');
@@ -1008,7 +1019,7 @@ async function joinByCode(code) {
 function activeReactions() {
   const t = Date.now();
   const out = {};
-  for (const [seat, r] of reactions) if (r.until > t) out[seat] = { text: r.text, from: r.from };
+  for (const [seat, r] of reactions) if (r.until > t) out[seat] = { text: r.text, from: r.from, until: r.until };
   return out;
 }
 // Reaktion erscheint beim Empfänger (to) – mit Absender – oder beim Absender selbst (an alle)
@@ -1311,11 +1322,20 @@ async function openStart() {
 
 // ---------- Revanche ----------
 
+// Revanche: wer im letzten Spiel die wenigsten Punkte hatte, fängt an
+function loserStarts(state, old) {
+  try {
+    const sc = scores(old).sort((a, b) => a.score - b.score);
+    const i = state.players.findIndex((p) => p.id === sc[0]?.id);
+    if (i >= 0) state.turn = i;
+  } catch { /* dann eben wie immer */ }
+}
 async function onRematch() {
   const g = ui.game;
   if (g.local) {
     const players = g.state.players.map((p) => ({ id: p.id, name: p.name }));
     const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: g.state.settings || null });
+    loserStarts(state, g.state);
     Object.keys(gameLocal).forEach((k) => delete gameLocal[k]);
     ui.game = { ...g, version: 0, status: 'playing', state };
     return render();
@@ -1342,6 +1362,7 @@ async function onRematch() {
   }
   const players = g.players.map((p) => ({ id: p.id, name: p.name }));
   const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: g.state.settings || null });
+  loserStarts(state, g.state);
   state.minVersion = APP_VERSION;
   const { data, error } = await sb.from('games')
     .insert({ id: newId, code: randomCode(), host: me.id, status: 'playing', players, state, version: 1 })

@@ -1,5 +1,23 @@
 # Änderungsprotokoll
 
+## v0.39.0 – Spielgefühl
+
+- [x] **Kuhhandel aufdecken wie am Tisch:** Im Ergebnis-Fenster drehen sich beide Stapel Schein für Schein um, erst dann steht der Gewinner fest (Unbeteiligte sehen nur die Rückseiten).
+- [x] Letzte 3 Sekunden der Versteigerung: Tick-Ton und pulsierender Ring.
+- [x] „⚡ Letzte Karte im Stapel!“ und „🐮 Stapel leer – ab jetzt nur noch Kuhhandel!“ werden angesagt.
+- [x] Dein Gebot führt: Geld-Fächer schimmert golden, „🔨 Du führst“.
+- [x] Esel-Bonus: Es regnen Scheine auf alle Plätze, mit Klingeln.
+- [x] Tiergeräusche beim Aufdecken (Kuh, Esel, Hahn, Ratte) – Platzhalter, eigene Aufnahmen können in js/voices.js eingetragen werden.
+- [x] Teure Karten (Schwein, Kuh, Pferd): Trommelwirbel, Karte zittert erst und leuchtet nach dem Umdrehen.
+- [x] Ratte aufgedeckt: Eine kleine Ratte huscht über den Tisch.
+- [x] Großes Gebot (+100 oder mehr auf einmal): „Wow!“ am Gebots-Schild.
+- [x] Reaktionen fliegen sichtbar vom Absender zum Empfänger.
+- [x] Gegner mit 3 von 4 Karten: Das Kärtchen am Platz glimmt.
+- [x] Neue Schalter im Warteraum (Gastgeber, standardmäßig aus): **Bedenkzeit im Kuhhandel** (20 s Uhr, keine automatische Entscheidung) und **Zwischenstand im Menü** (nur offene Quartette, Geld zählt nicht).
+- [x] Neues Aussehen „Winter“ mit Schnee-Muster.
+- [x] Revanche: Wer zuletzt war, fängt an.
+- [x] Spürbarer: eigene Vibrations-Muster (überboten, Zuschlag, Herausforderung, Quartett, kann nicht zahlen, du bist dran); auf dem iPhone ein kurzer Impuls über einen Trick (iOS 18+, noch auf echten Geräten zu testen).
+
 ## v0.38.0 – Knöpfe dort, worum es geht
 
 - [x] Versteigerung (Auktionator nach Ablauf): „Zuschlag an Nico · 130“ sitzt beim Gebots-Schild rechts neben der Karte, „Selbst kaufen“ bleibt unten links – weit auseinander.
