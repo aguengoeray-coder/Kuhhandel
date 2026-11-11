@@ -1935,3 +1935,87 @@ body:has(.stage) {
    statt overflow:hidden wird auf die Außenkante des Tisches zugeschnitten – alle Positionen bleiben gleich. */
 .stage .gtable { overflow: visible; clip-path: inset(0 round 24px); }
 .stage .fan-wrap { bottom: -8px; }
+
+/* ===== v0.33 Sitzordnung: Mitspieler links · oben · rechts, du unten ===== */
+/* Hintergrund ohne Seitenleiste */
+body:has(.stage) { background: var(--tbl-pat), radial-gradient(ellipse at 50% 55%, var(--tbl-1) 0%, var(--tbl-2) 58%, var(--tbl-3) 100%); background-attachment: fixed; }
+/* Tisch: volle Breite, oben Platz für den oberen Sitz; Mitte kompakter */
+.stage .gtable { left: 8px; width: 828px; top: 6px; height: 378px; border-top-width: 0; padding-top: 62px; gap: 2px; }
+.stage .gtable .tlog { min-height: 0; }
+.stage .tcenter:has(.deck-wrap) { justify-content: flex-start; flex: 0 1 auto; gap: 6px; }
+.stage .deck-wrap { position: relative; }
+.stage .deck-count { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); white-space: nowrap; background: rgba(0,0,0,.25); padding: 2px 8px; border-radius: 999px; }
+.stage .auslage, .stage .fan-wrap { right: 150px; }
+.stage .hand-row { right: 150px; }
+/* Plätze */
+.stage .gright { left: 0; right: 0; top: 0; bottom: 0; width: auto; display: block; pointer-events: none; z-index: 12; }
+.stage .gright > .prow { position: absolute; pointer-events: auto; gap: 5px; padding: 6px 8px 8px; border-radius: 16px; background: rgba(0,0,0,.12); order: 0; transition: background .4s, box-shadow .4s; }
+.stage .gright > .prow.turn { background: rgba(255,211,78,.16); box-shadow: 0 0 0 2px rgba(255,211,78,.55); }
+.stage .prow.seat-l { left: 6px; top: 60px; width: 132px; flex-direction: column; align-items: flex-start; }
+.stage .prow.seat-r { right: 6px; top: 60px; width: 132px; flex-direction: column; align-items: flex-end; }
+.stage .prow.seat-t { left: 50%; top: 3px; transform: translateX(-50%); flex-direction: row; align-items: center; }
+.stage .prow.seat-tl { left: 112px; top: 3px; flex-direction: row; align-items: center; }
+.stage .prow.seat-tr { right: 6px; top: 3px; flex-direction: row-reverse; align-items: center; }
+.stage .gright .prow .chips { max-width: 118px; flex-wrap: wrap; row-gap: 7px; justify-content: flex-start; }
+.stage .gright .prow.seat-r .chips, .stage .gright .prow.seat-tr .chips { justify-content: flex-end; }
+.stage .gright .prow.seat-t .chips, .stage .gright .prow.seat-tl .chips, .stage .gright .prow.seat-tr .chips { max-width: 160px; }
+.stage .prow .ribbon-s { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Menü + 💬 oben links */
+.stage .lround .chatbtn { order: 2; font-size: 17px; }
+/* Sprechblasen: unter dem Platz; an dich: über deinem Geld */
+.stage .prow .rbubble { right: auto; left: 50%; top: calc(100% + 8px); margin-left: -60px; transform-origin: 50% 0; }
+.stage .prow.seat-r .rbubble, .stage .prow.seat-tr .rbubble { left: auto; right: 6px; margin-left: 0; transform-origin: 90% 0; }
+.stage .prow.seat-l .rbubble, .stage .prow.seat-tl .rbubble { left: 6px; margin-left: 0; transform-origin: 10% 0; }
+.stage .prow .rbubble::after { right: auto; left: 24px; top: -10px; bottom: auto; border-top: none; border-bottom: 9px solid var(--ink); border-left: 7px solid transparent; border-right: 7px solid transparent; }
+.stage .prow.seat-r .rbubble::after, .stage .prow.seat-tr .rbubble::after { left: auto; right: 24px; }
+.stage .mebubble { position: absolute; left: 600px; top: 262px; pointer-events: none; }
+.stage .mebubble .rbubble { position: relative; right: auto; top: auto; left: 0; transform-origin: 20% 100%; }
+.stage .mebubble .rbubble::after { left: 20px; right: auto; }
+/* Rattenrunde: gelegte Karten liegen vor dem Platz */
+.ratpile { position: absolute; display: flex; align-items: center; z-index: 3; pointer-events: none; }
+.ratpile i { width: 16px; height: 23px; margin-left: -10px; border-radius: 3px; border: 1.5px solid #fff; background: var(--back-pat), var(--back); box-shadow: 0 2px 4px rgba(0,0,0,.35); }
+.ratpile i:first-child { margin-left: 0; }
+.ratpile b { margin-left: 4px; background: var(--ink); color: #fff; border-radius: 999px; font-size: 10px; padding: 0 5px; line-height: 15px; }
+.prow.seat-l .ratpile { left: calc(100% + 8px); top: 18px; }
+.prow.seat-r .ratpile { right: calc(100% + 8px); top: 18px; flex-direction: row-reverse; }
+.prow.seat-r .ratpile b { margin: 0 4px 0 0; }
+.prow.seat-t .ratpile, .prow.seat-tl .ratpile, .prow.seat-tr .ratpile { left: 50%; top: calc(100% + 6px); transform: translateX(-50%); }
+/* Effekte: Tischmitte jetzt bei x = 422 */
+.stage { --cx: 422px; }
+.soldsign, .logpop, .donkeypop, .mflyc, .moneyreveal, .rpsshow.v2, .outbid, .resultpop, .cantpop { left: var(--cx); }
+.qpop { left: calc(var(--cx) - 17px); }
+.fly { left: calc(var(--cx) - 42px); }
+.resultpop { top: 92px; }
+.cantpop { top: 70px; }
+.rpsshow.v2 { top: 76px; }
+.outbid { top: 70px; }
+/* Geld- und Kartenflüge: Ziel wird gemessen (--tx/--ty) */
+@keyframes mfly { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 10% { opacity: 1; } 50% { transform: translate(calc(var(--tx, 0px) / 2), calc(var(--ty, 0px) / 2 - 36px)) rotate(-18deg); } 90% { opacity: 1; } 100% { transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(0); opacity: 0; } }
+@keyframes mflyc { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(15deg); } }
+.mfly { left: 0; top: 0; }
+/* Debug-Knöpfe: unten rechts (oben rechts sitzt jetzt ein Mitspieler) */
+.dchips { top: auto; bottom: 6px; right: 10px; }
+.stage .prow.seat-t .ratpile, .stage .prow.seat-tl .ratpile { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+.stage .prow.seat-tr .ratpile { left: auto; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); flex-direction: row-reverse; }
+/* „Achtung … 10“ ist eine Zahl, kein Warte-Fenster (die allgemeine .wait-Regel legte sie über den ganzen Tisch) */
+.bignum.wait { position: static; inset: auto; padding: 0; }
+/* Kuhhandel: Tierstreifen + „Ehrlich & männlich“ in die freie Ecke unten rechts */
+.stage .gtable .tstriprow { position: absolute; right: 12px; bottom: 12px; margin: 0; flex-direction: column; align-items: flex-end; gap: 6px; }
+/* Der Zug wandert: goldener Schein von Platz zu Platz */
+.turnhalo { position: absolute; left: 0; top: 0; width: 54px; height: 54px; border-radius: 50%; z-index: 11; pointer-events: none; box-shadow: 0 0 0 4px var(--gold), 0 0 24px 8px rgba(255,211,78,.75); animation: halo .85s cubic-bezier(.45, 0, .3, 1) both; }
+@keyframes halo { 0% { transform: translate(0, 0) scale(.9); opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(1); } 100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(1.25); } }
+@media (prefers-reduced-motion: reduce) { .turnhalo { display: none; } }
+/* Gebote springen am Platz des Bieters auf */
+.stage .prow .coinpop { right: auto; left: 46px; top: -12px; }
+.stage .prow.seat-r .coinpop, .stage .prow.seat-tr .coinpop { left: auto; right: 46px; }
+.stage .prow .coinpop.bidpop { font-size: 19px; padding: 2px 13px; }
+.stage .gtable .hand-row { right: 200px; }
+/* Einmaliger Hinweis zur Sitzordnung */
+.seattip { position: absolute; left: var(--cx); top: 150px; transform: translateX(-50%); z-index: 34; width: 360px; background: #2B2F36; color: #fff; border-radius: 16px; padding: 10px 14px; font-size: 13px; line-height: 1.35; text-align: center; box-shadow: 0 10px 24px rgba(0,0,0,.4); cursor: pointer; animation: seattip 8s ease both; animation-delay: var(--el, 0ms); }
+.seattip b { color: var(--gold); font-family: var(--font-head); }
+.seattip span { display: block; margin-top: 4px; font-size: 11.5px; color: rgba(255,255,255,.75); }
+@keyframes seattip { 0% { opacity: 0; transform: translate(-50%, 8px); } 5%, 92% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+/* Spielende: Wertung mittig über dem Tisch (Plätze links/rechts bleiben sichtbar) */
+.stage .overlay.endtable { left: 132px; width: 580px; z-index: 13; }
+/* Mitspieler links: Gebot/Geldschein-Plakette nicht über den 💬-Knopf */
+.stage .prow.seat-l .coinpop { left: 88px; }

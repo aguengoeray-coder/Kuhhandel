@@ -1,5 +1,18 @@
 # Änderungsprotokoll
 
+## v0.33.0 – Sitzordnung wie am echten Tisch
+
+- [x] Mitspieler sitzen jetzt um den Tisch: links, oben, rechts (bei 3 Spielern oben links und oben rechts), du unten. Gespielt wird im Uhrzeigersinn – links von dir ist als Nächstes dran.
+- [x] Der Tisch nutzt die volle Breite; dein eigenes Profil ist weg (dein Geld und deine Tiere liegen ja vor dir).
+- [x] Der Zug wandert sichtbar: ein goldener Schein gleitet vom alten zum neuen Platz; wer dran ist, dessen Platz leuchtet.
+- [x] Gebote springen am Platz des Bieters auf, wer gepasst hat, wird grau.
+- [x] Rattenrunde: Die gelegten Karten liegen sichtbar vor jedem Platz; wer die Ratte nimmt, zu dem fliegen alle Stapel.
+- [x] Gekaufte Tiere, Geld und Esel-Bonus fliegen genau zum Platz (Ziel wird gemessen, nicht mehr fest eingestellt).
+- [x] 💬-Knopf neben dem Menü für „Reaktion an alle“; Sprechblasen an dich erscheinen über deinem Geld, Sprechblasen an andere unter ihrem Platz.
+- [x] „Erst ab N“ steht beim Buzzer auch schon während „Gleich …“; nach „keine N Karten“ bei der Spezialkarte kurze Zeile statt großer Scheinreihe (die Scheine zeigt das große Fenster).
+- [x] Debug-Knöpfe unten rechts. Einmaliger Hinweis zur neuen Sitzordnung beim ersten Spiel.
+- [x] Fehler behoben: „Achtung … 10“ lag als unsichtbare Fläche über dem ganzen Tisch.
+
 ## v0.32.2
 
 - [x] Dein Geld in der Hand ist weiter sichtbar (rund 90 % jeder Karte statt gut 60 %). Sonst hat sich nichts verschoben – per Bildvergleich in 36 Spielsituationen geprüft: nur der Geldfächer ist anders.
