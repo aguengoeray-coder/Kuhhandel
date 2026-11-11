@@ -1856,11 +1856,3 @@ html.bigtext .fansum { font-size: 17px; }
 /* v0.30.1: Unehrlich-Spruch (rot) + lange Sprüche im Reaktionsfenster über die ganze Breite */
 .rbubble.unehrlich { background: #C8323C; color: #fff; border-color: #6E1218; }
 .reactpick > button.long { grid-column: 1 / -1; line-height: 1.15; padding: 3px 10px; }
-
-/* v0.30.2: Verschnaufpause nach Ergebnissen, Effekte laufen zu Ende */
-.fxk { display: contents; }
-.fly { animation-duration: 1.2s; }
-.pill.calm { position: relative; overflow: hidden; }
-.pill.calm[disabled] { opacity: .75; }
-.pill.calm::before { content: ""; position: absolute; left: 0; bottom: 0; height: 6px; width: 100%; background: var(--gold); transform-origin: left; animation: calmbar 2.5s linear both; animation-delay: var(--el, 0ms); }
-@keyframes calmbar { from { transform: scaleX(0); } to { transform: scaleX(1); } }

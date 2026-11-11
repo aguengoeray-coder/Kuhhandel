@@ -1,7 +1,7 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
 import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS } from '../src/engine.js';
-import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_MS, CALM_TYPES } from './game.js';
+import { renderGame, SEAT_COLORS, fitStage, miniCard } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.30.2';
+export const APP_VERSION = '0.30.1';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -560,13 +560,6 @@ function canTakeover(seat) {
   if (DEMO && params.get('takeover')) return seat === params.get('takeover');
   return !!(online && offlineSince[seat] && Date.now() - offlineSince[seat] >= TAKEOVER_AFTER_MS);
 }
-// Test-Spieler halten die Verschnaufpause nach einem Ergebnis ein (wie echte Spieler)
-let calmLog = -1;
-let calmAt = 0;
-function botCalm(s) {
-  if (s.log.length !== calmLog) { calmLog = s.log.length; calmAt = Date.now(); }
-  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < CALM_MS + 300;
-}
 // Wer lässt die Test-Spieler laufen? Der erste Spieler am Tisch, der online ist und selbst spielt.
 function botRunner() {
   const s = ui.game.state;
@@ -577,7 +570,7 @@ setInterval(() => {
   if (DEMO || ui.screen !== 'playing' || !ui.game || ui.game.local || busy) return;
   const s = ui.game.state;
   if (!s?.autoplay?.length || s.phase === 'ended' || tooOld()) return;
-  if (botRunner() !== seatIn(ui.game) || botCalm(s)) return;
+  if (botRunner() !== seatIn(ui.game)) return;
   act((st) => botStep(st, st.autoplay || [], now()), { silent: true }).catch((e) => logError(`Test-Spieler: ${e.message}`));
 }, 1500);
 
@@ -691,7 +684,7 @@ function applyLocal(next) {
 setInterval(() => {
   if (!DEBUG || !dbg.bots || ui.screen !== 'playing' || !ui.game?.local) return;
   const s = ui.game.state;
-  if (s.phase === 'ended' || botCalm(s)) return;
+  if (s.phase === 'ended') return;
   const bots = s.players.map((p) => p.id).filter((id) => id !== 'me');
   try {
     const next = botStep(s, bots, now());
