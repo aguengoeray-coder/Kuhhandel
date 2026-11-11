@@ -1899,3 +1899,23 @@ html.bigtext .fansum { font-size: 17px; }
 .chip.card.tradechip { box-shadow: none; }
 .chip.card.tradechip .mcard { box-shadow: 0 0 0 2.5px var(--gold); animation: chipglow 1.6s ease-in-out infinite; }
 .stage .prow .chip.card { padding: 0; font-size: 10px; }
+
+/* v0.32: deutlichere Texte – lange Bildzeilen und Schilder dürfen umbrechen */
+.evstrip { flex-wrap: wrap; justify-content: center; row-gap: 2px; border-radius: 18px; max-width: 580px; }
+.soldsign { white-space: normal; max-width: 560px; text-align: center; line-height: 1.15; }
+
+/* v0.32 Variante C: ein durchgehendes Spielfeld, Mitspieler auf einer dezent abgedunkelten Leiste rechts.
+   Der Tisch behält Größe und Rand (nur unsichtbar) – so bleibt jede Position im Spiel genau gleich. */
+.stage { background: var(--tbl-pat), radial-gradient(ellipse at 38% 42%, var(--tbl-1) 0%, var(--tbl-2) 58%, var(--tbl-3) 100%); }
+.stage .gtable { background: none; border-color: transparent; box-shadow: none; }
+.stage::after { content: ""; position: absolute; left: 628px; right: 0; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,.2) 16px); border-left: 1.5px solid rgba(255,255,255,.08); z-index: 1; pointer-events: none; }
+body:has(.stage) { background: var(--tbl-pat), var(--tbl-3); }
+/* Vorschau unter „Aussehen“ wie im Spiel: ein Spielfeld, Leiste rechts */
+.tprev { background: var(--tbl-pat), radial-gradient(ellipse at 38% 42%, var(--tbl-1) 0%, var(--tbl-2) 58%, var(--tbl-3) 100%); overflow: hidden; }
+.tprev::after { content: ""; position: absolute; top: 0; bottom: 0; right: 0; width: 64px; background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,.2) 10px); border-left: 1px solid rgba(255,255,255,.08); }
+.tprev .tprev-table { background: none; border-color: transparent; box-shadow: none; margin-right: 52px; width: auto; }
+.tpv-player { z-index: 2; }
+.tpp i { left: auto; right: 0; top: 0; bottom: 0; width: 20px; border: none; border-radius: 0; background: rgba(0,0,0,.22); }
+.tpp b { left: 22px; }
+.tpp s { position: absolute; left: 4px; bottom: 4px; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #fff; }
+.th3note { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: 6px; }
