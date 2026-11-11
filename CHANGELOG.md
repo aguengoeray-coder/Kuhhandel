@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.37.0 – Kuhhandel deutlicher und schneller
+
+- [x] Kuhhandel: Das umkämpfte Tier steht groß in der Mitte zwischen beiden Seiten („um 2“, bei Ratten „2× loswerden“) – für Herausforderer, Gegner und Zuschauer gleich. Das gebotene Geld steht groß da („3 Karten · verdeckt geboten“).
+- [x] Schneller: Kuhhandel-Ergebnis 4 s statt 6 s; wenn der Stapel leer ist (nur noch Kuhhandel) nur 3 s – Sperre entsprechend kürzer.
+- [x] Eigenes Tier-Set antippen, wenn du dran bist: Kuhhandel um dieses Tier öffnet sich direkt; handelbare Sets leuchten. Geht keiner: „Keiner sonst hat Esel“.
+- [x] Im Spiel lässt sich kein Text mehr markieren (kein „Kopieren/Nachschlagen“-Menü beim langen Drücken).
+
 ## v0.36.0 – Börsen-Look, Börsenbericht, Rattenrunde im Ergebnis-Fenster
 
 - [x] Rattenrunde kommt ins Ergebnis-Fenster („Lea nimmt die Ratte · + 3 Karten“); die gelegten Scheine fliegen beim Schließen zum Nehmer, Aufdecken ist so lange gesperrt.

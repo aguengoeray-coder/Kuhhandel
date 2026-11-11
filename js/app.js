@@ -10,7 +10,7 @@ import { art } from './animals.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.36.0';
+export const APP_VERSION = '0.37.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -639,7 +639,7 @@ let calmLog = -1;
 let calmAt = 0;
 function botCalm(s) {
   if (s.log.length !== calmLog) { calmLog = s.log.length; calmAt = Date.now(); }
-  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < calmFor(s.lastEvent.type) + 300;
+  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < calmFor(s.lastEvent.type, s.deck.length) + 300;
 }
 // Wer lässt die Test-Spieler laufen? Der erste Spieler am Tisch, der online ist und selbst spielt.
 function botRunner() {
