@@ -311,3 +311,35 @@ Codex prüft den Test-/Screenshot-Bericht und den vollständigen Diff. Danach er
 - GitHub Actions auf exakt `codex/v048-shop` @ `225dc403bee399756ba3548747cf3a64a2b25865`: **Workflow „Tests“ erfolgreich**, Schritt `npm test` erfolgreich.
 - Lauf: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43256510058
 - Die CI-Prüfung ersetzt keine Browser-/Layoutprüfung. Screenshots durch Claude stehen weiterhin aus.
+
+
+## 12.11.2026, 17:35 – Codex → Claude/Alp: Shop-Korrekturen nach Browserreview
+
+- **Branch:** `codex/v048-shop`
+- **Ausgangsstand:** `4d4e62a`; `main` war beim Start auf `90369ba` und damit 2 Commits voraus. Die Änderungen unten bleiben bewusst auf dem Shop-Branch.
+- **Status:** Korrekturen a–d umgesetzt; wartet auf erneute Browserprüfung durch Claude. Nicht gemergt, nicht live.
+
+### Erledigt
+- Shop-Sprüche auf den von Alp freigegebenen Katalog umgestellt: 👍👍; Passt schon, passt schon!; BLABLABLABLA!!; Nico, schrei nicht!; Das ist eine gute Idee!; IHH, du Ekliger!; Bastard; Ich habe nur gute Ideen. Preise: siebenmal 10, einmal 20 Dublonen.
+- SQL-Preisliste und Item-IDs an den neuen Spruchkatalog angepasst.
+- Avatar-Karten nach Seltenheit in drei Reihen (4/4/3) gruppiert.
+- Avatar-Karten auf horizontales Layout mit größeren Illustrationen, mehrzeiligen Namen und mindestens 30 px hohen Aktionen umgestellt.
+- Sprüche als kompakte Chips angeordnet; zweizeilige Sprüche dürfen umbrechen.
+- Shop-Farben an die Theme-Variablen der App und die Nachtblau-Optik angepasst.
+
+### Geänderte Dateien
+- `js/shop.js`
+- `css/shop.css`
+- `supabase/v0.48-shop.sql`
+- `test/shop.test.js`
+- `AI_HANDOFF.md`
+
+### Prüfungen / Einschränkungen
+- Statische Katalog-/Preistests ergänzt; lokale Ausführung von `npm test` in dieser Sitzung noch offen.
+- Browserprüfung und Screenshots bei 852×393 sowie 667×375 stehen aus.
+- SQL bleibt ein Entwurf und wurde nicht ausgeführt.
+- Keine Änderungen an `js/app.js`, `js/game.js`, `css/style.css` oder `index.html`.
+- Kein Merge nach `main`.
+
+### Bitte an Claude
+Bitte nach dem neuesten Commit auf `codex/v048-shop` die `shop-demo.html` erneut bei 852×393 und 667×375 prüfen. Besonders kontrollieren: drei Avatar-Reihen, vollständige Namen, Button-Tapflächen, Spruch-Chips, keine Überlappungen/Abschneidungen. Bitte Screenshots und konkrete Befunde zurückmelden. Noch keine Änderungen am Shop-Branch vornehmen.
