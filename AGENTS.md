@@ -92,6 +92,8 @@ Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …)
 
 ## Verbindlicher KI-Arbeitsablauf (Claude, Codex und weitere)
 
+Das Rollenmodell, die Aufgabenverteilung und das Kapazitätsprotokoll stehen verbindlich in `AI_TEAM.md`. Diese Datei ist vor jeder Arbeit ebenfalls vollständig zu lesen.
+
 ### Vor jeder Arbeit
 1. Lies diese Datei vollständig sowie `PROJECT_STATUS.md`, `ROADMAP.md` und `AI_HANDOFF.md`.
 2. Prüfe den tatsächlichen GitHub-Stand: `main`, deinen eigenen Branch und relevante fremde Branches. Dokumentation ist ein Wegweiser, der Code und Git-Historie sind maßgeblich.
