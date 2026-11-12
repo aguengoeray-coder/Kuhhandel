@@ -19,7 +19,7 @@ Diese Datei liegt nur auf dem Branch **`ai/auftraege`** – nie auf `main`.
 
 | | Stand |
 |---|---|
-| `main` / live | **v0.47.2** (`e74c694`, Merge PR #2) · `test` ✅ · `Workers Builds` ✅ |
+| `main` / live | **v0.47.2** (`446540b`, Merge PR #6) · `test` ✅ · `Workers Builds` ✅ |
 | PR #2 Automatisierung | ✅ gemergt (`e74c694`) |
 | PR #3 Browser-/Layouttests | ✅ gemergt (`ca85106`) – Workflow „Browser-Tests“ läuft bei jedem PR |
 | Shop v0.48.0 | **PR #5** (Draft, `codex/v048-shop`, 0 Commits hinter `main`) – **nicht** gemergt. PR #1 ist geschlossen (ersetzt durch #5). |
@@ -83,7 +83,7 @@ _(von Claude auszufüllen)_
 
 ## A-005 → Claude · Layout-Check: Überlappung von Karten überall erkennen
 
-**Status:** erledigt – wartet auf „Merge-Go #6“
+**Status:** erledigt · mit Merge-Go von Alp gemergt (`446540b`)
 
 **Aufgabe**
 `e2e/lib/checks.mjs` erkennt Überlappungen bisher nur am Spieltisch. Ergänzen: Geschwister-Elemente mit eigenem Rahmen/Hintergrund (Karten, Listeneinträge, Abschnitte), die sich um > 2 px überdecken, sind ein Fehler – auf allen Seiten (Startseite, Warteraum, Shop, Fenster).
@@ -99,6 +99,36 @@ Anlass: Spruch-Karten im Shop überlappten, „Browser-Tests“ war trotzdem gr�
 - `main` (v0.47.2): 0 neue Fehler in allen 4 Größen → keine Fehlalarme. `npm test` 42/42, `node scripts/check.mjs` ✅.
 - Gegenprobe Shop `d0fbdea`: findet genau die 8 Spruch-Überlappungen (852×393: 7 px, 800×360: 4 px).
 - Wirkung für A-001: Sobald PR #6 in `main` ist und `codex/v048-shop` darauf gebracht wurde, wird „Browser-Tests“ im Shop-PR rot, bis Punkt 4 behoben ist. Codex kann es schon jetzt lokal prüfen: `e2e/lib/checks.mjs` aus `claude/e2e-karten` übernehmen (nur lesen, nicht committen) + `E2E_ONLY=shop node --test e2e/views.spec.mjs`.
+
+---
+
+## A-006 → Alp · Codex-Schreibzugriff (HTTP 404) wiederherstellen
+
+**Status:** blockiert – nur Alp kann das in GitHub/ChatGPT einstellen
+
+**Befund (Claude, 12.11. 21:40)**
+Codex bekam beim Ändern von `css/shop.css` auf `codex/v048-shop` und `AUFTRAEGE.md` auf `ai/auftraege` jeweils **HTTP 404**.
+Geprüft:
+- Repository `aguengoeray-coder/Kuhhandel` ist öffentlich; beide Branches existieren (`codex/v048-shop` = `d0fbdea`, `ai/auftraege` = dieser Commit).
+- Kein Branch-Schutz, keine Rulesets – nichts im Repository blockiert Schreiben.
+- Schreiben auf `ai/auftraege` funktioniert (Claude: Commits `b244c1b`, `e517c7d` und dieser).
+- Codex' letzte erfolgreiche Pushes: `ffa9b90` (20:06 UTC) und `d0fbdea` (20:10 UTC) auf `codex/v048-shop` – eine Stunde vorher ging es also.
+
+**Ursache (sehr wahrscheinlich)**
+GitHub antwortet bei einem öffentlichen Repository mit **404 statt 403**, wenn die Anfrage zwar angemeldet ist, die verwendete Verbindung aber **keine Schreibrechte für dieses Repository** hat (oder abgelaufen ist).
+Der Fehler liegt also in Codex' GitHub-Verbindung (Berechtigung/Anmeldung), nicht im Repository oder in den Branches.
+Typisch: Die genutzte Verbindung darf nur lesen, oder `Kuhhandel` ist in ihrer Repository-Auswahl nicht (mehr) freigegeben, oder eine Berechtigungsänderung wartet auf Bestätigung.
+
+**Was Alp prüfen muss (Schritt für Schritt)**
+1. github.com → oben rechts Profilbild → **Settings** → links **Applications** → Reiter **Installed GitHub Apps**.
+2. Die App von ChatGPT/Codex suchen (Name enthält „ChatGPT“ oder „Codex“) → **Configure**.
+3. Falls oben ein gelber Hinweis „…is requesting updated permissions“ steht → **Review request** → **Accept**.
+4. Unter **Repository access**: „All repositories“ **oder** „Only select repositories“ mit **Kuhhandel** in der Liste → **Save**.
+5. Unter **Permissions** prüfen: *Contents* = **Read and write**, *Pull requests* = **Read and write**.
+6. In ChatGPT/Codex die GitHub-Verbindung einmal **trennen und neu verbinden**, damit eine frische Anmeldung genutzt wird.
+7. Danach Codex mit „Check“ starten. Codex soll als Erstes eine Zeile unter „Nachweis“ eintragen und pushen.
+
+**Nachweis (von Codex auszufüllen):** Commit auf `ai/auftraege` + Commit auf `codex/v048-shop` (z. B. der CSS-Fix aus A-001).
 
 ---
 
