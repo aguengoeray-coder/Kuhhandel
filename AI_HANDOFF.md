@@ -62,3 +62,30 @@ Dieses Protokoll wird fortlaufend ergänzt. Frühere Einträge nicht löschen. V
 
 **Wichtige Konflikte oder Abhängigkeiten:**
 - 
+
+
+## 12.11.2026 – Codex: Gemeinsame Projektdokumentation eingerichtet
+
+**Branch:** `codex/ai-project-memory`  
+**Status:** Technisch angelegt; wartet auf Prüfung und Freigabe durch Alp. Nicht live.
+
+### Erledigt
+- `PROJECT_STATUS.md` als gemeinsames Gedächtnis angelegt.
+- `ROADMAP.md` mit den bekannten Planungen v0.46 bis v0.48 angelegt.
+- `AI_HANDOFF.md` als fortlaufendes Übergabeprotokoll mit Vorlage angelegt.
+- `AGENTS.md` um verpflichtende Vorher-/Nachher-Routinen, Statusbegriffe und Live-/Freigaberegeln ergänzt.
+
+### Geänderte Dateien
+- `AGENTS.md`
+- `PROJECT_STATUS.md` (neu)
+- `ROADMAP.md` (neu)
+- `AI_HANDOFF.md` (neu)
+
+### Prüfungen
+- Änderungen wurden auf einem separaten Branch angelegt.
+- Keine App-Dateien, Datenbank oder Live-Version verändert.
+- `npm test` nicht ausgeführt; es wurden ausschließlich Dokumentationsdateien geändert.
+- Inhaltliche Prüfung durch Alp steht aus.
+
+### Nächster Schritt
+Alp prüft die Dokumentationsstruktur. Erst nach seinem GO Änderungen nach `main` übernehmen. Vor einem Merge aktuellen `main` einholen und Änderungen erneut vergleichen.
