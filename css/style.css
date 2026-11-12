@@ -2419,3 +2419,23 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .khscrim { position: absolute; inset: 0; z-index: 39; pointer-events: none; background: radial-gradient(ellipse at 50% 40%, rgba(8,14,30,.82) 0%, rgba(8,14,30,.6) 55%, rgba(8,14,30,.35) 100%); animation: khscrim 1.5s ease both; }
 @keyframes khscrim { 0% { opacity: 0; } 12% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .khscrim { display: none; } }
+.cimoney { font-size: 11px; font-weight: 800; background: #FFE7A3; color: var(--ink); border-radius: 999px; padding: 0 6px; line-height: 18px; white-space: nowrap; align-self: center; }
+/* v0.45: dein Geld fliegt offen aus deiner Hand (kurz hochgeschoben) bzw. in deine Hand hinein */
+.mfly.mine { width: 38px; height: 54px; border-radius: 7px; background: var(--m); border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-weight: 700; font-size: 16px; color: var(--ink); z-index: 27; box-shadow: 0 4px 8px rgba(0,0,0,.3); }
+.mfly.mine.out { animation-name: mflyout; }
+.mfly.mine.in { animation-name: mflyin; }
+@keyframes mflyout { 0% { opacity: 0; transform: translate(0, 0); } 4% { opacity: 1; } 22% { transform: translate(0, -34px); } 34% { transform: translate(0, -34px); } 88% { opacity: 1; } 100% { transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(.5); opacity: 0; } }
+@keyframes mflyin { 0% { opacity: 0; transform: translate(0, 0) scale(.5); } 12% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(1); opacity: 0; } }
+.money.fan.newcard { animation: newcard .9s ease-out both; }
+@keyframes newcard { 0% { box-shadow: 0 0 0 4px var(--gold), 0 0 22px 8px rgba(255,211,78,.8); transform: rotate(var(--rot, 0deg)) translateY(calc(var(--dy, 0px) - 12px)); } 100% { box-shadow: 0 0 0 0 rgba(255,211,78,0); } }
+@media (prefers-reduced-motion: reduce) { .money.fan.newcard { animation: none; } }
+/* Große Auftritte (Gleichstand, Bluff, Geschenkt, Quartett, Rattenkönig): gleicher Stil wie „KUHHANDEL!“, Start über --d */
+.khscrim { animation-delay: var(--d, 0ms); }
+.khsplash { animation-delay: calc(var(--d, 0ms) + 1.2s); }
+.khsplash > b { animation-delay: var(--d, 0ms); }
+.khsplash small { animation-delay: calc(var(--d, 0ms) + .35s); }
+.khsplash.boom { gap: 8px; top: calc(170px + var(--dh, 0px) * .4); }
+.khsplash.boom small { font-size: 15px; padding: 3px 14px; max-width: 520px; text-align: center; }
+.khsplash.tie > b { color: #7FE3A2; }
+.khsplash.bluff > b { color: #FF9D6B; }
+.khsplash.gift > b { color: #9FD8FF; }

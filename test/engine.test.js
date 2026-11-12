@@ -660,3 +660,12 @@ test('Auszeichnungen: Bluffer (Nullen im gewonnenen Gebot), Pechvogel (knapp ver
   const keys = awards(g).map((a) => a.key);
   assert.ok(keys.includes('bluff') && keys.includes('pech') && keys.includes('tip'));
 });
+
+test('Einstellung „Geld zählt am Ende“: übriges Geld wird addiert (nicht multipliziert), ohne Einstellung zählt es nicht', () => {
+  const mk = (settings) => { const g = createGame({ players: P, seed: 3, settings }); g.players[0].animals.pferd = 4; g.players[0].animals.kuh = 4; g.players[0].money = [100, 200, 0]; g.players[1].money = [50]; return g; };
+  const off = scores(mk(null)); const on = scores(mk({ moneyCounts: true }));
+  assert.equal(off[0].score, (1000 + 800) * 2);
+  assert.equal(on[0].score, (1000 + 800) * 2 + 300);
+  assert.equal(on[1].score, 50);
+  assert.equal(off[1].score, 0);
+});

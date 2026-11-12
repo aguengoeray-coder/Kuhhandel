@@ -11,7 +11,7 @@ import { haptic } from './haptics.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.44.0';
+export const APP_VERSION = '0.45.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -370,7 +370,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['tradeTimer', '⏱ Bedenkzeit im Kuhhandel (20 s)'], ['standings', '📊 Zwischenstand im Menü']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['tradeTimer', '⏱ Bedenkzeit im Kuhhandel (20 s)'], ['standings', '📊 Zwischenstand im Menü'], ['moneyCounts', '💰 Geld zählt am Ende (+ Punkte)']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
     </div>
     </div>
@@ -1691,7 +1691,7 @@ function demo(kind) {
   if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }], state: { phase: 'turn', turn: 0, players: [{ id: me.id }] } }];
   if (demoState && params.get('herd')) { const me0 = demoState.players[0]; ['hahn', 'gans', 'katze', 'hund', 'schaf', 'ziege', 'esel', 'schwein', 'kuh', 'pferd'].forEach((id, k) => { me0.animals[id] = 1 + (k % 3); }); me0.rats = 2; } // Screenshots: volle Auslage
   if (demoState && params.get('cash')) { const n = Number(params.get('cash')); const vals = [0, 10, 10, 20, 50, 100, 200, 500]; demoState.players[0].money = Array.from({ length: n }, (_, k) => vals[k % vals.length]).sort((x, y) => x - y); } // Screenshots: viele Geldkarten
-  if (demoState && params.get('ev')) demoState.lastEvent = { n: 1, ...({ special: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u2', animal: 'pferd', count: 3 }, auction: { type: 'auction_won', buyer: 'u3', payee: 'u4', animal: 'schwein', amount: 130 }, self: { type: 'auction_won', buyer: 'u2', payee: 'u3', animal: 'kuh', amount: 90, self: true }, trade: { type: 'trade', accepted: true, offer: [10, 20], offerSum: 30, winner: 'u2', challenger: 'u2', target: 'u4', animal: 'ziege', count: 2 }, money: { type: 'money_drawn', player: 'u1', value: 50 }, rat: { type: 'rat_taken', player: 'u3', count: 3 }, ratgot: { type: 'rat_taken', player: 'u1', count: 3, cards: [50, 10, 0] }, specialself: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u3', animal: 'kuh', count: 4, self: true } })[params.get('ev')] }; // Screenshots: Ereigniszeile
+  if (demoState && params.get('ev')) demoState.lastEvent = { n: 1, ...({ special: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u2', animal: 'pferd', count: 3 }, auction: { type: 'auction_won', buyer: 'u3', payee: 'u4', animal: 'schwein', amount: 130 }, self: { type: 'auction_won', buyer: 'u2', payee: 'u3', animal: 'kuh', amount: 90, self: true }, trade: { type: 'trade', accepted: true, offer: [10, 20], offerSum: 30, winner: 'u2', challenger: 'u2', target: 'u4', animal: 'ziege', count: 2 }, money: { type: 'money_drawn', player: 'u1', value: 50 }, rat: { type: 'rat_taken', player: 'u3', count: 3 }, ratgot: { type: 'rat_taken', player: 'u1', count: 3, cards: [50, 10, 0] }, gift: { type: 'special_won', buyer: 'u3', animal: 'kuh', count: 0 }, specialself: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u3', animal: 'kuh', count: 4, self: true } })[params.get('ev')] }; // Screenshots: Ereigniszeile
   if (demoState && params.get('bots')) demoState.autoplay = params.get('bots').split(',');
   if (params.get('takeover')) online = new Set(['u1', 'u2', 'u4']);
   if (demoState) {
