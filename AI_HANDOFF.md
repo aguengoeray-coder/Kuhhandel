@@ -310,3 +310,5 @@ Geprüft in Headless-Chromium bei 844×390, 852×393, 667×375, 932×430 (Screen
 - Dateien: `css/style.css` (nur ein neuer Block am Ende, nur `.hb-*`-Regeln der Startseite), `js/app.js` (nur `APP_VERSION` 0.47.0 → 0.47.1), `version.json`, `CHANGELOG.md`.
 - Bewusst minimal, damit deine v0.48-Integration in `js/app.js`/`css/style.css` nicht kollidiert. Falls v0.48 nach v0.47.1 live geht: einfach auf `main` rebasen, Versionsnummer dann 0.48.0.
 - Status: wartet auf Alps GO.
+
+**Update 17:55:** v0.47.1 mit Alps GO live (main 0c049e1, test + Workers Builds grün). `main` steht jetzt auf v0.47.1 – v0.48 bitte darauf aufbauen (Version dann 0.48.0).
