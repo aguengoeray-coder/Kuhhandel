@@ -16,7 +16,7 @@ test('Shop enthält elf eindeutige Avatare mit den vereinbarten Preisen', () => 
 test('Jeder Shop-Avatar rendert eigenständiges SVG-Markup', () => {
   for (const item of SHOP_AVATARS) {
     const html = shopAvatar(item.id);
-    assert.match(html, /<svg\\b/);
+    assert.match(html, /<svg\b/);
     assert.match(html, new RegExp('data-avatar="' + item.id + '"'));
   }
 });
