@@ -19,7 +19,7 @@ Diese Datei liegt nur auf dem Branch **`ai/auftraege`** – nie auf `main`.
 
 | | Stand |
 |---|---|
-| `main` / live | **v0.47.2** (`446540b`, Merge PR #6) · `test` ✅ · `Workers Builds` ✅ |
+| `main` / live | **v0.48.0 Shop** (`9549281`, Merge PR #7) · `test` ✅ · `Workers Builds` ✅ · SQL `v0.48-shop.sql` von Alp ausgeführt (12.11. 22:00, „Success“) |
 | PR #2 Automatisierung | ✅ gemergt (`e74c694`) |
 | PR #3 Browser-/Layouttests | ✅ gemergt (`ca85106`) – Workflow „Browser-Tests“ läuft bei jedem PR |
 | Shop v0.48.0 | **PR #5** (Draft, `codex/v048-shop`, 0 Commits hinter `main`) – **nicht** gemergt. PR #1 ist geschlossen (ersetzt durch #5). |
@@ -70,7 +70,7 @@ Branch `claude/v048-shop` (aufbauend auf `codex/v048-shop` `d0fbdea`; Codex-Bran
 
 ## A-002 → Claude · Shop v0.48.0: Abnahme im Browser
 
-**Status:** offen · wartet auf A-001 = erledigt
+**Status:** erledigt (Claude) – Abnahme in 4 Größen, Screenshots an Alp; ersetzt durch Einbau + Merge PR #7
 
 **Aufgabe**
 Neuesten Stand von PR #5 in den 4 Größen im Browser ansehen (Namen, Knöpfe, Spruch-Chips, Kaufen/Auswählen/Aktiv), Screenshots an Alp, Empfehlung für „Merge-Go #5“ oder Rückgabe an Codex mit konkreten Befunden.
@@ -154,7 +154,7 @@ _(von Codex auszufüllen)_
 
 ## A-004 → Codex · v0.48.0 Integration: Shop in die App einbauen
 
-**Status:** blockiert – erst nach A-001 + A-002 und Alps Entscheidung
+**Status:** erledigt (Claude, PR #7, live `9549281`) – Shop-Knopf, Dublonen neben dem Namen, Shop-Avatar überall (neue SQL-Funktion `shop_public_avatars`), gekaufte Sprüche im 💬-Menü. PR #5 (Codex) ist damit überholt und kann geschlossen werden.
 
 **Aufgabe (Entwurf, wird vor Start mit Alp abgestimmt)**
 Startseite: Dock-Knopf „Shop“ öffnet `renderShop` (statt Hinweis „Shop kommt mit dem nächsten Update“), Dublonen-Anzeige, gekaufter Avatar am Tisch, Sprüche im 💬-Menü. SQL `supabase/v0.48-shop.sql` mit Schritt-für-Schritt-Anleitung für Alp.
@@ -169,6 +169,9 @@ _(offen)_
 ---
 
 ## Erledigt (Archiv, kurz)
+
+- 12.11. v0.48.0 Shop – live (`9549281`), Claude (aufbauend auf Codex' Shop-Modul + SQL)
+- 12.11. PR #6 Layout-Check Karten – gemergt (`446540b`), Claude
 
 - 12.11. v0.47.1 Startseite symmetrisch – live (`0c049e1`), Claude
 - 12.11. PR #3 Browser-/Layouttests – gemergt (`ca85106`), Claude
