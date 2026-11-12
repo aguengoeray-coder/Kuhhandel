@@ -32,3 +32,22 @@ test('Versionsprüfung meldet ungültiges version.json', () => {
   assert.equal(errors.length, 1);
   assert.match(errors[0], /JSON/);
 });
+
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { collectJavaScriptFiles } from '../scripts/check.mjs';
+
+test('Syntaxprüfung erfasst js/, src/, worker/ und sw.js, aber keine CSS-Dateien', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kuhhandel-check-'));
+  try {
+    for (const dir of ['js/nested', 'src', 'worker', 'css']) fs.mkdirSync(path.join(root, dir), { recursive: true });
+    for (const file of ['js/nested/app.js', 'src/engine.js', 'worker/index.js', 'sw.js', 'css/style.css']) {
+      fs.writeFileSync(path.join(root, file), '');
+    }
+    const files = collectJavaScriptFiles(root).map(file => path.relative(root, file)).sort();
+    assert.deepEqual(files, ['js/nested/app.js', 'src/engine.js', 'sw.js', 'worker/index.js']);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
