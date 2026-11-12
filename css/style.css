@@ -2562,3 +2562,6 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 @media (max-height: 440px) { .hb-felt { gap: 4px; padding-top: 6px; } .hb-seat .avatar { width: 38px; height: 38px; font-size: 16px; } .hb-seat { gap: 1px; } .hb-cta { min-height: 40px; font-size: 17px; } .hb-title { font-size: 19px; } }
 @media (max-height: 380px) { .hb-felt { min-height: 140px; padding-bottom: 17px; gap: 3px; } .hb-count { bottom: 2px; } .hb-cta { min-height: 36px; } .hb-side .pill-small { min-height: 32px; } }
 @media (min-height: 600px) { .hb-felt { max-height: 330px; } .hb-side .pill-small { min-height: 42px; font-size: 15px; } }
+/* v0.47.2: flache Handys – Warteraum-Knöpfe passen ganz ins Bild; Kuhhandel-Auswahl überdeckt die seitlichen Plätze nicht */
+@media (max-height: 370px) { .room { gap: 6px; } .room-actions .pill { min-height: 44px; } }
+@media (max-height: 440px) { .tp-grid .tp-nm { display: none; } .tp-t { gap: 2px; padding-top: 6px; } .tp-t .mcard { width: 42px; height: 42px; } }
