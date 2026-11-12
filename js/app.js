@@ -11,7 +11,7 @@ import { haptic } from './haptics.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.46.0';
+export const APP_VERSION = '0.47.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -251,77 +251,91 @@ const moneyNote = (g) => {
   return n ? ` · mit ${n} Geldschein${n === 1 ? '' : 'en'}` : '';
 };
 
+// Startseite „B: Tisch“ (v0.47): Ticker oben über die ganze Breite, das Spiel liegt groß auf dem Filz, unten eine App-Leiste.
+// Alles, was früher als Knopfreihe da stand, ist jetzt in der Leiste bzw. hinter ⚙️ Einstellungen.
+function homeItems() {
+  const items = [];
+  (ui.myGames || []).forEach((g) => items.push({ kind: 'resume', g }));
+  ui.games.forEach((g) => items.push({ kind: 'open', g }));
+  if (DEBUG) items.push({ kind: 'test' }); // Testspiel zuletzt – echte Spiele gehen vor
+  return items;
+}
 function renderStart() {
-  const nameBlock = `<div class="me-line">${avatarHtml(me.id, me.name, 'small')}<strong>${esc(me.name)}</strong>
-      <button class="slink sm" type="button" data-modal="profile">🐮 Bild</button>
-      <button class="slink sm" type="button" data-modal="mystats">📊 Statistik</button>
-      <button class="slink sm" type="button" id="logout">Abmelden</button></div>`;
-
-  const resume = (ui.myGames || []).map((g) => {
+  const items = homeItems();
+  // Was liegt auf dem Tisch? Dein laufendes Spiel zuerst, sonst das erste offene; mit ‹ › blättern
+  if (!items.length) ui.homeIdx = 0;
+  else ui.homeIdx = Math.min(Math.max(0, ui.homeIdx || 0), items.length - 1);
+  const it = items[ui.homeIdx];
+  const seatRow = (players) => `<div class="hb-seats">${Array.from({ length: MAX_PLAYERS }, (_, k) => {
+    const p = players[k];
+    return p ? `<div class="hb-seat">${avatarHtml(p.id, p.name)}<span>${esc(p.id === me.id ? 'Du' : p.name)}</span></div>`
+      : '<div class="hb-seat free"><div class="avatar hb-free">+</div><span>frei</span></div>';
+  }).join('')}</div>`;
+  let felt = '';
+  if (!it) {
+    felt = `<b class="hb-title">Gerade ist kein Spiel offen</b><small class="hb-sub">Erstelle eins und lade deine Freunde ein.</small>
+      ${seatRow(me.name ? [{ id: me.id, name: me.name }] : [])}
+      <button class="pill pill-red hb-cta" type="button" id="create" ${me.name ? '' : 'disabled'}>＋ Neues Spiel</button>`;
+  } else if (it.kind === 'test') {
+    const on = !!store.get('kh_dbg_money');
+    felt = `<b class="hb-title">Testspiel <span class="hb-tag">Debug</span></b><small class="hb-sub">Nur auf diesem Gerät, mit Test-Spielern</small>
+      <div class="hb-row">
+        <button class="pill pill-white pill-small toggle-pill ${on ? 'on' : ''}" type="button" id="dbgMoney" aria-pressed="${on}">Geld im Stapel: ${on ? 'an' : 'aus'}</button>
+        <button class="pill pill-white pill-small" type="button" data-test="3">3 Spieler</button>
+        <button class="pill pill-red pill-small" type="button" data-test="4">4 Spieler</button>
+      </div>`;
+  } else if (it.kind === 'resume') {
+    const g = it.g;
     let who = null;
     try { who = g.state ? whoMustAct(g.state, Date.now()) : null; } catch { who = null; }
     const mine = who === me.id || (Array.isArray(who) && who.includes(me.id));
-    return `<li class="game-row resume ${mine ? 'myturn' : ''}">
-      <div class="host">${mine ? '<span class="youturn">Du bist dran!</span>' : 'Laufendes Spiel'}<small>${g.players.map((p) => esc(p.name)).join(' · ')}</small></div>
-      <button class="pill pill-red pill-small" type="button" data-resume="${esc(g.id)}">Weiter spielen</button>
-    </li>`;
-  }).join('');
-
-  const testRow = DEBUG ? `<li class="game-row test">
-      <div class="host">Testspiel<small>Nur auf diesem Gerät · Debug-Modus</small></div>
-      <button class="pill pill-white pill-small toggle-pill ${store.get('kh_dbg_money') ? 'on' : ''}" type="button" id="dbgMoney" aria-pressed="${!!store.get('kh_dbg_money')}">Geld im Stapel: ${store.get('kh_dbg_money') ? 'an' : 'aus'}</button>
-      <button class="pill pill-white pill-small" type="button" data-test="3">3 Spieler</button>
-      <button class="pill pill-red pill-small" type="button" data-test="4">4 Spieler</button>
-    </li>` : '';
-
-  const list = ui.games.length
-    ? ui.games.map((g) => {
-        const host = (g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'Unbekannt';
-        const n = g.players.length;
-        const dots = Array.from({ length: MAX_PLAYERS }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
-        const full = n >= MAX_PLAYERS;
-        return `<li class="game-row">
-          <div class="host">Spiel von ${esc(host)}<small>${n} von ${MAX_PLAYERS} Spielern · Code ${esc(g.code)}${moneyNote(g)}</small></div>
-          <div class="seats-mini" aria-hidden="true">${dots}</div>
-          <button class="pill pill-red pill-small" type="button" data-join="${esc(g.id)}" ${full || !me.name ? 'disabled' : ''}>${full ? 'Voll' : 'Beitreten'}</button>
-        </li>`;
-      }).join('')
-    : `<li class="empty">Gerade ist kein Spiel offen.<br>Erstelle eins und lade deine Freunde ein.</li>`;
-
+    felt = `<b class="hb-title">${mine ? '<span class="hb-turn">Du bist dran!</span>' : 'Dein laufendes Spiel'}</b>
+      ${seatRow(g.players)}
+      <button class="pill pill-red hb-cta" type="button" data-resume="${esc(g.id)}">Weiter spielen</button>`;
+  } else {
+    const g = it.g;
+    const host = (g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'Unbekannt';
+    const n = g.players.length; const full = n >= MAX_PLAYERS;
+    felt = `<b class="hb-title">Spiel von ${esc(host)} <span class="hb-subin">· ${n} von ${MAX_PLAYERS} Plätzen</span></b>
+      <small class="hb-sub">Code ${esc(g.code)}${moneyNote(g)}</small>
+      ${seatRow(g.players)}
+      <button class="pill pill-red hb-cta" type="button" data-join="${esc(g.id)}" ${full || !me.name ? 'disabled' : ''}>${full ? 'Voll' : 'Platz nehmen'}</button>`;
+  }
+  const nav = items.length > 1 ? `<button type="button" class="hb-nav l" data-hb="prev" aria-label="Vorheriges Spiel" ${ui.homeIdx ? '' : 'disabled'}>‹</button>
+    <button type="button" class="hb-nav r" data-hb="next" aria-label="Nächstes Spiel" ${ui.homeIdx < items.length - 1 ? '' : 'disabled'}>›</button>
+    <span class="hb-count">${ui.homeIdx + 1} / ${items.length}</span>` : '';
+  const dock = [['play', '▶️', 'Spielen'], ['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
+    .map(([k, i, l]) => `<button type="button" class="hb-dk ${k === 'play' ? 'on' : ''}" data-dock="${k}">${k === 'shop' ? '<em class="hb-soon">bald</em>' : ''}<i>${i}</i>${l}</button>`).join('');
   app.innerHTML = `
-    <section class="start">
-      <div class="brand">
-        ${brandHtml()}
-        <div class="start-links btns">
-          <button type="button" class="slink" data-modal="rules">📖 Regeln</button>
-          <button type="button" class="slink" data-modal="stats">🏆 Bestenliste</button>
-          <button type="button" class="slink" data-modal="rejoin">🔑 Mit Code zurück</button>
-          <button type="button" class="slink" data-modal="design">🎨 Aussehen</button>
-          ${PUSH_PUBLIC_KEY ? `<button type="button" class="slink ${pushOn() ? 'on' : ''}" id="push-btn">🔔 ${pushOn() ? 'Benachrichtigung an' : 'Benachrichtigen'}</button>` : ''}
-          ${isStandalone() ? '' : '<button type="button" class="slink" data-modal="install">📲 Als App</button>'}
-          ${ui.isAdmin ? '<button type="button" class="slink admin-link" data-modal="admin">⚙ Admin</button>' : ''}
+    <section class="home">
+      ${tickerHtml()}
+      <div class="hb-top">
+        <div class="logorow tb hb-logo"><span class="logocow" aria-hidden="true">${art('kuh')}</span><div class="tbname"><span class="tbteam">🚀 Team Rockets</span><h1 class="logo tbtitle">Tier <span class="tbb">Börse</span></h1></div></div>
+        <button type="button" class="hb-me" data-modal="profile" aria-label="Profilbild ändern">${avatarHtml(me.id, me.name)}<b>${esc(me.name)}</b></button>
+      </div>
+      <div class="hb-stage">
+        <div class="hb-felt">${nav}${felt}
+          ${ui.error ? `<div class="error hb-err" role="alert">${esc(ui.error)}</div>` : ui.homeNote ? `<div class="hb-note" role="status">${esc(ui.homeNote)}</div>` : ''}
         </div>
-        <div class="card name-box">
-          <label>Du spielst als</label>
-          ${nameBlock}
+        <div class="hb-side">
+          ${it ? `<button class="pill pill-white pill-small" type="button" id="create" ${me.name ? '' : 'disabled'}>＋ Neues Spiel</button>` : ''}
+          <button class="pill pill-white pill-small" type="button" data-modal="rejoin">🔑 Mit Code</button>
         </div>
       </div>
-      <div class="card games">
-        <div class="games-head">
-          <h2>Offene Spiele</h2>
-          <button class="pill pill-red pill-small" type="button" id="create" ${me.name ? '' : 'disabled'}>Spiel erstellen</button>
-        </div>
-        ${ui.error ? `<div class="error" role="alert">${esc(ui.error)}</div>` : ''}
-        <ul class="games-list">${testRow}${resume}${list}</ul>
-      </div>
+      <nav class="hb-dock" aria-label="Bereiche">${dock}</nav>
     </section>`;
 
-  document.getElementById('logout')?.addEventListener('click', doLogout);
-  document.getElementById('push-btn')?.addEventListener('click', togglePush);
   document.getElementById('create')?.addEventListener('click', onCreate);
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-test]').forEach((b) => b.addEventListener('click', () => startLocalGame(Number(b.dataset.test))));
+  app.querySelectorAll('[data-hb]').forEach((b) => b.addEventListener('click', () => { ui.homeIdx = (ui.homeIdx || 0) + (b.dataset.hb === 'next' ? 1 : -1); render(); }));
+  app.querySelectorAll('[data-dock]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.dock;
+    if (k === 'play') return;
+    if (k === 'shop') { ui.homeNote = 'Der Shop kommt mit dem nächsten Update 🛒'; render(); setTimeout(() => { ui.homeNote = ''; render(); }, 3000); return; }
+    openModal(k);
+  }));
   document.getElementById('dbgMoney')?.addEventListener('click', () => { if (store.get('kh_dbg_money')) store.del('kh_dbg_money'); else store.set('kh_dbg_money', '1'); render(); });
   app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
     const { data } = await sb.from('games').select('*').eq('id', b.dataset.resume).maybeSingle();
@@ -1467,6 +1481,19 @@ function renderModal() {
       </table>`}
       ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
   }
+  if (modal.kind === 'settings') {
+    const row = (m, v, icon, label, right = '›', cls = '') => `<button type="button" class="srow ${cls}" data-m="${m}" ${v ? `data-v="${v}"` : ''}><i>${icon}</i><span>${label}</span><em>${right}</em></button>`;
+    const pr = profiles.get(me.id);
+    body = `<h2>⚙️ Einstellungen</h2><div class="srows">
+      ${row('go', 'profile', '🖼️', 'Profilbild', pr ? esc(ANIMALS.find((a) => a.id === pr.animal)?.name || '') + ' ›' : '›')}
+      ${row('go', 'design', '🎨', 'Aussehen')}
+      ${PUSH_PUBLIC_KEY ? row('push', '', '🔔', 'Benachrichtigen', `<span class="stog ${pushOn() ? 'on' : ''}"></span>`) : ''}
+      ${isStandalone() ? '' : row('go', 'install', '📲', 'Als App installieren')}
+      ${row('go', 'mystats', '📊', 'Meine Statistik')}
+      ${ui.isAdmin ? row('go', 'admin', '🛠️', 'Admin') : ''}
+      ${row('logout', '', '🚪', 'Abmelden', '', 'out')}
+    </div>`;
+  }
   if (modal.kind === 'rejoin') {
     body = `<h2>Mit Code zurück ins Spiel</h2>
       <p class="mtext">Code und PIN findest du auf deinem alten Gerät im Spiel unter Menü → „Wiedereinstieg-Code“.</p>
@@ -1491,6 +1518,9 @@ function renderModal() {
     const b = e.target.closest('[data-m]');
     if (!b) return;
     if (b.dataset.m === 'close') { modal = null; return render(); }
+    if (b.dataset.m === 'go') return openModal(b.dataset.v);
+    if (b.dataset.m === 'push') { await togglePush(); return render(); }
+    if (b.dataset.m === 'logout') { modal = null; render(); return doLogout(); }
     if (b.dataset.m === 'doInstall' && installPrompt) { installPrompt.prompt(); installPrompt = null; modal = null; return render(); }
     if (b.dataset.m === 'animal') return saveProfile({ animal: b.dataset.v });
     if (b.dataset.m === 'theme' || b.dataset.m === 'themePreset' || b.dataset.m === 'themeReset') {
@@ -1704,7 +1734,7 @@ function demo(kind) {
   render();
   if (demoState) return;
   // In der Demo nichts speichern oder senden
-  app.addEventListener('click', (e) => { if (ui.screen !== 'playing' && e.target.closest('button')) e.stopPropagation(); }, true);
+  if (!params.get('klick')) app.addEventListener('click', (e) => { if (ui.screen !== 'playing' && e.target.closest('button')) e.stopPropagation(); }, true); // ?klick=1: Startseite in der Demo durchklicken (Tests)
 }
 
 // ---------- Start ----------

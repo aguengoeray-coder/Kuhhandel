@@ -1,5 +1,15 @@
 # Änderungsprotokoll
 
+## v0.47.0 – Neue Startseite „Tisch“
+
+- [x] **Börsenticker** läuft oben über die ganze Breite.
+- [x] **Das Spiel liegt auf dem Tisch:** groß in der Mitte auf dem Filz – mit den Spielern und freien Plätzen („Platz nehmen“). Dein laufendes Spiel zuerst („Du bist dran!“ → „Weiter spielen“). Mehrere Spiele: mit ‹ › blättern.
+- [x] Daneben „＋ Neues Spiel“ und „🔑 Mit Code“.
+- [x] **Leiste unten wie in einer App:** Spielen · Shop (kommt mit dem nächsten Update) · Bestenliste · Statistik · Regeln · Einstellungen.
+- [x] **⚙️ Einstellungen** in einem Fenster: Profilbild, Aussehen, Benachrichtigen (Schalter), Als App, Meine Statistik, Admin (nur Admins), Abmelden. Die vielen Knöpfe auf der Startseite sind weg.
+- [x] Oben rechts dein Bild und Name – antippen ändert das Profilbild.
+- [x] Testspiel (Debug) liegt als letzter Tisch zum Durchblättern.
+
 ## v0.46.0 – Kuhhandel: der Einsatz ist sichtbar
 
 - [x] **Topf in der Mitte:** Statt einer Karte mit „um 2“ liegen alle eingesetzten Tierkarten beider Seiten in der Mitte – bei „um 2“ also 4 Karten. Darunter „2 gegen 2 · Gewinner bekommt alle 4“ (Rattenhandel: „Verlierer bekommt alle“).
