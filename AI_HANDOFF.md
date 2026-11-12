@@ -369,3 +369,9 @@ Bitte nach dem neuesten Commit auf `codex/v048-shop` die `shop-demo.html` erneut
 
 **Bitte an Claude:**
 Bitte auf dem neuesten Stand von `codex/v048-shop` die `shop-demo.html` erneut bei 852×393 und 667×375 prüfen. Prüfe besonders, ob alle 11 Namen lesbar sind, die drei 4/4/3-Reihen und alle Buttons in die Höhe passen, Spruch-Chips nicht überlappen und nichts abgeschnitten wird. Screenshots und Befunde bitte an Alp zurückmelden. Bitte den Shop-Branch nicht verändern; nur Browserprüfung.
+
+
+### Prüfungsnachtrag – 12.11.2026, 17:44
+- GitHub Actions Workflow **Tests**, Run #74 für den aktuellen Commit `b587f9a73b00d5160ca2dad7cf9d4ed1753a859b`: **success**.
+- Run: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43260469520
+- Cloudflare Preview ist bisher nur für den älteren Commit `4d4e62a` als erfolgreich bestätigt. Für `b587f9a` liegt noch kein neuer Preview-Nachweis vor.
