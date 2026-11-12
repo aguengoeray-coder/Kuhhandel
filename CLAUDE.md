@@ -88,3 +88,39 @@ Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten ohn
 Eigenes Geld als Fächer unten, deine Knöpfe unten links (Daumen), Menü oben links, 💬 unten rechts. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
 dem Zeichnen gemessen (`data-aim-to` / `data-aim-from`, `aimFx` in `js/game.js`), nicht fest eingebaut.
 Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …), nicht fest einbauen.
+
+
+## Verbindlicher KI-Arbeitsablauf (Claude, Codex und weitere)
+
+Das Rollenmodell, die Aufgabenverteilung und das Kapazitätsprotokoll stehen verbindlich in `AI_TEAM.md`. Diese Datei ist vor jeder Arbeit ebenfalls vollständig zu lesen.
+
+### Vor jeder Arbeit
+1. Lies diese Datei vollständig sowie `PROJECT_STATUS.md`, `ROADMAP.md` und `AI_HANDOFF.md`.
+2. Prüfe den tatsächlichen GitHub-Stand: `main`, deinen eigenen Branch und relevante fremde Branches. Dokumentation ist ein Wegweiser, der Code und Git-Historie sind maßgeblich.
+3. Prüfe offene Änderungen und Zuständigkeiten. Bearbeite keine Datei parallel mit einem anderen KI-Mitarbeiter.
+4. Teile Alp kurz mit, welchen abgeschlossenen Teil du übernimmst und welchen Branch du verwendest.
+5. Wenn Status oder Dokumentation dem tatsächlichen Code widersprechen, halte an und kläre den Widerspruch, statt Annahmen zu treffen.
+
+### Nach jeder Arbeitseinheit
+1. Führe passende Tests aus; notiere exakt, was ausgeführt wurde und was nicht.
+2. Aktualisiere `PROJECT_STATUS.md` mit Branch, Dateien, Status und offenen Punkten.
+3. Ergänze `AI_HANDOFF.md` um einen neuen datierten Eintrag. Frühere Übergaben nicht löschen.
+4. Aktualisiere `ROADMAP.md`, wenn sich Planung, Zuständigkeit oder Reihenfolge geändert hat.
+5. Committe nur auf deinem eigenen Branch. Commit-Nachrichten beginnen mit der Versionsnummer, z. B. `v0.48.0: Projektstatus und KI-Übergabe`.
+
+### Statusbegriffe
+- **Geplant:** noch nicht begonnen.
+- **In Arbeit:** Umsetzung läuft.
+- **Technisch fertig:** Code liegt vor, aber Tests/visuelle Prüfung können noch offen sein.
+- **Geprüft:** benannte Tests/Prüfungen wurden tatsächlich ausgeführt und bestanden.
+- **Wartet auf Alp:** benötigt Entscheidung oder Freigabe.
+- **Freigegeben:** Alp hat die konkrete Änderung freigegeben.
+- **Live:** nachweislich in `main` und veröffentlicht.
+
+Niemals „fertig“, „getestet“ oder „live“ behaupten, wenn die entsprechenden Prüfungen bzw. Veröffentlichung nicht stattgefunden haben.
+
+### Live-Stand und Freigabe
+- `main` ist produktiv; niemals direkt darauf schreiben oder pushen.
+- Ein Entwicklungsbranch ist niemals automatisch live.
+- Vor Merge: `git pull` auf aktuellem `main`, Änderungen vergleichen, `npm test` grün, Screenshots der echten Darstellung vorlegen und Alps ausdrückliches GO abwarten.
+- Datenbank-SQL wird nur vorbereitet. Alp führt es selbst im Supabase-SQL-Editor aus.
