@@ -88,3 +88,31 @@ Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten ohn
 Eigenes Geld als Fächer unten, deine Knöpfe unten links (Daumen), Menü oben links, 💬 unten rechts. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
 dem Zeichnen gemessen (`data-aim-to` / `data-aim-from`, `aimFx` in `js/game.js`), nicht fest eingebaut.
 Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …), nicht fest einbauen.
+
+## Verbindlicher KI-Arbeitsablauf
+
+1. Vor jeder Arbeit: diese Datei, `PROJECT_STATUS.md` und offene Einträge in `AI_HANDOFF.md` lesen; danach `main`, eigenen Branch, relevante Fremdbranches und Datei-Owner auf GitHub prüfen.
+2. Bei widersprüchlicher Dokumentation anhalten und den tatsächlichen Code-/Git-Stand klären.
+3. Pro Aufgabe genau ein schreibender Owner; Reviewer bleiben read-only. Die im neuesten Handoff genannten Dateigrenzen sind verbindlich.
+4. Nach jeder Arbeitseinheit passende Tests ausführen, `PROJECT_STATUS.md` aktualisieren und einen datierten Handoff-Eintrag mit Branch, Commit, Dateien, Tests und offenen Punkten ergänzen.
+5. Nur auf dem eigenen Branch committen. Nach jedem abgeschlossenen Schritt Alp um ein eigenes GO bitten.
+
+## Verbindliche Freigabe- und Sicherheitsregeln
+
+- **Kein automatischer Merge, kein Push auf `main`, kein automatisches Deployment.** Ein GO gilt nur für den konkret benannten Schritt.
+- Alp ist alleiniger Product Owner und entscheidet über Umfang, Prioritäten, Abnahme, SQL-Ausführung sowie jeden Merge.
+- SQL niemals selbst ausführen. SQL-Dateien nur vorbereiten; Alp führt sie im Supabase-SQL-Editor aus.
+- Keine Secrets ins Repository. Supabase Secret-/Service-Role-Keys gehören ausschließlich in sichere Umgebungsvariablen/Secret Stores.
+- Automatisierte Workflows dürfen prüfen und berichten, aber keine Codeänderungen, Merges oder Pushes ausführen.
+- PR-Berichte erhalten nur minimale Berechtigungen: `contents: read` und `pull-requests: write`.
+- Branch-Schutz für `main` soll Pull Requests und grüne Pflichtprüfungen verlangen. Einrichtung nur durch Alp; KIs liefern eine Anleitung.
+- „Live“ nur behaupten, wenn Merge in `main` und Deployment tatsächlich nachgewiesen sind.
+
+## Dokumentation und Versionsregeln
+
+- `AGENTS.md` und `CLAUDE.md` müssen identisch sein.
+- `PROJECT_STATUS.md` ist die kompakte Quelle für aktuellen Projektstand und Roadmap; keine parallelen, redundanten Roadmap-/Teamdateien pflegen.
+- `AI_HANDOFF.md` enthält offene Übergaben; ältere abgeschlossene Einträge stehen im Archiv.
+- App-Version: `APP_VERSION` in `js/app.js` = `version.json` = oberster Versionskopf in `CHANGELOG.md`.
+- `package.json`-Version ist npm-Paketmetadatum und derzeit bewusst `0.1.0`; nicht mit der App-Version verwechseln.
+- `npm test` und `node scripts/check.mjs` müssen vor einem PR grün sein.
