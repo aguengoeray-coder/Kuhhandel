@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v0.43.1 – Ruhigerer Ablauf
+
+- [x] **Kuhhandel-Fenster:** Alle Scheine werden sicher aufgedeckt (vorher blieben auf manchen iPhones einzelne Scheine verdeckt).
+- [x] **Gelber „dran“-Rahmen** wandert erst zum nächsten Spieler, wenn Tier und Geld gelandet sind – nicht mehr mittendrin.
+- [x] **Richtige Anzahl:** Es fliegen so viele Scheine, wie wirklich bezahlt werden (vorher höchstens 5). Tierkarten: so viele, wie den Besitzer wechseln (beim Kuhhandel um 2 also 2).
+- [x] Weniger Gelb auf dem Feld: das kurze Leuchten am Platz des neuen Tierbesitzers ist wieder weg.
+- [x] Kuhhandel-Fenster: „Du bekommst 300 · Nico bekommt 560“ (vorher fehlte das zweite „bekommt“).
+- [x] Kuhhandel vorbereiten: die Felder erscheinen sanfter und stoßen beim Auftauchen nicht mehr kurz an die Plätze.
+
 ## v0.43.0 – Klarere Ergebnisse, schneller bezahlen
 
 **Ergebnis-Fenster nebeneinander**

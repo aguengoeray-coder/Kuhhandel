@@ -2290,10 +2290,6 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .bignum.hit.hitin { animation: hitpop .45s var(--e-pop) both; }
 .bignum.hit small { opacity: 1; color: #fff; }
 @keyframes hitpop { 0% { transform: scale(1.5); } 100% { transform: none; } }
-/* Tier kommt an: Platz des neuen Besitzers leuchtet kurz */
-.landglow { position: absolute; left: 0; top: 0; width: 120px; height: 120px; border-radius: 50%; z-index: 19; pointer-events: none; background: radial-gradient(circle, rgba(255,211,78,.75) 0%, rgba(255,211,78,.25) 45%, transparent 70%); opacity: 0; transform: scale(.4); animation: landglow .7s ease-out both; }
-@keyframes landglow { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3); } }
-@media (prefers-reduced-motion: reduce) { .landglow { display: none; } }
 .du-note { font-size: 11.5px; font-weight: 700; color: #7A7468; margin-top: -2px; }
 .ec-bills { align-items: center; flex-wrap: wrap; }
 .ec-bills .ecr-c { width: 28px; height: 38px; border-radius: 6px; border-width: 2px; font-size: 13px; animation: none; }
@@ -2343,3 +2339,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .kslots.many > * + * { margin-left: -7px; }
 .kslots.many > * { box-shadow: -2px 0 3px rgba(0,0,0,.18); }
 .tpanel .kslots.many > * + * { margin-left: -13px; }
+.ecr-c.open { animation: none; } .ecr-c.open::after { display: none; } /* schon umgedreht: fest offen, egal ob die Animation lief */
+/* Kuhhandel-Felder erscheinen sanfter (vorher kurz 15 % größer → stießen an die Plätze) */
+.tduel.pop { animation: tdpop .3s ease-out; }
+@keyframes tdpop { 0% { transform: scale(.94); opacity: .4; } 100% { transform: none; opacity: 1; } }
