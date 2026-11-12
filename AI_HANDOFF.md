@@ -304,3 +304,10 @@ Codex prüft den Test-/Screenshot-Bericht und den vollständigen Diff. Danach er
 - Der Draft-PR **#1** wurde ausschließlich zum Auslösen der vorhandenen GitHub-Tests angelegt: https://github.com/aguengoeray-coder/Kuhhandel/pull/1. Er bleibt Draft und wird nicht gemergt.
 - Die GitHub-Actions-Workflowdatei führt bei Pull Requests `npm test` aus. Der Lauf für den vorherigen Branch-Stand war beim letzten Abruf noch in der Warteschlange; nach den anschließenden SQL-/CSS-Korrekturen muss der neueste PR-Lauf geprüft werden.
 - SQL-Leserechte für Wallet, Käufe und Belohnungen sind explizit auf SELECT für angemeldete Nutzer begrenzt; Schreibzugriffe bleiben den SECURITY DEFINER-Funktionen vorbehalten.
+
+
+### Nachtrag Codex – automatische Tests erfolgreich (12.11.2026)
+- Ergänzt: `test/shop.test.js` prüft Shop-Exports, 11 eindeutige Avatare, SVG-Markup sowie 8 Sprüche und deren Preise.
+- GitHub Actions auf exakt `codex/v048-shop` @ `225dc403bee399756ba3548747cf3a64a2b25865`: **Workflow „Tests“ erfolgreich**, Schritt `npm test` erfolgreich.
+- Lauf: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43256510058
+- Die CI-Prüfung ersetzt keine Browser-/Layoutprüfung. Screenshots durch Claude stehen weiterhin aus.
