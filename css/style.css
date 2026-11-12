@@ -2242,3 +2242,40 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .fly, .qpop, .rpsshow, .moneyreveal, .outbid, .cantpop, .seattip, .evcard, .lastcard, .wowpop, .ratrun { margin-top: calc(var(--dh, 0px) * .4); }
 .stage .mebubble, .mflyc { margin-top: var(--dh, 0px); }
 .stage .deck-count.low { white-space: normal; width: 128px; border-radius: 10px; line-height: 1.25; text-align: center; }
+/* v0.43: Kuhhandel-Ergebnis als Duell nebeneinander */
+.evcard.duel { display: block; width: 520px; padding: 11px 16px 16px; }
+.evcard.duel .ec-title { display: block; font-size: 21px; margin-top: 1px; }
+.du-row { display: flex; align-items: stretch; gap: 10px; margin-top: 8px; }
+.du-side { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 6px 9px; border-radius: 14px; background: #F4F1EA; border: 2.5px solid transparent; }
+.du-side .ec-p { font-size: 15px; gap: 6px; }
+.du-side .ec-p .avatar { width: 30px; height: 30px; }
+.du-role { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #7A7468; margin-top: -3px; }
+.du-side .ecr-cards { gap: 3px; }
+.du-side .ecr-c { width: 30px; height: 42px; border-radius: 6px; border-width: 2px; font-size: 14px; box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+.du-side .ecr-c::after { border-radius: 6px; }
+.du-sum { font-family: var(--font-head); font-weight: 700; font-size: 26px; line-height: 1; }
+.du-sum.small { font-size: 17px; color: #7A7468; }
+.du-side.win { background: #E3F3E8; border-color: #2E7D4F; }
+.du-side.win .du-sum:not(.small) { color: #2E7D4F; }
+.du-side.win .du-sum.small { color: #2E7D4F; }
+.du-tag { position: absolute; top: -13px; right: -8px; background: #2E7D4F; color: #fff; font-family: var(--font-head); font-weight: 700; font-size: 12px; border: 2px solid #fff; border-radius: 999px; padding: 1px 9px; box-shadow: 0 2px 0 rgba(0,0,0,.2); white-space: nowrap; }
+.du-mid { flex: none; width: 86px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; }
+.du-mid .pcard { transform: scale(.62); margin: -22px -16px; flex: none; }
+.du-mid .trcount { position: absolute; right: 2px; top: 2px; bottom: auto; background: var(--ink); color: #fff; border-radius: 999px; padding: 0 7px; font-family: var(--font-head); font-weight: 700; font-size: 13px; line-height: 20px; border: 2px solid #fff; }
+.du-vs { position: relative; font-family: var(--font-head); font-weight: 700; font-size: 13px; color: #fff; background: var(--ink); border-radius: 999px; padding: 0 8px; line-height: 20px; }
+.du-vs.ok { background: #2E7D4F; }
+.du-foot { margin-top: 8px; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; font-weight: 700; color: #7A7468; }
+.du-pill { background: #F4F1EA; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.du-pill.me { background: #FFE7A3; color: var(--ink); }
+.du-pill b { color: var(--ink); }
+.du-q { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; }
+.du-q .ec-badge { position: static; transform: none; }
+/* Aufdecken: erst Scheine umdrehen, dann Gewinnerseite + Schild */
+.evcard.duel.reveal .du-side.win { animation: duwin .4s ease both; animation-delay: calc(var(--el, 0ms) + 1100ms); }
+.evcard.duel.reveal .du-side.lose { animation: dulose .4s ease both; animation-delay: calc(var(--el, 0ms) + 1100ms); }
+.evcard.duel.reveal .du-tag { animation: ecrin .35s var(--e-pop) both; animation-delay: calc(var(--el, 0ms) + 1200ms); }
+.evcard.duel .ecr-sum { animation-delay: calc(var(--el, 0ms) + 1000ms); }
+@keyframes duwin { from { background: #F4F1EA; border-color: transparent; } to { background: #E3F3E8; border-color: #2E7D4F; } }
+@keyframes dulose { to { opacity: .78; } }
+.evcard.duel:not(.reveal) .du-side.lose { opacity: .78; }
+@media (prefers-reduced-motion: reduce) { .evcard.duel .du-side, .evcard.duel .du-tag { animation: none !important; } .evcard.duel .du-side.lose { opacity: .78; } }

@@ -155,6 +155,25 @@ export function buildDemoState(kind, local) {
       g = counterTrade(g, 'u1', [5, 6]);
       return g;
     }
+    case 'tradeseen': { // Kuhhandel zwischen zwei anderen: Zuschauer sehen nur Rückseiten
+      g = base(); g.turn = 1;
+      g = startTrade(g, 'u2', 'u3', 'kuh', [0, 2, 6]);
+      g = counterTrade(g, 'u3', [1, 5]);
+      return g;
+    }
+    case 'tradetie': { // Gleichstand: Herausforderer (du) gewinnt
+      g = base();
+      g = startTrade(g, 'u1', 'u2', 'kuh', [3, 4]);
+      g = counterTrade(g, 'u2', [3, 4]);
+      return g;
+    }
+    case 'traderatresult': {
+      g = base(); g.turn = 1;
+      g.players[0].animals[RAT] = 1;
+      g = startTrade(g, 'u2', 'u1', RAT, [0, 2, 6]);
+      g = counterTrade(g, 'u1', [5, 6]);
+      return g;
+    }
     case 'rat': {
       g = base(); g.turn = 1; g.deck[0] = RAT;
       g = drawForAuction(g, 'u2');

@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v0.43.0 – Kuhhandel-Ergebnis als Duell
+
+- [x] **Kuhhandel-Ergebnis nebeneinander:** Links der Herausforderer, rechts der Gegner, das Tier in der Mitte („VS“). Jeder hat ein eigenes Feld mit großen Scheinen und großer Summe.
+- [x] Der Gewinner bekommt einen grünen Rahmen und das Schild „gewinnt“ (beim Rattenhandel „ist sie los“), der Verlierer wird leicht ausgegraut – erst nachdem die Scheine umgedreht sind.
+- [x] Unten steht klar, was passiert: „Unterschied 40“ bzw. „Gleichstand – … gewinnt“ und für Beteiligte „Du bekommst 60 · Nico 100“.
+- [x] Zuschauer sehen weiter nur Rückseiten und die Kartenanzahl.
+- [x] Angenommenes Angebot im selben Stil: „bietet 60“ – ✓ – „nimmt an“.
+- [x] Neue Demo-Ansichten für Screenshots: `tradeseen`, `tradetie`, `traderatresult`.
+
 ## v0.42.0 – Ganzer Bildschirm
 
 - [x] **Der Tisch füllt jetzt den ganzen Bildschirm:** Bisher war er ein fester Rahmen, der oben/unten (iPhone) bzw. links/rechts (breite Handys) Platz verschenkt hat. Jetzt kleben Plätze, Menü, 💬, deine Knöpfe und dein Geld an den Rändern, die Mitte bekommt die zusätzliche Höhe bzw. Breite. Kamera-Aussparung und Home-Balken bleiben frei.

@@ -1222,7 +1222,7 @@ export function renderGame(root, ctx) {
       const verb = (id, du, er) => (id === meId ? du : er);
       const ecP = (id) => { const i = idxOf(id); return i >= 0 ? `<span class="ec-p">${avatar(v.players[i], i)}<b>${nm(id)}</b></span>` : ''; };
       const deal = (from, amt, to, cls = '') => `<div class="ec-deal">${ecP(from)}<span class="ec-arr">→</span><span class="ec-amt ${cls}">${amt}</span><span class="ec-arr">→</span>${ecP(to)}</div>`;
-      let card = ''; let kind = ''; let title = ''; let body = ''; let tone = ''; let reveal = false;
+      let card = ''; let kind = ''; let title = ''; let body = ''; let tone = ''; let reveal = false; let duel = '';
       if (e.type === 'auction_won') {
         kind = '🔨 Versteigerung';
         card = playCard(e.animal);
@@ -1248,28 +1248,44 @@ export function renderGame(root, ctx) {
         const isRat = e.animal === RAT;
         kind = isRat ? '🐀 Rattenhandel' : '🐮 Kuhhandel';
         const loser = e.winner === e.challenger ? e.target : e.challenger;
-        card = `${isRat ? playCard(RAT, 'rat') : playCard(e.animal)}<span class="trcount">×${e.count}</span>`;
         title = isRat ? `${nm(loser)} ${verb(loser, 'bekommst', 'bekommt')} ${e.count}× Ratte` : `${nm(e.winner)} ${verb(e.winner, 'gewinnst', 'gewinnt')} ${e.count}× ${esc(aname(e.animal))}`;
+        kind += ` · um ${e.count}× ${esc(isRat ? 'Ratte' : aname(e.animal))}`;
+        const winTag = isRat ? 'ist sie los' : 'gewinnt';
+        const mid = (sign) => `<div class="du-mid">${isRat ? playCard(RAT, 'rat') : playCard(e.animal)}<span class="trcount">×${e.count}</span>${sign}</div>`;
+        // Duell nebeneinander: links Herausforderer, rechts Gegner, Tier in der Mitte
+        const duSide = (id, role, inner, win) => `<div class="du-side ${win ? 'win' : 'lose'}">${win ? `<span class="du-tag">${winTag}</span>` : ''}${ecP(id)}<span class="du-role">${role}</span>${inner}</div>`;
         if (e.accepted) {
-          body = `<span class="ec-sub">${nm(e.target)} ${verb(e.target, 'nimmst', 'nimmt')} das Angebot an</span>`
-            + (e.offerSum != null ? deal(e.challenger, e.offerSum, e.target) : '');
+          const known = e.offerSum != null;
+          const n = Array.isArray(e.offer) ? e.offer.length : e.offer;
+          const amt = known ? `<b class="du-sum">${e.offerSum}</b>` : `<b class="du-sum small">${karten(n)}</b>`;
+          const got = e.target === meId && known ? `+${e.offerSum} für dich` : `bekommt ${known ? e.offerSum : karten(n)}`;
+          duel = `<div class="du-row">${duSide(e.challenger, verb(e.challenger, 'bietest', 'bietet'), amt, true)}${mid('<span class="du-vs ok">✓</span>')}${duSide(e.target, verb(e.target, 'nimmst an', 'nimmt an'), `<b class="du-sum small">${got}</b>`, false).replace('du-side lose', 'du-side')}</div>`;
         } else {
           const amts = e.offerSum != null && e.counterSum != null;
           const cw = e.winner === e.challenger;
           // Aufdecken wie am Tisch: beide Stapel werden Schein für Schein umgedreht, dann steht der Gewinner fest
           // (Unbeteiligte sehen nur die Rückseiten – Beträge bleiben verdeckt)
-          const side = (id, cards, total, win) => {
+          const stack = (cards, total) => {
             const list = Array.isArray(cards) ? [...cards].sort((x, y) => y - x) : Array.from({ length: cards || 0 }, () => null);
-            return `<div class="ecr-side ${win ? 'win' : ''}">${ecP(id)}<div class="ecr-cards">${list.map((m, k) => `<span class="ecr-c ${m == null ? 'back' : ''}" style="--k:${k};--m:${m == null ? '#ccc' : MONEY_COLORS[m] || '#eee'}">${m == null ? '' : m}</span>`).join('') || '<em>–</em>'}</div>${total != null ? `<b class="ecr-sum">${total}</b>` : ''}</div>`;
+            return `<div class="ecr-cards">${list.map((m, k) => `<span class="ecr-c ${m == null ? 'back' : ''}" style="--k:${k};--m:${m == null ? '#ccc' : MONEY_COLORS[m] || '#eee'}">${m == null ? '' : m}</span>`).join('') || '<em>–</em>'}</div>`
+              + (total != null ? `<b class="ecr-sum du-sum">${total}</b>` : `<b class="ecr-sum du-sum small">${karten(list.length)}</b>`);
           };
-          body = `<div class="ec-reveal">${side(e.challenger, e.offer, amts ? e.offerSum : null, cw)}<span class="ec-vs">gegen</span>${side(e.target, e.counter, amts ? e.counterSum : null, !cw)}</div>
-            <span class="ec-sub ecr-after">${e.diff === 0 ? `Gleichstand – ${nm(e.challenger)} ${verb(e.challenger, 'gewinnst', 'gewinnt')}` : `Unterschied: <b>${e.diff}</b>`} · Geld wird getauscht</span>`;
+          duel = `<div class="du-row">${duSide(e.challenger, verb(e.challenger, 'forderst heraus', 'fordert heraus'), stack(e.offer, amts ? e.offerSum : null), cw)}${mid('<span class="du-vs">VS</span>')}${duSide(e.target, 'Gegenangebot', stack(e.counter, amts ? e.counterSum : null), !cw)}</div>`;
+          const pills = [e.diff === 0 ? `Gleichstand – ${nm(e.challenger)} ${verb(e.challenger, 'gewinnst', 'gewinnt')}` : `Unterschied <b>${e.diff}</b>`];
+          if (amts && (e.challenger === meId || e.target === meId)) {
+            const other = e.challenger === meId ? e.target : e.challenger;
+            const mine = e.challenger === meId ? e.offerSum : e.counterSum;
+            pills.push(`<span class="me">Du bekommst <b>${e.challenger === meId ? e.counterSum : e.offerSum}</b> · ${nm(other)} <b>${mine}</b></span>`);
+          } else pills.push('Geld wird getauscht');
+          duel += `<div class="du-foot ecr-after">${pills.map((x) => x.startsWith('<span') ? x.replace('<span class="me">', '<span class="du-pill me">') : `<span class="du-pill">${x}</span>`).join('')}</div>`;
           reveal = true;
         }
         tone = e.winner === meId ? 'good' : '';
       }
       const badge = local.res.quartet ? '<span class="ec-badge">Quartett!</span>' : '';
-      const html = `<div class="evcard ${tone} ${reveal ? 'reveal' : ''}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
+      const html = duel ? `<div class="evcard duel ${tone} ${reveal ? 'reveal' : ''}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
+        <small class="ec-kind">${kind}</small><b class="ec-title">${title}</b>${duel}${local.res.quartet ? `<span class="ec-sub du-q"><span class="ec-badge">Quartett!</span> ${nm(receiverOf(e))} ${verb(receiverOf(e), 'hast', 'hat')} jetzt alle 4× ${esc(aname(e.animal))}</span>` : ''}
+        <i class="rtimer"></i></div>` : `<div class="evcard ${tone} ${reveal ? 'reveal' : ''}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
         <div class="ec-art">${card}${badge}</div>
         <div class="ec-body"><small class="ec-kind">${kind}</small><b class="ec-title">${title}</b>${body}${local.res.quartet ? `<span class="ec-sub">${nm(receiverOf(e))} ${verb(receiverOf(e), 'hast', 'hat')} jetzt alle 4× ${esc(aname(e.animal))}</span>` : ''}</div>
         <i class="rtimer"></i></div>`;
