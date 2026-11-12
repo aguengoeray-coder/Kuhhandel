@@ -62,9 +62,14 @@ test('Shop-Karten sind auf beiden iPhone-Landscape-Größen vollständig sichtba
     const avatarIssues = await page.locator('.shop-avatar-item').evaluateAll(cards => cards.flatMap((card, index) => {
       const cardRect = card.getBoundingClientRect();
       const cardStyle = getComputedStyle(card);
+      const sectionRect = card.closest('.shop-avatar-section').getBoundingClientRect();
+      const headingRect = card.closest('.shop-avatar-section').querySelector('.shop-section-head').getBoundingClientRect();
       const issues = [];
       if (cardRect.left < -1 || cardRect.top < -1 || cardRect.right > innerWidth + 1 || cardRect.bottom > innerHeight + 1) {
         issues.push(`Avatar-Karte ${index + 1} liegt außerhalb des sichtbaren Viewports.`);
+      }
+      if (cardRect.top < headingRect.bottom - 1 || cardRect.bottom > sectionRect.bottom + 1) {
+        issues.push(`Avatar-Karte ${index + 1} ragt aus dem Avatar-Bereich.`);
       }
       for (const child of card.querySelectorAll('.shop-art,.shop-item-name,.shop-item-sub,.shop-action,.shop-active,.shop-owned')) {
         const rect = child.getBoundingClientRect();
