@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.47.1 – Startseite symmetrisch
+
+- [x] „＋ Neues Spiel“ und „🔑 Mit Code“ stehen jetzt nebeneinander mittig unter dem Tisch statt rechts daneben – der Tisch steht genau in der Mitte.
+
 ## v0.47.0 – Neue Startseite „Tisch“
 
 - [x] **Börsenticker** läuft oben über die ganze Breite.
