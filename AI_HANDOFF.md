@@ -586,3 +586,19 @@ Bitte auf dem neuesten Stand von `codex/v048-shop` die `shop-demo.html` erneut b
 - PR #1 ist geschlossen, nicht gemergt. PR #4 war die Synchronisierung von `main` in den Feature-Branch und ist abgeschlossen. PR #5 bleibt Draft.
 - Shop-Playwright auf `0f027fc` nach Synchronisierung erfolgreich; weitere CI-Läufe auf dem aktuellen Dokumentations-Head laufen.
 - Kein Merge nach `main`, kein Live-Deployment, kein SQL ausgeführt.
+
+
+## 12.11.2026, 20:10 – Codex: finaler Shop-Prüfstand und SQL-Rechteprüfung
+
+- Aktueller Shop-Code-Head: `ffa9b90dd6bf7a74ef737f209f1fe50bad10e566`; PR #5 bleibt Draft.
+- Branch-Vergleich zu `main`: 60 Commits voraus, 0 zurück. Der Diff enthält 12 Shop-/Shop-Dokumentations-/Testdateien; keine App-Integration in `js/app.js`, `js/game.js`, `css/style.css` oder `index.html`.
+- GitHub Actions Tests auf `ffa9b90`: erfolgreich.
+- Shop-Playwright auf `ffa9b90`: erfolgreich für 852×393 und 667×375. Zusätzlich werden mindestens 10 px Schriftgröße, Preislabel auf schmalem Layout, Clipping und Bereichsüberläufe geprüft.
+- Shop-Preview-Artefakt: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43297050744/artifacts/13978794151
+- Cloudflare Workers Builds Preview auf `ffa9b90`: erfolgreich; Build-ID `2a5f574c-1b82-4566-8cdc-639e9697eeda`.
+- Allgemeiner Browser-Test auf `ffa9b90`: Ansichten in vier Größen erfolgreich; vollständige Testpartien laufen noch: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43297050731
+- SQL-Sicherheitsverbesserung: `record_results(uuid,jsonb)` widerruft explizit Rechte von `public`, `anon` und `authenticated`, danach wird nur `authenticated` Execute gewährt. Statische Tests prüfen diese Rechte sowie den internen Aufrufschutz von `shop_credit_game_winners`.
+- Das Sicherheitsrestrisiko bleibt unverändert: `games.state` kann vom Client geschrieben werden. Damit ist die Siegprämie zwar gegen Doppelgutschrift, aber nicht gegen gefälschte Endstände geschützt. Vor einer Echtgeld-/wettbewerbsähnlichen Ökonomie muss die Spielzug-/Endstandsberechnung serverautoritativ werden.
+- Die App-Version bleibt absichtlich v0.47.2, solange der Shop nur ein isoliertes Modul ist. v0.48.0 plus CHANGELOG erfolgt mit der separaten Integration in die Haupt-App.
+- PR #2 Automatisierung wurde von Alp gemergt; aktueller `main` ist `e74c694`. Shop-PR #1 ist wegen veraltetem Basisstand geschlossen; sauberer Draft-PR #5 ist aktiv.
+- Kein Merge von PR #5, kein Live-Deployment und keine SQL-Ausführung.
