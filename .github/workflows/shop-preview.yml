@@ -1,0 +1,40 @@
+name: Shop-Vorschau
+on:
+  pull_request:
+    paths:
+      - 'shop-demo.html'
+      - 'css/shop.css'
+      - 'js/shop.js'
+      - 'js/shopavatars.js'
+      - 'test/shop.test.js'
+      - 'e2e/shop-preview.mjs'
+      - '.github/workflows/shop-preview.yml'
+  push:
+    branches: [codex/v048-shop]
+permissions:
+  contents: read
+jobs:
+  shop-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Shop-Unit-Tests
+        run: npm test
+      - name: Playwright installieren
+        run: |
+          npm install --no-save --no-package-lock playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: Shop bei 852×393 und 667×375 prüfen
+        run: node --test e2e/shop-preview.mjs
+      - name: Screenshots hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shop-preview-screenshots
+          path: shop-report/
+          if-no-files-found: ignore
+          retention-days: 14
