@@ -13,7 +13,7 @@ import { shopAvatar, SHOP_AVATAR_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.48.0';
+export const APP_VERSION = '0.48.1';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -73,6 +73,7 @@ const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '
 // EHRLICH: euer Insider – kommt als großer Spruch mit eigenem Ton
 const EHRLICH = 'Ehrliches, männliches Angebot! 💪';
 const UNEHRLICH = 'Unehrliches, unmännliches Angebot! 👎';
+const REACT_EMOJI = ['😂', '👍', '👎', '😱', '🤑', '🙄', '🔥', '🐮'];
 const REACTIONS = [EHRLICH, UNEHRLICH, 'Komm schon, da geht noch mehr!', 'Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!'];
 let roomChannel = null;
 let versions = {}; // Platz → App-Version (aus der Live-Verbindung)
@@ -594,7 +595,8 @@ function renderPlaying() {
     playSound: (kind) => { if (soundOn() && !DEMO) playSound(kind); },
     reactions: activeReactions(),
     reactionList: myReactions(),
-    reactionBase: REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
+    reactionEmoji: REACT_EMOJI.length,
+    reactionBase: REACT_EMOJI.length + REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
     seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
@@ -1020,7 +1022,7 @@ async function loadProfiles(ids) {
 
 function myReactions() {
   if (DEMO && shopMe.state === 'idle') loadShop();
-  return [...REACTIONS, ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)];
+  return [...REACT_EMOJI, ...REACTIONS, ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)];
 }
 
 async function loadShop(force = false) {
@@ -1286,7 +1288,7 @@ function watchRoom(id) {
     })
     .on('broadcast', { event: 'nudge' }, ({ payload }) => gotNudge(payload))
     .on('broadcast', { event: 'react' }, ({ payload }) => {
-      if (!payload?.seat || !(REACTIONS.includes(payload.text) || SAYING_TEXTS.includes(payload.text))) return;
+      if (!payload?.seat || !(REACTIONS.includes(payload.text) || SAYING_TEXTS.includes(payload.text) || REACT_EMOJI.includes(payload.text))) return;
       const to = typeof payload.to === 'string' && ui.game?.state?.players?.some((p) => p.id === payload.to) ? payload.to : null;
       showReaction(payload.seat, payload.text, to);
     })
@@ -1767,7 +1769,7 @@ function demo(kind) {
   if (kind === 'testspiel' || kind === 'testspiel3') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(kind === 'testspiel3' ? 3 : 4); }
   me = { id: 'u1', name: 'Alp' };
   if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
-  if (params.get('react')) reactions.set(params.get('react'), { text: params.get('rtext') === 'ehrlich' ? EHRLICH : params.get('rtext') === 'unehrlich' ? UNEHRLICH : params.get('rtext') === 'mehr' ? REACTIONS[2] : 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
+  if (params.get('react')) reactions.set(params.get('react'), { text: params.get('rtext') === 'ehrlich' ? EHRLICH : params.get('rtext') === 'unehrlich' ? UNEHRLICH : params.get('rtext') === 'mehr' ? REACTIONS[2] : params.get('rtext') === 'lach' ? '😂' : params.get('rtext') === 'nico' ? 'Nico, schrei nicht!' : 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
   if (params.get('pick')) gameLocal.reactTo = params.get('pick');
   if (params.get('score')) gameLocal.scoreOpen = params.get('score');
   if (params.get('oldv')) versions = { u3: '0.11.0' };
