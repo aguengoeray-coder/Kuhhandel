@@ -2571,3 +2571,8 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .avatar.shopav .shop-avatar { width: 100%; height: 100%; border-width: 2px; box-shadow: none; }
 .avatar.shopav .shop-avatar::before { display: none; }
 .reactpick > button.bought { border-color: #C99A1E; background: #FFF4CF; }
+/* v0.49 Bühne: ein Maßstab pro Partie für die ganze Tischmitte (3 Spieler: Seiten frei → größer) */
+.stage { --bz: 1.1; }
+.stage.p3 { --bz: 1.25; }
+.tcenter { zoom: var(--bz); width: calc(100% / var(--bz)); max-height: calc(200px / var(--bz) * 1.25); }
+.turnhint { top: -2px; } /* v0.49: oben am Rand nicht abschneiden */

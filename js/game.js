@@ -1606,7 +1606,7 @@ export function renderGame(root, ctx) {
   // gemerkte Einmal-Effekte zeichnen; die Animationen werden nach dem Zeichnen auf die richtige Stelle vorgespult
   local.fx.forEach((f) => { effects += `<div class="fxk" data-fxat="${f.at}">${f.html}</div>`; wakeLocal(f.until + 30); });
 
-  root.innerHTML = `<div class="stage-wrap"><div class="stage" id="stage">
+  root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
     ${table}
     ${ctx.reactionList ? '<button type="button" class="round chatbtn chat-br" data-a="reactTo" data-v="' + esc(meId) + '" aria-label="Reaktion an alle">💬</button>' : ''}
