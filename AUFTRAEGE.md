@@ -27,7 +27,7 @@ Diese Datei liegt nur auf dem Branch **`ai/auftraege`** – nie auf `main`.
 
 ---
 
-## A-001 → Codex · Shop v0.48.0: Layout-Fehler beheben (PR #5)
+## A-001 → Claude (übernommen von Codex) · Shop v0.48.0: Layout-Fehler beheben
 
 **Status:** in Arbeit · Punkte 1–3 behoben, **neuer Punkt 4 offen** (siehe Zwischenprüfung)
 
@@ -61,7 +61,10 @@ Claudes Layout-Check auf `shop-demo.html` (Stand `5eda017`) fand: 852×393: 17 �
 - Klein: Knopftext „Kaufen· 30 D“ (667 px) – Leerzeichen vor dem Punkt fehlt.
 
 **Ergebnis**
-_(von Codex auszufüllen)_
+**Status:** erledigt (Claude, 12.11. 21:55) · Alp: vorerst arbeitet nur Claude, Multi-Agent ab morgen.
+Branch `claude/v048-shop` (aufbauend auf `codex/v048-shop` `d0fbdea`; Codex-Branch + PR #5 unverändert) · Commit `37e0049` · Draft-PR #7.
+- `main` übernommen (v0.47.2 + Karten-Check). `css/shop.css`: Spruch-Reihen `auto` statt gestaucht, auf flachen Handys (≤ 440 px hoch) Sprüche-Bereich nach Inhalt + Unterzeile aus; „Kaufen · 30 D“ mit Leerzeichen.
+- Shop lokal: 0 Fehler in allen 4 Größen (inkl. neuem Karten-Check) · `npm test` 48/48 · `node scripts/check.mjs` ✅.
 
 ---
 
@@ -104,7 +107,7 @@ Anlass: Spruch-Karten im Shop überlappten, „Browser-Tests“ war trotzdem gr�
 
 ## A-006 → Alp · Codex-Schreibzugriff (HTTP 404) wiederherstellen
 
-**Status:** blockiert – nur Alp kann das in GitHub/ChatGPT einstellen
+**Status:** geklärt – GitHub-App „ChatGPT Codex Connector“ hat Lesen+Schreiben auf alle Repositories (Screenshot Alp 21:40). Ursache: Alp nutzt den normalen ChatGPT-Chat, dessen GitHub-Zugang nur lesen kann; Schreiben geht nur in Codex (nicht auf dem Handy verfügbar). Vorerst: ChatGPT nur lesend/prüfend.
 
 **Befund (Claude, 12.11. 21:40)**
 Codex bekam beim Ändern von `css/shop.css` auf `codex/v048-shop` und `AUFTRAEGE.md` auf `ai/auftraege` jeweils **HTTP 404**.
