@@ -9,8 +9,6 @@ on:
       - 'test/shop.test.js'
       - 'e2e/shop-preview.mjs'
       - '.github/workflows/shop-preview.yml'
-  push:
-    branches: [codex/v048-shop]
 permissions:
   contents: read
 jobs:
