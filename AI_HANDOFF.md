@@ -116,3 +116,67 @@ Alp prüft die Dokumentationsstruktur. Erst nach seinem GO Änderungen nach `mai
 ### Nächster Schritt
 - Nach Alps Freigabe Änderungen in `main` integrieren.
 - Anschließend Kapazitätsmeldungen in einem realen Claude/Codex-Übergabetest ausprobieren.
+
+
+## 12.11.2026 – Claude → Codex/Team: Bestandsaufnahme, v0.46-Stand und Kommunikationstest
+
+- **Branch (dieser Eintrag):** `claude/handoff` (basiert auf `codex/ai-project-memory`, nur `AI_HANDOFF.md` ergänzt)
+- **Feature-Branch:** `v0.46-kuhhandel-einsatz` – Commits `311ffeb`, `95e6b05`, `8ea85d3`, `86e7a16`
+- **Status v0.46:** Technisch fertig · großer Testlauf läuft · Wartet auf Alp (GO). Nicht live.
+- **Live (`main`):** v0.45.0 (`48a07e2`), Cloudflare-Build und Tests erfolgreich.
+
+### KAPAZITÄT
+- Modell/Modus: Claude Opus 5.5 (`claude-opus-5-5`) in der Claude-App (Cloud-Sitzung mit Agent-Werkzeugen). Das Modell wurde in dieser Sitzung zwischendurch gewechselt (Fable 5.2 ↔ Opus 5.5).
+- Kontextfenster: nicht verfügbar (wird mir nicht angezeigt).
+- Aktuelle Auslastung / Rest: nicht verfügbar. Die Sitzung ist sehr lang und wurde bereits einmal automatisch zusammengefasst → qualitativ: **knapp**, Übergaben lieber früh schreiben.
+- Nutzungslimit / Reset: nicht verfügbar.
+- Werkzeuge: Terminal (Linux), git + `gh` mit Push-Rechten auf eigene Branches, `npm test`, Headless-Chromium/Playwright (Screenshots, Videos, automatisierte Partien), lokaler Server, Websuche.
+- Einschränkungen: Live-Seite ist aus der Sitzung nicht direkt abrufbar (nur über Build-Status von GitHub/Cloudflare); keine echten Geräte; Supabase nur über Code, nicht über Konsole.
+- Datenqualität: Modell/Werkzeuge angezeigt; Kontext/Limits unbekannt.
+
+### 1. Was habe ich zuletzt entwickelt?
+v0.46 „Kuhhandel: Einsatz sichtbar“ auf `v0.46-kuhhandel-einsatz`:
+- Topf in der Mitte mit allen eingesetzten Tierkarten beider Seiten („2 gegen 2 · Gewinner bekommt alle 4“; Rattenhandel: „Verlierer bekommt alle“).
+- Je Seite: eingesetzte Karten, „+N“ behält, „gewinnt → 4× Gans · Quartett!“ – beim Angebot, Antworten, Zuschauen und im Ergebnisfenster.
+- Geldtausch im Ergebnisfenster: Stapel rutschen nach dem Aufdecken auf die andere Seite; danach fliegt nur das Tier (kein Geldflug mehr beim Kuhhandel, `choreo()` angepasst).
+- Vom Test gefundene Layout-Fehler behoben (gab es teils schon live): „Kann nicht zahlen“ mit vielen Scheinen zusammengefasst; Spezialkarte bezahlen mit vielen Karten in einer Reihe; Kuhhandel-Antwortfeld kompakter.
+- Neue Demo-Ansichten: `tradeum2`, `cantpaymany`, `sppay10`.
+
+### 2. Was ist tatsächlich fertig?
+- Live: alles bis v0.45.0.
+- v0.46: Code fertig, `npm test` grün (38/38). Großer Testlauf (Layout, Simulationen, Flugziele, Klicks, 60 fps, 16 ganze Partien bis Siegertreppchen auf 4 Handygrößen) war bis auf zwei Layout-Funde grün; beide behoben, Wiederholung läuft (Ergebnis folgt in einem Nachtrag/Chat an Alp).
+
+### 3. Was ist noch in Arbeit?
+- Abschluss-Testlauf v0.46 → danach Screenshots an Alp → GO → Merge.
+- v0.47 Startseite „B: Tisch“: **noch nicht begonnen**. Nur Skizzen (nicht im Repo) – Alp hat Variante B freigegeben.
+
+### 4. Welche Dateien bearbeite ich?
+- v0.46 (abgeschlossen bis auf GO): `js/game.js`, `css/style.css`, `js/demo.js`, `js/app.js` (nur `APP_VERSION`), `version.json`, `CHANGELOG.md`.
+- v0.47 (als Nächstes): `js/app.js` (Startseite/Warteraum/Einstellungen), `css/style.css`, ggf. `index.html`.
+
+### 5. Was kann Codex übernehmen, ohne meine Arbeit zu berühren?
+- v0.48 weiter in eigenen Dateien: `js/shopavatars.js` (Browserprüfung/Screenshots nachholen), Shop-Modul (`js/shop.js` + `css/shop.css`), `supabase/v0.48-shop.sql` (Dublonen nur serverseitig gutschreiben, Kauf serverseitig prüfen, RLS) inkl. Schritt-für-Schritt-Anleitung für Alp.
+- Schnittstelle für die Integration vorschlagen (z. B. `renderShop(root, ctx)` und `avatarHtml(id)`), damit ich in v0.47 nur einen Einstiegspunkt in der unteren Leiste einhänge.
+- Review meines v0.46-Diffs (read-only): Spiellogik ist unverändert (`src/engine.js` nicht angefasst), Fokus auf `js/game.js` (`choreo`, `stakeOf`, `tmid`, Ergebnisfenster `.du-*`).
+
+### 6. Wo brauche ich Unterstützung?
+- Unabhängiges Review v0.46 (siehe oben).
+- Entscheidung/Vorschlag, wie Shop-Avatare am Tisch angezeigt werden (Größe am Platz ~44 px; Animationen dort nur dezent, Performance auf älteren Handys).
+- Die Datenbank-Seite (Dublonen beim Sieg): bitte klären, wo der Sieg verlässlich serverseitig feststeht (heute schreibt der Client `game_results`).
+
+### 7. Nächste Aufgabe
+1. Alp: GO für v0.46 nach dem Abschluss-Testlauf.
+2. Claude: v0.47 Startseite B (ticker, Filz-Tisch, Leiste, Einstellungen hinter ⚙️) auf `claude/v047-startseite`.
+3. Codex parallel: Shop-Modul + SQL in eigenen Dateien; Einhängen in die Leiste erst nach v0.47 und Absprache.
+
+### Gefundene Widersprüche (bitte klären)
+- `AGENTS.md` wurde auf `codex/ai-project-memory` erweitert, `CLAUDE.md` aber nicht. Laut Regel müssen beide identisch sein (Claude liest `CLAUDE.md`). Vorschlag: beim Merge `CLAUDE.md` angleichen.
+- `AI_TEAM.md` sagt „Merge und Live-Schaltung ausschließlich Alp“. Gelebte Praxis bisher: Alp sagt „go“, Claude merged und prüft den Cloudflare-Build. Bitte festlegen, ob das so bleibt.
+- `AI_TEAM.md`/`PROJECT_STATUS.md` nennen Branch-Namen wie `claude/v046-kuhhandel`; der tatsächliche Branch heißt `v0.46-kuhhandel-einsatz`. Ab v0.47 nutze ich das Schema `claude/…`.
+- `PROJECT_STATUS.md`: v0.46 steht als „In Arbeit“ – tatsächlich technisch fertig (s. o.). v0.47 steht als „In Arbeit/geplant“ – tatsächlich noch nicht begonnen. Ich habe `PROJECT_STATUS.md` nicht geändert (Datei-Owner Codex), bitte übernehmen.
+- Die Doku-Commits auf `codex/ai-project-memory` tragen teils „v0.48.0“, obwohl es keine App-Version ist – nur zur Info.
+
+### Wichtige Konflikte oder Abhängigkeiten
+- Kein Dateikonflikt zwischen `v0.46-kuhhandel-einsatz` und `codex/shop-avatars` (getrennte Dateien).
+- v0.47 und das Shop-Einhängen berühren beide `js/app.js`/`css/style.css` → Integration erst nach v0.47, nacheinander.
+- Im lokalen Repo von Claude liegt eine nicht von Claude stammende Änderung an `js/demo.js` (Demo `trade3`) als git-stash; nicht committet. Falls sie von Codex/Nico stammt: bitte Bescheid geben.
