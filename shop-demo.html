@@ -13,17 +13,12 @@
 <body>
 <main id="demo"></main>
 <script type="module">
-import { renderShop } from './js/shop.js';
-const owned = new Set(['noergler','boersen-gauner','spruch-bluff','spruch-gute-ideen']);
+import { renderShop, SHOP_SAYINGS } from './js/shop.js';
+import { SHOP_AVATARS } from './js/shopavatars.js';
+const owned = new Set(['noergler','boersen-gauner','spruch-nico','spruch-gute-ideen']);
 let balance = 105;
 let activeAvatar = 'noergler';
-const prices = {
-  noergler:30,'opa-ratte':30,'business-huhn':30,'spar-schwein':30,
-  'boersen-gauner':40,'disco-kuh':40,'raketen-esel':40,'piraten-papagei':40,
-  daemonenritter:60,'cyborg-hahn':60,'kuh-kaiser':60,
-  'spruch-ehrlich':10,'spruch-unehrlich':10,'spruch-mehr':10,'spruch-bluff':10,
-  'spruch-niemals':10,'spruch-gutgespielt':10,'spruch-verteuert':10,'spruch-gute-ideen':20
-};
+const prices = Object.fromEntries([...SHOP_AVATARS,...SHOP_SAYINGS].map(({id,price})=>[id,price]));
 const shop = renderShop(document.getElementById('demo'), {
   me:{id:'demo-user',name:'Alp'},
   get balance(){return balance},
