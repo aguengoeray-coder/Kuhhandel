@@ -8,8 +8,8 @@ Hauptbranch: `main`
 
 ## Veröffentlichter Stand
 
-- Letzter bestätigter Live-Stand aus der Projektübergabe: **v0.45.0**.
-- `version.json` auf `main` weist **v0.45.0** aus (zuletzt am 12.11.2026 geprüft).
+- Letzter bestätigter Live-Stand: **v0.47.0** (Claude, Merge-Commit `90369ba7801390e560131f0f950f1678c38fb7a9`, 12.11.2026).
+- `version.json`/Changelog und GitHub-Stand müssen bei der nächsten Aktualisierung erneut gegengeprüft werden; der erfolgreiche Cloudflare-Build für `90369ba` wurde von Claude gemeldet.
 - `CHANGELOG.md` auf `main` dokumentiert v0.45.0 als jüngsten Eintrag.
 - Hosting: Cloudflare Worker; Änderungen auf `main` werden automatisch veröffentlicht; die umsetzende KI merged und pusht erst nach Alps ausdrücklichem „go“.
 - Datenbank/Echtzeit: Supabase.
@@ -19,11 +19,11 @@ Hauptbranch: `main`
 
 | Bereich | Bekannter Stand am 12.11.2026 | Zuständig | Nächster Schritt |
 |---|---|---|---|
-| v0.46 Kuhhandel-Einsatz | **Technisch fertig – wartet auf Alps GO** | Claude | Screenshots/Testergebnisse vorlegen; nach ausdrücklichem GO eigener Merge durch Claude |
-| v0.47 Startseite „B: Tisch“ | **Freigegeben, noch nicht begonnen** | Claude | Umsetzung auf eigenem Branch beginnen; v0.46-Dateien/Änderungen sauber abgrenzen |
-| v0.48 Shop-Avatare | Umsetzung liegt auf `codex/shop-avatars` | Codex | Browserdarstellung prüfen; Tests nachholen |
-| v0.48 Shop-Oberfläche | Noch nicht umgesetzt laut Übergabe | Codex | Eigenständiges Modul planen/umsetzen |
-| v0.48 Dublonen/Käufe | Noch nicht umgesetzt laut Übergabe | Codex | Serverseitige Supabase-Funktionen und SQL vorbereiten |
+| v0.46 Kuhhandel-Einsatz | **Live als v0.46.0** | Claude | Keine offenen Arbeiten aus dem letzten Übergabestand |
+| v0.47 Startseite „Tisch“ | **Live als v0.47.0** (`main` @ `90369ba`) | Claude | Keine offenen Arbeiten gemeldet; Startseite nach Deployment auf echtem Gerät kontrollieren |
+| v0.48 Shop/Avatare | Modul, 11 Avatare, Demo, SQL-Entwurf auf `codex/v048-shop` | Codex | Shop-Korrekturen a–d umgesetzt; Claude soll neueste Vorschau bei 852×393 und 667×375 prüfen |
+| v0.48 Shop-Oberfläche | Technisch umgesetzt, visuelle Abnahme offen | Codex | Browserprüfung, `npm test`, danach Integrationsplanung |
+| v0.48 Dublonen/Käufe | SQL-Entwurf vorhanden, nicht ausgeführt | Codex | Schema/Funktionsdefinitionen gegen Live-Supabase prüfen; SQL erst nach Alps Freigabe |
 | Bestenliste/Statistik | Bestehende Funktionen vorhanden; Erweiterungen nicht spezifiziert | Offen | Nur bei konkretem Auftrag ändern |
 
 ## Codex-Arbeit: Shop-Avatare
@@ -81,9 +81,9 @@ Das verbindliche Rollenmodell, die Aufgabenverteilung und die Meldung von Kontex
 |---|---|---|
 | JS-Syntax der Shop-Avatare | Bestanden | 12.11.2026, statische Prüfung |
 | 11 SVG-Avatare/Karten | Bestanden | 12.11.2026, Funktionsprüfung |
-| `npm test` für Shop-Branch | Nicht ausgeführt/nicht bestätigt | Noch nachholen |
+| `npm test` für Shop-Branch | Für älteren Commit 225dc403 erfolgreich (38/38); neueste Korrekturen noch nicht getestet | GitHub-Actions-Lauf für aktuellen Head ausstehend |
 | Browser-/Geräteprüfung | Offen | Screenshots erforderlich |
-| Merge/Deployment | Nicht erfolgt | Branch bleibt getrennt |
+| Merge/Deployment | Shop nicht gemergt; Cloudflare-Preview für Commit 4d4e62a war erfolgreich | Neueste Änderungen brauchen neuen Preview-/Browsercheck |
 
 ## Aktualisierungsregel
 
