@@ -361,6 +361,10 @@ export function renderGame(root, ctx) {
   const seatList = v.players.map((_, k) => v.players[(Math.max(0, myIdx) + 1 + k) % v.players.length]).filter((p) => p.id !== meId);
   const SEATS = seatList.length >= 3 ? ['l', 't', 'r'] : seatList.length === 2 ? ['tl', 'tr'] : ['t'];
   const seatOf = (id) => SEATS[seatList.findIndex((p) => p.id === id)] || null;
+  // Kuhhandel Schritt 1 (Gegner + Tier wählen): mögliche Gegner lassen sich auch direkt am Platz antippen
+  const pickTrades = state.phase === 'turn' && myTurn && local.tradeOpen && !local.tradePicked ? possibleTrades(state, meId) : null;
+  const pickTargets = pickTrades ? [...new Set(pickTrades.map((t) => t.target))] : [];
+  if (pickTrades && !pickTargets.includes(local.tradeTarget)) local.tradeTarget = pickTargets[0];
   const tradeMap = {};
   if (state.phase === 'turn' && myTurn && !v.mustDraw && !calmLeft) possibleTrades(state, meId).forEach((t) => { (tradeMap[t.target] ||= new Set()).add(t.animal); });
   // dezente Pfeile zwischen den Plätzen: so herum wird gespielt
@@ -415,7 +419,7 @@ export function renderGame(root, ctx) {
     const laidN = state.phase === 'rat' ? (v.rat.laid[p.id] || 0) : 0;
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
     return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}">${coin}${ratPile}
-      ${bubble}${nudge}
+      ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}${avatar(p, i)}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}</span>` : status}</span></div>
@@ -736,35 +740,54 @@ export function renderGame(root, ctx) {
     const target = v.players[idxOf(local.tradeTarget)];
     const canOffer = chosen && (local.sel.length > 0 || me.money.length === 0);
     aucBanner = chosen?.animal === RAT ? 'Rattenhandel' : 'Kuhhandel';
-    aucCenter = `<div class="tduel ${entered ? 'pop' : ''}">
+    const tName = (id) => esc(nameOf(id));
+    if (!local.tradePicked) {
+      // Schritt 1: ein Fenster – Gegner oben, darunter große Kärtchen nur mit Tieren, die ihr beide habt
+      const many = forTarget.length > 8 ? 'many' : '';
+      aucCenter = `<div class="tpick ${entered ? 'pop' : ''}">
+        <small class="tp-kind">Kuhhandel · Schritt 1 von 2${targets.length > 1 ? ' · Gegner auch direkt am Platz antippen' : ''}</small>
+        <div class="tp-head"><b>Mit wem, um welches Tier?</b>
+          <div class="tp-opps">${targets.map((id) => { const i = idxOf(id); return targets.length > 1 ? `<button type="button" class="tp-opp ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${avatar(v.players[i], i)}<span>${tName(id)}</span></button>` : `<span class="tp-opp on solo">${avatar(v.players[i], i)}<span>${tName(id)}</span></span>`; }).join('')}</div>
+          <button type="button" class="tp-x" data-a="tradeClose" aria-label="Abbrechen">✕</button></div>
+        <div class="tp-grid ${many}">${forTarget.map((t) => `<button type="button" class="tp-t" data-a="tAnimal" data-v="${t.animal}" style="--a:${ANIMAL_COLORS[t.animal]}" aria-label="${aname(t.animal)}: es geht um ${t.count}">
+          <span class="tp-um">um ${t.count}</span>${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="tp-val">${aval(t.animal)}</em>` : ''}<span class="tp-nm">${esc(aname(t.animal))}</span>
+          <span class="tp-cnt"><span class="me">Du ${me.animals[t.animal] || 0}</span><span class="op" style="--c:${SEAT_COLORS[idxOf(target.id)]}">${tName(target.id)} ${target.animals[t.animal] || 0}</span></span></button>`).join('')}</div>
+      </div>`;
+      aucLeft = '';
+      aucBanner = ''; // das Fenster hat seine eigene Überschrift
+      pickMode = null;
+    } else {
+      // Schritt 2: Geld wählen – Gegner und Tier stehen fest (antippen = ändern)
+      aucCenter = `<div class="tduel ${local.pickedNow ? 'pop' : ''}">
       <div class="tpanel">
         ${who(meId, 'Du')}
         <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
         <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
-        ${myTiles(chosen?.animal)}
+        <small class="thas">du hast ${me.animals[chosen?.animal] || 0}× ${esc(aname(chosen?.animal))}</small>
       </div>
       ${tmid(chosen?.animal, chosen?.count)}
       <div class="tpanel">
         ${who(target.id)}
-        ${targets.length > 1 ? `<div class="tabs">${targets.map((id) => `<button type="button" class="tab ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${esc(nameOf(id))}</button>`).join('')}</div>` : ''}
-        <div class="atiles ${forTarget.length > 3 ? 'many' : ''}">${forTarget.map((t) => `<button type="button" class="atile ${t.animal === local.tradeAnimal ? 'on' : ''}" style="--a:${ANIMAL_COLORS[t.animal]}" data-a="tAnimal" data-v="${t.animal}" aria-label="${aname(t.animal)}: es geht um ${t.count}">${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="cv">${aval(t.animal)}</em>` : ''}<span class="tcount">um ${t.count}</span></button>`).join('')}</div>
+        <small class="thas">hat ${target.animals[chosen?.animal] || 0}× ${esc(aname(chosen?.animal))}</small>
+        <button type="button" class="pill pill-white pill-small tchange" data-a="tradeRepick">Gegner/Tier ändern</button>
       </div>
     </div>`;
-    const step = (n, label, val, state0) => `<div class="tstep ${state0}"><i>${state0 === 'done' ? '✓' : n}</i><span>${label}</span><b>${val}</b></div>`;
-    const moneyDone = local.sel.length > 0;
-    const steps = `<div class="tsteps">
-        ${step(1, 'Gegner', esc(target.name), 'done')}
-        ${step(2, 'Tier', chosen ? `${chosen.count}× ${esc(aname(chosen.animal))}` : '–', chosen ? 'done' : 'now')}
-        ${step(3, 'Geld', moneyDone ? karten(local.sel.length) : 'unten antippen', moneyDone ? 'done' : chosen ? 'now' : '')}
-      </div>`;
-    aucCenter = steps + aucCenter;
-    aucLeft = `
+      local.pickedNow = false;
+      const moneyDone = local.sel.length > 0;
+      const step = (n, label, val, state0) => `<div class="tstep ${state0}"><i>${state0 === 'done' ? '✓' : n}</i><span>${label}</span><b>${val}</b></div>`;
+      aucCenter = `<div class="tsteps">
+          ${step(1, 'Gegner + Tier', `${esc(target.name)} · ${chosen ? `${chosen.count}× ${esc(aname(chosen.animal))}` : '–'}`, 'done')}
+          ${step(2, 'Geld', moneyDone ? karten(local.sel.length) : 'unten antippen', moneyDone ? 'done' : 'now')}
+        </div>` + aucCenter;
+      aucLeft = `
       <button type="button" class="pill pill-white pill-small" data-a="tradeClose">Abbrechen</button>
       <button type="button" class="pill pill-red" data-a="tradeGo" ${canOffer ? '' : 'disabled'}><small>ANGEBOT MACHEN</small>${karten(local.sel.length)}</button>`;
-    pickMode = 'sel';
-    H.tTarget = (id) => { local.tradeTarget = id; local.tradeAnimal = null; ctx.rerender(); };
-    H.tAnimal = (id) => { local.tradeAnimal = id; ctx.rerender(); };
-    H.tradeClose = () => { local.tradeOpen = false; local.sel = []; ctx.rerender(); };
+      pickMode = 'sel';
+    }
+    H.tTarget = (id) => { local.tradeTarget = id; local.tradeAnimal = null; local.tradePicked = false; ctx.rerender(); };
+    H.tAnimal = (id) => { local.tradeAnimal = id; local.tradePicked = true; local.pickedNow = true; ctx.rerender(); };
+    H.tradeRepick = () => { local.tradePicked = false; ctx.rerender(); };
+    H.tradeClose = () => { local.tradeOpen = false; local.tradePicked = false; local.sel = []; ctx.rerender(); };
     H.tradeGo = () => ctx.act((s) => startTrade(s, meId, local.tradeTarget, local.tradeAnimal, local.sel));
   }
 
@@ -887,7 +910,7 @@ export function renderGame(root, ctx) {
   const setTrade = new Set(setTap ? possibleTrades(state, meId).map((t) => t.animal) : []);
   H.setTrade = (id) => {
     const t = possibleTrades(state, meId).find((x) => x.animal === id);
-    if (t) { local.tradeOpen = true; local.sel = []; local.tradeTarget = t.target; local.tradeAnimal = id; local.setHint = null; }
+    if (t) { local.tradeOpen = true; local.tradePicked = true; local.sel = []; local.tradeTarget = t.target; local.tradeAnimal = id; local.setHint = null; }
     else local.setHint = { id, at: Date.now() };
     ctx.rerender();
   };
@@ -993,8 +1016,8 @@ export function renderGame(root, ctx) {
   H.push = () => ctx.togglePush && ctx.togglePush();
   H.modal = (kind) => ctx.openModal(kind);
   H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
-  H.tradeOpen = () => { local.tradeOpen = true; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
-  H.tradeWith = (val) => { const [pid, animal] = String(val).split('|'); local.tradeOpen = true; local.sel = []; local.tradeTarget = pid; local.tradeAnimal = animal; ctx.rerender(); };
+  H.tradeOpen = () => { local.tradeOpen = true; local.tradePicked = false; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
+  H.tradeWith = (val) => { const [pid, animal] = String(val).split('|'); local.tradeOpen = true; local.tradePicked = true; local.sel = []; local.tradeTarget = pid; local.tradeAnimal = animal; ctx.rerender(); };
 
   // ----- Überlagerung je nach Phase -----
   let overlay = '';

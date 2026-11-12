@@ -131,8 +131,17 @@ export function buildDemoState(kind, local) {
     case 'tradesetup':
       g = base();
       local.key = `${g.phase}|${g.turn}|${g.log.length}`;
-      local.tradeOpen = true; local.tradeTarget = 'u3'; local.tradeAnimal = 'kuh'; local.sel = [2, 3, 5];
+      local.tradeOpen = true; local.tradePicked = true; local.tradeTarget = 'u3'; local.tradeAnimal = 'kuh'; local.sel = [2, 3, 5];
       return g;
+    case 'tradepick': { // Kuhhandel Schritt 1, spät im Spiel: viele gemeinsame Tiere (Gegner + Tier wählen)
+      g = base();
+      Object.assign(g.players[0].animals, { hahn: 2, gans: 2, katze: 1, hund: 1, schaf: 3, ziege: 1, esel: 2, schwein: 3, kuh: 1, pferd: 2 });
+      Object.assign(g.players[1].animals, { hahn: 1, katze: 2, hund: 3, schaf: 1, kuh: 1, pferd: 1 });
+      Object.assign(g.players[2].animals, { hahn: 1, gans: 2, katze: 2, hund: 1, schaf: 1, ziege: 2, esel: 1, schwein: 1, kuh: 2, pferd: 1 });
+      local.key = `${g.phase}|${g.turn}|${g.log.length}`;
+      local.tradeOpen = true; local.tradePicked = false; local.tradeTarget = 'u3'; local.sel = [];
+      return g;
+    }
     case 'traderespond':
       g = base(); g.turn = 1;
       g = startTrade(g, 'u2', 'u1', 'hund', [0, 2, 6]);
