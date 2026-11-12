@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_run:
-    workflows: ["E2E Layout"]
+    workflows: ["Browser-Tests"]
     types: [completed]
 permissions:
   contents: read
