@@ -5,7 +5,9 @@
 - [x] **Topf in der Mitte:** Statt einer Karte mit „um 2“ liegen alle eingesetzten Tierkarten beider Seiten in der Mitte – bei „um 2“ also 4 Karten. Darunter „2 gegen 2 · Gewinner bekommt alle 4“ (Rattenhandel: „Verlierer bekommt alle“).
 - [x] **Einsatz je Seite:** Jede Seite zeigt ihre eingesetzten Karten, wie viele sie behält („+1“) und was sie hätte, wenn sie gewinnt („gewinnt → 4× Gans · Quartett!“).
 - [x] Gilt beim Angebot machen, beim Antworten, beim Zuschauen und im Ergebnisfenster.
-- [x] Neue Demo-Ansicht: `tradeum2` (Kuhhandel um 2).
+- [x] **Geldtausch im Ergebnisfenster:** Nach dem Aufdecken rutschen die beiden Geldstapel sichtbar auf die andere Seite. Danach fliegt nur noch das Tier – kein doppelter Geldflug mehr, die Pause nach dem Kuhhandel ist rund 1,5 s kürzer. Dein neues Geld erscheint beim Schließen im Fächer und leuchtet kurz.
+- [x] „Kann nicht zahlen“ mit sehr vielen Scheinen: die Scheine werden zusammengefasst („10 ×8“), damit das Feld nicht in deine Tierreihe wächst (vom Test gefunden).
+- [x] Neue Demo-Ansichten: `tradeum2` (Kuhhandel um 2), `cantpaymany`.
 
 ## v0.45.0 – Geld in der Hand, große Momente
 

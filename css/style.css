@@ -2475,3 +2475,15 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .du-pot .tpc { width: 40px; height: 40px; margin-left: -20px; top: 6px; }
 .du-pot .tpc .mcard { width: 40px; height: 40px; }
 .du-potl { font-family: var(--font-head); font-weight: 700; font-size: 12px; color: var(--ink); background: #F4F1EA; border-radius: 999px; padding: 0 8px; line-height: 18px; white-space: nowrap; }
+.reveal-row .rvgrp { display: inline-flex; align-items: center; gap: 1px; margin-right: 3px; } .reveal-row .rvgrp b { font-size: 10px; color: #8F1626; }
+/* v0.46: Kuhhandel – Geldtausch im Ergebnisfenster: nach dem Aufdecken rutschen die Stapel auf die andere Seite */
+.du-pile { display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; z-index: 3; }
+.evcard.duel .du-row.swap .sl .du-pile { animation: duswapr .7s cubic-bezier(.5, 0, .3, 1) both; animation-delay: calc(var(--el, 0ms) + 2200ms); }
+.evcard.duel .du-row.swap .sr .du-pile { animation: duswapl .7s cubic-bezier(.5, 0, .3, 1) both; animation-delay: calc(var(--el, 0ms) + 2200ms); }
+@keyframes duswapr { 0% { transform: none; } 50% { transform: translate(140px, -14px) scale(.92); } 100% { transform: translateX(279px); } }
+@keyframes duswapl { 0% { transform: none; } 50% { transform: translate(-140px, 14px) scale(.92); } 100% { transform: translateX(-279px); } }
+@media (prefers-reduced-motion: reduce) { .du-row.swap .du-pile { animation: none !important; } }
+/* beim Tausch dürfen die Seiten keine eigene Ebene bilden (sonst verschwindet der Stapel hinter der anderen Seite):
+   Verlierer statt durchsichtig nur blasser gefärbt */
+.evcard.duel .du-row.swap .du-side.lose { opacity: 1 !important; animation: none !important; background: #EEEBE4; }
+.evcard.duel .du-row.swap .du-side.lose .ec-p, .evcard.duel .du-row.swap .du-side.lose .du-role { color: #9A9486; }

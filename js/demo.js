@@ -128,6 +128,15 @@ export function buildDemoState(kind, local) {
       g = closeAuction(g, 'u2', 'sell', Date.now() - 800); // gerade eben: Pause zum Anschauen läuft noch
       return g;
     }
+    case 'cantpaymany': { // „Kann nicht zahlen“ mit sehr vielen Scheinen (spät im Spiel): Zeile fasst zusammen
+      const t = Date.now() - 25000;
+      g = base(); g.turn = 1; g.deck[0] = 'kuh';
+      g.players[3].money = [0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 10, 20, 20, 20, 50, 50];
+      g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
+      g = bid(g, 'u4', 400, t + 2600);
+      g = closeAuction(g, 'u2', 'sell', Date.now() - 800);
+      return g;
+    }
     case 'tradesetup':
       g = base();
       local.key = `${g.phase}|${g.turn}|${g.log.length}`;

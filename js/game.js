@@ -213,11 +213,7 @@ export function choreo(le, deckLeft, W = evWait(le.type, deckLeft) || 0, piles =
   const streams = [];
   if (le.type === 'auction_won' && le.amount > 0 && le.payer && le.payee) streams.push({ from: le.payer, to: le.payee, count: le.cardCount || 1, at: payAt });
   if (le.type === 'special_won' && le.count > 0 && le.payer && le.payee) streams.push({ from: le.payer, to: le.payee, count: le.count, at: payAt });
-  if (le.type === 'trade') {
-    const o = cntOf(le.offer);
-    if (o) streams.push({ from: le.challenger, to: le.target, count: o, at: payAt });
-    if (!le.accepted && cntOf(le.counter)) streams.push({ from: le.target, to: le.challenger, count: cntOf(le.counter), at: payAt + (o ? streamMs(o) : 0) });
-  }
+  // Kuhhandel: das Geld wird schon im Ergebnisfenster getauscht (Stapel rutschen auf die andere Seite) – danach fliegt nur das Tier
   if (le.type === 'rat_taken') {
     if (piles) Object.entries(piles).filter(([pid, c]) => pid !== le.player && c).forEach(([pid, c]) => streams.push({ from: pid, to: le.player, count: c, at: payAt }));
     else if (le.count) streams.push({ from: null, to: le.player, count: le.count, at: payAt }); // ohne Stapel-Info: obere Grenze
@@ -390,8 +386,8 @@ export function renderGame(root, ctx) {
     const outS = ch0.streams.find((x) => x.from === meId); const inS = ch0.streams.filter((x) => x.to === meId);
     local.handFx = lose.length || gain.length ? {
       lose: [...lose].sort((a, b) => a - b), gain: [...gain].sort((a, b) => a - b),
-      loseAt: outS ? t0 + outS.at : t0,
-      gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 60 : t0,
+      loseAt: outS ? t0 + outS.at : le0.type === 'trade' ? t0 + ch0.W : t0,
+      gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 60 : le0.type === 'trade' ? t0 + ch0.W : t0,
     } : null;
   }
   if (Array.isArray(me.money)) local.prevMoney = me.money.slice();
@@ -540,7 +536,10 @@ export function renderGame(root, ctx) {
     const ev = v.lastEvent;
     const info = ev?.type === 'cant_pay' && !a.high
       ? `<div class="reveal-row ${fresh ? 'shake' : ''}"><strong>${esc(nameOf(ev.player))} ${ev.player === meId ? 'kannst' : 'kann'} ${ev.amount} nicht zahlen:</strong>
-          <span class="reveal-cards">${ev.revealed.map((m) => moneyCard(m, { size: 'xs' })).join('') || 'keine Karten'}</span>
+          <span class="reveal-cards">${ev.revealed.length > 8
+            // viele Scheine: zusammengefasst („×6“), damit die Zeile nicht nach unten in die Tierreihe wächst
+            ? [...new Set(ev.revealed)].sort((x, y) => x - y).map((m) => `<span class="rvgrp">${moneyCard(m, { size: 'xs' })}<b>×${ev.revealed.filter((x) => x === m).length}</b></span>`).join('')
+            : ev.revealed.map((m) => moneyCard(m, { size: 'xs' })).join('') || 'keine Karten'}</span>
           <span>→ max. ${ev.amount - BID_STEP}</span></div>`
       : (() => {
         // Gebots-Schild: wer bietet wie viel – groß, mit Spielerfarbe, springt bei jedem neuen Gebot auf
@@ -1473,7 +1472,7 @@ export function renderGame(root, ctx) {
         const potN = e.count * 2;
         const mid = (sign) => `<div class="du-mid"><div class="tpot du-pot" style="--pn:${potN};--sp:${Math.min(20, Math.round(48 / Math.max(1, potN - 1)))}px">${Array.from({ length: potN }, (_, k) => `<span class="tpc" style="--k:${k}">${miniCard(e.animal, 'fill')}</span>`).join('')}</div><span class="du-potl">${e.count} gegen ${e.count}</span>${sign}</div>`;
         // Duell nebeneinander: links Herausforderer, rechts Gegner, Tier in der Mitte
-        const duSide = (id, role, inner, win) => `<div class="du-side ${win ? 'win' : 'lose'}">${win ? `<span class="du-tag">${winTag}</span>` : ''}${ecP(id)}<span class="du-role">${role}</span>${inner}</div>`;
+        const duSide = (id, role, inner, win, side = '') => `<div class="du-side ${win ? 'win' : 'lose'} ${side}">${win ? `<span class="du-tag">${winTag}</span>` : ''}${ecP(id)}<span class="du-role">${role}</span>${inner}</div>`;
         if (e.accepted) {
           const known = e.offerSum != null;
           const n = Array.isArray(e.offer) ? e.offer.length : e.offer;
@@ -1494,7 +1493,7 @@ export function renderGame(root, ctx) {
           };
           // Differenz sehen alle (auch Zuschauer) – groß in der Mitte unter dem Tier
           const diffBox = `<span class="du-diff ecr-after ${e.diff === 0 ? 'tie' : ''}"><small>Differenz</small><b>${e.diff}</b></span>`;
-          duel = `<div class="du-row">${duSide(e.challenger, verb(e.challenger, 'forderst heraus', 'fordert heraus'), stack(e.offer, amts ? e.offerSum : null), cw)}${mid(`<span class="du-vs">VS</span>${diffBox}`)}${duSide(e.target, 'Gegenangebot', stack(e.counter, amts ? e.counterSum : null), !cw)}</div>`;
+          duel = `<div class="du-row swap">${duSide(e.challenger, verb(e.challenger, 'forderst heraus', 'fordert heraus'), `<div class="du-pile">${stack(e.offer, amts ? e.offerSum : null)}</div>`, cw, 'sl')}${mid(`<span class="du-vs">VS</span>${diffBox}`)}${duSide(e.target, 'Gegenangebot', `<div class="du-pile">${stack(e.counter, amts ? e.counterSum : null)}</div>`, !cw, 'sr')}</div>`;
           const pills = e.diff === 0 ? [`Gleichstand – ${nm(e.challenger)} ${verb(e.challenger, 'gewinnst', 'gewinnt')}`] : [];
           if (amts && (e.challenger === meId || e.target === meId)) {
             const other = e.challenger === meId ? e.target : e.challenger;
