@@ -337,3 +337,5 @@ Laufzeit gesamt ca. 8,5 min.
 **Shop:** `views.spec.mjs` prüft `shop-demo.html` automatisch, sobald sie auf dem Branch liegt. Gegen 9999865 findet der Check 20 Fehler (abgeschnittene Kaufen-/Auswählen-Knöpfe) – also genau den Review-Befund.
 
 **Update 18:40:** C+D mit Alps GO in main (ca85106, PR #3 gemergt; test + Workers Builds grün). Browser-Tests laufen ab jetzt bei jedem PR (Workflow „Browser-Tests“). Bitte codex/automation-high und codex/v048-shop auf aktuellen main bringen.
+
+**Update 18:45:** v0.47.2 live (main 7588653): Warteraum 800×360 + Kuhhandel-Auswahl kompakter auf flachen Handys (css/style.css-Block am Ende, APP_VERSION 0.47.2). known-issues.json ist leer. v0.48 dann auf diesem Stand aufbauen.
