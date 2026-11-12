@@ -334,7 +334,7 @@ export function renderGame(root, ctx) {
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
   if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = calmFor(v.lastEvent.type, v.deck); local.calmUntil = Date.now() + local.calmDur; }
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
-  if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + evWait(v.lastEvent.type, v.deck) };
+  if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + evWait(v.lastEvent.type, v.deck) + (FLY_AFTER[v.lastEvent.type] || 0) };
   if (local.turnHold && (Date.now() >= local.turnHold.until || state.phase !== 'turn')) local.turnHold = null;
   const realHolder = state.phase === 'ended' || state.phase === 'block' ? null : state.phase === 'rat' ? ratCurrent(v) : currentPlayer(v).id;
   const shownHolder = local.turnHold ? local.turnHold.id : realHolder;
@@ -1137,8 +1137,7 @@ export function renderGame(root, ctx) {
     // Ziel wird nach dem Zeichnen gemessen: deine Auslage bzw. der Platz des Mitspielers
     keepFx(Array.from({ length: n }, (_, k) => `<div class="fly ${evDelay ? 'fromev' : ''}" ${mine ? `data-flyto="${flyAnimal}"` : `data-aim-to="${esc(to)}" data-aim-scale="0.32"`} style="--tx:0px;--ty:-120px;animation-delay:${evDelay + k * 120}ms">
       <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join('')
-      // Ankunft: der Platz des neuen Besitzers leuchtet kurz auf (bei dir hüpft der Stapel)
-      + (mine ? '' : `<div class="landglow" data-aim-from="${esc(to)}" data-aim-to="${esc(to)}" style="animation-delay:${evDelay + 820 + (n - 1) * 120}ms"></div>`), evDelay + 1700 + n * 120, evDelay ? 'ev' : null);
+, evDelay + 1700 + n * 120, evDelay ? 'ev' : null);
   }
   // Der Zug wandert sichtbar im Uhrzeigersinn: ein goldener Schein gleitet vom alten zum neuen Platz
   const holder = shownHolder;
@@ -1149,7 +1148,7 @@ export function renderGame(root, ctx) {
   // Geld fliegt (verdeckt) vom Platz des Zahlers zum Platz des Empfängers (Start und Ziel werden gemessen)
   const moneyFly = (from, to, count, delay = 0) => {
     if (!count || idxOf(from) < 0 || idxOf(to) < 0) return '';
-    return Array.from({ length: Math.min(count, 5) }, (_, k) => `<div class="mfly" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" style="animation-delay:${delay + k * 90}ms"></div>`).join('');
+    return Array.from({ length: Math.min(count, 15) }, (_, k) => `<div class="mfly" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" style="animation-delay:${delay + k * 70}ms"></div>`).join(''); // so viele Scheine, wie wirklich bezahlt werden
   };
   // Ratte genommen: die vor den Plätzen gelegten Karten fliegen alle zum Nehmer
   if (evFresh && le?.type === 'rat_taken' && local.ratLaid) {
@@ -1271,7 +1270,7 @@ export function renderGame(root, ctx) {
     // Flüge, die auf das Fenster warten, sofort starten
     if (left > 0) local.fx.forEach((f) => { if (f.tag === 'ev' && f.at >= local.res.at - 50) { f.at -= left; f.until -= left; } });
     if (local.stripAt > Date.now()) local.stripAt = Date.now(); // Infozeile erscheint, sobald das Fenster weg ist
-    if (local.turnHold) local.turnHold.until = Date.now(); // „dran“-Rahmen wandert jetzt weiter
+    if (local.turnHold) local.turnHold.until = Date.now() + (FLY_AFTER[local.res.ev.type] || 0); // „dran“-Rahmen wandert, sobald Tier und Geld gelandet sind
     if (local.res.html) keepFx(`<div class="evout" aria-hidden="true">${local.res.html}</div>`, 280);
     local.res = null;
   };
@@ -1344,7 +1343,9 @@ export function renderGame(root, ctx) {
           // (Unbeteiligte sehen nur die Rückseiten – Beträge bleiben verdeckt)
           const stack = (cards, total) => {
             const list = Array.isArray(cards) ? [...cards].sort((x, y) => y - x) : Array.from({ length: cards || 0 }, () => null);
-            return `<div class="ecr-cards">${list.map((m, k) => `<span class="ecr-c ${m == null ? 'back' : ''}" style="--k:${k};--m:${m == null ? '#ccc' : MONEY_COLORS[m] || '#eee'}">${m == null ? '' : m}</span>`).join('') || '<em>–</em>'}</div>`
+            const openN = Math.floor((Date.now() - local.res.at - 400) / 160) + 1; // Karte k ist nach 250 + k·160 + 150 ms offen
+            if (openN < list.length) wakeLocal(local.res.at + 400 + list.length * 160 + 20);
+            return `<div class="ecr-cards">${list.map((m, k) => `<span class="ecr-c ${m == null ? 'back' : k < openN ? 'open' : ''}" style="--k:${k};--m:${m == null ? '#ccc' : MONEY_COLORS[m] || '#eee'}">${m == null ? '' : m}</span>`).join('') || '<em>–</em>'}</div>`
               + (total != null ? `<b class="ecr-sum du-sum">${total}</b>` : `<b class="ecr-sum du-sum small">${karten(list.length)}</b>`);
           };
           // Differenz sehen alle (auch Zuschauer) – groß in der Mitte unter dem Tier
@@ -1354,7 +1355,7 @@ export function renderGame(root, ctx) {
           if (amts && (e.challenger === meId || e.target === meId)) {
             const other = e.challenger === meId ? e.target : e.challenger;
             const mine = e.challenger === meId ? e.offerSum : e.counterSum;
-            pills.push(`<span class="me">Du bekommst <b>${e.challenger === meId ? e.counterSum : e.offerSum}</b> · ${nm(other)} <b>${mine}</b></span>`);
+            pills.push(`<span class="me">Du bekommst <b>${e.challenger === meId ? e.counterSum : e.offerSum}</b> · ${nm(other)} bekommt <b>${mine}</b></span>`);
           } else pills.push('Geld wird getauscht');
           duel += `<div class="du-foot ecr-after">${pills.map((x) => x.startsWith('<span') ? x.replace('<span class="me">', '<span class="du-pill me">') : `<span class="du-pill">${x}</span>`).join('')}</div>`;
           reveal = true;
