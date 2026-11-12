@@ -55,6 +55,18 @@ Vorschau: https://github.com/aguengoeray-coder/Kuhhandel/blob/codex/shop-avatars
 - Eigene Tiergrafiken: `js/animals.js`.
 - SQL-Änderungen ausschließlich als Datei unter `supabase/`; Ausführung durch Alp.
 
+## KI-Team und Kapazitätsplanung
+
+Das verbindliche Rollenmodell, die Aufgabenverteilung und die Meldung von Kontext-/Tokenkapazität sind in `AI_TEAM.md` beschrieben.
+
+- Alp: Product Owner und alleiniger Entscheider.
+- Claude: Lead Feature Developer für zugewiesene größere Spielfunktionen und UI-Flows.
+- Codex: technische Koordination, Architektur-/Integrationsprüfung, Dokumentation und zugewiesene Features.
+- Copilot: vorgesehener In-IDE-Assistent, noch nicht technisch eingerichtet.
+- Gemini: vorgesehener unabhängiger Reviewer, noch nicht technisch eingerichtet.
+- Größere Aufgaben beginnen mit einer Kapazitätsmeldung. Nicht verfügbare Werte müssen als unbekannt markiert werden; keine KI darf Token- oder Kontextwerte erfinden.
+- Pro Aufgabe genau ein schreibender Owner; andere KIs prüfen oder beraten.
+
 ## Zuständigkeiten und Konfliktregeln
 
 - Claude: v0.46/v0.47, insbesondere `js/game.js`, `js/app.js`, `css/style.css`.
