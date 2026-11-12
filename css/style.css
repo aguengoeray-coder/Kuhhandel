@@ -2588,7 +2588,18 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .rbubble.emo { background: transparent; border: 0; box-shadow: none; padding: 0; font-size: 46px; line-height: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
 .rbubble.emo::after { display: none; }
 /* v0.49 Bühne: ein Maßstab pro Partie für die ganze Tischmitte (3 Spieler: Seiten frei → größer) */
-.stage { --bz: 1.1; }
-.stage.p3 { --bz: 1.25; }
-.tcenter { zoom: var(--bz); width: calc(100% / var(--bz)); max-height: calc(200px / var(--bz) * 1.25); }
+/* 4 Spieler: Höhe zwischen Plätzen und eigener Reihe ist ausgeschöpft → Maßstab 1, aber überall dieselben Größen.
+   3 Spieler: Seiten frei → Mitte 1,25× (Versteigerung, Spezialkarte, Ratte, Stapel) bzw. 1,2× (Kuhhandel), gleiche Grundfläche. */
+.stage { --bz: 1; --bzt: 1; }
+.stage.p3 { --bz: 1; --bzt: 1; } /* erst mit mehr Höhe (eigene Reihe kompakter) größer – siehe v0.50 */
+.tcenter { max-height: none; }
+.tcenter > .auc, .tcenter > .deck-wrap, .tcenter > .batzen, .tcenter > .blockpanel { zoom: var(--bz); }
+.stage.p3 .tcenter > .auc { width: calc(480px / var(--bz)); }
+.tcenter > .tduel { zoom: var(--bzt); }
+/* eine Kartengröße für die große Karte in der Mitte: Stapel = Tierkarte bei Versteigerung/Ratte/Spezialkarte */
+.gtable .tcenter .deck { width: 82px; height: 112px; }
+/* Überschrift oben immer gleich groß – „du bist dran“ hebt sich nur durch Farbe ab, nicht durch Größe */
+.gtable > .tbanner, .gtable > .tbanner.mine { font-size: 16px; padding: 3px 18px; line-height: 1.3; }
 .turnhint { top: -2px; } /* v0.49: oben am Rand nicht abschneiden */
+.stage.p3 .owners .ebonus { white-space: normal; max-width: 130px; text-align: center; line-height: 1.15; }
+.stage.p3 .tcenter:has(.evstrip) { gap: 0; margin-top: -8px; } /* 3 Spieler: Stapel mit Ereigniszeile ragt sonst in die Restkarten-Reihe */
