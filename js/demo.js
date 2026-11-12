@@ -133,6 +133,13 @@ export function buildDemoState(kind, local) {
       local.key = `${g.phase}|${g.turn}|${g.log.length}`;
       local.tradeOpen = true; local.tradePicked = true; local.tradeTarget = 'u3'; local.tradeAnimal = 'kuh'; local.sel = [2, 3, 5];
       return g;
+    case 'tradeum2': { // Kuhhandel um 2 (beide haben 2 Gänse): Gewinner bekommt alle 4 → Quartett
+      g = base();
+      g.players[0].animals.gans = 2; g.players[2].animals.gans = 2;
+      local.key = `${g.phase}|${g.turn}|${g.log.length}`;
+      local.tradeOpen = true; local.tradePicked = true; local.tradeTarget = 'u3'; local.tradeAnimal = 'gans'; local.sel = [2, 5];
+      return g;
+    }
     case 'tradepick': { // Kuhhandel Schritt 1, spät im Spiel: viele gemeinsame Tiere (Gegner + Tier wählen)
       g = base();
       Object.assign(g.players[0].animals, { hahn: 2, gans: 2, katze: 1, hund: 1, schaf: 3, ziege: 1, esel: 2, schwein: 3, kuh: 1, pferd: 2 });

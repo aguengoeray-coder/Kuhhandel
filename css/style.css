@@ -2439,3 +2439,39 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .khsplash.tie > b { color: #7FE3A2; }
 .khsplash.bluff > b { color: #FF9D6B; }
 .khsplash.gift > b { color: #9FD8FF; }
+/* v0.46: Kuhhandel – Einsatz je Seite sichtbar, Topf in der Mitte */
+.tstake { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.tstk { display: flex; align-items: center; gap: 3px; }
+.tstk .mcard { width: 30px; height: 30px; border-radius: 6px; box-shadow: 0 2px 0 rgba(0,0,0,.3); }
+.tkeep { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.75); background: rgba(255,255,255,.12); border-radius: 999px; padding: 0 6px; line-height: 18px; margin-left: 2px; }
+.tstake small { font-size: 10.5px; font-weight: 700; opacity: .85; white-space: nowrap; }
+.tq { background: var(--gold); color: var(--ink); border-radius: 999px; padding: 0 6px; font-size: 10px; margin-left: 2px; }
+.tmid.tmpot { width: 104px; gap: 2px; }
+.tpot { position: relative; width: 100px; height: 88px; }
+.tpc { position: absolute; left: 50%; top: 4px; width: 52px; height: 72px; margin-left: -26px; transform: translateX(calc((var(--k) - (var(--pn) - 1) / 2) * 13px)) rotate(calc((var(--k) - (var(--pn) - 1) / 2) * 7deg)); transform-origin: 50% 120%; border-radius: 8px; box-shadow: 0 0 0 2px var(--gold), 0 4px 10px rgba(0,0,0,.35); }
+.tpc .pcard { transform: scale(.4); transform-origin: 0 0; position: absolute; left: 0; top: 0; }
+.tpotl { font-size: 10px; font-weight: 800; color: #fff; opacity: .85; text-align: center; line-height: 1.1; }
+.tduel.pop .tpc { animation: tpcin .4s var(--e-pop) both; animation-delay: calc(var(--k) * 70ms); }
+@keyframes tpcin { from { opacity: 0; translate: 0 -30px; } to { opacity: 1; translate: 0 0; } }
+/* kompakter: Einsatz in einer Zeile, Topf aus Tierkärtchen */
+.tstake { flex-direction: row; gap: 6px; align-items: center; }
+.tstk .mcard { width: 26px; height: 26px; border-radius: 5px; }
+.tsl { font-style: normal; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; opacity: .7; margin-right: 2px; }
+.tstake small { font-size: 10.5px; line-height: 1.15; white-space: normal; max-width: 92px; text-align: left; }
+.tpot { width: 100px; height: 66px; }
+.tpc { width: 44px; height: 44px; top: 8px; margin-left: -22px; border-radius: 8px; box-shadow: 0 0 0 2px #fff, 0 3px 8px rgba(0,0,0,.35); transform: translateX(calc((var(--k) - (var(--pn) - 1) / 2) * 15px)) rotate(calc((var(--k) - (var(--pn) - 1) / 2) * 8deg)); }
+.tpc .mcard { width: 44px; height: 44px; border-radius: 8px; }
+.tmid.tmpot .tmidcnt { font-size: 13px; line-height: 20px; }
+.tmid.tmpot .tvs { display: none; }
+.tduel.respond .tpanel { gap: 3px; }
+.tmid.tmpot .tmidcnt { opacity: 1; }
+.tpc { transform: translateX(calc((var(--k) - (var(--pn) - 1) / 2) * 22px)) rotate(calc((var(--k) - (var(--pn) - 1) / 2) * 9deg)); }
+.tkeep::after { content: " behält"; font-weight: 700; opacity: .8; }
+.tkeep { white-space: nowrap; }
+.tpc { transform: translateX(calc((var(--k) - (var(--pn) - 1) / 2) * var(--sp, 22px))) rotate(calc((var(--k) - (var(--pn) - 1) / 2) * 8deg)); }
+.tkeep::after { content: none; }
+.tstake small { max-width: 112px; }
+.du-pot { width: 86px; height: 58px; }
+.du-pot .tpc { width: 40px; height: 40px; margin-left: -20px; top: 6px; }
+.du-pot .tpc .mcard { width: 40px; height: 40px; }
+.du-potl { font-family: var(--font-head); font-weight: 700; font-size: 12px; color: var(--ink); background: #F4F1EA; border-radius: 999px; padding: 0 8px; line-height: 18px; white-space: nowrap; }

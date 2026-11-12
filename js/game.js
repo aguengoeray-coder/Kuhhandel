@@ -789,8 +789,26 @@ export function renderGame(root, ctx) {
     return `<div class="atiles mine">${ids.map((id) => `<span class="atile ${id === focus ? 'on' : focus ? 'dim' : ''}" style="--a:${ANIMAL_COLORS[id]}" title="${me.animals[id]}× ${aname(id)}">${miniCard(id, 'fill')}${aval(id) != null ? `<em class="cv">${aval(id)}</em>` : ''}<span class="tcount">×${me.animals[id]}</span></span>`).join('')}${more ? `<span class="amore">+${more}</span>` : ''}</div>`;
   };
   const who = (id, label) => { const i = idxOf(id); return `<div class="twho">${avatar(v.players[i], i)}<span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(label || nameOf(id))}</span></div>`; };
-  // Mitte zwischen den beiden Seiten: das umkämpfte Tier groß, darunter „um 2“
-  const tmid = (animal, count, extra = '') => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">um ${count}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span>${extra}</div>`;
+  // Einsatz sichtbar: jede Seite zeigt, was sie setzt und was sie hätte, wenn sie gewinnt
+  const stakeOf = (id, animal, count, otherId) => {
+    if (!animal) return '';
+    const p = v.players[idxOf(id)]; const have = p.animals[animal] || 0; const isRat = animal === RAT;
+    const winHave = isRat ? have - count : have + count; // Rattenhandel: wer gewinnt, wird sie los
+    const quart = !isRat && winHave === 4;
+    const mine = id === meId;
+    const keep = have - count;
+    return `<div class="tstake"><div class="tstk">${Array.from({ length: count }, () => miniCard(animal, 'fill')).join('')}${keep > 0 ? `<span class="tkeep" title="behält ${keep}">+${keep}</span>` : ''}</div>
+      <small>${isRat ? (mine ? 'gewinnst du' : 'gewinnt') + ` → ${winHave ? `noch ${winHave}×` : 'keine Ratte mehr'}` : `${mine ? 'gewinnst du' : 'gewinnt'} → ${winHave}× ${esc(aname(animal))}${quart ? ' <b class="tq">Quartett!</b>' : ''}`}</small></div>`;
+  };
+  // Mitte: der Topf – alle eingesetzten Karten (beide Seiten), darunter worum es geht
+  const tmid = (animal, count, extra = '') => {
+    if (!animal) return `<div class="tmid"><div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span><span class="tvs">VS</span>${extra}</div>`;
+    const n = count * 2; const isRat = animal === RAT;
+    return `<div class="tmid tmpot"><div class="tpot" style="--pn:${n};--sp:${Math.min(22, Math.round(54 / Math.max(1, n - 1)))}px">${Array.from({ length: n }, (_, k) => `<span class="tpc" style="--k:${k}">${miniCard(animal, 'fill')}</span>`).join('')}</div>
+      <span class="tmidcnt">${count} gegen ${count}</span><small class="tpotl">${isRat ? `Verlierer bekommt alle ${n}` : `Gewinner bekommt alle ${n}`}</small><span class="tvs">VS</span>${extra}</div>`;
+  };
+  // (alt) Mitte zwischen den beiden Seiten: das umkämpfte Tier groß, darunter „um 2“
+  const tmidOld = (animal, count, extra = '') => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">um ${count}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span>${extra}</div>`;
   const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}">${miniCard(animal)}<span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b>${note ? `<small>${note}</small>` : ''}</span></div>`;
   if (state.phase === 'turn' && myTurn && local.tradeOpen) {
     const trades0 = possibleTrades(state, meId);
@@ -825,12 +843,12 @@ export function renderGame(root, ctx) {
         ${who(meId, 'Du')}
         <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
         <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
-        <small class="thas">du hast ${me.animals[chosen?.animal] || 0}× ${esc(aname(chosen?.animal))}</small>
+        ${stakeOf(meId, chosen?.animal, chosen?.count || 0, target.id)}
       </div>
       ${tmid(chosen?.animal, chosen?.count)}
       <div class="tpanel">
         ${who(target.id)}
-        <small class="thas">hat ${target.animals[chosen?.animal] || 0}× ${esc(aname(chosen?.animal))}</small>
+        ${stakeOf(target.id, chosen?.animal, chosen?.count || 0, meId)}
         <button type="button" class="pill pill-white pill-small tchange" data-a="tradeRepick">Gegner/Tier ändern</button>
       </div>
     </div>`;
@@ -873,7 +891,7 @@ export function renderGame(root, ctx) {
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
         <div class="kslots">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
         <div class="tline big"><b>${karten(offerCount)}${Array.isArray(t.offer) ? ` · ${sum(t.offer)}` : ''}</b><small>${Array.isArray(t.offer) ? 'dein Angebot' : 'verdeckt geboten'}</small></div>
-        ${t.challenger === meId ? myTiles(t.animal) : ''}
+        ${stakeOf(t.challenger, t.animal, t.count, t.target)}
         ${extra}
       </div>`;
     if (t.target === meId) {
@@ -884,6 +902,7 @@ export function renderGame(root, ctx) {
         ${tmid(t.animal, t.count, ttHtml)}
         <div class="tpanel">
           ${who(meId, 'Du')}
+          ${stakeOf(meId, t.animal, t.count, t.challenger)}
           <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
           ${counterBtn}
         </div>
@@ -897,6 +916,7 @@ export function renderGame(root, ctx) {
         ${tmid(t.animal, t.count, ttHtml)}
         <div class="tpanel">
           ${who(t.target)}
+          ${stakeOf(t.target, t.animal, t.count, t.challenger)}
           <div class="kslots"><div class="slot q">?</div></div>
           <div class="tline"><b>überlegt …</b></div>
         </div>
@@ -1449,7 +1469,9 @@ export function renderGame(root, ctx) {
         title = isRat ? `${nm(loser)} ${verb(loser, 'bekommst', 'bekommt')} ${e.count}× Ratte` : `${nm(e.winner)} ${verb(e.winner, 'gewinnst', 'gewinnt')} ${e.count}× ${esc(aname(e.animal))}`;
         kind += ` · um ${e.count}× ${esc(isRat ? 'Ratte' : aname(e.animal))}`;
         const winTag = isRat ? 'ist sie los' : 'gewinnt';
-        const mid = (sign) => `<div class="du-mid">${isRat ? playCard(RAT, 'rat') : playCard(e.animal)}<span class="trcount">×${e.count}</span>${sign}</div>`;
+        // Mitte: der Topf – alle eingesetzten Karten beider Seiten (um 2 → 4 Karten)
+        const potN = e.count * 2;
+        const mid = (sign) => `<div class="du-mid"><div class="tpot du-pot" style="--pn:${potN};--sp:${Math.min(20, Math.round(48 / Math.max(1, potN - 1)))}px">${Array.from({ length: potN }, (_, k) => `<span class="tpc" style="--k:${k}">${miniCard(e.animal, 'fill')}</span>`).join('')}</div><span class="du-potl">${e.count} gegen ${e.count}</span>${sign}</div>`;
         // Duell nebeneinander: links Herausforderer, rechts Gegner, Tier in der Mitte
         const duSide = (id, role, inner, win) => `<div class="du-side ${win ? 'win' : 'lose'}">${win ? `<span class="du-tag">${winTag}</span>` : ''}${ecP(id)}<span class="du-role">${role}</span>${inner}</div>`;
         if (e.accepted) {
