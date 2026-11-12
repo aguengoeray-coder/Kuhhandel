@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.47.2 – Kleine Layout-Fehler (von den neuen Browser-Tests gefunden)
+
+- [x] **Warteraum auf flachen Handys (800×360):** „SPIEL STARTEN“ war unten angeschnitten – passt jetzt ganz ins Bild.
+- [x] **Kuhhandel-Auswahl (Schritt 1):** überdeckte auf flachen Handys ein Stück der Plätze links/rechts. Die Tier-Kärtchen sind dort jetzt etwas kompakter (Bild + Wert, ohne Tiernamen).
+- [x] **Neu im Hintergrund:** automatische Browser-Tests bei jedem Pull Request – alle Ansichten in 4 Handy-Größen und komplette Test-Partien.
+
 ## v0.47.1 – Startseite symmetrisch
 
 - [x] „＋ Neues Spiel“ und „🔑 Mit Code“ stehen jetzt nebeneinander mittig unter dem Tisch statt rechts daneben – der Tisch steht genau in der Mitte.
