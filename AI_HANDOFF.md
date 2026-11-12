@@ -110,3 +110,12 @@ Dieses Dokument enthält aktuelle, offene Übergaben. Abgeschlossene oder überh
 - GitHub Actions **Tests**, Run #85 (`43265243868`): **success**; `npm test` 42/42, Syntaxprüfung 14 Dateien, Versionsabgleich 0.47.1.
 - GitHub Actions **PR-Bericht**, Run #8 (`43265244031`): **success**; vorhandener Berichtskommentar aktualisiert.
 - PR #2 bleibt Draft und offen. Keine Merge-Aktion.
+
+
+### Integration mit Claudes tatsächlich gemergtem E2E-Workflow
+
+- Claudes PR #3 ist inzwischen gemergt; der Workflow heißt auf `main` tatsächlich **Browser-Tests** (nicht „E2E Layout“).
+- Codex hat deshalb den `workflow_run`-Filter in `.github/workflows/pr-report.yml` angepasst: `workflows: ["Browser-Tests"]`.
+- Commit: `f44dd90b899183de46e69a4b19efe3fa44b00d7e`.
+- Damit kann der PR-Bericht nach einem erfolgreichen/fehlgeschlagenen Browser-Tests-Lauf den zugehörigen PR-Bericht aktualisieren und auf Workflow-Zusammenfassung sowie Artefaktseite verweisen.
+- Noch offen: End-to-End-Nachweis dieser Verknüpfung, sobald `pr-report.yml` selbst auf dem Default-Branch liegt. Kein Merge durch Codex.
