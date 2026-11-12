@@ -254,3 +254,31 @@ Bitte am Ende einen Eintrag in `AI_HANDOFF.md` (dein Branch) mit Branch, Commits
 - **Geänderte Dateien:** `js/game.js`, `css/style.css`, `js/demo.js`, `js/app.js` (APP_VERSION), `version.json`, `CHANGELOG.md`.
 - **Für Codex:** Bitte `PROJECT_STATUS.md` auf „v0.46.0 live“ setzen. Dein Branch `codex/ai-project-memory` liegt jetzt hinter `main` – vor deinem Merge bitte `main` einholen (keine Überschneidung mit den Doku-Dateien, außer `CLAUDE.md`/`AGENTS.md` sind auf `main` unverändert).
 - **Nächster Schritt Claude:** v0.47 Startseite „B: Tisch“ auf `claude/v047-startseite`.
+
+
+## 12.11.2026 – Claude → Codex: v0.47.0 live + Browserprüfung deiner Shop-Vorschau
+
+### A) v0.47.0 ist live (nach Alps „go“, 17:16)
+- **Merge-Commit auf `main`:** `90369ba7801390e560131f0f950f1678c38fb7a9` (Branch `claude/v047-startseite` @ `9c2a30d`).
+- **Prüfungen:** `npm test` 38/38; GitHub „test“ success; „Workers Builds: kuhhandel“ success; Klicktest Startseite (Leiste, Einstellungen, Blättern, Testspiel-Start) ohne Fehler; Spiel-Testlauf grün.
+- **Geändert:** `js/app.js` (neue `renderStart`, Modal `settings`, Demo-Param `?klick=1`), `css/style.css` (Block „v0.47“, Klassen `hb-*`, `srow`, `stog`), `version.json`, `CHANGELOG.md`.
+- **Einhängepunkt für deinen Shop:** In `js/app.js` → `renderStart()` → Klick auf `[data-dock="shop"]` (zeigt derzeit nur „kommt mit dem nächsten Update“). Dort später `renderShop(root, ctx)` öffnen. Die Dublonen-Anzeige oben rechts (`.hb-me`) ist bewusst noch nicht drin.
+- **Bitte für dich:** `PROJECT_STATUS.md` auf „v0.47.0 live“ setzen. Vor deinem Einhängen bitte `main` einholen – `js/app.js`/`css/style.css` haben sich geändert. Ich fasse diese beiden Dateien nicht an, solange du am Einhängen arbeitest; sag in `AI_HANDOFF.md` Bescheid, wann du startest.
+
+### B) Browserprüfung `shop-demo.html` (`codex/v048-shop` @ `0a1cfa55d2cc03aca0231d47a9a36288a609b380`)
+Geprüft in Headless-Chromium bei 844×390, 852×393, 667×375, 932×430 (Screenshots hat Alp). Nichts geändert.
+
+**Funktioniert**
+- Alle 11 Avatare und 8 Sprüche werden angezeigt; keine Karten-Überlappung; kein seitliches Scrollen; keine JS-Fehler.
+- Kaufen: 105 → 75 (Opa Ratte), Meldung „Artikel erfolgreich gekauft.“, danach „Auswählen“ → „Aktiv“ wechselt korrekt; Spruch kaufen 75 → 65.
+- Animationen laufen (12 verschiedene, z. B. shop-sigh, shop-fire, shop-rocket).
+
+**Befunde**
+1. **Hoch – falsche Sprüche:** `SHOP_SAYINGS` enthält die vorhandenen *kostenlosen* Reaktionen („Ehrliches, männliches Angebot!“, „Bluff!“, „Niemals!“ …). Laut Alps Plan sollen es sein: „👍👍“, „Passt schon, passt schon!“, „BLABLABLABLA!!“, „Nico, schrei nicht!“, „Das ist eine gute Idee!“, „IHH, du Ekliger!“, „Bastard“ (je 10) und „Ich habe nur gute Ideen“ (20). Bitte auch in `supabase/v0.48-shop.sql`/`test/shop.test.js` abgleichen.
+2. **Mittel – Sprüche oben abgeschnitten (alle Größen):** Zweizeilige Texte ragen über die Kartenoberkante („Ehrliches, männliches Angebot! 💪“, „Unehrliches …“, „Komm schon …“).
+3. **Mittel – zu klein für Handys:** Kauf-/Auswahl-Knöpfe nur **18 px hoch** (Finger brauchen ca. 40 px); Schrift auf den Karten 8–9 px („Selten · 30 D“, „✓ hast du“, Namen); Avatarbild nur 42 px (667×375: 34 px) – die Animationen sind so kaum zu sehen.
+4. **Mittel – abgeschnittene Namen:** 852×393: „Gestresstes Business-Huhn“, „Börsen-Gauner“, „Piraten-Papagei“ mit „…“. 667×375: 7 Namen gekürzt, „Legendär · 60 D“ links/rechts abgeschnitten.
+5. **Niedrig – Plan vs. Umsetzung:** Alle 11 Avatare in einer Reihe → sehr kleine Karten. Vorschlag: pro Seltenheit eine Reihe (4/4/3) mit größeren Sammelkarten, Sprüche als kompakte Chips (Text + Preis) statt großer Karten; „zum Kippen/Drehen“ fehlt noch.
+6. **Niedrig – Stil:** Heller Beige-/Grün-Hintergrund weicht vom Spiel ab (Nachtblau, Farben über CSS-Variablen aus `js/theme.js`). Für das Einhängen bitte an die App-Variablen anlehnen.
+
+**Empfehlung:** Befund 1–4 vor dem Einhängen beheben; danach prüfe ich gern erneut.
