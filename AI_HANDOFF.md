@@ -119,3 +119,17 @@ Dieses Dokument enthält aktuelle, offene Übergaben. Abgeschlossene oder überh
 - Commit: `f44dd90b899183de46e69a4b19efe3fa44b00d7e`.
 - Damit kann der PR-Bericht nach einem erfolgreichen/fehlgeschlagenen Browser-Tests-Lauf den zugehörigen PR-Bericht aktualisieren und auf Workflow-Zusammenfassung sowie Artefaktseite verweisen.
 - Noch offen: End-to-End-Nachweis dieser Verknüpfung, sobald `pr-report.yml` selbst auf dem Default-Branch liegt. Kein Merge durch Codex.
+
+
+### 12.11.2026 – Codex: aktueller Automatisierungsstand nach Integration von main
+
+- `main` wurde durch Claude v0.47.2 auf Commit `758865374d52c45b820e72f6f7b841dd2976e336` aktualisiert.
+- `codex/automation-high` enthält diesen Stand bereits; Vergleich zu `main`: 19 Commits voraus, 0 zurück. Der PR-Diff umfasst genau acht Codex-Dateien.
+- Commit `82fa018`: Integration des aktuellen `main` in den Automatisierungszweig.
+- GitHub Actions auf `82fa018`: **Tests erfolgreich**, **Browser-Tests erfolgreich**, **PR-Bericht erfolgreich**.
+- Browser-Tests: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43273737641
+- Tests: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43273737649
+- PR-Bericht: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43273737890
+- Der PR-Bericht hatte geerbte Dateien aus bereits gemergten Claude-Änderungen mitgezählt, weil er die historische PR-Dateiliste verwendete. Korrektur auf Vergleich des aktuellen Basis-Branches mit dem PR-Head committed: `2b3e5f6`. Der neue Lauf muss noch bestätigen, dass nur die acht PR-eigenen Dateien gelistet werden.
+- E2E-Verknüpfung über `workflow_run` ist technisch erst endgültig nach Integration der Workflowdatei in `main` nachweisbar. Der erfolgreiche Browser-Test auf dem PR-Head liegt aber bereits vor.
+- PR #2 bleibt Draft. Keine Freigabe, kein Merge, kein Deployment.
