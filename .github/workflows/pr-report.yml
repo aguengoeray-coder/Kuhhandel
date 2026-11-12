@@ -81,8 +81,13 @@ jobs:
             const risks = [];
             if (has('src/engine.js')) risks.push('⚠️ `src/engine.js` geändert: Spiellogik besonders sorgfältig reviewen.');
             if (files.some(file => file.startsWith('supabase/') && file.endsWith('.sql'))) risks.push('⚠️ Neue/geänderte SQL-Datei: Alp muss SQL selbst prüfen und ausführen.');
-            const appCodeChanged = files.some(file => /^(js\/|src\/|worker\/|sw\.js)/.test(file));
-            if (appCodeChanged && oldAppVersion && newAppVersion && oldAppVersion === newAppVersion) risks.push(`⚠️ App-Code geändert, aber APP_VERSION nicht erhöht (${newAppVersion}).`);
+            const appCodeChanged = files.some(file => /^(js\/|src\/|worker\/|css\/|sw\.js|index\.html$)/.test(file));
+            const compareVersions = (a, b) => {
+              const left = a.split('.').map(Number); const right = b.split('.').map(Number);
+              for (let i = 0; i < 3; i++) if ((left[i] || 0) !== (right[i] || 0)) return (left[i] || 0) - (right[i] || 0);
+              return 0;
+            };
+            if (appCodeChanged && oldAppVersion && newAppVersion && compareVersions(newAppVersion, oldAppVersion) <= 0) risks.push(`⚠️ App-Code geändert, aber APP_VERSION nicht erhöht (alt ${oldAppVersion}, neu ${newAppVersion}).`);
             if (appCodeChanged && !has('CHANGELOG.md')) risks.push('⚠️ App-Code geändert, aber CHANGELOG.md fehlt im PR.');
             if (!headAgents || !headClaude || headAgents !== headClaude) risks.push('⚠️ AGENTS.md und CLAUDE.md fehlen oder sind nicht identisch.');
             if (newAppVersion && newJsonVersion && newAppVersion !== newJsonVersion) risks.push(`❌ APP_VERSION (${newAppVersion}) und version.json (${newJsonVersion}) weichen ab.`);
