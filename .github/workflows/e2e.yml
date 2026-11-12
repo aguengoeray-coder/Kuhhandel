@@ -1,0 +1,36 @@
+# Browser- und Layouttests (Playwright) bei jedem Pull Request.
+# Prüft alle Ansichten in 4 Handy-Größen + komplette Partien mit Test-Spielern.
+# Nur lesen: kein Merge, kein Push, keine Secrets. Ergebnis: Zusammenfassung im Lauf + Artefakt „e2e-report“ (Bericht + Screenshots).
+name: Browser-Tests
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Playwright nur für den Test installieren (nicht in package.json → Cloudflare-Build bleibt unberührt)
+      - run: npm install --no-save --no-package-lock playwright@1.63.0
+      - run: npx playwright install --with-deps chromium
+      - name: Ansichten (4 Größen)
+        run: node --test e2e/views.spec.mjs
+      - name: Komplette Partien
+        if: ${{ !cancelled() }}
+        run: node --test e2e/fullgame.spec.mjs
+      - name: Bericht + Screenshots hochladen
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: e2e-report/
+          retention-days: 14
