@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { SHOP_AVATARS, shopAvatar } from '../js/shopavatars.js';
 import { SHOP_SAYINGS, renderShop } from '../js/shop.js';
 
@@ -37,4 +38,14 @@ test('Shop-Sprüche entsprechen exakt dem freigegebenen Katalog und den Preisen'
 
 test('Shop-Modul exportiert den vereinbarten renderShop-Einstieg', () => {
   assert.equal(typeof renderShop, 'function');
+});
+
+
+test('Shop-Demo verwendet die echten Artikel-IDs und Preise statt einer veralteten Kopie', () => {
+  const demo = readFileSync(new URL('../shop-demo.html', import.meta.url), 'utf8');
+  assert.match(demo, /import \\{ SHOP_SAYINGS \\} from '.\\/js\\/shop.js'/);
+  assert.match(demo, /import \\{ SHOP_AVATARS \\} from '.\\/js\\/shopavatars.js'/);
+  assert.match(demo, /Object\\.fromEntries\\(\\[\\.\\.\\.SHOP_AVATARS,\\.\\.\\.SHOP_SAYINGS\\]/);
+  assert.match(demo, /spruch-nico/);
+  assert.match(demo, /spruch-gute-ideen/);
 });
