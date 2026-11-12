@@ -335,3 +335,5 @@ Laufzeit gesamt ca. 8,5 min.
 **Achtung, nicht von uns verursacht:** „Workers Builds: kuhhandel“ schlägt auf Branches fehl (auch schon `claude/v0471-start-symmetrie` ef8f8cc, ohne e2e-Dateien). Auf `codex/v048-shop` grün – evtl. wegen `"previews": {}` in wrangler.jsonc. Bitte bei B/Preview prüfen; Logs nur im Cloudflare-Dashboard (Alp).
 
 **Shop:** `views.spec.mjs` prüft `shop-demo.html` automatisch, sobald sie auf dem Branch liegt. Gegen 9999865 findet der Check 20 Fehler (abgeschnittene Kaufen-/Auswählen-Knöpfe) – also genau den Review-Befund.
+
+**Update 18:40:** C+D mit Alps GO in main (ca85106, PR #3 gemergt; test + Workers Builds grün). Browser-Tests laufen ab jetzt bei jedem PR (Workflow „Browser-Tests“). Bitte codex/automation-high und codex/v048-shop auf aktuellen main bringen.
