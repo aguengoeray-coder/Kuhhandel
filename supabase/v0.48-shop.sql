@@ -22,7 +22,8 @@ alter table public.shop_wallets enable row level security;
 drop policy if exists "shop_wallets_select_own" on public.shop_wallets;
 create policy "shop_wallets_select_own" on public.shop_wallets
   for select to authenticated using (user_id = auth.uid());
-revoke insert, update, delete on public.shop_wallets from anon, authenticated;
+revoke all on public.shop_wallets from anon, authenticated;
+grant select on public.shop_wallets to authenticated;
 
 insert into public.shop_wallets (user_id, balance)
 select id, 0 from auth.users
@@ -53,7 +54,8 @@ alter table public.shop_purchases enable row level security;
 drop policy if exists "shop_purchases_select_own" on public.shop_purchases;
 create policy "shop_purchases_select_own" on public.shop_purchases
   for select to authenticated using (user_id = auth.uid());
-revoke insert, update, delete on public.shop_purchases from anon, authenticated;
+revoke all on public.shop_purchases from anon, authenticated;
+grant select on public.shop_purchases to authenticated;
 
 -- 3. Serverseitiger Festpreis, Sperre des Wallets und atomarer Kauf.
 create or replace function public.shop_buy(p_item_id text)
@@ -131,7 +133,8 @@ alter table public.shop_win_rewards enable row level security;
 drop policy if exists "shop_win_rewards_select_own" on public.shop_win_rewards;
 create policy "shop_win_rewards_select_own" on public.shop_win_rewards
   for select to authenticated using (player_id = auth.uid());
-revoke insert, update, delete on public.shop_win_rewards from anon, authenticated;
+revoke all on public.shop_win_rewards from anon, authenticated;
+grant select on public.shop_win_rewards to authenticated;
 
 -- Interne Funktion; kein direkter RPC-Zugriff durch Clients.
 create or replace function public.shop_credit_game_winners(p_game uuid)
