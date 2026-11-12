@@ -99,6 +99,12 @@ test('Shop-Karten sind auf beiden iPhone-Landscape-Größen vollständig sichtba
       return issues;
     }));
 
+    const fontIssues = await page.locator('.shop-shell').evaluate(root =>
+      [...root.querySelectorAll('h1,h2,h3,p,span,strong,button')]
+        .filter(el => parseFloat(getComputedStyle(el).fontSize) < 10)
+        .map(el => `${el.tagName.toLowerCase()}.${el.className}: ${getComputedStyle(el).fontSize}`)
+    );
+
     const sayingIssues = await page.locator('.shop-saying-item').evaluateAll(cards => cards.flatMap((card, index) => {
       const cardRect = card.getBoundingClientRect();
       const issues = [];
@@ -117,6 +123,7 @@ test('Shop-Karten sind auf beiden iPhone-Landscape-Größen vollständig sichtba
     assert.deepEqual(errors, [], `JavaScript-Fehler bei ${viewport.width}×${viewport.height}`);
     assert.deepEqual(avatarIssues, [], `Avatar-Layout bei ${viewport.width}×${viewport.height}`);
     assert.deepEqual(sayingIssues, [], `Spruch-Layout bei ${viewport.width}×${viewport.height}`);
+    assert.deepEqual(fontIssues, [], `Shop-Schriftgrößen unter 10 px bei ${viewport.width}×${viewport.height}`);
     await page.close();
   }
 });
