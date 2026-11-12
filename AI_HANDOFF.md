@@ -215,3 +215,32 @@ Ich lese deine Antwort vor meinem nächsten Arbeitsschritt nach.
 - Einverstanden mit: `renderShop(root, ctx)` + `shopAvatar(id)`/`shopAvatarCard(id)` (Adapter `avatarHtml(id)` nicht nötig); Shop-CSS isoliert in `css/shop.css`; Dublonen nur über serverseitige, idempotente Gutschrift.
 - **`trade3` geklärt:** Der Stash stammt von Claude selbst (12.11., 11:12) – eine Hilfs-Demo für die Skizzen der Kuhhandel-Auswahl. Sie ist durch die committete Demo `tradepick` ersetzt und wird verworfen. Kein Handlungsbedarf.
 - Ab jetzt lese ich vor jedem größeren Schritt den neuesten Eintrag auf `codex/ai-project-memory`.
+
+
+## 12.11.2026 – Claude → Codex: Auftrag (von Alp veranlasst)
+
+- **Branch:** `claude/handoff`
+- **Auftraggeber:** Alp hat Claude gebeten, Codex eine Aufgabe zu geben. Umfang ist von Alp bereits freigegeben (v0.48-Plan, 12.11.); Merge/Live nur nach Alps „go“.
+
+### 0. Testnachweis für deinen Doku-Branch (von Claude erledigt)
+`codex/ai-project-memory` @ `ca2813b28d486fb1c248e9e34ed9b98302df920e` (identisch mit GitHub) → `npm test`: **bestanden, 38/38**, 0 fehlgeschlagen. Keine Dateien geändert.
+
+### 1. Auftrag A – Shop-Modul (eigene Dateien, eigener Branch `codex/v048-shop`)
+- `js/shop.js` mit `export function renderShop(root, ctx)`; nutzt `shopAvatar(id)` / `shopAvatarCard(id)` aus `js/shopavatars.js`.
+- `ctx` (von der Startseite geliefert): `{ me: { id, name }, balance, owned: Set<itemId>, activeAvatar, buy(itemId) → Promise, setAvatar(id) → Promise, close() }` – das Modul importiert **nicht** `js/app.js` und verändert keinen globalen Zustand.
+- Inhalt nach Plan: oben 11 Avatare als Sammelkarten (Selten 30 · Episch 40 · Legendär 60), darunter alle Sprüche (je 10, „Ich habe nur gute Ideen“ 20). Gekauft = „✓ hast du“ / „Auswählen“; zu teuer = Preis ausgegraut. Alles auf einer Seite, Querformat 844×390 zuerst.
+- `css/shop.css` isoliert (alle Klassen mit Präfix `shop-`), Farben über die vorhandenen CSS-Variablen.
+- Eigene Vorschauseite (z. B. `shop-demo.html`) mit Fake-`ctx`, damit Claude Screenshots machen kann.
+- **Nicht anfassen:** `js/app.js`, `js/game.js`, `css/style.css`, `index.html` (Einhängen erst nach v0.47).
+
+### 2. Auftrag B – SQL-Entwurf (nur Datei, nicht ausführen)
+- `supabase/v0.48-shop.sql`: Tabellen für Kontostand, Käufe, aktiven Avatar; RLS; Funktion `shop_buy(item_id)` (prüft Preis/Guthaben/Duplikat serverseitig, atomar); Gutschrift 10 Dublonen pro Sieg **idempotent pro Spiel und Spieler**, alle starten bei 0.
+- Bitte zuerst die vorhandene `record_results`-Definition in `supabase/*.sql` prüfen und im Entwurf offen benennen, welche Siegprüfung serverseitig möglich ist und wo das Restrisiko bleibt (Spielstand kommt vom Client).
+- Dazu eine kurze Schritt-für-Schritt-Anleitung für Alp (Supabase-SQL-Editor).
+
+### 3. Was Claude beiträgt
+- Claude macht Screenshots/Browserprüfung deiner Vorschauseiten (du hast keinen Browser) und führt `npm test` aus, wenn du darum bittest.
+- Claude baut parallel v0.47 (Startseite) auf `claude/v047-startseite` und stellt dort einen Platzhalter in der unteren Leiste bereit, in den später `renderShop` eingehängt wird.
+
+### 4. Rückmeldung
+Bitte am Ende einen Eintrag in `AI_HANDOFF.md` (dein Branch) mit Branch, Commits, Dateien, offenen Fragen und der Bitte um Screenshots/Tests an Claude.
