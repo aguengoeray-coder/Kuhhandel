@@ -494,6 +494,8 @@ function toast(msg) {
 
 // Anstupsen: auf wen wird seit über 20 Sekunden gewartet?
 const NUDGE_AFTER_MS = 20000;
+// Versteigerung vorbei, Auktionator entscheidet nicht: schon nach 12 s anstupsen
+const nudgeAfter = (s) => (s.phase === 'auction' ? 12000 : NUDGE_AFTER_MS);
 let waitKey = '';
 let waitSince = 0;
 let lastNudgeAt = 0;
@@ -506,10 +508,10 @@ function waitingFor() {
   if (key !== waitKey) {
     waitKey = key;
     waitSince = Date.now();
-    if (who) setTimeout(() => { if (waitKey === key) render(); }, NUDGE_AFTER_MS + 100);
+    if (who) setTimeout(() => { if (waitKey === key) render(); }, nudgeAfter(s) + 100);
   }
   if (DEMO && params.get('nudge')) return params.get('nudge');
-  return who && Date.now() - waitSince >= NUDGE_AFTER_MS ? who : null;
+  return who && Date.now() - waitSince >= nudgeAfter(s) ? who : null;
 }
 function sendNudge(to) {
   if (Date.now() - lastNudgeAt < 15000) return toast('Gerade erst angestupst – kurz warten.');

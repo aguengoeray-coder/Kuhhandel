@@ -15,9 +15,16 @@
 - [x] **Erst das Tier, dann das Geld:** Das Tier wandert zum neuen Besitzer (sein Platz leuchtet kurz auf), danach fliegt das Geld. Beim Kuhhandel erst das Angebot hin, dann das Gegenangebot zurück.
 - [x] **Buzzer:** Sobald jemand buzzert, bleibt die Zahl stehen (mit Namen) und der Countdown tickt nicht weiter. Die kurze Zeit zum Gleichziehen läuft unsichtbar weiter.
 
+**Flotter**
+- [x] Ergebnis-Fenster stehen etwas kürzer (Versteigerung 3 s, Spezialkarte/Ratte 3,5 s) – „Karte aufdecken“ wird erst frei, wenn Tier und Geld gelandet sind.
+- [x] Spezialkarte: „Zeig Batzen!“ nur noch 3 s, „Achtung“ 2 s (vorher 5 s und 3 s).
+- [x] Auktionator lässt sich Zeit: nach 8 s steht bei ihm „Alle warten auf dich“ und die Knöpfe pulsieren; die anderen können ihn schon nach 12 s anstupsen (sonst 20 s).
+- [x] „Passend wählen“ erscheint beim Bezahlen nur noch, wenn nichts vorgewählt ist oder du die Auswahl geändert hast.
+
 **Bedienung**
-- [x] **Bezahlen:** Passen deine Scheine genau, sind sie schon vorgewählt (möglichst wenige Scheine) – nur noch „Bezahlen“ drücken. Bei der Spezialkarte sind die kleinsten Scheine vorgewählt. Passt nichts genau, wählst du selbst. Die Auswahl lässt sich vorher ändern.
+- [x] **Bezahlen:** Passen deine Scheine genau (mit höchstens 5 Scheinen), sind sie schon vorgewählt – nur noch „Bezahlen“ drücken. Bei der Spezialkarte sind die kleinsten Scheine vorgewählt. Passt nichts genau, wählst du selbst. Die Auswahl lässt sich vorher ändern.
 - [x] **Ratte:** Schein zweimal schnell antippen legt ihn direkt in die Mitte.
+- [x] Viele Scheine im Bezahl- oder Angebotsfeld liegen in einer überlappenden Reihe, statt nach unten in deine Tierreihe zu wachsen. „Zeit abgelaufen“ sitzt am Kartenrand statt auf deiner Tierreihe.
 **Spielende**
 - [x] **Abrechnung:** Bevor das Siegertreppchen kommt, werden die Punkte einzeln hochgezählt – vom letzten Platz bis zum Sieger, mit Trommelwirbel; beim Sieger Glitzer und Fanfare. Antippen überspringt.
 - [x] **Neue Auszeichnungen im Börsenbericht:** 🃏 Bluffer (Nullen in gewonnenen Kuhhandeln), 🌧️ Pechvogel (Kuhhandel knapp verloren), 💶 Trinkgeld-König (am meisten überzahlt), 🤏 Geizhals (oft geboten, nie hoch). Die Liste lässt sich scrollen.

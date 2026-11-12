@@ -192,7 +192,7 @@ function avatar(p, idx, extra = '') {
 const AUSLAGE_MAX = 1;
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
-const EV_WAIT = { auction_won: 3500, special_won: 4000, trade: 4800, rat_taken: 4000 }; // Kuhhandel: inkl. ~1 s Aufdecken
+const EV_WAIT = { auction_won: 3000, special_won: 3500, trade: 4800, rat_taken: 3500 }; // Kuhhandel: inkl. ~1 s Aufdecken
 // Stapel leer (nur noch Kuhhandel): Ergebnis kürzer zeigen, damit es flott weitergeht
 export const evWait = (type, deckLeft) => (type === 'trade' && deckLeft === 0 ? 3800 : EV_WAIT[type]);
 // Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
@@ -432,6 +432,7 @@ export function renderGame(root, ctx) {
   let aucCenter = '';
   let aucLeft = '';
   let aucBanner = '';
+  local.urgeNow = false; // Auktionator soll entscheiden (Schild leuchtet)
   if (state.phase === 'auction') {
     const a = auction;
     const iAmAuctioneer = a.auctioneer === meId;
@@ -465,6 +466,11 @@ export function renderGame(root, ctx) {
           ${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(7, 'calm') : ''}
           <svg class="ring" viewBox="0 0 112 152" aria-hidden="true"><rect class="ringbg" x="4" y="4" width="104" height="144" rx="16" pathLength="100"></rect><rect class="ringp" x="4" y="4" width="104" height="144" rx="16" pathLength="100" style="stroke-dashoffset:${100 - pct}"></rect></svg>
           <span class="ringsec">${running ? secs : '✓'}</span></div>`;
+    // Auktionator lässt sich Zeit: nach 8 s freundlicher Hinweis, die Knöpfe pulsieren
+    const URGE_MS = 8000;
+    const urge = iAmAuctioneer && !revealing && !running && a.endsAt != null && now - a.endsAt >= URGE_MS;
+    local.urgeNow = urge;
+    if (iAmAuctioneer && !revealing && !running && a.endsAt != null && !urge && (!wake || wake > a.endsAt + URGE_MS + 20)) wake = a.endsAt + URGE_MS + 20; // Serverzeit
     const countdown = !revealing && !running && a.endsAt != null ? '<div class="timeup">Zeit abgelaufen</div>' : '';
 
     const ev = v.lastEvent;
@@ -483,10 +489,10 @@ export function renderGame(root, ctx) {
           ${avatar(v.players[bi], bi)}<span class="bwho">${a.high.player === meId ? '🔨 Du<small>führst</small>' : `${esc(nameOf(a.high.player))}<small>bietet</small>`}</span><b>${high}</b></div>`;
       })();
 
-    aucBanner = `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
+    aucBanner = urge ? 'Alle warten auf dich!' : `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
     // Nach Ablauf entscheidet der Auktionator: „Zuschlag“ sitzt beim Gebot des Höchstbietenden, „Selbst kaufen“ unten links – weit auseinander
     const decideHere = iAmAuctioneer && !revealing && !running && a.high;
-    const sellBtn = decideHere ? `<button type="button" class="tbtn accept sidebtn" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))} · ${high}</button>` : '';
+    const sellBtn = decideHere ? `<button type="button" class="tbtn accept sidebtn ${urge ? 'urge' : ''}" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))} · ${high}</button>` : '';
     aucCenter = revealing ? `<div class="auc aucreveal">${card}</div>` : `<div class="auc aucmain"><div class="aucrow"><div class="aside l">${ainfo}</div>${card}<div class="aside r">${info}${sellBtn}</div></div>${countdown}</div>`;
 
     if (iAmAuctioneer) {
@@ -496,7 +502,7 @@ export function renderGame(root, ctx) {
       } else if (running) {
         aucLeft = ''; // „Du versteigerst“ steht schon oben im Schild
       } else if (a.high) {
-        aucLeft = `<button type="button" class="pill pill-white" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>${myTotal >= high ? 'SELBST KAUFEN' : 'ZU WENIG GELD'}</small>${high}</button>`;
+        aucLeft = `<button type="button" class="pill pill-white ${urge ? 'urge' : ''}" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>${myTotal >= high ? 'SELBST KAUFEN' : 'ZU WENIG GELD'}</small>${high}</button>`;
       } else {
         aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>Tier nehmen</button>`;
       }
@@ -666,8 +672,8 @@ export function renderGame(root, ctx) {
         local.autoKey = local.key;
         if (!local.sel.length) {
           if (isSp) { if (me.money.length >= pm.count) local.sel = me.money.map((m, i) => [m, i]).sort((a, b) => a[0] - b[0]).slice(0, pm.count).map(([, i]) => i); }
-          else { const idx = bestPay(me.money, pm.amount); if (idx.reduce((t, i) => t + me.money[i], 0) === pm.amount) local.sel = idx; }
-          local.autoPicked = local.sel.length > 0;
+          else { const idx = bestPay(me.money, pm.amount); if (idx.length <= 5 && idx.reduce((t, i) => t + me.money[i], 0) === pm.amount) local.sel = idx; } // mit vielen Kleinen: lieber selbst entscheiden
+          local.autoSel = local.sel.length ? local.sel.join() : null;
         }
       }
       selSum = local.sel.reduce((t, i) => t + (me.money[i] ?? 0), 0);
@@ -686,11 +692,11 @@ export function renderGame(root, ctx) {
       aucBanner = isSp ? `Zahle ${karten(pm.count)} an ${esc(nameOf(pm.payee))}` : `Zahle ${pm.amount} an ${esc(nameOf(pm.payee))}`;
       aucCenter = `<div class="auc paytable">${card}
         <div class="kasse ${entered ? 'pop' : ''}">
-          <div class="kslots">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3, local.justAdded)}</div>
+          <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3, local.justAdded)}</div>
           <div class="kline"><span>${isSp ? `${karten(n)} von ${pm.count}` : `${karten(n)} · ${selSum}`}</span><b class="paystatus ${cls}">${status}</b></div>
         </div></div>`;
       aucLeft = `<div class="lhead">${isSp ? `${esc(aname(pm.special))}-Spezialkarte` : `Für: ${esc(aname(pm.animal))}`}</div>
-        <button type="button" class="pill pill-white pill-small" data-a="${isSp ? 'autocount' : 'autopay'}">${isSp ? 'Kleinste wählen' : 'Passend wählen'}</button>
+        ${local.autoSel && local.autoSel === local.sel.join() ? '' : `<button type="button" class="pill pill-white pill-small" data-a="${isSp ? 'autocount' : 'autopay'}">${isSp ? 'Kleinste wählen' : 'Passend wählen'}</button>`}
         <button type="button" class="pill pill-red" data-a="pay" ${ready ? '' : 'disabled'}><small>BEZAHLEN</small>${isSp ? karten(n) : `${karten(n)} · ${selSum}`}</button>`;
       pickMode = 'sel';
       H.pay = () => ctx.act((s) => pay(s, meId, local.sel));
@@ -733,7 +739,7 @@ export function renderGame(root, ctx) {
     aucCenter = `<div class="tduel ${entered ? 'pop' : ''}">
       <div class="tpanel">
         ${who(meId, 'Du')}
-        <div class="kslots">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
+        <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
         <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
         ${myTiles(chosen?.animal)}
       </div>
@@ -793,7 +799,7 @@ export function renderGame(root, ctx) {
         ${tmid(t.animal, t.count, ttHtml)}
         <div class="tpanel">
           ${who(meId, 'Du')}
-          <div class="kslots">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
+          <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
           ${counterBtn}
         </div>
       </div>`;
@@ -924,11 +930,11 @@ export function renderGame(root, ctx) {
       <button type="button" class="pill pill-red ${calmLeft ? 'calm' : ''}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>KARTE<br>AUFDECKEN</button>
       <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>`;
   }
-  const askMe = (state.phase === 'turn' && myTurn && !local.tradeOpen) || (state.phase === 'payment' && v.payment.payer === meId)
+  const askMe = local.urgeNow || (state.phase === 'turn' && myTurn && !local.tradeOpen) || (state.phase === 'payment' && v.payment.payer === meId)
     || (state.phase === 'trade' && v.trade.target === meId) || (state.phase === 'rat' && ratCurrent(v) === meId) || (state.phase === 'block' && v.block.player === meId);
   const banner = aucBanner || (state.phase === 'ended' || state.phase === 'block' ? 'Spielende' : myTurn ? (v.mustDraw ? 'Nochmal aufdecken!' : 'Du bist dran') : `${esc(cur.name)} ist dran`);
   const table = `<div class="gtable">
-    <div class="tbanner ${askMe ? 'mine' : ''} ${fresh && myTurn && state.phase === 'turn' ? 'pulse' : ''}" ${askMe ? `style="--c:${SEAT_COLORS[meIdx]}"` : ''}>${banner}</div>
+    <div class="tbanner ${askMe ? 'mine' : ''} ${(fresh && myTurn && state.phase === 'turn') || local.urgeNow ? 'pulse' : ''}" ${askMe ? `style="--c:${SEAT_COLORS[meIdx]}"` : ''}>${banner}</div>
     <div class="tcenter">${aucCenter || `${evStrip ? `<div class="evstrip ${stripNew}" ${stripNew ? `style="--el:${local.stripAt - Date.now()}ms"` : ''} title="${esc(lastLog)}">${evStrip}</div>` : `<div class="tlog ${stripNew}" ${stripNew ? `style="--el:${local.stripAt - Date.now()}ms"` : ''}>${esc(lastLog)}</div>`}
     <div class="deck-wrap">
       ${canDraw ? `<button type="button" class="deck go" data-a="auction" aria-label="Karte aufdecken"><span class="deckcow">${art('kuh')}</span><span class="deckgo">Tippen</span></button>`

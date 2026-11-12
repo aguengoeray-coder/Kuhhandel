@@ -2332,3 +2332,14 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .overlay.endtable .ending.recap ul { max-height: 270px; overflow-y: auto; overscroll-behavior: contain; }
 .overlay.endtable .ending.recap li { flex: none; }
 .overlay.endtable .ending.recap li > :last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* Auktionator lässt sich Zeit: Hinweis + pulsierende Knöpfe */
+.timeup.urge { background: var(--gold); color: var(--ink); animation: pulse 1s ease-in-out infinite; }
+.urge.tbtn, .pill.urge { animation: urgepulse 1s ease-in-out infinite; }
+@keyframes urgepulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(255,211,78,.45); } }
+@media (prefers-reduced-motion: reduce) { .timeup.urge, .urge.tbtn, .pill.urge { animation: none; } }
+.aucmain .timeup { position: relative; z-index: 2; margin-top: -8px; } /* klebt am Kartenrand statt an deiner Tierreihe */
+/* Viele Scheine im Feld: eine Reihe, überlappend (statt nach unten in deine Tierreihe zu wachsen) */
+.kslots.many { flex-wrap: nowrap; gap: 0; }
+.kslots.many > * + * { margin-left: -7px; }
+.kslots.many > * { box-shadow: -2px 0 3px rgba(0,0,0,.18); }
+.tpanel .kslots.many > * + * { margin-left: -13px; }
