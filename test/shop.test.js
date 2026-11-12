@@ -16,15 +16,22 @@ test('Shop enthält elf eindeutige Avatare mit den vereinbarten Preisen', () => 
 test('Jeder Shop-Avatar rendert eigenständiges SVG-Markup', () => {
   for (const item of SHOP_AVATARS) {
     const html = shopAvatar(item.id);
-    assert.match(html, /<svg\b/);
+    assert.match(html, /<svg\\b/);
     assert.match(html, new RegExp('data-avatar="' + item.id + '"'));
   }
 });
 
-test('Shop-Sprüche und Preise entsprechen dem vereinbarten Katalog', () => {
-  assert.equal(SHOP_SAYINGS.length, 8);
-  assert.equal(SHOP_SAYINGS.filter((item) => item.price === 10).length, 7);
-  assert.equal(SHOP_SAYINGS.find((item) => item.id === 'spruch-gute-ideen')?.price, 20);
+test('Shop-Sprüche entsprechen exakt dem freigegebenen Katalog und den Preisen', () => {
+  assert.deepEqual(SHOP_SAYINGS.map(({text,price})=>[text,price]), [
+    ['👍👍',10],
+    ['Passt schon, passt schon!',10],
+    ['BLABLABLABLA!!',10],
+    ['Nico, schrei nicht!',10],
+    ['Das ist eine gute Idee!',10],
+    ['IHH, du Ekliger!',10],
+    ['Bastard',10],
+    ['Ich habe nur gute Ideen',20]
+  ]);
   assert.equal(new Set(SHOP_SAYINGS.map((item) => item.id)).size, 8);
 });
 
