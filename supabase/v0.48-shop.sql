@@ -72,10 +72,10 @@ begin
     when 'raketen-esel' then 40 when 'piraten-papagei' then 40
     when 'daemonenritter' then 60 when 'cyborg-hahn' then 60
     when 'kuh-kaiser' then 60
-    when 'spruch-ehrlich' then 10 when 'spruch-unehrlich' then 10
-    when 'spruch-mehr' then 10 when 'spruch-bluff' then 10
-    when 'spruch-niemals' then 10 when 'spruch-gutgespielt' then 10
-    when 'spruch-verteuert' then 10 when 'spruch-gute-ideen' then 20
+    when 'spruch-daumen' then 10 when 'spruch-passt-schon' then 10
+    when 'spruch-blablabla' then 10 when 'spruch-nico' then 10
+    when 'spruch-gute-idee' then 10 when 'spruch-ihh' then 10
+    when 'spruch-bastard' then 10 when 'spruch-gute-ideen' then 20
     else null end;
   if v_price is null then raise exception 'Unbekannter Shop-Artikel'; end if;
 
