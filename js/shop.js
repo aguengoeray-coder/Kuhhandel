@@ -49,12 +49,12 @@ export function renderShop(root, ctx) {
       ? '<span class="shop-active">Aktiv</span>'
       : has
         ? '<button class="shop-action shop-select" data-select="' + esc(item.id) + '" ' + (busy?'disabled':'') + '>Auswählen</button>'
-        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' D</button>';
+        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen</button>';
     return '<article class="shop-item shop-avatar-item shop-tier-' + esc(item.tier) + '">' +
       '<div class="shop-art">' + shopAvatar(item.id) + '</div>' +
       '<div class="shop-avatar-info"><strong class="shop-item-name">' + esc(item.name) + '</strong>' +
-      '<span class="shop-item-sub">' + tierName(item.tier) + ' · ' + item.price + ' D</span>' +
-      (has?'<span class="shop-owned">✓ hast du</span>':'') + action + '</div></article>';
+      '<span class="shop-item-sub">' + tierName(item.tier) + ' · ' + item.price + ' D</span></div>' +
+      action + '</article>';
   };
 
   const sayingCard = (item) => {
