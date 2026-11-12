@@ -91,3 +91,14 @@ Dieses Dokument enthält aktuelle, offene Übergaben. Abgeschlossene oder überh
 - `codex/v048-shop` blieb unberührt.
 - Kein SQL ausgeführt.
 - **Nächste Entscheidung:** Alp prüft A, B und E und erteilt – falls freigegeben – ein ausdrückliches GO für diesen konkreten Schritt.
+
+
+### Nachtrag – erweiterter Prüftest und erneuter CI-Lauf
+
+- Commit `169051c`: zusätzlicher Test für die Dateierfassung von `collectJavaScriptFiles()` (prüft `js/`, `src/`, `worker/`, `sw.js` und schließt CSS aus).
+- GitHub Actions **Tests**, Run #84 (`43265151543`): **success**.
+  - `npm test`: **42/42 bestanden**.
+  - Syntaxprüfung: **14 JavaScript-Dateien bestanden**.
+  - Versionsabgleich: **0.47.1**.
+- GitHub Actions **PR-Bericht**, Run #7 (`43265151696`): **success**; derselbe Kommentar wurde aktualisiert.
+- Der letzte geprüfte Code-Commit ist `169051cc419ae672a5155298cf34a54a694aee23`. Die danach folgenden Änderungen an `PROJECT_STATUS.md` und `AI_HANDOFF.md` sind reine Dokumentationsupdates.
