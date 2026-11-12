@@ -25,7 +25,8 @@ test('Große Karte und Überschrift sind in allen Phasen gleich groß', { timeou
           const card = document.querySelector('.tcenter .aucard .pcard, .tcenter .bigcard .pcard, .tcenter .deck');
           const ban = document.querySelector('.gtable > .tbanner');
           const r = card?.getBoundingClientRect();
-          return { p: document.querySelectorAll('.prow').length + 1, card: r ? [Math.round(r.width / sc), Math.round(r.height / sc)] : null, font: ban ? parseFloat(getComputedStyle(ban).fontSize) : null };
+          // Layout-Größe (ohne Animationen wie Wackeln/Pulsieren)
+          return { p: document.querySelectorAll('.prow').length + 1, card: card ? [card.offsetWidth, card.offsetHeight] : null, font: ban ? parseFloat(getComputedStyle(ban).fontSize) : null };
         });
         (groups[m.p] = groups[m.p] || []).push({ d, ...m });
       }

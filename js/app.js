@@ -13,7 +13,7 @@ import { shopAvatar, SHOP_AVATAR_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.48.1';
+export const APP_VERSION = '0.49.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -322,7 +322,7 @@ function renderStart() {
       ${tickerHtml()}
       <div class="hb-top">
         <div class="logorow tb hb-logo"><span class="logocow" aria-hidden="true">${art('kuh')}</span><div class="tbname"><span class="tbteam">🚀 Team Rockets</span><h1 class="logo tbtitle">Tier <span class="tbb">Börse</span></h1></div></div>
-        <button type="button" class="hb-me" data-modal="profile" aria-label="Profilbild ändern">${avatarHtml(me.id, me.name)}<b>${esc(me.name)}</b>${shopMe.state === 'ok' ? `<span class="hb-dub" title="Dublonen">🪙 ${shopMe.balance}</span>` : ''}</button>
+        <button type="button" class="hb-me" data-modal="profile" aria-label="Profilbild ändern">${avatarHtml(me.id, me.name)}<b>${esc(me.name)}</b>${shopMe.state === 'ok' ? `<span class="hb-dub" title="Dublonen"><i class="dub" aria-hidden="true"></i> ${shopMe.balance}</span>` : ''}</button>
       </div>
       <div class="hb-stage">
         <div class="hb-felt">${nav}${felt}

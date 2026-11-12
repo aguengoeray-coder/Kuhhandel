@@ -43,3 +43,9 @@
 @media(max-height:380px){.shop-shell{padding-top:6px;gap:6px}.shop-header{min-height:40px}}
 /* Shop als Vollbild über der Startseite (iPhone: Kamera-Aussparung + Home-Balken freilassen) */
 .shop-overlay{position:fixed;inset:0;z-index:200;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);background:var(--bg,#1e2a44)}
+
+/* Dublone: goldene Münze als Zeichen */
+.dub{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.17em;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%23FFF3B0'/%3E%3Cstop offset='.55' stop-color='%23F5C542'/%3E%3Cstop offset='1' stop-color='%23C98A12'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='14.5' fill='url%28%23g%29' stroke='%238A5A00' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='10.5' fill='none' stroke='%23B57D10' stroke-width='1.5' stroke-dasharray='2 1.6'/%3E%3Cpath d='M16 9.5l1.9 4.1 4.5.4-3.4 3 1 4.4L16 19.1l-4 2.3 1-4.4-3.4-3 4.5-.4z' fill='%23B57D10'/%3E%3C/svg%3E") center/contain no-repeat;flex:none}
+.shop-balance .dub{width:22px;height:22px;align-self:center}
+.shop-tier-kult .shop-tier-tag{background:linear-gradient(90deg,#E2557A,#FF8FB1)}
+.shop-tier-kult{border-color:#E2557A88;background:linear-gradient(170deg,#ff6f9a26,#ffffff08)}

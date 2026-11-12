@@ -4,13 +4,13 @@ import { readFileSync } from 'node:fs';
 import { SHOP_AVATARS, shopAvatar } from '../js/shopavatars.js';
 import { SHOP_SAYINGS, renderShop } from '../js/shop.js';
 
-test('Shop enthält elf eindeutige Avatare mit den vereinbarten Preisen', () => {
-  assert.equal(SHOP_AVATARS.length, 11);
-  assert.equal(new Set(SHOP_AVATARS.map((item) => item.id)).size, 11);
+test('Shop enthält 14 eindeutige Avatare (11 + 3 Kult) mit den vereinbarten Preisen', () => {
+  assert.equal(SHOP_AVATARS.length, 14);
+  assert.equal(new Set(SHOP_AVATARS.map((item) => item.id)).size, 14);
   for (const item of SHOP_AVATARS) {
     assert.ok(item.id && item.name);
-    assert.ok(['selten', 'episch', 'legendaer'].includes(item.tier));
-    assert.equal(item.price, item.tier === 'selten' ? 30 : item.tier === 'episch' ? 40 : 60);
+    assert.ok(['selten', 'episch', 'legendaer', 'kult'].includes(item.tier));
+    assert.equal(item.price, { selten: 30, episch: 40, legendaer: 60, kult: 50 }[item.tier]);
   }
 });
 
@@ -55,4 +55,10 @@ test('Shop-SQL beschränkt Schreib-RPCs auf angemeldete Nutzer', () => {
   assert.ok(sql.includes('revoke all on function public.record_results(uuid, jsonb) from public, anon, authenticated;'));
   assert.ok(sql.includes('grant execute on function public.record_results(uuid, jsonb) to authenticated;'));
   assert.ok(sql.includes('revoke all on function public.shop_credit_game_winners(uuid) from public, anon, authenticated;'));
+});
+
+test('Datenbank-Preisliste kennt jeden Shop-Artikel mit demselben Preis wie die App', () => {
+  const sql = readFileSync(new URL('../supabase/v0.48-shop.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.49-kult-avatare.sql', import.meta.url), 'utf8');
+  for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), `${item.id} fehlt oder falscher Preis in der SQL`);
+  for (const item of SHOP_AVATARS) assert.ok(sql.includes(`'${item.id}'`), `${item.id} fehlt in shop_set_avatar`);
 });
