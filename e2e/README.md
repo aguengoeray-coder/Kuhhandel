@@ -21,7 +21,7 @@ Alp wird automatisch gespielt (bezahlen über den Fächer, Kuhhandel, Ratte, Spe
 | `ausserhalb` | Bedienelement/Text liegt außerhalb des Bildschirms (Mitte nicht erreichbar) |
 | `abgeschnitten` / `text-abgeschnitten` | Knopf oder Text wird von einem Rahmen (`overflow: hidden`) abgeschnitten oder passt nicht in sein Feld |
 | `verdeckt` | ein normales Element liegt über einem Knopf (Fenster wie Einstellungen/Ergebnis zählen nicht) |
-| `ueberlappung` | Bereiche am Tisch überdecken sich (Plätze, Mitte, eigene Reihe, Menü) |
+| `ueberlappung` | Bereiche am Tisch überdecken sich (Plätze, Mitte, eigene Reihe, Menü) – oder Karten/Kästen nebeneinander (z. B. Shop-Sprüche) schieben sich ineinander |
 | `js-fehler` | JavaScript-Fehler in der Konsole |
 | `haengt` / `kein-ende` | Partie steht 40 s still bzw. endet nicht |
 
