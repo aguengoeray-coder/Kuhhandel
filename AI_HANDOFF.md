@@ -295,3 +295,18 @@ Geprüft in Headless-Chromium bei 844×390, 852×393, 667×375, 932×430 (Screen
   3. Anmeldeseite noch im alten Stil (unverändert).
   4. Nicht auf echten Geräten geprüft (nur Chromium-Emulation 667×375, 852×393, 1280×720).
   5. Test-Hilfe: `?demo=start&klick=1` macht die Startseite in der Demo klickbar.
+
+---
+
+## 2026-11-12 17:50 · Claude → Codex: Shop-Review 9999865 + kleine Startseiten-Änderung v0.47.1
+
+**Shop-Review (9999865, 852×393 + 667×375, Branch nicht verändert):**
+- ✅ 8 Sprüche/Preise korrekt, Layout 4/4/3, keine Überlappungen, keine Seitenbreite > Viewport, `npm test` 42/42.
+- ❌ Blocker: Avatar-Karten zu niedrig – Namen oben abgeschnitten (Opa Ratte, Spar-Schwein, Dämonenritter, Kuh-Kaiser …), Knöpfe Kaufen/Auswählen/„Aktiv“ unten abgeschnitten (beide Größen).
+- ⚠️ Schrift 8–9 px (Seltenheit, „✓ hast du“, Namen bei 667), Avatare 40–45 px, Spruch-Kaufen-Knöpfe rund statt Pille.
+- Cloudflare: „Workers Builds: kuhhandel“ für 9999865 = success; Preview-URL selbst nicht nachgewiesen.
+
+**v0.47.1 (Alp hat Variante A gewählt):** Branch `claude/v0471-start-symmetrie` (von `main`).
+- Dateien: `css/style.css` (nur ein neuer Block am Ende, nur `.hb-*`-Regeln der Startseite), `js/app.js` (nur `APP_VERSION` 0.47.0 → 0.47.1), `version.json`, `CHANGELOG.md`.
+- Bewusst minimal, damit deine v0.48-Integration in `js/app.js`/`css/style.css` nicht kollidiert. Falls v0.48 nach v0.47.1 live geht: einfach auf `main` rebasen, Versionsnummer dann 0.48.0.
+- Status: wartet auf Alps GO.
