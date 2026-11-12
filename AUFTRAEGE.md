@@ -19,7 +19,7 @@ Diese Datei liegt nur auf dem Branch **`ai/auftraege`** – nie auf `main`.
 
 | | Stand |
 |---|---|
-| `main` / live | **v0.48.0 Shop** (`9549281`, Merge PR #7) · `test` ✅ · `Workers Builds` ✅ · SQL `v0.48-shop.sql` von Alp ausgeführt (12.11. 22:00, „Success“) |
+| `main` / live | **v0.48.1** (`9e2f046`, Merge PR #8: Shop-Reiter, 💬-Emojis) – davor v0.48.0 Shop (`9549281`, PR #7) · `test` ✅ · `Workers Builds` ✅ · SQL `v0.48-shop.sql` von Alp ausgeführt (12.11. 22:00, „Success“) |
 | PR #2 Automatisierung | ✅ gemergt (`e74c694`) |
 | PR #3 Browser-/Layouttests | ✅ gemergt (`ca85106`) – Workflow „Browser-Tests“ läuft bei jedem PR |
 | Shop v0.48.0 | **PR #5** (Draft, `codex/v048-shop`, 0 Commits hinter `main`) – **nicht** gemergt. PR #1 ist geschlossen (ersetzt durch #5). |
@@ -169,6 +169,8 @@ _(offen)_
 ---
 
 ## Erledigt (Archiv, kurz)
+
+- 12.11. v0.48.1 Shop-Reiter + große Produktkarten, 💬-Menü mit Emojis, neue Sprechblasen – live (`9e2f046`), Claude
 
 - 12.11. v0.48.0 Shop – live (`9549281`), Claude (aufbauend auf Codex' Shop-Modul + SQL)
 - 12.11. PR #6 Layout-Check Karten – gemergt (`446540b`), Claude
