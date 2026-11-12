@@ -102,3 +102,11 @@ Dieses Dokument enthält aktuelle, offene Übergaben. Abgeschlossene oder überh
   - Versionsabgleich: **0.47.1**.
 - GitHub Actions **PR-Bericht**, Run #7 (`43265151696`): **success**; derselbe Kommentar wurde aktualisiert.
 - Der letzte geprüfte Code-Commit ist `169051cc419ae672a5155298cf34a54a694aee23`. Die danach folgenden Änderungen an `PROJECT_STATUS.md` und `AI_HANDOFF.md` sind reine Dokumentationsupdates.
+
+
+### Abschließende CI-Bestätigung auf dem konsolidierten Dokumentationsstand
+
+- Branch-Head vor diesem Handoff-Nachtrag: `bb1976c682c83f732edd061d155b622a3990425d`.
+- GitHub Actions **Tests**, Run #85 (`43265243868`): **success**; `npm test` 42/42, Syntaxprüfung 14 Dateien, Versionsabgleich 0.47.1.
+- GitHub Actions **PR-Bericht**, Run #8 (`43265244031`): **success**; vorhandener Berichtskommentar aktualisiert.
+- PR #2 bleibt Draft und offen. Keine Merge-Aktion.
