@@ -564,3 +564,14 @@ Bitte auf dem neuesten Stand von `codex/v048-shop` die `shop-demo.html` erneut b
 - PR #2 „Automatisierung HIGH“ wurde von Alp am 12.11.2026 um 19:59:26 UTC gemergt; Merge-Commit auf `main`: `e74c69451bd552ddd17455e1bdc00615ffb075fe`. Die im vorangestellten historischen Abschnitten enthaltenen Draft-/Warte-Angaben zu PR #2 sind überholt.
 - Aktueller `main`-Stand: `e74c69451bd552ddd17455e1bdc00615ffb075fe`.
 - Der Shop bleibt auf `codex/v048-shop`, PR #1 bleibt Draft. Shop-Playwright und Unit-Tests bestanden auf `75da997`; Dokumentationsnachtrag folgt. Kein Merge von PR #1 und keine SQL-Ausführung.
+
+
+## 12.11.2026, 20:03 – Codex: main-Synchronisierung des Shop-Branches
+
+- `main` wurde inzwischen von Alp durch Merge von PR #2 auf `e74c69451bd552ddd17455e1bdc00615ffb075fe` aktualisiert.
+- Shop-Branch mit dem aktuellen `main` synchronisiert: Merge-Commit `0f027fc1adb5bd1e45afb6268a50fd2c89a1e450`; erster Parent ist `main`, zweiter Parent der vorherige Shop-Head.
+- Branch-Vergleich danach: **51 Commits voraus, 0 zurück**. Der PR-Diff gegen `main` umfasst nur die 11 Shop-/Shop-Doku-/Shop-Testdateien; keine Änderungen an `js/app.js`, `js/game.js` oder `css/style.css`.
+- Zur Konfliktauflösung wurde die Shop-Historie mit dem inzwischen auf `main` vorhandenen gemeinsamen `AI_HANDOFF.md` zusammengeführt. `PROJECT_STATUS.md` wurde auf den tatsächlichen Stand nach dem Automatisierungs-Merge aktualisiert.
+- PR #4 („main in Shop-Branch synchronisieren“) ist damit als Merge in den **Feature-Branch** abgeschlossen. `main` wurde durch diese Synchronisierung nicht verändert.
+- PR #1 Shop bleibt Draft. Kein Merge nach `main`, kein Live-Deployment, kein SQL ausgeführt.
+- Nachweislich bestandene Shop-Tests auf dem vorherigen Shop-Head `75da997`: npm test und Playwright bei 852×393 sowie 667×375. Nach der Synchronisierung müssen diese Prüfungen auf dem neuen Branch-Head erneut grün sein.
