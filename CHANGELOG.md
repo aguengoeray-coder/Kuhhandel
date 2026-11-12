@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.50.0 – Neuer „Wer ist dran“-Anzeiger
+
+- [x] **Kein wandernder gelber Kreis mehr.** Der Platz, der dran ist, leuchtet einmal hell auf und glimmt dann ruhig golden weiter.
+- [x] **Überschrift klappt um** wie eine Anzeigetafel und trägt die Farbe des Spielers, der dran ist.
+- [x] **Du bist dran:** dein Tischrand unten leuchtet golden.
+
 ## v0.49.0 – Kult-Avatare, Dublonen-Münze, einheitliche Größen
 
 - [x] **3 neue Kult-Avatare (je 50):** Der verletzte Bennet, Der schreiende Nico, Der quasselnde Alp.
