@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.48.1 – Shop schöner, 💬-Menü mit Emojis
+
+- [x] **Shop neu:** zwei Reiter „Avatare“ und „Sprüche“, große Avatar-Karten mit Seltenheit, Sprüche als Sprechblasen. Nichts wird mehr abgeschnitten – bei wenig Platz wird gescrollt.
+- [x] **💬-Menü:** oben 8 Emojis zum schnellen Reagieren (😂 👍 👎 😱 🤑 🙄 🔥 🐮), darunter deine gekauften Sprüche, dann die Standard-Sprüche, ganz unten die Karten.
+- [x] **Sprechblasen am Tisch:** runder, mit Schatten, längere Sprüche brechen um; Emojis erscheinen groß ohne Kasten.
+
 ## v0.48.0 – Shop: Dublonen, Börsen-Avatare und Sprüche
 
 - [x] **Shop geöffnet:** Startseite → 🛒 Shop. 11 eigene Börsen-Avatare (Selten 30 D, Episch 40 D, Legendär 60 D) und 8 Sprüche (10 D, „Ich habe nur gute Ideen“ 20 D).

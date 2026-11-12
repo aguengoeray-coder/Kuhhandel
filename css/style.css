@@ -2571,6 +2571,22 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .avatar.shopav .shop-avatar { width: 100%; height: 100%; border-width: 2px; box-shadow: none; }
 .avatar.shopav .shop-avatar::before { display: none; }
 .reactpick > button.bought { border-color: #C99A1E; background: #FFF4CF; }
+/* v0.48.1 💬-Menü: Emojis zuerst, eigene Sprüche, Standard-Sprüche, Karten unten */
+.reactpick.v2 { display: flex; flex-direction: column; gap: 6px; width: 300px; max-height: 378px; overflow-y: auto; padding: 8px 10px 10px; border-radius: 18px; top: 6px; }
+.reactpick.v2 .rphead { padding: 0 0 2px; font-size: 15px; }
+.reactpick.v2 .rp-emos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.reactpick.v2 .rp-emo { min-height: 46px; font-size: 28px; line-height: 1; border: 0; border-radius: 14px; background: #F1EEE6; box-shadow: inset 0 -3px 0 rgba(0,0,0,.08); padding: 0; }
+.reactpick.v2 .rp-emo:active { transform: scale(.92); }
+.reactpick.v2 .rp-lbl { font-size: 11px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #8a8478; margin-top: 2px; }
+.reactpick.v2 .rp-says { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.reactpick.v2 .rp-say { min-height: 34px; font-size: 12.5px; line-height: 1.15; padding: 4px 8px; border: 2px solid var(--ink); background: #fff; border-radius: 12px; }
+.reactpick.v2 .rp-say.long { grid-column: 1 / -1; }
+.reactpick.v2 .rp-say.bought { background: #FFF4CF; border-color: #C99A1E; }
+.reactpick.v2 .pdetail, .reactpick.v2 > div:last-child { flex: none; }
+/* Sprechblasen am Tisch: runder, ruhiger Schatten, längere Sprüche dürfen umbrechen; reine Emojis groß ohne Kasten */
+.rbubble { border-radius: 16px; border-width: 2.5px; padding: 5px 12px; box-shadow: 0 6px 14px rgba(0,0,0,.28); white-space: normal; width: max-content; max-width: 190px; text-align: center; line-height: 1.15; }
+.rbubble.emo { background: transparent; border: 0; box-shadow: none; padding: 0; font-size: 46px; line-height: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+.rbubble.emo::after { display: none; }
 /* v0.49 Bühne: ein Maßstab pro Partie für die ganze Tischmitte (3 Spieler: Seiten frei → größer) */
 .stage { --bz: 1.1; }
 .stage.p3 { --bz: 1.25; }

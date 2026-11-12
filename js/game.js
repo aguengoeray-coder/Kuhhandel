@@ -469,7 +469,8 @@ export function renderGame(root, ctx) {
     const fromIdx = from ? idxOf(from) : -1;
  const isEhrlich = said?.text?.startsWith('Ehrliches, männliches');
     const isUnehrlich = said?.text?.startsWith('Unehrliches');
-    const bubble = said ? `<div class="rbubble ${from ? 'to' : ''} ${isEhrlich ? 'ehrlich' : ''} ${isUnehrlich ? 'ehrlich unehrlich' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
+    const isEmo = said && /^\p{Extended_Pictographic}[\p{Extended_Pictographic}\u200d\ufe0f]*$/u.test(said.text);
+    const bubble = said ? `<div class="rbubble ${isEmo ? 'emo' : ''} ${from ? 'to' : ''} ${isEhrlich ? 'ehrlich' : ''} ${isUnehrlich ? 'ehrlich unehrlich' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
     let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
     // du sitzt unten: kein eigener Platz – nur Sprechblasen erscheinen über deinem Geld
@@ -1606,6 +1607,23 @@ export function renderGame(root, ctx) {
   // gemerkte Einmal-Effekte zeichnen; die Animationen werden nach dem Zeichnen auf die richtige Stelle vorgespult
   local.fx.forEach((f) => { effects += `<div class="fxk" data-fxat="${f.at}">${f.html}</div>`; wakeLocal(f.until + 30); });
 
+  // 💬-Menü: oben Emojis (schnell), dann eigene gekaufte Sprüche, dann die Standard-Sprüche; Karten/Punkte ganz unten
+  function reactPicker() {
+    const list = ctx.reactionList, nE = ctx.reactionEmoji || 0, base = ctx.reactionBase ?? list.length;
+    const to = local.reactTo, self = to === meId;
+    const btn = (r, i, cls = '') => `<button type="button" class="${cls}${r.length > 18 ? ' long' : ''}" data-a="react" data-v="${i}">${esc(r)}</button>`;
+    const emo = list.slice(0, nE).map((r, i) => btn(r, i, 'rp-emo')).join('');
+    const std = list.slice(nE, base).map((r, k) => btn(r, nE + k, 'rp-say')).join('');
+    const own = list.slice(base).map((r, k) => btn(r, base + k, 'rp-say bought')).join('');
+    return `<div class="reactpick v2 ${self ? 'self' : ''}">
+      <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
+      ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
+      ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}
+      <div class="rp-lbl">Sprüche</div><div class="rp-says">${std}</div>
+      <div class="rp-lbl">${self ? 'Deine Karten' : `Karten von ${esc(nameOf(to))}`}</div>
+      ${playerDetail(v.players[idxOf(to)], self)}
+    </div>`;
+  }
   root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
     ${table}
@@ -1617,10 +1635,7 @@ export function renderGame(root, ctx) {
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? '<div class="rpback" data-a="reactClose" aria-hidden="true"></div>' : ''}
-    ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick withdetail ${local.reactTo === meId ? 'self' : ''}" style="top:6px">
-      <div class="rphead">${local.reactTo === meId ? 'Du · Reaktion an alle' : `An ${esc(nameOf(local.reactTo))}`}<button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
-      ${playerDetail(v.players[idxOf(local.reactTo)], local.reactTo === meId)}
-      ${ctx.reactionList.map((r, i) => { const cl = [r.length > 16 ? 'long' : '', i >= (ctx.reactionBase ?? Infinity) ? 'bought' : ''].filter(Boolean).join(' '); return `<button type="button" data-a="react" data-v="${i}"${cl ? ` class="${cl}"` : ''}>${i >= (ctx.reactionBase ?? Infinity) ? '🪙 ' : ''}${esc(r)}</button>`; }).join('')}</div>` : ''}
+    ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? reactPicker() : ''}
     ${ctx.toastMsg ? `<div class="toast" role="alert">${esc(ctx.toastMsg)}</div>` : ''}
   </div></div>`;
 
