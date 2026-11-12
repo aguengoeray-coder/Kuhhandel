@@ -84,7 +84,7 @@ jobs:
             const appCodeChanged = files.some(file => /^(js\/|src\/|worker\/|sw\.js)/.test(file));
             if (appCodeChanged && oldAppVersion && newAppVersion && oldAppVersion === newAppVersion) risks.push(`⚠️ App-Code geändert, aber APP_VERSION nicht erhöht (${newAppVersion}).`);
             if (appCodeChanged && !has('CHANGELOG.md')) risks.push('⚠️ App-Code geändert, aber CHANGELOG.md fehlt im PR.');
-            if (headAgents && headClaude && headAgents !== headClaude) risks.push('⚠️ AGENTS.md und CLAUDE.md sind nicht identisch.');
+            if (!headAgents || !headClaude || headAgents !== headClaude) risks.push('⚠️ AGENTS.md und CLAUDE.md fehlen oder sind nicht identisch.');
             if (newAppVersion && newJsonVersion && newAppVersion !== newJsonVersion) risks.push(`❌ APP_VERSION (${newAppVersion}) und version.json (${newJsonVersion}) weichen ab.`);
             if (oldAppVersion && newAppVersion && oldAppVersion !== newAppVersion && oldJsonVersion === newJsonVersion) risks.push('⚠️ APP_VERSION geändert, version.json aber nicht.');
             if (!risks.length) risks.push('Keine automatische Risiko-Regel hat einen Treffer ergeben. Das ersetzt kein fachliches Review.');
