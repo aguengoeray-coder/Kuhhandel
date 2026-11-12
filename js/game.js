@@ -1270,8 +1270,10 @@ export function renderGame(root, ctx) {
             return `<div class="ecr-cards">${list.map((m, k) => `<span class="ecr-c ${m == null ? 'back' : ''}" style="--k:${k};--m:${m == null ? '#ccc' : MONEY_COLORS[m] || '#eee'}">${m == null ? '' : m}</span>`).join('') || '<em>–</em>'}</div>`
               + (total != null ? `<b class="ecr-sum du-sum">${total}</b>` : `<b class="ecr-sum du-sum small">${karten(list.length)}</b>`);
           };
-          duel = `<div class="du-row">${duSide(e.challenger, verb(e.challenger, 'forderst heraus', 'fordert heraus'), stack(e.offer, amts ? e.offerSum : null), cw)}${mid('<span class="du-vs">VS</span>')}${duSide(e.target, 'Gegenangebot', stack(e.counter, amts ? e.counterSum : null), !cw)}</div>`;
-          const pills = [e.diff === 0 ? `Gleichstand – ${nm(e.challenger)} ${verb(e.challenger, 'gewinnst', 'gewinnt')}` : `Unterschied <b>${e.diff}</b>`];
+          // Differenz sehen alle (auch Zuschauer) – groß in der Mitte unter dem Tier
+          const diffBox = `<span class="du-diff ecr-after ${e.diff === 0 ? 'tie' : ''}"><small>Differenz</small><b>${e.diff}</b></span>`;
+          duel = `<div class="du-row">${duSide(e.challenger, verb(e.challenger, 'forderst heraus', 'fordert heraus'), stack(e.offer, amts ? e.offerSum : null), cw)}${mid(`<span class="du-vs">VS</span>${diffBox}`)}${duSide(e.target, 'Gegenangebot', stack(e.counter, amts ? e.counterSum : null), !cw)}</div>`;
+          const pills = e.diff === 0 ? [`Gleichstand – ${nm(e.challenger)} ${verb(e.challenger, 'gewinnst', 'gewinnt')}`] : [];
           if (amts && (e.challenger === meId || e.target === meId)) {
             const other = e.challenger === meId ? e.target : e.challenger;
             const mine = e.challenger === meId ? e.offerSum : e.counterSum;

@@ -2279,3 +2279,9 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 @keyframes dulose { to { opacity: .78; } }
 .evcard.duel:not(.reveal) .du-side.lose { opacity: .78; }
 @media (prefers-reduced-motion: reduce) { .evcard.duel .du-side, .evcard.duel .du-tag { animation: none !important; } .evcard.duel .du-side.lose { opacity: .78; } }
+.du-mid { gap: 4px; }
+.du-mid .pcard { margin: -26px -16px -24px; }
+.du-diff { display: flex; flex-direction: column; align-items: center; background: #FFE7A3; border: 2px solid var(--ink); border-radius: 10px; padding: 1px 8px 2px; line-height: 1; box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+.du-diff small { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #6B5A2A; margin-top: 2px; }
+.du-diff b { font-family: var(--font-head); font-weight: 700; font-size: 22px; color: var(--ink); }
+.du-diff.tie { background: #fff; }
