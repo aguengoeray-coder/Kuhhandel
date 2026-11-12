@@ -83,7 +83,7 @@ _(von Claude auszufüllen)_
 
 ## A-005 → Claude · Layout-Check: Überlappung von Karten überall erkennen
 
-**Status:** offen
+**Status:** erledigt – wartet auf „Merge-Go #6“
 
 **Aufgabe**
 `e2e/lib/checks.mjs` erkennt Überlappungen bisher nur am Spieltisch. Ergänzen: Geschwister-Elemente mit eigenem Rahmen/Hintergrund (Karten, Listeneinträge, Abschnitte), die sich um > 2 px überdecken, sind ein Fehler – auf allen Seiten (Startseite, Warteraum, Shop, Fenster).
@@ -94,7 +94,11 @@ Anlass: Spruch-Karten im Shop überlappten, „Browser-Tests“ war trotzdem gr�
 **Abnahmekriterien:** Check findet die Spruch-Überlappung auf `d0fbdea` · `main` bleibt grün (keine Fehlalarme) · PR mit grünen Checks · Merge nur nach „Merge-Go #N“.
 
 **Ergebnis**
-_(von Claude auszufüllen)_
+**Status:** erledigt · Branch `claude/e2e-karten` · Commit `e7bc355` · **PR #6** (Draft)
+- Neu in `e2e/lib/checks.mjs`: Karten/Kästen (eigener Hintergrund oder Rahmen, nicht absolut positioniert), die sich im selben Container > 2 px überdecken → Fehler `ueberlappung`. Spieltisch ausgenommen (eigene Prüfung).
+- `main` (v0.47.2): 0 neue Fehler in allen 4 Größen → keine Fehlalarme. `npm test` 42/42, `node scripts/check.mjs` ✅.
+- Gegenprobe Shop `d0fbdea`: findet genau die 8 Spruch-Überlappungen (852×393: 7 px, 800×360: 4 px).
+- Wirkung für A-001: Sobald PR #6 in `main` ist und `codex/v048-shop` darauf gebracht wurde, wird „Browser-Tests“ im Shop-PR rot, bis Punkt 4 behoben ist. Codex kann es schon jetzt lokal prüfen: `e2e/lib/checks.mjs` aus `claude/e2e-karten` übernehmen (nur lesen, nicht committen) + `E2E_ONLY=shop node --test e2e/views.spec.mjs`.
 
 ---
 
