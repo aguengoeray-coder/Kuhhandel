@@ -8,10 +8,12 @@ import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
 import { haptic } from './haptics.js';
+import { renderShop, SHOP_SAYINGS } from './shop.js';
+import { shopAvatar, SHOP_AVATAR_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.47.2';
+export const APP_VERSION = '0.48.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -60,6 +62,11 @@ let ui = { screen: 'start', editingName: !store.get('kh_name'), games: [], game:
 let lobbyChannel = null;
 let auth = { mode: 'login', error: '', busy: false }; // Anmelde-Bildschirm
 const profiles = new Map(); // Anmelde-ID → { name, animal, color }
+// v0.48 Shop: eigener Kontostand/Käufe + gekaufte Avatare aller Mitspieler (Anmelde-ID → Avatar-ID)
+const shopAvatars = new Map();
+const shopMe = { state: 'idle', balance: 0, owned: new Set(), active: null }; // state: idle | loading | ok | off (SQL noch nicht eingerichtet)
+const SAYING_TEXTS = SHOP_SAYINGS.map((x) => x.text);
+try { if (!document.getElementById('shop-avatar-runtime-css')) { const st = document.createElement('style'); st.id = 'shop-avatar-runtime-css'; st.textContent = SHOP_AVATAR_CSS; document.head.append(st); } } catch {}
 const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
 let lastReactAt = 0;
 const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
@@ -144,6 +151,8 @@ function render() {
 
 // Kleines Spielerbild (Tier auf Farbe); ohne Profil: Anfangsbuchstabe
 function avatarHtml(id, name, cls = '') {
+  const sa = shopAvatars.get(id);
+  if (sa) return `<div class="avatar pic shopav ${cls}" aria-hidden="true">${shopAvatar(sa)}</div>`;
   const pr = profiles.get(id);
   if (pr) return `<div class="avatar pic ${cls}" style="--bg:${esc(pr.color)}" aria-hidden="true">${art(pr.animal)}</div>`;
   return `<div class="avatar ${cls}" aria-hidden="true">${initial(name)}</div>`;
@@ -261,6 +270,7 @@ function homeItems() {
   return items;
 }
 function renderStart() {
+  if (shopMe.state === 'idle') loadShop();
   const items = homeItems();
   // Was liegt auf dem Tisch? Dein laufendes Spiel zuerst, sonst das erste offene; mit ‹ › blättern
   if (!items.length) ui.homeIdx = 0;
@@ -305,13 +315,13 @@ function renderStart() {
     <button type="button" class="hb-nav r" data-hb="next" aria-label="Nächstes Spiel" ${ui.homeIdx < items.length - 1 ? '' : 'disabled'}>›</button>
     <span class="hb-count">${ui.homeIdx + 1} / ${items.length}</span>` : '';
   const dock = [['play', '▶️', 'Spielen'], ['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
-    .map(([k, i, l]) => `<button type="button" class="hb-dk ${k === 'play' ? 'on' : ''}" data-dock="${k}">${k === 'shop' ? '<em class="hb-soon">bald</em>' : ''}<i>${i}</i>${l}</button>`).join('');
+    .map(([k, i, l]) => `<button type="button" class="hb-dk ${k === 'play' ? 'on' : ''}" data-dock="${k}"><i>${i}</i>${l}</button>`).join('');
   app.innerHTML = `
     <section class="home">
       ${tickerHtml()}
       <div class="hb-top">
         <div class="logorow tb hb-logo"><span class="logocow" aria-hidden="true">${art('kuh')}</span><div class="tbname"><span class="tbteam">🚀 Team Rockets</span><h1 class="logo tbtitle">Tier <span class="tbb">Börse</span></h1></div></div>
-        <button type="button" class="hb-me" data-modal="profile" aria-label="Profilbild ändern">${avatarHtml(me.id, me.name)}<b>${esc(me.name)}</b></button>
+        <button type="button" class="hb-me" data-modal="profile" aria-label="Profilbild ändern">${avatarHtml(me.id, me.name)}<b>${esc(me.name)}</b>${shopMe.state === 'ok' ? `<span class="hb-dub" title="Dublonen">🪙 ${shopMe.balance}</span>` : ''}</button>
       </div>
       <div class="hb-stage">
         <div class="hb-felt">${nav}${felt}
@@ -333,7 +343,7 @@ function renderStart() {
   app.querySelectorAll('[data-dock]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.dock;
     if (k === 'play') return;
-    if (k === 'shop') { ui.homeNote = 'Der Shop kommt mit dem nächsten Update 🛒'; render(); setTimeout(() => { ui.homeNote = ''; render(); }, 3000); return; }
+    if (k === 'shop') { openShop(); return; }
     openModal(k);
   }));
   document.getElementById('dbgMoney')?.addEventListener('click', () => { if (store.get('kh_dbg_money')) store.del('kh_dbg_money'); else store.set('kh_dbg_money', '1'); render(); });
@@ -577,11 +587,14 @@ function renderPlaying() {
     rematchId: ui.game.state?.rematchId || null,
     avatarFor: (seat) => {
       const pl = ui.game.players?.find((x) => (x.seat || x.id) === seat);
-      return profiles.get(pl ? pl.id : (local && seat === 'me' ? me.id : seat)) || null;
+      const uid = pl ? pl.id : (local && seat === 'me' ? me.id : seat);
+      const pr = profiles.get(uid) || null; const sa = shopAvatars.get(uid);
+      return sa ? { ...(pr || {}), shop: sa } : pr;
     },
     playSound: (kind) => { if (soundOn() && !DEMO) playSound(kind); },
     reactions: activeReactions(),
-    reactionList: REACTIONS,
+    reactionList: myReactions(),
+    reactionBase: REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
     seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
@@ -997,7 +1010,62 @@ async function loadProfiles(ids) {
   if (!missing.length) return;
   const { data } = await sb.from('profiles').select('id, name, animal, color').in('id', missing);
   (data || []).forEach((p) => profiles.set(p.id, p));
-  if (data?.length) render();
+  // gekaufte Shop-Avatare der Mitspieler (öffentlich lesbar über eine eigene Funktion; fehlt sie noch, bleibt es beim Profilbild)
+  const sa = await sb.rpc('shop_public_avatars', { p_ids: missing }).then((r) => r, () => ({ data: null }));
+  (sa?.data || []).forEach((r) => { if (r.active_avatar) shopAvatars.set(r.user_id, r.active_avatar); });
+  if (data?.length || sa?.data?.length) render();
+}
+
+// ---------- Shop (v0.48): Dublonen, Avatare, Sprüche ----------
+
+function myReactions() {
+  if (DEMO && shopMe.state === 'idle') loadShop();
+  return [...REACTIONS, ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)];
+}
+
+async function loadShop(force = false) {
+  if (!me?.id || (!force && shopMe.state !== 'idle')) return;
+  shopMe.state = 'loading';
+  if (DEMO) {
+    Object.assign(shopMe, { state: 'ok', balance: 105, active: 'noergler', owned: new Set(['noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen']) });
+    shopAvatars.set(me.id, 'noergler');
+    return;
+  }
+  try {
+    const w = await sb.from('shop_wallets').select('balance, active_avatar').eq('user_id', me.id).maybeSingle();
+    if (w.error) throw w.error;
+    const p = await sb.from('shop_purchases').select('item_id').eq('user_id', me.id);
+    if (p.error) throw p.error;
+    Object.assign(shopMe, { state: 'ok', balance: w.data?.balance || 0, active: w.data?.active_avatar || null, owned: new Set((p.data || []).map((x) => x.item_id)) });
+    if (shopMe.active) shopAvatars.set(me.id, shopMe.active); else shopAvatars.delete(me.id);
+  } catch { shopMe.state = 'off'; }
+  render();
+}
+
+async function openShop() {
+  if (shopMe.state !== 'ok') await loadShop(true);
+  if (shopMe.state !== 'ok') { ui.homeNote = 'Der Shop wird gerade eingerichtet – gleich geht’s los 🛒'; render(); setTimeout(() => { ui.homeNote = ''; render(); }, 3500); return; }
+  const root = document.createElement('div');
+  root.className = 'shop-overlay';
+  document.body.append(root);
+  const err = (e, fb) => new Error(String(e?.message || fb).replace(/^.*?:\s*/, '') || fb);
+  renderShop(root, {
+    me: { id: me.id, name: me.name },
+    balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active,
+    async buy(id) {
+      if (DEMO) { const it = [...SHOP_SAYINGS].find((x) => x.id === id); shopMe.balance -= it ? it.price : 30; shopMe.owned.add(id); return { balance: shopMe.balance }; }
+      const { data, error } = await sb.rpc('shop_buy', { p_item_id: id });
+      if (error) throw err(error, 'Der Kauf hat nicht geklappt.');
+      const row = Array.isArray(data) ? data[0] : data;
+      shopMe.balance = Number(row?.new_balance ?? shopMe.balance); shopMe.owned.add(id);
+      return { balance: shopMe.balance };
+    },
+    async setAvatar(id) {
+      if (!DEMO) { const { error } = await sb.rpc('shop_set_avatar', { p_avatar_id: id }); if (error) throw err(error, 'Der Avatar konnte nicht ausgewählt werden.'); }
+      shopMe.active = id; shopAvatars.set(me.id, id);
+    },
+    close() { root.remove(); render(); },
+  });
 }
 
 async function saveProfile(change) {
@@ -1218,7 +1286,7 @@ function watchRoom(id) {
     })
     .on('broadcast', { event: 'nudge' }, ({ payload }) => gotNudge(payload))
     .on('broadcast', { event: 'react' }, ({ payload }) => {
-      if (!payload?.seat || !REACTIONS.includes(payload.text)) return;
+      if (!payload?.seat || !(REACTIONS.includes(payload.text) || SAYING_TEXTS.includes(payload.text))) return;
       const to = typeof payload.to === 'string' && ui.game?.state?.players?.some((p) => p.id === payload.to) ? payload.to : null;
       showReaction(payload.seat, payload.text, to);
     })
@@ -1693,6 +1761,7 @@ function adminBody() {
 // ---------- Demo für Screenshots ----------
 
 function demo(kind) {
+  if (params.get('shopav')) shopAvatars.set('u2', params.get('shopav'));
   const demoProfiles = { u1: ['Alp', 'pferd', '#1D5FC2'], u2: ['Nico', 'schwein', '#B8285F'], u3: ['Bennet', 'esel', '#0B7A68'], u4: ['Mo', 'hahn', '#B58A00'] };
   Object.entries(demoProfiles).forEach(([id, [name, animal, color]]) => profiles.set(id, { id, name, animal, color }));
   if (kind === 'testspiel' || kind === 'testspiel3') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(kind === 'testspiel3' ? 3 : 4); }

@@ -1,4 +1,5 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
+import { shopAvatar } from './shopavatars.js';
 import {
   ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, CANTPAY_HOLD_MS, AUCTION_START_MS, AUCTION_BID_MS,
   viewFor, possibleTrades, scores, currentPlayer,
@@ -182,6 +183,7 @@ function bigAnimalCard(id, extraRows = '', cls = '') {
 let avatarLookup = () => null; // wird pro Darstellung gesetzt (Spielerbild aus dem Profil)
 function avatar(p, idx, extra = '') {
   const pr = avatarLookup(p.id);
+  if (pr?.shop) return `<div class="avatar pic shopav" style="--c:${SEAT_COLORS[idx]}" aria-hidden="true">${shopAvatar(pr.shop)}</div>${extra}`;
   if (pr) return `<div class="avatar pic" style="--c:${SEAT_COLORS[idx]};--bg:${pr.color}" aria-hidden="true">${art(pr.animal)}</div>${extra}`;
   return `<div class="avatar" style="--c:${SEAT_COLORS[idx]}" aria-hidden="true">${initial(p.name)}</div>${extra}`;
 }
@@ -1618,7 +1620,7 @@ export function renderGame(root, ctx) {
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? `<div class="reactpick withdetail ${local.reactTo === meId ? 'self' : ''}" style="top:6px">
       <div class="rphead">${local.reactTo === meId ? 'Du · Reaktion an alle' : `An ${esc(nameOf(local.reactTo))}`}<button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
       ${playerDetail(v.players[idxOf(local.reactTo)], local.reactTo === meId)}
-      ${ctx.reactionList.map((r, i) => `<button type="button" data-a="react" data-v="${i}"${r.length > 16 ? ' class="long"' : ''}>${esc(r)}</button>`).join('')}</div>` : ''}
+      ${ctx.reactionList.map((r, i) => { const cl = [r.length > 16 ? 'long' : '', i >= (ctx.reactionBase ?? Infinity) ? 'bought' : ''].filter(Boolean).join(' '); return `<button type="button" data-a="react" data-v="${i}"${cl ? ` class="${cl}"` : ''}>${i >= (ctx.reactionBase ?? Infinity) ? '🪙 ' : ''}${esc(r)}</button>`; }).join('')}</div>` : ''}
     ${ctx.toastMsg ? `<div class="toast" role="alert">${esc(ctx.toastMsg)}</div>` : ''}
   </div></div>`;
 

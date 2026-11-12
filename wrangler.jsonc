@@ -10,5 +10,6 @@
   },
   "triggers": {
     "crons": ["23 5 * * *"]
-  }
+  },
+  "previews": {}
 }

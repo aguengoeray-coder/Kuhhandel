@@ -1,0 +1,58 @@
+/* v0.48 Shop – isolierte shop-* Selektoren, Farben aus dem App-Theme */
+.shop-shell{height:100%;min-height:0;display:flex;flex-direction:column;gap:6px;padding:9px 12px;color:#fff;background:linear-gradient(145deg,var(--bg,#1e2a44),var(--tbl-3,#172e55));font-family:var(--font-body,Inter,system-ui,sans-serif);overflow:hidden}
+.shop-header{display:flex;align-items:center;gap:12px;flex:none;min-height:42px}
+.shop-heading{display:flex;align-items:baseline;gap:9px;min-width:0;flex:1}
+.shop-kicker{font-size:10px;font-weight:800;letter-spacing:1px;color:#c4d1e5}
+.shop-heading h1{font:700 25px/1 var(--font-head,Fredoka,sans-serif);margin:0;color:#fff}
+.shop-greeting{font-size:12px;color:#d5dfed;white-space:nowrap}
+.shop-balance{display:flex;align-items:center;gap:9px;background:rgba(5,13,29,.55);border:1px solid #ffffff30;color:#fff;border-radius:11px;padding:6px 11px}
+.shop-balance>span{font-size:10px;color:#d5dfed}
+.shop-balance strong{font:700 17px var(--font-head,Fredoka,sans-serif);color:var(--gold,#ffd34e);white-space:nowrap}
+.shop-balance small{font:600 10px var(--font-body,Inter,sans-serif);color:#fff}
+.shop-close{width:36px;height:36px;flex:none;border:1px solid #ffffff38;border-radius:50%;background:#ffffff18;color:#fff;font-size:25px;line-height:1;cursor:pointer}
+.shop-content{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1.8fr) minmax(0,.85fr);gap:6px}
+.shop-section{min-height:0;display:flex;flex-direction:column;background:#0b1729a8;border:1px solid #ffffff24;border-radius:12px;padding:6px 8px;overflow:visible}
+.shop-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;margin-bottom:4px}
+.shop-section-head h2{font:700 14px/1.1 var(--font-head,Fredoka,sans-serif);margin:0;color:#fff}
+.shop-section-head p{font-size:10px;color:#c4d1e5;margin:2px 0 0}
+.shop-section-head>span{font-size:10px;font-weight:700;color:#c4d1e5;white-space:nowrap}
+.shop-tier-list{display:grid;grid-template-rows:repeat(3,minmax(52px,auto));align-content:space-evenly;gap:4px;flex:1;min-height:0;overflow:visible}
+.shop-tier-row{display:grid;grid-template-columns:58px minmax(0,1fr);align-items:stretch;gap:6px;min-height:52px;overflow:visible}
+.shop-tier-row>h3{margin:0;display:flex;align-items:center;justify-content:center;border-radius:7px;background:#ffffff12;color:#dce7f6;font:700 10px var(--font-head,Fredoka,sans-serif);text-align:center}
+.shop-avatar-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(48px,auto);gap:5px;min-width:0;min-height:0;overflow:visible}
+.shop-item{position:relative;min-width:0;display:flex;align-items:center;text-align:left;background:#ffffff12;border:1px solid #ffffff24;border-radius:9px;padding:4px;overflow:visible}
+.shop-avatar-item{display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:minmax(0,1fr) 20px;column-gap:4px;row-gap:2px;align-items:center;padding:3px;overflow:visible}
+.shop-art{grid-column:1;grid-row:1;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none;border-radius:50%;background:#f7f1df;border:2px solid #d2c5a5;overflow:hidden}
+.shop-tier-episch .shop-art{border-color:#c4a0ed;box-shadow:0 0 0 2px #8a64b455}
+.shop-tier-legendaer .shop-art{border-color:#f3cc57;box-shadow:0 0 0 2px #f6e8b855,0 0 8px #e6bd4b66}
+.shop-art .shop-avatar{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.shop-art .shop-avatar-art{width:100%;height:100%;display:block}
+.shop-avatar-info{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;min-width:0;min-height:0;overflow:visible}
+.shop-item-name{font:700 10px/1.1 var(--font-head,Fredoka,sans-serif);width:100%;height:auto;max-height:none;white-space:normal;overflow-wrap:anywhere;display:block;overflow:visible;color:#fff}
+.shop-item-sub{font-size:10px;line-height:1.1;color:#c4d1e5;white-space:nowrap}
+.shop-owned{font-size:10px;font-weight:800;color:#9de5b2;line-height:1.1}
+.shop-avatar-item>.shop-action,.shop-avatar-item>.shop-active{grid-column:1 / -1;grid-row:2;width:100%;min-width:0;min-height:20px;display:flex;align-items:center;justify-content:center;padding:1px 4px;font-size:10px;line-height:1;border-radius:999px;white-space:nowrap}
+.shop-action{border:0;border-radius:999px;min-height:24px;padding:2px 7px;font:700 10px var(--font-head,Fredoka,sans-serif);cursor:pointer;white-space:nowrap;max-width:100%}
+.shop-action:disabled{opacity:.42;cursor:not-allowed}
+.shop-buy{background:var(--gold,#ffd34e);color:#252b36;box-shadow:0 2px 0 #987321}
+.shop-select{background:#39875a;color:#fff}
+.shop-active{font-size:10px;font-weight:800;color:#9de5b2}
+.shop-saying-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,auto);align-content:center;gap:5px;flex:1;min-height:0}
+.shop-saying-item{position:relative;min-width:0;min-height:34px;display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:9px;background:#ffffff12;border:1px solid #ffffff24;overflow:visible}
+.shop-saying-text{flex:1;min-width:0;font:600 11px/1.15 var(--font-head,Fredoka,sans-serif);color:#fff;overflow-wrap:anywhere}
+.shop-saying-price{font-size:10px;color:#c4d1e5;white-space:nowrap}
+.shop-saying-item .shop-action{flex:none;min-height:26px;padding:2px 8px;border-radius:999px;align-self:center}
+.shop-saying-item .shop-owned{white-space:nowrap}
+.shop-footer{display:flex;justify-content:space-between;gap:10px;flex:none;font-size:10px;color:#c4d1e5;padding:0 3px}
+.shop-notice{flex:none;padding:4px 9px;border-radius:7px;font-size:10px;font-weight:600}
+.shop-notice-success{background:#d9f5e1;color:#185b2d}
+.shop-notice-error{background:#fbe4e4;color:#922e36}
+.shop-notice-info{background:#e7edf6;color:#38516e}
+@media(max-width:700px){.shop-content{grid-template-rows:minmax(0,1.8fr) minmax(0,.85fr)}.shop-section-head p{display:none}.shop-avatar-info .shop-item-sub{display:none}.shop-avatar-item>.shop-action[data-price]::after{content:'\00a0· ' attr(data-price) ' D'}.shop-avatar-item{grid-template-columns:28px minmax(0,1fr);grid-template-rows:minmax(0,1fr) 20px}.shop-art{width:26px;height:26px}.shop-shell{padding:6px;gap:4px}.shop-header{gap:7px;min-height:38px}.shop-heading{gap:6px}.shop-kicker{display:none}.shop-heading h1{font-size:22px}.shop-greeting{font-size:10px}.shop-balance{padding:5px 7px;gap:4px}.shop-balance>span{display:none}.shop-balance strong{font-size:15px}.shop-content{grid-template-rows:minmax(0,1.55fr) minmax(0,.85fr);gap:4px}.shop-section{padding:4px}.shop-tier-row{grid-template-columns:48px minmax(0,1fr);gap:4px}.shop-avatar-grid{gap:3px} .shop-art{width:26px;height:26px}.shop-item{padding:3px;gap:4px} .shop-item-name{font-size:10px}.shop-item-sub{font-size:10px} .shop-action{min-height:24px;font-size:10px;padding:2px 6px}.shop-saying-grid{gap:3px}.shop-saying-item{gap:4px;padding:4px}.shop-saying-text{font-size:10px}.shop-saying-price{font-size:10px} .shop-saying-item .shop-action{min-height:26px;font-size:10px;padding:2px 7px;border-radius:999px}}
+@media(max-height:360px){.shop-tier-list{grid-template-rows:repeat(3,minmax(52px,auto))}.shop-tier-row{min-height:52px}.shop-avatar-item{grid-template-rows:minmax(0,1fr) 20px}.shop-shell{padding:4px 8px;gap:3px}.shop-header{min-height:34px}.shop-heading h1{font-size:21px}.shop-content{gap:3px}.shop-section{padding:3px 6px}.shop-section-head{margin-bottom:2px}.shop-tier-row{grid-template-columns:44px minmax(0,1fr);min-height:52px}.shop-art{width:26px;height:26px}}
+@media(prefers-reduced-motion:reduce){.shop-shell *{scroll-behavior:auto!important}}
+@media(max-height:440px){.shop-content{grid-template-rows:minmax(0,1fr) auto}.shop-section-head p{display:none}.shop-saying-item{min-height:30px}}
+/* v0.48 Einbau in die App: Shop als Vollbild über der Startseite */
+.shop-overlay{position:fixed;inset:0;z-index:200;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);background:var(--bg,#1e2a44)}
+.shop-overlay .shop-shell{position:relative}
+.shop-overlay .shop-notice{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:5;max-width:min(520px,80%);box-shadow:0 6px 18px #0006;pointer-events:none}
