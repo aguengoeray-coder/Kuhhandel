@@ -575,3 +575,14 @@ Bitte auf dem neuesten Stand von `codex/v048-shop` die `shop-demo.html` erneut b
 - PR #4 („main in Shop-Branch synchronisieren“) ist damit als Merge in den **Feature-Branch** abgeschlossen. `main` wurde durch diese Synchronisierung nicht verändert.
 - PR #1 Shop bleibt Draft. Kein Merge nach `main`, kein Live-Deployment, kein SQL ausgeführt.
 - Nachweislich bestandene Shop-Tests auf dem vorherigen Shop-Head `75da997`: npm test und Playwright bei 852×393 sowie 667×375. Nach der Synchronisierung müssen diese Prüfungen auf dem neuen Branch-Head erneut grün sein.
+
+
+## 12.11.2026, 20:04 – Codex: sauberer Abnahme-PR nach Synchronisierung
+
+- Der frühere Draft-PR #1 wurde geschlossen, weil er noch den alten Basisstand `aadafb1` referenzierte und dadurch bereits integrierte main-Dateien in seiner historischen Dateiliste führte.
+- Neuer sauberer Draft-PR: **#5** https://github.com/aguengoeray-coder/Kuhhandel/pull/5
+- PR #5 basiert exakt auf aktuellem `main` `e74c694`; der Diff umfasst 12 Shop-bezogene Dateien (Shop-Code, SQL-Entwurf, Anleitung, Tests, Shop-Preview-Workflow und Projektübergaben).
+- Keine Änderungen an `js/app.js`, `js/game.js`, `css/style.css` oder `src/engine.js`.
+- PR #1 ist geschlossen, nicht gemergt. PR #4 war die Synchronisierung von `main` in den Feature-Branch und ist abgeschlossen. PR #5 bleibt Draft.
+- Shop-Playwright auf `0f027fc` nach Synchronisierung erfolgreich; weitere CI-Läufe auf dem aktuellen Dokumentations-Head laufen.
+- Kein Merge nach `main`, kein Live-Deployment, kein SQL ausgeführt.
