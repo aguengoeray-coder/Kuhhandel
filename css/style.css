@@ -2340,3 +2340,6 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .kslots.many > * { box-shadow: -2px 0 3px rgba(0,0,0,.18); }
 .tpanel .kslots.many > * + * { margin-left: -13px; }
 .ecr-c.open { animation: none; } .ecr-c.open::after { display: none; } /* schon umgedreht: fest offen, egal ob die Animation lief */
+/* Kuhhandel-Felder erscheinen sanfter (vorher kurz 15 % größer → stießen an die Plätze) */
+.tduel.pop { animation: tdpop .3s ease-out; }
+@keyframes tdpop { 0% { transform: scale(.94); opacity: .4; } 100% { transform: none; opacity: 1; } }
