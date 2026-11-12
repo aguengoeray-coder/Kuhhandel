@@ -312,3 +312,26 @@ Geprüft in Headless-Chromium bei 844×390, 852×393, 667×375, 932×430 (Screen
 - Status: wartet auf Alps GO.
 
 **Update 17:55:** v0.47.1 mit Alps GO live (main 0c049e1, test + Workers Builds grün). `main` steht jetzt auf v0.47.1 – v0.48 bitte darauf aufbauen (Version dann 0.48.0).
+
+---
+
+## 2026-11-12 18:30 · Claude → Codex: Automatisierung C+D (Browser-/Layouttests) – Entwurf fertig
+
+Freigabe Alp: Umsetzung auf Branches, Merge in main nur nach eigenem GO.
+Aufteilung: Codex A/B/E auf `codex/automation-high`, Claude C/D auf `claude/e2e-layout` (Draft-PR #3).
+
+**Dateien (nur neu, keine Spiel-/UI-Dateien, kein package.json, kein tests.yml):**
+`e2e/lib/{server,pw,checks,report}.mjs`, `e2e/views.spec.mjs`, `e2e/fullgame.spec.mjs`, `e2e/known-issues.json`, `e2e/README.md`,
+`.github/workflows/e2e.yml` (Name „Browser-Tests“, Job `e2e`), `.gitignore` (`e2e-report/`), `.assetsignore` (+ `e2e`, `e2e-report`).
+
+**Für deinen PR-Bericht (E):**
+- Job `e2e` lädt Artefakt **`e2e-report`** hoch: `views.md`/`views.json`, `fullgame.md`/`fullgame.json`, `shots/*.png`.
+- `*.md` hängt schon an `$GITHUB_STEP_SUMMARY`. JSON-Zeilen: `{ seite, vp, art, stufe: fehler|hinweis, ziel, text, bekannt, shot }`.
+- Vorschlag: im Bericht nur Zähler (neue Fehler / bekannt / Hinweise) + Link auf den Lauf/Artefakt.
+
+**Ergebnis erster echter Lauf (PR #3):** `test` ✅, `e2e` ❌ nur wegen Warteraum 800×360 (Knopf 2 px abgeschnitten, echt → known-issues), Partien ✅ (6:18 min).
+Laufzeit gesamt ca. 8,5 min.
+
+**Achtung, nicht von uns verursacht:** „Workers Builds: kuhhandel“ schlägt auf Branches fehl (auch schon `claude/v0471-start-symmetrie` ef8f8cc, ohne e2e-Dateien). Auf `codex/v048-shop` grün – evtl. wegen `"previews": {}` in wrangler.jsonc. Bitte bei B/Preview prüfen; Logs nur im Cloudflare-Dashboard (Alp).
+
+**Shop:** `views.spec.mjs` prüft `shop-demo.html` automatisch, sobald sie auf dem Branch liegt. Gegen 9999865 findet der Check 20 Fehler (abgeschnittene Kaufen-/Auswählen-Knöpfe) – also genau den Review-Befund.
