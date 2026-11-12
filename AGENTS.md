@@ -120,5 +120,5 @@ Niemals „fertig“, „getestet“ oder „live“ behaupten, wenn die entspre
 ### Live-Stand und Freigabe
 - `main` ist produktiv; niemals direkt darauf schreiben oder pushen.
 - Ein Entwicklungsbranch ist niemals automatisch live.
-- Vor Merge: `git pull` auf aktuellem `main`, Änderungen vergleichen, `npm test` grün, Screenshots der echten Darstellung vorlegen und Alpengs ausdrückliches GO abwarten.
+- Vor Merge: `git pull` auf aktuellem `main`, Änderungen vergleichen, `npm test` grün, Screenshots der echten Darstellung vorlegen und Alps ausdrückliches GO abwarten.
 - Datenbank-SQL wird nur vorbereitet. Alp führt es selbst im Supabase-SQL-Editor aus.
