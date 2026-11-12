@@ -1,5 +1,22 @@
 # Änderungsprotokoll
 
+## v0.44.0 – Kuhhandel: klarer auswählen
+
+- [x] **Schritt 1 – ein Fenster:** „Mit wem, um welches Tier?“ – oben die Gegner, darunter große Kärtchen nur mit den Tieren, die ihr beide habt. Jedes Kärtchen zeigt Wert, „um 1/2“ und wie viele ihr habt („Du 3 · Lea 1“).
+- [x] **Gegner auch direkt am Platz antippen:** mögliche Gegner sind gestrichelt umrandet („antippen“), der gewählte leuchtet („✓ gewählt“).
+- [x] **Schritt 2 – Geld:** Gegner und Tier stehen fest, nur noch Scheine wählen. „Gegner/Tier ändern“ führt zurück.
+- [x] Die verwirrende zweite Tierreihe (deine Tiere, nicht antippbar) ist weg.
+- [x] Eigenes Set antippen (wenn du dran bist) springt wie bisher direkt zu Schritt 2.
+
+**Fester Ablauf nach jedem Ergebnis** (aus den echten Flügen berechnet, nicht mehr geschätzt)
+- [x] Fenster zu → das Tier fliegt → erst wenn es gelandet ist, fliegt das Geld (beim Kuhhandel erst das Angebot hin, wenn es angekommen ist das Gegenangebot zurück) → 0,7 s Ruhe → **dann** wandert der gelbe „dran“-Rahmen → erst danach ist „Karte aufdecken“ frei.
+- [x] Fenster früher wegtippen: der ganze Ablauf rückt einfach vor, die Reihenfolge bleibt.
+- [x] **Geld fliegt in einem Zug** vom Zahler zum Empfänger – kein Halt mehr in der Mitte.
+- [x] Gemessen in Test-Partien: der Rahmen startet jetzt immer frühestens 0,7 s nachdem der letzte Schein gelandet ist (vorher oft, während das Geld noch flog).
+
+**KUHHANDEL!**
+- [x] Startet jemand einen Kuhhandel, erscheint bei allen kurz ein großes „KUHHANDEL!“ (bzw. „RATTENHANDEL!“): die beiden Spieler fliegen aufeinander zu, darunter „um 2× Kuh“. Dauert 1,5 s und blockiert nichts.
+
 ## v0.43.1 – Ruhigerer Ablauf
 
 - [x] **Kuhhandel-Fenster:** Alle Scheine werden sicher aufgedeckt (vorher blieben auf manchen iPhones einzelne Scheine verdeckt).

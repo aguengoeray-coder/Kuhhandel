@@ -2343,3 +2343,79 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 /* Kuhhandel-Felder erscheinen sanfter (vorher kurz 15 % größer → stießen an die Plätze) */
 .tduel.pop { animation: tdpop .3s ease-out; }
 @keyframes tdpop { 0% { transform: scale(.94); opacity: .4; } 100% { transform: none; opacity: 1; } }
+/* v0.44: Kuhhandel Schritt 1 – ein Fenster: Gegner oben, große Tier-Kärtchen */
+.tcenter:has(.tpick) { max-height: none; }
+.tpick { position: relative; background: rgba(10,18,38,.88); border: 2px solid rgba(255,255,255,.3); border-radius: 18px; padding: 9px 14px 10px; color: #fff; box-shadow: 0 10px 28px rgba(0,0,0,.35); max-width: calc(100% - 20px); }
+.tpick.pop { animation: tdpop .3s ease-out; }
+.tp-head { display: flex; align-items: baseline; gap: 10px; padding-right: 36px; }
+.tp-head small { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; opacity: .7; white-space: nowrap; }
+.tp-head b { font-family: var(--font-head); font-size: 17px; }
+.tp-x { position: absolute; top: 6px; right: 8px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255,255,255,.6); background: transparent; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; }
+.tp-opps { display: flex; gap: 8px; margin: 7px 0 9px; flex-wrap: wrap; }
+.tp-opp { display: flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 13px 3px 3px; background: rgba(255,255,255,.12); border: 2px solid transparent; color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; min-height: 36px; }
+.tp-opp.on { background: #fff; color: var(--ink); border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,211,78,.35); }
+.tp-opp.solo { cursor: default; }
+.tp-opp .avatar { width: 28px; height: 28px; border-width: 2px; font-size: 11px; }
+.tp-grid { display: flex; gap: 7px; justify-content: center; flex-wrap: nowrap; padding-top: 8px; }
+.tp-t { position: relative; flex: none; width: 66px; border-radius: 12px; background: #fff; color: var(--ink); padding: 5px 4px 5px; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 3px solid transparent; box-shadow: 0 3px 0 rgba(0,0,0,.25); cursor: pointer; font: inherit; }
+.tp-t:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+.tp-t .mcard { width: 46px; height: 46px; border-radius: 8px; }
+.tp-val { position: absolute; top: 3px; left: 4px; font-style: normal; font-size: 10px; font-weight: 800; background: #fff; border: 1.5px solid var(--ink); border-radius: 6px; padding: 0 3px; line-height: 14px; }
+.tp-um { position: absolute; top: -10px; right: -7px; background: var(--ink); color: #fff; border: 2px solid #fff; border-radius: 999px; font-family: var(--font-head); font-weight: 700; font-size: 12px; padding: 0 7px; line-height: 18px; white-space: nowrap; }
+.tp-nm { font-size: 11px; font-weight: 800; }
+.tp-cnt { display: flex; flex-direction: column; width: 100%; gap: 2px; font-size: 9.5px; font-weight: 800; line-height: 13px; }
+.tp-cnt span { border-radius: 6px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 3px; }
+.tp-cnt .me { background: #FCE3C9; color: #9A4508; }
+.tp-cnt .op { background: color-mix(in srgb, var(--c) 18%, #fff); color: color-mix(in srgb, var(--c) 80%, #000); }
+.tp-grid.many { gap: 5px; }
+.tp-grid.many .tp-t { width: 56px; }
+.tp-grid.many .tp-t .mcard { width: 38px; height: 38px; }
+.tp-foot { margin-top: 7px; font-size: 11.5px; opacity: .75; text-align: center; }
+/* Plätze, die man für den Kuhhandel antippen kann */
+.seatpick { position: absolute; inset: -3px; z-index: 6; border-radius: 16px; border: 2px dashed rgba(255,255,255,.7); background: rgba(255,255,255,.06); cursor: pointer; padding: 0; }
+.seatpick.on { border: 3px solid var(--gold); background: rgba(255,211,78,.1); box-shadow: 0 0 18px 4px rgba(255,211,78,.4); }
+.seatpick span { position: absolute; left: 50%; bottom: -11px; transform: translateX(-50%); background: #fff; color: var(--ink); font-weight: 800; font-size: 11px; border-radius: 999px; padding: 1px 9px; white-space: nowrap; border: 2px solid var(--ink); }
+.seatpick.on span { background: var(--gold); }
+/* Schritt 2: Gegner + Tier stehen fest */
+.thas { font-size: 11px; font-weight: 700; opacity: .8; }
+.tchange { min-height: 34px; font-size: 12px; padding: 4px 12px; margin-top: 2px; }
+/* Schritt 1 sitzt unten über dem (dann ausgeblendeten) Geld-Fächer – so bleiben alle Plätze frei sichtbar */
+.tpick { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 20; width: max-content; max-width: calc(100% - 150px); }
+.tpick.pop { animation: tppop .3s ease-out both; }
+@keyframes tppop { from { opacity: .3; transform: translateX(-50%) translateY(12px); } to { opacity: 1; transform: translateX(-50%); } }
+.stage:has(.tpick) .fan-wrap, .stage:has(.tpick) .fansum { visibility: hidden; }
+.tp-kind { display: block; font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; opacity: .65; margin-bottom: 3px; }
+.tp-head { align-items: center; padding-right: 0; gap: 12px; }
+.tp-head .tp-opps { margin: 0; flex-wrap: nowrap; }
+.tp-x { position: static; flex: none; margin-left: auto; }
+.tp-grid { padding-top: 12px; }
+.stage:has(.tpick) .tbanner { visibility: hidden; }
+.tpick { bottom: 6px; padding-top: 7px; padding-bottom: 8px; }
+.tp-grid { padding-top: 11px; }
+.tp-grid.many .tp-nm { display: none; } /* viele Tiere: Bild + Wert reichen, Name steht im Vorlese-Text */
+.tp-grid.many .tp-t { gap: 2px; padding-top: 6px; }
+.seat-l .seatpick span, .seat-r .seatpick span { bottom: auto; top: -11px; }
+.seat-l .seatpick span { left: 64%; }
+/* Geldschein: ein durchgehender Flug vom Zahler zum Empfänger – ohne Halt in der Mitte */
+@keyframes mfly { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(-10deg); opacity: 0; } }
+.mfly { animation-duration: 1s; }
+/* „KUHHANDEL!“ – kurzer Auftritt beim Start eines Kuhhandels (blockiert nichts) */
+.khsplash { position: absolute; left: var(--cx, 422px); top: calc(150px + var(--dh, 0px) * .4); transform: translate(-50%, -50%); z-index: 40; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; animation: khout .3s ease-in 1.2s both; }
+.khsplash > b { font-family: var(--font-head); font-size: 46px; line-height: 1; color: var(--gold); letter-spacing: .02em; -webkit-text-stroke: 2px var(--ink); text-shadow: 0 5px 0 var(--ink), 0 10px 24px rgba(0,0,0,.45); animation: khboom .45s var(--e-pop) both; }
+.khsplash.rat > b { color: #E7E2D6; }
+.khduo { display: flex; align-items: center; gap: 10px; }
+.khduo > span { display: flex; align-items: center; gap: 6px; background: #fff; color: var(--ink); border-radius: 999px; padding: 3px 12px 3px 3px; border: 3px solid var(--c); font-weight: 800; font-size: 15px; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
+.khduo > span i { font-style: normal; }
+.khduo .avatar { width: 32px; height: 32px; border-width: 2px; }
+.khduo .khl { animation: khinl .4s var(--e-pop) .15s both; }
+.khduo .khr { animation: khinr .4s var(--e-pop) .15s both; }
+.khduo em { font-style: normal; font-size: 24px; animation: khboom .35s var(--e-pop) .4s both; }
+.khsplash small { background: var(--ink); color: #fff; border-radius: 999px; padding: 2px 12px; font-weight: 800; font-size: 13px; animation: khboom .3s ease-out .5s both; }
+@keyframes khboom { 0% { transform: scale(2.2); opacity: 0; } 60% { transform: scale(.92); opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes khinl { from { transform: translateX(-120px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes khinr { from { transform: translateX(120px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes khout { to { opacity: 0; transform: translate(-50%, -50%) scale(.9); } }
+@media (prefers-reduced-motion: reduce) { .khsplash, .khsplash * { animation: none !important; } .khsplash { display: none; } }
+.khscrim { position: absolute; inset: 0; z-index: 39; pointer-events: none; background: radial-gradient(ellipse at 50% 40%, rgba(8,14,30,.82) 0%, rgba(8,14,30,.6) 55%, rgba(8,14,30,.35) 100%); animation: khscrim 1.5s ease both; }
+@keyframes khscrim { 0% { opacity: 0; } 12% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .khscrim { display: none; } }
