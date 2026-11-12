@@ -69,6 +69,28 @@ export function pageChecks() {
     if (min < 24 && !e.matches('input[type="checkbox"], input[type="radio"]')) add('klein', 'hinweis', e, `Tippfläche nur ${Math.round(r.width)}×${Math.round(r.height)}px`);
   }
 
+  // 2b) Karten/Kästen, die sich gegenseitig überdecken (Geschwister im selben Container, z. B. Shop-Sprüche).
+  //     Nur Elemente mit eigenem Hintergrund oder Rahmen; absolut positionierte (Abzeichen, Ebenen) zählen nicht.
+  //     Der Spieltisch (.stage) hat eine eigene Prüfung (tableOverlaps).
+  const boxy = (e) => {
+    if (!vis(e) || e.closest('.stage') || moving(e)) return false;
+    const cs = getComputedStyle(e);
+    if (cs.position === 'absolute' || cs.position === 'fixed' || cs.display === 'contents') return false;
+    const bg = cs.backgroundColor, bw = parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+    return (bg && bg !== 'transparent' && !/rgba\(.*,\s*0\)$/.test(bg)) || cs.backgroundImage !== 'none' || bw > 0;
+  };
+  const parents = new Set([...document.querySelectorAll('body *')].filter((e) => e.childElementCount > 1).filter((e) => !e.closest('svg')));
+  for (const par of parents) {
+    const kids = [...par.children].filter(boxy);
+    if (kids.length < 2) continue;
+    const rs = kids.map((k) => k.getBoundingClientRect());
+    for (let i = 0; i < kids.length; i++) for (let j = i + 1; j < kids.length; j++) {
+      const a = rs[i], b = rs[j];
+      const ox = Math.min(a.right, b.right) - Math.max(a.left, b.left), oy = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (ox > 2 && oy > 2) add('ueberlappung', 'fehler', kids[i], `überdeckt ${name(kids[j])} (${Math.round(ox)}×${Math.round(oy)}px)`);
+    }
+  }
+
   // 3) Abgeschnittene Texte
   const texts = [...document.querySelectorAll('body *')].filter((e) => {
     if (!vis(e) || e.closest('svg')) return false;
