@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.42.0 – Ganzer Bildschirm
+
+- [x] **Der Tisch füllt jetzt den ganzen Bildschirm:** Bisher war er ein fester Rahmen, der oben/unten (iPhone) bzw. links/rechts (breite Handys) Platz verschenkt hat. Jetzt kleben Plätze, Menü, 💬, deine Knöpfe und dein Geld an den Rändern, die Mitte bekommt die zusätzliche Höhe bzw. Breite. Kamera-Aussparung und Home-Balken bleiben frei.
+- [x] Dadurch keine Überlappungen mehr spät im Spiel (viele Tiere, viel Geld): Stapel/Versteigerungskarte an deiner Tierreihe, Kuhhandel-Felder im Geld-Fächer, „Zeig Batzen“-Stapel auf deinem Geld.
+- [x] „… bald nur noch Kuhhandel“ neben dem Stapel bricht um und ragt nicht mehr in den Platz rechts.
+- [x] Debug: `?spaet=1` startet das Testspiel kurz vor Schluss (alle haben viele Tiere) – zum Prüfen voller Plätze.
+
 ## v0.41.0 – Ruhiger aufdecken, einheitliche Knöpfe
 
 - [x] **Aufdecken ohne Springen:** Die Karte wächst direkt aus dem Stapel, dreht sich um und bleibt genau dort liegen, wo sie versteigert wird (vorher rutschte sie erst nach unten und sprang dann nach oben).

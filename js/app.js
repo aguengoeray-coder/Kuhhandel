@@ -11,7 +11,7 @@ import { haptic } from './haptics.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.41.0';
+export const APP_VERSION = '0.42.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -756,7 +756,13 @@ setInterval(() => {
 
 function startLocalGame(n) {
   const players = [{ id: 'me', name: me.name || 'Ich' }, ...Array.from({ length: n - 1 }, (_, i) => ({ id: `t${i + 1}`, name: `Test ${i + 1}` }))];
-  const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: store.get('kh_dbg_money') ? { money: { ...DEFAULT_MONEY } } : null });
+  let state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: store.get('kh_dbg_money') ? { money: { ...DEFAULT_MONEY } } : null });
+  // Debug „?spaet=1“: Test-Spieler spielen bis kurz vor Schluss vor (viele Tiere, viel Geld) – zum Prüfen voller Plätze
+  if (new URLSearchParams(location.search).has('spaet')) {
+    let t = now(), k = 0;
+    const ids = players.map((p) => p.id);
+    while ((state.deck.length > 14 || state.phase !== 'turn') && state.phase !== 'ended' && k++ < 6000) { try { const n = botStep(state, ids, t); if (n) state = n; } catch { /* weiter */ } t += 700; }
+  }
   Object.keys(gameLocal).forEach((k) => delete gameLocal[k]);
   dbg.viewAs = 'me';
   ui.game = { id: 'local', local: true, version: 0, status: 'playing', players, state };

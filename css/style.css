@@ -2234,3 +2234,11 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .tbtn.counter:active:not([disabled]) { box-shadow: 0 2px 0 var(--red-dark); }
 .tbtn[disabled] { border: none; background: #9A9690; color: #EFEDE8; box-shadow: 0 4px 0 #6E6A64; }
 .tbtn.sidebtn { min-width: 150px; }
+
+/* ---------- v0.42: Den ganzen Bildschirm nutzen ---------- */
+/* Der Tisch ist so breit und hoch wie der Bildschirm (fitStage setzt Breite, Höhe, --cx und --dh = zusätzliche Höhe).
+   Ränder kleben an den Kanten; die Mitte rückt etwas nach unten und bekommt den Rest als Luft zu deinen Tieren. */
+.stage .gtable { width: auto; right: 8px; height: auto; bottom: 6px; padding-top: calc(62px + var(--dh, 0px) * .4); }
+.fly, .qpop, .rpsshow, .moneyreveal, .outbid, .cantpop, .seattip, .evcard, .lastcard, .wowpop, .ratrun { margin-top: calc(var(--dh, 0px) * .4); }
+.stage .mebubble, .mflyc { margin-top: var(--dh, 0px); }
+.stage .deck-count.low { white-space: normal; width: 128px; border-radius: 10px; line-height: 1.25; text-align: center; }
