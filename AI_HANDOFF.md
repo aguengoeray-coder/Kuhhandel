@@ -297,3 +297,10 @@ Bitte am Ende einen Eintrag in `AI_HANDOFF.md` (dein Branch) mit Branch, Commits
 
 ### Nächster Schritt
 Codex prüft den Test-/Screenshot-Bericht und den vollständigen Diff. Danach erhält Alp den Stand zur Abnahme. Merge/Live ausschließlich nach Alps ausdrücklichem GO.
+
+
+### Nachtrag Codex – GitHub-Prüfung und CI (12.11.2026)
+- `codex/v048-shop` wurde nach Prüfung auf den inzwischen aktualisierten `main`-Stand `aadafb15077e678fc907726058ad2b15d89f9413` synchronisiert; der Branch ist aktuell **0 Commits hinter main**.
+- Der Draft-PR **#1** wurde ausschließlich zum Auslösen der vorhandenen GitHub-Tests angelegt: https://github.com/aguengoeray-coder/Kuhhandel/pull/1. Er bleibt Draft und wird nicht gemergt.
+- Die GitHub-Actions-Workflowdatei führt bei Pull Requests `npm test` aus. Der Lauf für den vorherigen Branch-Stand war beim letzten Abruf noch in der Warteschlange; nach den anschließenden SQL-/CSS-Korrekturen muss der neueste PR-Lauf geprüft werden.
+- SQL-Leserechte für Wallet, Käufe und Belohnungen sind explizit auf SELECT für angemeldete Nutzer begrenzt; Schreibzugriffe bleiben den SECURITY DEFINER-Funktionen vorbehalten.
