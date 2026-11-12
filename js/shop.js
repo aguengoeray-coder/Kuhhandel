@@ -1,16 +1,21 @@
 import { SHOP_AVATARS, SHOP_AVATAR_CSS, shopAvatar } from './shopavatars.js';
 
 export const SHOP_SAYINGS = [
-  { id:'spruch-ehrlich', text:'Ehrliches, männliches Angebot! 💪', price:10 },
-  { id:'spruch-unehrlich', text:'Unehrliches, unmännliches Angebot! 👎', price:10 },
-  { id:'spruch-mehr', text:'Komm schon, da geht noch mehr!', price:10 },
-  { id:'spruch-bluff', text:'Bluff!', price:10 },
-  { id:'spruch-niemals', text:'Niemals!', price:10 },
-  { id:'spruch-gutgespielt', text:'Gut gespielt!', price:10 },
-  { id:'spruch-verteuert', text:'Zu teuer!', price:10 },
+  { id:'spruch-daumen', text:'👍👍', price:10 },
+  { id:'spruch-passt-schon', text:'Passt schon, passt schon!', price:10 },
+  { id:'spruch-blablabla', text:'BLABLABLABLA!!', price:10 },
+  { id:'spruch-nico', text:'Nico, schrei nicht!', price:10 },
+  { id:'spruch-gute-idee', text:'Das ist eine gute Idee!', price:10 },
+  { id:'spruch-ihh', text:'IHH, du Ekliger!', price:10 },
+  { id:'spruch-bastard', text:'Bastard', price:10 },
   { id:'spruch-gute-ideen', text:'Ich habe nur gute Ideen', price:20 }
 ];
 const AVATARS = SHOP_AVATARS.map(({id,name,tier,price,animal}) => ({id,name,tier,price,animal}));
+const TIERS = [
+  { id:'selten', label:'Selten', items:AVATARS.filter(x=>x.tier==='selten') },
+  { id:'episch', label:'Episch', items:AVATARS.filter(x=>x.tier==='episch') },
+  { id:'legendaer', label:'Legendär', items:AVATARS.filter(x=>x.tier==='legendaer') }
+];
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tierName = (t) => t === 'legendaer' ? 'Legendär' : t[0].toUpperCase()+t.slice(1);
 
@@ -22,11 +27,8 @@ function addAvatarCss() {
   document.head.append(style);
 }
 
-/**
- * ctx = { me:{id,name}, balance, owned:Set<itemId>, activeAvatar,
- *         buy(itemId):Promise, setAvatar(id):Promise, close() }
- * Das Modul verwaltet weder Auth noch Supabase und importiert nicht app.js.
- */
+/** ctx = { me:{id,name}, balance, owned:Set<itemId>, activeAvatar,
+ * buy(itemId):Promise, setAvatar(id):Promise, close() } */
 export function renderShop(root, ctx) {
   if (!root || !ctx || typeof ctx.buy !== 'function' ||
       typeof ctx.setAvatar !== 'function' || typeof ctx.close !== 'function') {
@@ -47,20 +49,19 @@ export function renderShop(root, ctx) {
       ? '<span class="shop-active">Aktiv</span>'
       : has
         ? '<button class="shop-action shop-select" data-select="' + esc(item.id) + '" ' + (busy?'disabled':'') + '>Auswählen</button>'
-        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + '</button>';
+        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' D</button>';
     return '<article class="shop-item shop-avatar-item shop-tier-' + esc(item.tier) + '">' +
       '<div class="shop-art">' + shopAvatar(item.id) + '</div>' +
-      '<strong class="shop-item-name">' + esc(item.name) + '</strong>' +
+      '<div class="shop-avatar-info"><strong class="shop-item-name">' + esc(item.name) + '</strong>' +
       '<span class="shop-item-sub">' + tierName(item.tier) + ' · ' + item.price + ' D</span>' +
-      (has?'<span class="shop-owned">✓ hast du</span>':'') + action + '</article>';
+      (has?'<span class="shop-owned">✓ hast du</span>':'') + action + '</div></article>';
   };
 
   const sayingCard = (item) => {
     const has = owned.has(item.id);
-    return '<article class="shop-item shop-saying-item"><span class="shop-quote-mark">„</span>' +
-      '<strong class="shop-saying-text">' + esc(item.text) + '</strong>' +
-      '<span class="shop-item-sub">' + item.price + ' Dublonen</span>' +
-      (has?'<span class="shop-owned">✓ hast du</span>':'<button class="shop-action shop-buy" data-buy="' + item.id + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + '</button>') +
+    return '<article class="shop-saying-item"><strong class="shop-saying-text">' + esc(item.text) + '</strong>' +
+      '<span class="shop-saying-price">' + item.price + ' D</span>' +
+      (has?'<span class="shop-owned">✓ hast du</span>':'<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen</button>') +
       '</article>';
   };
 
@@ -72,9 +73,9 @@ export function renderShop(root, ctx) {
         '<button class="shop-close" data-close aria-label="Shop schließen">×</button></header>' +
         (notice?'<div class="shop-notice shop-notice-' + noticeKind + '" role="status">' + esc(notice) + '</div>':'') +
         '<div class="shop-content">' +
-          '<section class="shop-section"><div class="shop-section-head"><div><h2>Deine Börsen-Avatare</h2><p>Sammelkarten für deinen Auftritt am Tisch</p></div><span>11 Charaktere</span></div>' +
-          '<div class="shop-avatar-grid">' + AVATARS.map(avatarCard).join('') + '</div></section>' +
-          '<section class="shop-section"><div class="shop-section-head"><div><h2>Sprüche</h2><p>Deine Lieblingssprüche für den Handel</p></div><span>8 Sammlerstücke</span></div>' +
+          '<section class="shop-section shop-avatar-section"><div class="shop-section-head"><div><h2>Deine Börsen-Avatare</h2><p>Sammelkarten für deinen Auftritt am Tisch</p></div><span>11 Charaktere</span></div>' +
+          '<div class="shop-tier-list">' + TIERS.map(tier => '<div class="shop-tier-row shop-tier-row-' + tier.id + '"><h3>' + tier.label + '</h3><div class="shop-avatar-grid">' + tier.items.map(avatarCard).join('') + '</div></div>').join('') + '</div></section>' +
+          '<section class="shop-section shop-saying-section"><div class="shop-section-head"><div><h2>Sprüche</h2><p>Deine Lieblingssprüche für den Handel</p></div><span>8 Sammlerstücke</span></div>' +
           '<div class="shop-saying-grid">' + SHOP_SAYINGS.map(sayingCard).join('') + '</div></section>' +
         '</div><footer class="shop-footer"><span>Spiele gewinnen. Dublonen sammeln. Deinen Stil zeigen.</span><span>Einmal gekauft, dauerhaft deins.</span></footer></section>';
 
