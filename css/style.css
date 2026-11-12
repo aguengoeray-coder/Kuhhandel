@@ -2487,3 +2487,9 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
    Verlierer statt durchsichtig nur blasser gefärbt */
 .evcard.duel .du-row.swap .du-side.lose { opacity: 1 !important; animation: none !important; background: #EEEBE4; }
 .evcard.duel .du-row.swap .du-side.lose .ec-p, .evcard.duel .du-row.swap .du-side.lose .du-role { color: #9A9486; }
+/* Antworten im Kuhhandel: mit Einsatz-Zeile etwas kompakter, damit das Feld auf flachen Handys nicht an dein Geld stößt */
+.tduel.respond .tpanel { padding-top: 4px; padding-bottom: 4px; }
+.tduel.respond .tpanel .kslots { min-height: 34px; }
+.tduel.respond .tpanel .kslots .money.xs, .tduel.respond .tpanel .kslots .slot { height: 34px; width: 26px; }
+.tduel.respond .tbtn { min-height: 44px; padding-top: 4px; padding-bottom: 4px; }
+.tduel.respond .tline.big b { font-size: 18px; }
