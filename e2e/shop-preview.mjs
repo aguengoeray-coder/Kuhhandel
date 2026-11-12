@@ -74,6 +74,9 @@ test('Shop-Karten sind auf beiden iPhone-Landscape-Größen vollständig sichtba
         if (child.matches('.shop-action') && child.scrollWidth > child.clientWidth + 1) {
           issues.push(`Avatar-Karte ${index + 1}: Button-Text wird abgeschnitten.`);
         }
+        if (child.matches('.shop-item-name') && child.scrollHeight > child.clientHeight + 2) {
+          issues.push(`Avatar-Karte ${index + 1}: Name wird abgeschnitten.`);
+        }
       }
       if (cardStyle.overflow === 'hidden' || cardStyle.overflow === 'clip') issues.push(`Avatar-Karte ${index + 1} schneidet Inhalte ab.`);
       return issues;
