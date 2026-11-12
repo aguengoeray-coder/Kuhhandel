@@ -1,6 +1,16 @@
 {
   "_info": "Bekannte, bewusst (noch) akzeptierte Punkte. Felder: seite, art, ziel (RegExp), grund. Neue Einträge nur mit Begründung und nach Absprache mit Alp.",
   "bekannt": [
-    { "seite": "^traderat$", "art": "ueberlappung", "ziel": "seat:prow × center:tpick", "grund": "Kuhhandel-Auswahl (Schritt 1) überdeckt bei 852/932 px ca. 11×17 px vom rechten Platz (Mo, Rattenkarte). Fix offen (Claude, game.js)." }
+    {
+      "seite": "^traderat$",
+      "art": "ueberlappung",
+      "ziel": "seat:prow × center:tpick",
+      "grund": "Kuhhandel-Auswahl (Schritt 1) überdeckt bei 852/932 px ca. 11×17 px vom rechten Platz (Mo, Rattenkarte). Fix offen (Claude, game.js)."
+    },
+    {
+      "seite": "^warteraum$",
+      "ziel": "SPIEL STARTEN",
+      "grund": "Warteraum bei 800×360: „SPIEL STARTEN“ ragt unten ca. 2 px aus dem Bild (wird abgeschnitten). Fix offen (Claude, css/style.css)."
+    }
   ]
 }
