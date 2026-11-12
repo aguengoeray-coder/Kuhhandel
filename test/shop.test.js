@@ -49,3 +49,10 @@ test('Shop-Demo verwendet die echten Artikel-IDs und Preise statt einer veraltet
   assert.match(demo, /spruch-nico/);
   assert.match(demo, /spruch-gute-ideen/);
 });
+
+test('Shop-SQL beschränkt Schreib-RPCs auf angemeldete Nutzer', () => {
+  const sql = readFileSync(new URL('../supabase/v0.48-shop.sql', import.meta.url), 'utf8');
+  assert.match(sql, /revoke all on function public\\.record_results\\(uuid, jsonb\\) from public, anon, authenticated/i);
+  assert.match(sql, /grant execute on function public\\.record_results\\(uuid, jsonb\\) to authenticated/i);
+  assert.match(sql, /revoke all on function public\\.shop_credit_game_winners\\(uuid\\) from public, anon, authenticated/i);
+});
