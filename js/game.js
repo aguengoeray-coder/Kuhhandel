@@ -1624,7 +1624,7 @@ export function renderGame(root, ctx) {
       ${playerDetail(v.players[idxOf(to)], self)}
     </div>`;
   }
-  root.innerHTML = `<div class="stage-wrap"><div class="stage" id="stage">
+  root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
     ${table}
     ${ctx.reactionList ? '<button type="button" class="round chatbtn chat-br" data-a="reactTo" data-v="' + esc(meId) + '" aria-label="Reaktion an alle">💬</button>' : ''}

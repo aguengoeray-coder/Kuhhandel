@@ -11,9 +11,11 @@ const PLAYERS = [
   { id: 'u4', name: 'Mo' },
 ];
 
+// ?p=3: dieselben Beispiele mit 3 Spielern (ohne Mo) – für Screenshots/Tests der 3-Spieler-Ansicht
+const P3 = typeof location !== 'undefined' && new URLSearchParams(location.search).get('p') === '3';
 function base() {
-  const g = createGame({ players: PLAYERS, seed: 7 });
-  const set = (i, obj) => Object.assign(g.players[i].animals, obj);
+  const g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7 });
+  const set = (i, obj) => { if (g.players[i]) Object.assign(g.players[i].animals, obj); };
   set(0, { hund: 2, kuh: 1, ziege: 1, katze: 2 });
   set(1, { kuh: 1, pferd: 2, katze: 1, hund: 1 });
   set(2, { schaf: 3, kuh: 2 });
@@ -23,7 +25,7 @@ function base() {
   g.players[0].specials = ['hund'];
   g.players[1].animals[RAT] = 1;
   g.players[1].specials = ['pferd', 'hahn'];
-  g.players[3].animals[RAT] = 1;
+  if (g.players[3]) g.players[3].animals[RAT] = 1;
   g.players[0].money = [0, 0, 10, 10, 10, 50, 50];
   g.log.push('Mo ersteigert Gans für 30.', 'Lea nimmt den Kuhhandel an. Nico bekommt 1× Hund.');
   return g;

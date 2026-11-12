@@ -129,7 +129,7 @@ export function tableOverlaps() {
     seat: '.gright > .prow, .ratpile',
     menu: '.lround, .chat-br',
     center: '.tbanner, .tlog, .evstrip, .deck-wrap .deck, .deck-count, .aucard, .aside > *, .reveal-row, .pot, .potbox, .ratnow, .bigcard, .tsteps, .tduel, .tpanel, .tpick, .seatpick span, .tbox, .tradebox, .sptimer, .spstage, .batzen, .bstacks, .spinfo, .tstriprow, .evcard',
-    mine: '.auslage > *, .money.fan, .fansum, .hand-row, .dock',
+    mine: '.auslage > *, .money.fan, .fansum, .hand-row, .dock > *',
   };
   if (!document.querySelector('.stage')) return [];
   const items = [];

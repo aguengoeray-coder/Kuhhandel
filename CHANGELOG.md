@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.49.0 – Kult-Avatare, Dublonen-Münze, einheitliche Größen
+
+- [x] **3 neue Kult-Avatare (je 50):** Der verletzte Bennet, Der schreiende Nico, Der quasselnde Alp.
+- [x] **Dublonen-Münze** statt „D“ – im Shop und neben deinem Namen.
+- [x] **Einheitlicher Tisch:** Stapel und Tierkarte (Versteigerung, Ratte, Spezialkarte) haben jetzt dieselbe Größe, die Überschrift oben ist immer gleich groß – nichts „springt“ mehr zwischen den Phasen.
+- [x] Hintergrund: automatischer Größen-Test, Demo-Ansichten auch mit 3 Spielern (`?p=3`).
+
 ## v0.48.1 – Shop schöner, 💬-Menü mit Emojis
 
 - [x] **Shop neu:** zwei Reiter „Avatare“ und „Sprüche“, große Avatar-Karten mit Seltenheit, Sprüche als Sprechblasen. Nichts wird mehr abgeschnitten – bei wenig Platz wird gescrollt.

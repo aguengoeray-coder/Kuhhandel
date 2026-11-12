@@ -23,7 +23,7 @@ jobs:
       - run: npm install --no-save --no-package-lock playwright@1.63.0
       - run: npx playwright install --with-deps chromium
       - name: Ansichten (4 Größen)
-        run: node --test e2e/views.spec.mjs
+        run: node --test e2e/views.spec.mjs e2e/sizes.spec.mjs
       - name: Komplette Partien
         if: ${{ !cancelled() }}
         run: node --test e2e/fullgame.spec.mjs

@@ -14,8 +14,11 @@ const AVATARS = SHOP_AVATARS.map(({id,name,tier,price,animal}) => ({id,name,tier
 const TIERS = [
   { id:'selten', label:'Selten', items:AVATARS.filter(x=>x.tier==='selten') },
   { id:'episch', label:'Episch', items:AVATARS.filter(x=>x.tier==='episch') },
-  { id:'legendaer', label:'Legendär', items:AVATARS.filter(x=>x.tier==='legendaer') }
+  { id:'legendaer', label:'Legendär', items:AVATARS.filter(x=>x.tier==='legendaer') },
+  { id:'kult', label:'Kult', items:AVATARS.filter(x=>x.tier==='kult') }
 ];
+// Goldene Dublone als eigenes Zeichen (statt „D“) – sieht auf allen Geräten gleich aus
+export const DUB = '<i class="dub" role="img" aria-label="Dublonen"></i>';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tierName = (t) => t === 'legendaer' ? 'Legendär' : t[0].toUpperCase()+t.slice(1);
 
@@ -43,7 +46,7 @@ export function renderShop(root, ctx) {
   let noticeKind = 'info';
 
   let tab = 'avatare';
-  const tierLabel = { selten: 'Selten', episch: 'Episch', legendaer: 'Legendär' };
+  const tierLabel = { selten: 'Selten', episch: 'Episch', legendaer: 'Legendär', kult: 'Kult' };
 
   const avatarCard = (item) => {
     const has = owned.has(item.id);
@@ -52,7 +55,7 @@ export function renderShop(root, ctx) {
       ? '<span class="shop-active">✓ Aktiv</span>'
       : has
         ? '<button class="shop-action shop-select" data-select="' + esc(item.id) + '" ' + (busy?'disabled':'') + '>Auswählen</button>'
-        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' D</button>';
+        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' ' + DUB + '</button>';
     return '<article class="shop-item shop-avatar-item shop-tier-' + esc(item.tier) + (active ? ' is-active' : '') + (has ? ' is-owned' : '') + '">' +
       '<span class="shop-tier-tag">' + tierLabel[item.tier] + '</span>' +
       '<div class="shop-art">' + shopAvatar(item.id) + '</div>' +
@@ -63,7 +66,7 @@ export function renderShop(root, ctx) {
   const sayingCard = (item) => {
     const has = owned.has(item.id);
     return '<article class="shop-item shop-saying-item' + (has ? ' is-owned' : '') + '"><div class="shop-bubble">' + esc(item.text) + '</div>' +
-      (has ? '<span class="shop-owned">✓ hast du</span>' : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' D</button>') +
+      (has ? '<span class="shop-owned">✓ hast du</span>' : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' ' + DUB + '</button>') +
       '</article>';
   };
 
@@ -76,7 +79,7 @@ export function renderShop(root, ctx) {
           '<button role="tab" data-tab="avatare" class="' + (tab === 'avatare' ? 'on' : '') + '">Avatare <small>' + nAv + '/' + AVATARS.length + '</small></button>' +
           '<button role="tab" data-tab="sprueche" class="' + (tab === 'sprueche' ? 'on' : '') + '">Sprüche <small>' + nSp + '/' + SHOP_SAYINGS.length + '</small></button>' +
         '</nav>' +
-        '<div class="shop-balance" title="Dein Guthaben"><strong>' + new Intl.NumberFormat('de-DE').format(balance) + '</strong> <small>Dublonen</small></div>' +
+        '<div class="shop-balance" title="Dein Guthaben">' + DUB + '<strong>' + new Intl.NumberFormat('de-DE').format(balance) + '</strong></div>' +
         '<button class="shop-close" data-close aria-label="Shop schließen">×</button></header>' +
         (notice?'<div class="shop-notice shop-notice-' + noticeKind + '" role="status">' + esc(notice) + '</div>':'') +
         '<div class="shop-content">' +
@@ -85,7 +88,7 @@ export function renderShop(root, ctx) {
               '<p class="shop-hint">Dein aktiver Avatar ersetzt dein Profilbild – für alle am Tisch sichtbar.</p>'
             : '<div class="shop-grid shop-saying-grid">' + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
               '<p class="shop-hint">Gekaufte Sprüche findest du im Spiel unter 💬.</p>') +
-        '</div><footer class="shop-footer">Jeder Sieg = 10 Dublonen · Einmal gekauft, dauerhaft deins.</footer></section>';
+        '</div><footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer></section>';
 
     root.querySelector('[data-close]')?.addEventListener('click', () => ctx.close());
     root.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; notice = ''; render(); }));

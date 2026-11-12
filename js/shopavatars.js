@@ -1,4 +1,4 @@
-// Elf eigenständige Shop-Avatare im Comic-Stil der Tier Börse.
+// Vierzehn eigenständige Shop-Avatare (11 + 3 Kult) im Comic-Stil der Tier Börse.
 // Reine SVG-Illustrationen; keine fremden Figuren, Logos oder Bilddateien.
 
 const INK = '#2A2420';
@@ -123,6 +123,36 @@ const AVATARS = [
     <circle cx="60" cy="12" r="5" fill="#E64D4D"/><circle cx="36" cy="27" r="4" fill="#4CA5D8"/><circle cx="84" cy="27" r="4" fill="#4CA5D8"/>
     <path d="M18 105h84" stroke="#C58B25" stroke-width="5"/>
   `, '<g class="sa-crown-glint" fill="#FFF5B5"><path d="M17 16l3-8 3 8-3 8zM101 48l3-8 3 8-3 8zM13 78l3-6 3 6-3 6z"/></g>') },
+  // Kult: unsere eigenen Leute (eigene Comic-Tiere)
+  { id:'bennet-verletzt', name:'Der verletzte Bennet', tier:'kult', price:50, animal:'Esel', motion:'limp', art: () => shell(`
+    <path d="M38 44L26 8Q40 6 48 38M82 44l12-36q-14-2-22 30" fill="#A9A6B0"/><path d="M33 16l9 24M87 16l-9 24" stroke="#E7A6B4" stroke-width="5"/>
+    <ellipse cx="60" cy="66" rx="33" ry="40" fill="#B7B4BE"/>
+    <path d="M40 54q7-5 14 0M66 54q7-5 14 0" fill="none" stroke-width="3.5"/>
+    <path d="M45 61l-3 7M77 61l3 7" stroke="#6FB6E8" stroke-width="3"/>
+    <ellipse cx="60" cy="84" rx="20" ry="14" fill="#DCD8E0"/><ellipse cx="53" cy="83" rx="3" ry="4" fill="#5B5761"/><ellipse cx="67" cy="83" rx="3" ry="4" fill="#5B5761"/>
+    <path d="M51 94q9-5 18 0" fill="none"/>
+    <path d="M70 33l14 6-4 7-14-6z" fill="#F3E2C2"/><path d="M75 36l2 5M79 37l-3 4" stroke="#C9A06A" stroke-width="2"/>
+    <path d="M96 114l6-62" stroke="#8A6340" stroke-width="5"/><path d="M94 56h14" stroke="#8A6340" stroke-width="6"/>
+    <path d="M12 116l8-22 12 0 6 22" fill="#B7B4BE"/><rect x="15" y="98" width="22" height="9" rx="3" fill="#FFFFFF"/><path d="M18 100l16 5M18 105l16-5" stroke="#E46A6A" stroke-width="2"/>
+  `, '<g class="sa-ouch" fill="#FFD34E" stroke="#8A5A00" stroke-width="1.5"><path d="M30 86l3-6 3 6-3 6zM8 82l2-4 2 4-2 4z"/></g>') },
+  { id:'nico-schreit', name:'Der schreiende Nico', tier:'kult', price:50, animal:'Schwein', motion:'shout', art: () => shell(`
+    <path d="M31 42L22 17 46 30M89 42l9-25-24 13" fill="#F09AAE"/>
+    <ellipse cx="60" cy="64" rx="38" ry="40" fill="#F5A3B6"/>
+    <path d="M36 44l15 7M84 44l-15 7" stroke-width="4.5"/>
+    ${eye(45,57,5)}${eye(75,57,5)}
+    <ellipse cx="60" cy="70" rx="13" ry="8" fill="#E57E98"/><ellipse cx="55" cy="70" rx="2.5" ry="3.5" fill="#8E3550"/><ellipse cx="65" cy="70" rx="2.5" ry="3.5" fill="#8E3550"/>
+    <path d="M42 82q18-6 36 0q-2 22-18 22q-16 0-18-22z" fill="#7A1F33"/><path d="M47 98q13 7 26 0" fill="#F27C94" stroke="none"/>
+    <path d="M45 83h30" stroke="#FFFFFF" stroke-width="4"/>
+  `, '<g class="sa-shout" fill="none" stroke="#FF5A5A" stroke-width="4" stroke-linecap="round"><path d="M100 70q8 10 0 22M108 64q12 16 0 34M20 70q-8 10 0 22M12 64q-12 16 0 34"/></g>') },
+  { id:'alp-quasselt', name:'Der quasselnde Alp', tier:'kult', price:50, animal:'Pferd', motion:'chatter', art: () => shell(`
+    <path d="M40 40L34 14 52 32M80 40l6-26-18 18" fill="#8E5A34"/>
+    <path d="M44 18q16-10 32 0q-8 10-16 8q-8 2-16-8z" fill="#3B2A22"/>
+    <path d="M36 50q24-26 48 0v30q-2 26-24 26q-22 0-24-26z" fill="#A86D42"/>
+    ${eye(47,56,5)}${eye(73,56,5)}
+    <path d="M42 46q5-3 10 0M68 46q5-3 10 0" fill="none" stroke-width="3"/>
+    <ellipse cx="60" cy="86" rx="20" ry="16" fill="#C99470"/><circle cx="52" cy="80" r="2.5" fill="#5A3520"/><circle cx="68" cy="80" r="2.5" fill="#5A3520"/>
+    <ellipse cx="60" cy="94" rx="11" ry="8" fill="#7A2A2A"/><path d="M52 98q8-5 16 0q-8 5-16 0z" fill="#E87A8C" stroke="none"/><path d="M50 89h20" stroke="#FFFFFF" stroke-width="3"/>
+  `, '<g class="sa-chatter"><path d="M86 18h28v16h-18l-6 6v-6h-4z" fill="#FFFFFF" stroke="#2A2420" stroke-width="2"/><text x="100" y="30" font-size="9" font-weight="800" text-anchor="middle" fill="#2A2420" font-family="sans-serif">bla</text><path d="M4 30h26v14h-6v6l-6-6H4z" fill="#FFFFFF" stroke="#2A2420" stroke-width="2"/><text x="17" y="41" font-size="8" font-weight="800" text-anchor="middle" fill="#2A2420" font-family="sans-serif">bla</text></g>') },
 ];
 
 export const SHOP_AVATARS = AVATARS.map(({ art, ...meta }) => ({ ...meta, render: art }));
@@ -134,6 +164,12 @@ export const SHOP_AVATAR_CSS = `
 .shop-avatar[data-tier="legendaer"]{--ring:#E8B83F;background:radial-gradient(circle at 35% 25%,#fff9ce,#e8c45e 72%,#9d6b19);box-shadow:0 0 0 3px #f9e7a0,0 0 18px #f3cb56aa,inset 0 2px 7px #fff}
 .shop-avatar[data-tier="legendaer"]::before{border-color:#fff2b8;box-shadow:0 0 12px #ffdc64}
 .shop-avatar[data-tier="selten"]{--ring:#71A98A}
+.shop-avatar[data-tier="kult"]{--ring:#E2557A;background:radial-gradient(circle at 35% 25%,#fff0f4,#f5a9bf 72%,#a3284f);box-shadow:0 0 0 3px #ffc2d3,0 0 16px #ff6f9a88,inset 0 2px 7px #fff}
+.shop-avatar[data-motion="limp"] .shop-avatar-art{animation:shop-limp 2.6s ease-in-out infinite}
+.shop-avatar[data-motion="shout"] .sa-shout{animation:shop-pulse .5s ease-in-out infinite}
+.shop-avatar[data-motion="shout"] .shop-avatar-art{animation:shop-shake 1.2s ease-in-out infinite}
+.shop-avatar[data-motion="chatter"] .sa-chatter{animation:shop-pulse 1.4s ease-in-out infinite}
+@keyframes shop-limp{0%,100%{transform:rotate(0)}30%{transform:rotate(-4deg) translateY(2px)}60%{transform:rotate(1deg)}}
 .shop-avatar .shop-avatar-art{width:100%;height:100%;animation:shop-breathe 3.8s ease-in-out infinite;transform-origin:50% 72%}
 .shop-avatar .sa-steam,.shop-avatar .sa-sweat,.shop-avatar .sa-coins,.shop-avatar .sa-notes,.shop-avatar .sa-lights,.shop-avatar .sa-flame,.shop-avatar .sa-doubloon,.shop-avatar .sa-embers,.shop-avatar .sa-electric,.shop-avatar .sa-crown-glint{transform-box:fill-box;transform-origin:center;animation:shop-float 2.5s ease-in-out infinite}
 .shop-avatar .sa-hearing{animation:shop-pulse 1.1s ease-in-out infinite}
