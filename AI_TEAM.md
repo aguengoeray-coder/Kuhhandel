@@ -8,7 +8,7 @@ Gemeinsame Quelle der Wahrheit: **GitHub-Repository**. Chatverläufe einzelner K
 
 | Mitglied | Rolle | Verantwortet | Grenzen |
 |---|---|---|---|
-| **Alp** | Product Owner | Ziele, Prioritäten, Umfang, Spielregeln, Abnahme, SQL-Ausführung, Merge und Veröffentlichung | Alle Produktentscheidungen bleiben bei Alp |
+| **Alp** | Product Owner | Ziele, Prioritäten, Umfang, Spielregeln, Abnahme, SQL-Ausführung sowie Freigabe von Merge und Veröffentlichung | Alle Produktentscheidungen bleiben bei Alp |
 | **Claude** | Lead Feature Developer | Größere zusammenhängende Spielfunktionen und UI-Flows, sofern zugewiesen; aktuell v0.46/v0.47 | Keine parallelen Änderungen an Codex-Dateien |
 | **ChatGPT / Codex** | Technical Coordinator & Feature Developer | Technische Planung, Architektur-/Integrationsprüfung, Projektdokumentation und zugewiesene Features; aktuell v0.48-Shop | Keine Änderungen an Claudes laufenden Dateien ohne Abstimmung |
 | **GitHub Copilot** | In-IDE Coding Assistant | Kleine Implementierungshilfen, Boilerplate, Code-Erklärung und gezielte Fehlerbehebung unter Verantwortung des Datei-Owners | Kein eigener Produktauftrag, keine eigenständige Architekturentscheidung oder Freigabe |
@@ -29,7 +29,8 @@ Copilot und Gemini sind hier zunächst **vorgesehene Rollen**, nicht als technis
 | Tests und reproduzierbare Fehlerberichte | jeweiliger Feature-Owner | Gemini kann Testideen liefern |
 | Gemeinsame Projektdokumentation | Codex als Verwalter; jeder Owner dokumentiert eigene Arbeit | Alp entscheidet bei Planänderungen |
 | SQL-Migrationen | zuständiger Entwickler erstellt nur SQL-Datei | Codex prüft; Alp führt SQL selbst aus |
-| Merge, Freigabe und Live-Schaltung | ausschließlich Alp | KIs liefern Nachweise und PR |
+| Freigabe von Merge und Live-Schaltung | ausschließlich Alp (ausdrückliches „go“ nach Screenshots/Testergebnissen) | Die umsetzende KI legt Nachweise vor |
+| Merge, Push und Live-Prüfung | umsetzende KI, ausschließlich nach Alps ausdrücklichem „go“ | Vorher aktuelles `main` holen, Diff prüfen und `npm test`; danach Cloudflare-Build und GitHub-Tests prüfen und Alp berichten |
 
 **Ein Auftrag = ein schreibender Owner.** Weitere KIs beraten oder prüfen denselben Diff, ändern aber nicht parallel dieselben Dateien.
 
@@ -116,7 +117,7 @@ Nicht jede Kleinigkeit braucht ein Review durch alle KIs. Gemini wird gezielt f�
 8. **Unabhängig reviewen:** Bei relevanten Änderungen Gemini oder eine nicht am Code beteiligte KI um Diff-Review bitten. Reviewer ändern den Code nicht.
 9. **Befunde abarbeiten:** Owner bewertet jeden Befund, korrigiert bestätigte Fehler oder dokumentiert eine begründete Nichtübernahme.
 10. **Dokumentieren:** Status, Commits, Dateien, Tests, Screenshots, offene Punkte und nächste Zuständigkeit in `PROJECT_STATUS.md` und `AI_HANDOFF.md` aktualisieren.
-11. **Alp-Abnahme:** Screenshots und Nachweise vorlegen. Erst nach ausdrücklichem GO von Alp darf gemergt/veröffentlicht werden.
+11. **Alp-Abnahme und Veröffentlichung:** Die umsetzende KI legt Alp Screenshots und Testergebnisse vor. Erst nach Alps ausdrücklichem „go“ führt genau diese KI ihren eigenen Branch selbst in `main` zusammen: vorher aktuelles `main` holen, vollständigen Diff prüfen und `npm test` erfolgreich ausführen. Anschließend pusht sie `main`, prüft den Cloudflare-Build sowie die GitHub-Tests und meldet das Ergebnis an Alp. Ohne ausdrückliches „go“ kein Merge und kein Push auf `main`.
 
 ## 5. Branch- und Datei-Regeln
 
