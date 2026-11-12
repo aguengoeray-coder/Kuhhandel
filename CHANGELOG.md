@@ -18,6 +18,10 @@
 **Bedienung**
 - [x] **Bezahlen:** Passen deine Scheine genau, sind sie schon vorgewählt (möglichst wenige Scheine) – nur noch „Bezahlen“ drücken. Bei der Spezialkarte sind die kleinsten Scheine vorgewählt. Passt nichts genau, wählst du selbst. Die Auswahl lässt sich vorher ändern.
 - [x] **Ratte:** Schein zweimal schnell antippen legt ihn direkt in die Mitte.
+**Spielende**
+- [x] **Abrechnung:** Bevor das Siegertreppchen kommt, werden die Punkte einzeln hochgezählt – vom letzten Platz bis zum Sieger, mit Trommelwirbel; beim Sieger Glitzer und Fanfare. Antippen überspringt.
+- [x] **Neue Auszeichnungen im Börsenbericht:** 🃏 Bluffer (Nullen in gewonnenen Kuhhandeln), 🌧️ Pechvogel (Kuhhandel knapp verloren), 💶 Trinkgeld-König (am meisten überzahlt), 🤏 Geizhals (oft geboten, nie hoch). Die Liste lässt sich scrollen.
+
 - [x] Neue Demo-Ansichten: `tradeseen`, `tradetie`, `traderatresult`, `specialhit`, `paynew`, `?ev=ratgot`, `?ev=specialself`.
 
 ## v0.42.0 – Ganzer Bildschirm

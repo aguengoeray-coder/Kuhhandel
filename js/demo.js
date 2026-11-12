@@ -319,6 +319,7 @@ export function buildDemoState(kind, local) {
       g.blocked = { player: 'u4', animal: 'hahn' };
       Object.assign(g.stats.u2, { buys: 5, maxBuy: { amount: 620, animal: 'pferd' }, tradesWon: 2 });
       Object.assign(g.stats.u1, { tradesWon: 4, ratsTaken: 2, ratCards: 6 });
+      Object.assign(g.stats.u3, { bluffZeros: 3, overpaid: 80 }); Object.assign(g.stats.u4, { closeLosses: 2, bids: 6, maxBid: 50 });
       Object.assign(g.stats.u4, { ratsTaken: 3, ratCards: 11, specialsWon: 3 });
       Object.assign(g.stats.u3, { moneyDrawn: 700 });
       g.players.forEach((p, i) => { p.money = [[0, 10, 50, 200], [0, 0, 10], [500, 100, 20], [10, 10]][i]; });

@@ -196,7 +196,9 @@ const EV_WAIT = { auction_won: 3500, special_won: 4000, trade: 4800, rat_taken: 
 // Stapel leer (nur noch Kuhhandel): Ergebnis kürzer zeigen, damit es flott weitergeht
 export const evWait = (type, deckLeft) => (type === 'trade' && deckLeft === 0 ? 3800 : EV_WAIT[type]);
 // Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
-export const calmFor = (type, deckLeft) => (EV_WAIT[type] ? evWait(type, deckLeft) + 500 : CALM_MS);
+// Danach fliegen erst das Tier, dann das Geld (Kuhhandel: hin und zurück) – erst wenn das gelandet ist, darf aufgedeckt werden
+const FLY_AFTER = { auction_won: 1300, special_won: 1300, rat_taken: 1300, trade: 1900 };
+export const calmFor = (type, deckLeft) => (EV_WAIT[type] ? evWait(type, deckLeft) + 500 + FLY_AFTER[type] : CALM_MS);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
 
@@ -1008,7 +1010,7 @@ export function renderGame(root, ctx) {
     if (poor && (!rich || rich.who !== poor.id)) list.push({ key: 'poor', title: 'Pleitegeier', who: poor.id, name: state.players.find((p) => p.id === poor.id)?.name || '?', text: `nur noch ${poor.v} Taler` });
     return list;
   };
-  const ICON = { buy: '💸', trade: '🐮', rat: '🐀', ratcards: '🧀', special: '⭐', money: '🍀', rich: '🏦', poor: '📉' };
+  const ICON = { buy: '💸', trade: '🐮', rat: '🐀', ratcards: '🧀', special: '⭐', money: '🍀', rich: '🏦', poor: '📉', bluff: '🃏', pech: '🌧️', tip: '💶', geiz: '🤏' };
   H.shareReport = async () => {
     const sc = scores(state).sort((a, b) => b.score - a.score);
     const text = ['📈 Börsenbericht – Team Rockets Tier Börse', `🏆 ${sc[0].name} gewinnt mit ${sc[0].score} Punkten`,
@@ -1019,6 +1021,15 @@ export function renderGame(root, ctx) {
       await navigator.clipboard.writeText(text); local.shared = Date.now(); ctx.rerender();
     } catch { /* abgebrochen */ }
   };
+  // Spielende: erst die Abrechnung (Tippen überspringt), danach das Siegertreppchen mit Konfetti
+  const TALLY_START = 500; const TALLY_STEP = 1500;
+  if (entered && state.phase === 'ended') { local.tallyAt = Date.now(); local.tallySkip = false; local.podiumShown = false; }
+  const tallyTotal = TALLY_START + v.players.length * TALLY_STEP + 900;
+  const tallyEl = local.tallyAt ? Date.now() - local.tallyAt : Infinity;
+  const tallyOn = state.phase === 'ended' && !local.recap && !local.tallySkip && tallyEl < tallyTotal;
+  if (tallyOn) wakeLocal(local.tallyAt + tallyTotal + 20);
+  const podiumIn = state.phase === 'ended' && !tallyOn && !local.recap && !local.podiumShown;
+  if (podiumIn) local.podiumShown = true;
   if (state.phase === 'ended' && local.recap) {
     const list = reportList();
     const copied = local.shared && Date.now() - local.shared < 3000;
@@ -1027,6 +1038,20 @@ export function renderGame(root, ctx) {
       <h2>📈 Börsenbericht</h2>
       <ul>${list.map((a) => { const i = idxOf(a.who); return `<li><span class="atitle"><i>${ICON[a.key] || '•'}</i>${esc(a.title)}</span>${i >= 0 ? avatar(v.players[i], i) : ''}<span class="awho">${esc(a.who === meId ? 'Du' : a.name)}</span><span class="atext">${esc(a.text)}</span></li>`; }).join('') || '<li>Keine besonderen Momente – ein ruhiges Spiel.</li>'}</ul>
       <div class="endbtns"><button type="button" class="pill pill-white" data-a="shareReport">${copied ? 'Kopiert ✓' : '📤 Teilen'}</button><button type="button" class="pill pill-red" data-a="recap">Zurück zur Wertung</button></div>
+    </div></div>`;
+  } else if (state.phase === 'ended' && tallyOn) {
+    // Abrechnung: Punkte werden einzeln hochgezählt – vom letzten Platz bis zum Sieger, dann das Siegertreppchen
+    const s = scores(state).sort((a, b) => b.score - a.score);
+    const ranked = s.map((r) => ({ ...r, place: s.findIndex((x) => x.score === r.score) + 1 }));
+    const n = ranked.length;
+    const cnt = typeof CSS !== 'undefined' && CSS.registerProperty ? 'cnt' : '';
+    overlay = `<div class="overlay endtable" data-a="tallySkip" role="button"><div class="ending tally ${cnt}">
+      <h2>Abrechnung</h2>
+      <div class="tallyrows">${ranked.map((r, idx) => {
+        const i = idxOf(r.id); const d = TALLY_START + (n - 1 - idx) * TALLY_STEP - tallyEl;
+        return `<div class="trow ${r.place === 1 ? 'win' : ''}" style="--d:${d}ms;--to:${r.score};--c:${SEAT_COLORS[i]}"><i>${r.place === 1 ? '👑' : `${r.place}.`}</i>${avatar(v.players[i], i)}<span class="tname">${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b class="tnum"><span>${r.score}</span></b></div>`;
+      }).join('')}</div>
+      <small class="sthint">Tippen zum Überspringen</small>
     </div></div>`;
   } else if (state.phase === 'ended') {
     const s = scores(state).sort((a, b) => b.score - a.score);
@@ -1046,9 +1071,9 @@ export function renderGame(root, ctx) {
     // Rechnung steht immer da: erst die des Gewinners, Antippen zeigt die eines anderen
     const openRow = ranked.find((r) => r.id === local.scoreOpen) || ranked[0];
     const cols = ['#FFD34E', '#D7263D', '#1D5FC2', '#B8285F', '#6D3FC0', '#7FA88A', '#fff'];
-    const confetti = entered ? `<div class="confetti" aria-hidden="true">${Array.from({ length: 40 }, (_, k) =>
+    const confetti = podiumIn ? `<div class="confetti" aria-hidden="true">${Array.from({ length: 40 }, (_, k) =>
       `<i style="left:${(k * 37) % 100}%;background:${cols[k % cols.length]};animation-delay:${(k % 10) * 90}ms;animation-duration:${1600 + (k % 7) * 180}ms;transform:rotate(${k * 29}deg)"></i>`).join('')}</div>` : '';
-    overlay = `<div class="overlay endtable ${entered ? 'enter' : ''}">${confetti}<div class="ending podium">
+    overlay = `<div class="overlay endtable ${podiumIn ? 'enter' : ''}">${confetti}<div class="ending podium">
       <h2 style="--c:${SEAT_COLORS[winIdx]}">${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
       <div class="pods">${order.map(step).join('')}</div>
       ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
@@ -1063,6 +1088,7 @@ export function renderGame(root, ctx) {
 
   H.rematch = () => ctx.onRematch();
   H.recap = () => { local.recap = !local.recap; ctx.rerender(); };
+  H.tallySkip = () => { local.tallySkip = true; ctx.rerender(); };
   H.scoreOpen = (id) => { local.scoreOpen = local.scoreOpen === id ? null : id; ctx.rerender(); };
 
   // ----- Effekte: Tier fliegt zum neuen Besitzer, Konfetti am Ende, Quartett-Moment -----
@@ -1172,7 +1198,9 @@ export function renderGame(root, ctx) {
   if (entered && state.phase === 'ended') {
     const sc = scores(state).sort((a, b) => b.score - a.score);
     const last = sc.length > 1 && sc[sc.length - 1].id === meId && sc[sc.length - 1].score < sc[0].score;
-    sounds.push(last ? 'boo' : 'fanfare');
+    sc.forEach((_, k) => later.push(['drum', TALLY_START + k * TALLY_STEP])); // Trommelwirbel je Zeile
+    const winAt = TALLY_START + (sc.length - 1) * TALLY_STEP + 1100;
+    later.push(['glitz', winAt]); later.push([last ? 'boo' : 'fanfare', winAt + 300]);
   }
   if (entered && state.phase === 'auction') {
     sounds.push('flip');
@@ -1194,7 +1222,7 @@ export function renderGame(root, ctx) {
     if (le.type === 'money_drawn') { sounds.push('flip'); sounds.push('coins'); if (le.value >= 100) later.push(['glitz', 300]); }
     if (le.type === 'trade') sounds.push('trade');
   }
-  if (local.qSound || (entered && state.phase === 'ended')) sounds.push('quartet');
+  if (local.qSound) sounds.push('quartet');
   if (local.qMine) feel('quartet');
   local.qMine = false;
   // Kuhhandel-Herausforderung an dich / kann nicht zahlen: spürbar
