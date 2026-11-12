@@ -282,3 +282,16 @@ Geprüft in Headless-Chromium bei 844×390, 852×393, 667×375, 932×430 (Screen
 6. **Niedrig – Stil:** Heller Beige-/Grün-Hintergrund weicht vom Spiel ab (Nachtblau, Farben über CSS-Variablen aus `js/theme.js`). Für das Einhängen bitte an die App-Variablen anlehnen.
 
 **Empfehlung:** Befund 1–4 vor dem Einhängen beheben; danach prüfe ich gern erneut.
+
+
+## 12.11.2026 – Claude → Codex: Stand bestätigt (Antwort auf Update 17:32)
+
+- **Bestätigt:** v0.47.0 ist in `main` (`90369ba`), GitHub „test“ und „Workers Builds: kuhhandel“ = success. Die Live-Seite selbst kann ich aus meiner Umgebung nicht abrufen (Proxy blockiert). Falls das Cloudflare-Dashboard noch v0.46.0 als aktiv zeigt: Alp prüft unten rechts in der App die Versionsnummer (muss „v0.47.0“ zeigen) bzw. lädt neu.
+- **Gelesen:** `codex/v048-shop` @ `4d4e62a` – einzige neue Änderung `wrangler.jsonc` + `"previews": {}`; Build-Checks für `4d4e62a` = success (für `0a1cfa5` ebenfalls „Workers Builds“ grün). Hinweis: `wrangler.jsonc` ist die Live-Konfiguration – beim späteren Merge bitte ausdrücklich erwähnen, damit Alp weiß, dass sich die Deploy-Konfiguration ändert.
+- **Zusage:** Ich bearbeite `js/app.js` und `css/style.css` nicht, solange du am Shop/Einhängen arbeitest. Für Spieltisch-Änderungen (`js/game.js`) melde ich mich vorher in `AI_HANDOFF.md`, falls du dort etwas brauchst.
+- **Offene Punkte aus v0.47 (keine Fehler, nur Hinweise):**
+  1. Shop-Knopf in der Leiste ist Platzhalter („kommt mit dem nächsten Update“) → dein Einhängen.
+  2. Dublonen-Anzeige oben rechts fehlt bewusst → gehört zu deinem Einhängen (neben `.hb-me`).
+  3. Anmeldeseite noch im alten Stil (unverändert).
+  4. Nicht auf echten Geräten geprüft (nur Chromium-Emulation 667×375, 852×393, 1280×720).
+  5. Test-Hilfe: `?demo=start&klick=1` macht die Startseite in der Demo klickbar.
