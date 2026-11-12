@@ -259,6 +259,15 @@ export function buildDemoState(kind, local) {
       g = buzz(g, 'u2', t0 + SPECIAL_DELAY_MS + 3500);
       return g;
     }
+    case 'sppay10': { // Spezialkarte: du musst 10 Karten zahlen (Feld bleibt eine Reihe, kleinste sind vorgewählt)
+      const t0 = Date.now() - 60000;
+      g = base(); g.turn = 1; g.deck[0] = 'sp-schwein';
+      g.players[0].money = [0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 20, 20, 50, 50, 100];
+      g = drawForAuction(g, 'u2', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
+      g = buzz(g, 'u1', t0 + SPECIAL_DELAY_MS + 0);
+      g = specialDecide(g, 'u2', 'sell', t0 + 30000);
+      return g;
+    }
     case 'rps': {
       const t0 = Date.now() - 60000;
       g = base(); g.turn = 3; g.deck[0] = 'sp-ziege';
