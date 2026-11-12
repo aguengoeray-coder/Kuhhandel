@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tier Börse – Avatar-Vorschau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#2b2926;background:#172b27}*{box-sizing:border-box}body{margin:0;padding:28px 18px 48px;background:radial-gradient(ellipse at 50% 0,#31584b,#172b27 70%);min-height:100vh}header{max-width:1050px;margin:0 auto 26px;color:#fff;text-align:center}h1{font:700 clamp(28px,5vw,44px) Fredoka,sans-serif;margin:0 0 6px}header p{margin:0;color:#d5e4d9}.shop-avatar-gallery{max-width:1050px;margin:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.shop-avatar-card{padding:16px 12px 14px;border-radius:20px;background:linear-gradient(145deg,#f8f2e4,#e5d8bd);box-shadow:0 7px 0 #0003;text-align:center;min-width:0}.shop-avatar-stage{width:min(100%,160px);margin:0 auto 12px;padding:10px;border-radius:50%;background:#293c35}.shop-avatar-meta{display:grid;gap:3px}.shop-avatar-meta strong{font:600 19px Fredoka,sans-serif}.shop-avatar-meta span{font-size:12px;font-weight:700;color:#70532d}.shop-avatar-meta small{font-size:11px;color:#716b60}@media(max-width:720px){.shop-avatar-gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.shop-avatar-card{padding:12px 8px}.shop-avatar-stage{width:min(100%,130px)}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body><header><h1>Die elf Shop-Avatare</h1><p>Eigene Tier-Börsen-Figuren · animierte Vorschau</p></header><main id="gallery"></main>
+<script type="module">
+import {SHOP_AVATAR_CSS,shopAvatarGallery} from './js/shopavatars.js';
+const style=document.createElement('style');style.textContent=SHOP_AVATAR_CSS;document.head.append(style);
+document.querySelector('#gallery').innerHTML=shopAvatarGallery();
+</script></body></html>
