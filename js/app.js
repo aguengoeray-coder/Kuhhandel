@@ -648,7 +648,7 @@ let calmLog = -1;
 let calmAt = 0;
 function botCalm(s) {
   if (s.log.length !== calmLog) { calmLog = s.log.length; calmAt = Date.now(); }
-  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < calmFor(s.lastEvent.type, s.deck.length) + 300;
+  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < calmFor(s.lastEvent, s.deck.length) + 300;
 }
 // Wer lässt die Test-Spieler laufen? Der erste Spieler am Tisch, der online ist und selbst spielt.
 function botRunner() {

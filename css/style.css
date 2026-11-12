@@ -2396,3 +2396,26 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .tp-grid.many .tp-t { gap: 2px; padding-top: 6px; }
 .seat-l .seatpick span, .seat-r .seatpick span { bottom: auto; top: -11px; }
 .seat-l .seatpick span { left: 64%; }
+/* Geldschein: ein durchgehender Flug vom Zahler zum Empfänger – ohne Halt in der Mitte */
+@keyframes mfly { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(-10deg); opacity: 0; } }
+.mfly { animation-duration: 1s; }
+/* „KUHHANDEL!“ – kurzer Auftritt beim Start eines Kuhhandels (blockiert nichts) */
+.khsplash { position: absolute; left: var(--cx, 422px); top: calc(150px + var(--dh, 0px) * .4); transform: translate(-50%, -50%); z-index: 40; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 4px; animation: khout .3s ease-in 1.2s both; }
+.khsplash > b { font-family: var(--font-head); font-size: 46px; line-height: 1; color: var(--gold); letter-spacing: .02em; -webkit-text-stroke: 2px var(--ink); text-shadow: 0 5px 0 var(--ink), 0 10px 24px rgba(0,0,0,.45); animation: khboom .45s var(--e-pop) both; }
+.khsplash.rat > b { color: #E7E2D6; }
+.khduo { display: flex; align-items: center; gap: 10px; }
+.khduo > span { display: flex; align-items: center; gap: 6px; background: #fff; color: var(--ink); border-radius: 999px; padding: 3px 12px 3px 3px; border: 3px solid var(--c); font-weight: 800; font-size: 15px; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
+.khduo > span i { font-style: normal; }
+.khduo .avatar { width: 32px; height: 32px; border-width: 2px; }
+.khduo .khl { animation: khinl .4s var(--e-pop) .15s both; }
+.khduo .khr { animation: khinr .4s var(--e-pop) .15s both; }
+.khduo em { font-style: normal; font-size: 24px; animation: khboom .35s var(--e-pop) .4s both; }
+.khsplash small { background: var(--ink); color: #fff; border-radius: 999px; padding: 2px 12px; font-weight: 800; font-size: 13px; animation: khboom .3s ease-out .5s both; }
+@keyframes khboom { 0% { transform: scale(2.2); opacity: 0; } 60% { transform: scale(.92); opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes khinl { from { transform: translateX(-120px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes khinr { from { transform: translateX(120px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes khout { to { opacity: 0; transform: translate(-50%, -50%) scale(.9); } }
+@media (prefers-reduced-motion: reduce) { .khsplash, .khsplash * { animation: none !important; } .khsplash { display: none; } }
+.khscrim { position: absolute; inset: 0; z-index: 39; pointer-events: none; background: radial-gradient(ellipse at 50% 40%, rgba(8,14,30,.82) 0%, rgba(8,14,30,.6) 55%, rgba(8,14,30,.35) 100%); animation: khscrim 1.5s ease both; }
+@keyframes khscrim { 0% { opacity: 0; } 12% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .khscrim { display: none; } }
