@@ -213,11 +213,7 @@ export function choreo(le, deckLeft, W = evWait(le.type, deckLeft) || 0, piles =
   const streams = [];
   if (le.type === 'auction_won' && le.amount > 0 && le.payer && le.payee) streams.push({ from: le.payer, to: le.payee, count: le.cardCount || 1, at: payAt });
   if (le.type === 'special_won' && le.count > 0 && le.payer && le.payee) streams.push({ from: le.payer, to: le.payee, count: le.count, at: payAt });
-  if (le.type === 'trade') {
-    const o = cntOf(le.offer);
-    if (o) streams.push({ from: le.challenger, to: le.target, count: o, at: payAt });
-    if (!le.accepted && cntOf(le.counter)) streams.push({ from: le.target, to: le.challenger, count: cntOf(le.counter), at: payAt + (o ? streamMs(o) : 0) });
-  }
+  // Kuhhandel: das Geld wird schon im Ergebnisfenster getauscht (Stapel rutschen auf die andere Seite) – danach fliegt nur das Tier
   if (le.type === 'rat_taken') {
     if (piles) Object.entries(piles).filter(([pid, c]) => pid !== le.player && c).forEach(([pid, c]) => streams.push({ from: pid, to: le.player, count: c, at: payAt }));
     else if (le.count) streams.push({ from: null, to: le.player, count: le.count, at: payAt }); // ohne Stapel-Info: obere Grenze
@@ -390,8 +386,8 @@ export function renderGame(root, ctx) {
     const outS = ch0.streams.find((x) => x.from === meId); const inS = ch0.streams.filter((x) => x.to === meId);
     local.handFx = lose.length || gain.length ? {
       lose: [...lose].sort((a, b) => a - b), gain: [...gain].sort((a, b) => a - b),
-      loseAt: outS ? t0 + outS.at : t0,
-      gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 60 : t0,
+      loseAt: outS ? t0 + outS.at : le0.type === 'trade' ? t0 + ch0.W : t0,
+      gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 60 : le0.type === 'trade' ? t0 + ch0.W : t0,
     } : null;
   }
   if (Array.isArray(me.money)) local.prevMoney = me.money.slice();
@@ -540,7 +536,10 @@ export function renderGame(root, ctx) {
     const ev = v.lastEvent;
     const info = ev?.type === 'cant_pay' && !a.high
       ? `<div class="reveal-row ${fresh ? 'shake' : ''}"><strong>${esc(nameOf(ev.player))} ${ev.player === meId ? 'kannst' : 'kann'} ${ev.amount} nicht zahlen:</strong>
-          <span class="reveal-cards">${ev.revealed.map((m) => moneyCard(m, { size: 'xs' })).join('') || 'keine Karten'}</span>
+          <span class="reveal-cards">${ev.revealed.length > 8
+            // viele Scheine: zusammengefasst („×6“), damit die Zeile nicht nach unten in die Tierreihe wächst
+            ? [...new Set(ev.revealed)].sort((x, y) => x - y).map((m) => `<span class="rvgrp">${moneyCard(m, { size: 'xs' })}<b>×${ev.revealed.filter((x) => x === m).length}</b></span>`).join('')
+            : ev.revealed.map((m) => moneyCard(m, { size: 'xs' })).join('') || 'keine Karten'}</span>
           <span>→ max. ${ev.amount - BID_STEP}</span></div>`
       : (() => {
         // Gebots-Schild: wer bietet wie viel – groß, mit Spielerfarbe, springt bei jedem neuen Gebot auf
@@ -758,7 +757,7 @@ export function renderGame(root, ctx) {
       aucBanner = isSp ? `Zahle ${karten(pm.count)} an ${esc(nameOf(pm.payee))}` : `Zahle ${pm.amount} an ${esc(nameOf(pm.payee))}`;
       aucCenter = `<div class="auc paytable">${card}
         <div class="kasse ${entered ? 'pop' : ''}">
-          <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3, local.justAdded)}</div>
+          <div class="kslots ${Math.max(local.sel.length, isSp ? pm.count : 0) > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3, local.justAdded)}</div>
           <div class="kline"><span>${isSp ? `${karten(n)} von ${pm.count}` : `${karten(n)} · ${selSum}`}</span><b class="paystatus ${cls}">${status}</b></div>
         </div></div>`;
       aucLeft = `<div class="lhead">${isSp ? `${esc(aname(pm.special))}-Spezialkarte` : `Für: ${esc(aname(pm.animal))}`}</div>
@@ -789,8 +788,26 @@ export function renderGame(root, ctx) {
     return `<div class="atiles mine">${ids.map((id) => `<span class="atile ${id === focus ? 'on' : focus ? 'dim' : ''}" style="--a:${ANIMAL_COLORS[id]}" title="${me.animals[id]}× ${aname(id)}">${miniCard(id, 'fill')}${aval(id) != null ? `<em class="cv">${aval(id)}</em>` : ''}<span class="tcount">×${me.animals[id]}</span></span>`).join('')}${more ? `<span class="amore">+${more}</span>` : ''}</div>`;
   };
   const who = (id, label) => { const i = idxOf(id); return `<div class="twho">${avatar(v.players[i], i)}<span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(label || nameOf(id))}</span></div>`; };
-  // Mitte zwischen den beiden Seiten: das umkämpfte Tier groß, darunter „um 2“
-  const tmid = (animal, count, extra = '') => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">um ${count}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span>${extra}</div>`;
+  // Einsatz sichtbar: jede Seite zeigt, was sie setzt und was sie hätte, wenn sie gewinnt
+  const stakeOf = (id, animal, count, otherId) => {
+    if (!animal) return '';
+    const p = v.players[idxOf(id)]; const have = p.animals[animal] || 0; const isRat = animal === RAT;
+    const winHave = isRat ? have - count : have + count; // Rattenhandel: wer gewinnt, wird sie los
+    const quart = !isRat && winHave === 4;
+    const mine = id === meId;
+    const keep = have - count;
+    return `<div class="tstake"><div class="tstk">${Array.from({ length: count }, () => miniCard(animal, 'fill')).join('')}${keep > 0 ? `<span class="tkeep" title="behält ${keep}">+${keep}</span>` : ''}</div>
+      <small>${isRat ? (mine ? 'gewinnst du' : 'gewinnt') + ` → ${winHave ? `noch ${winHave}×` : 'keine Ratte mehr'}` : `${mine ? 'gewinnst du' : 'gewinnt'} → ${winHave}× ${esc(aname(animal))}${quart ? ' <b class="tq">Quartett!</b>' : ''}`}</small></div>`;
+  };
+  // Mitte: der Topf – alle eingesetzten Karten (beide Seiten), darunter worum es geht
+  const tmid = (animal, count, extra = '') => {
+    if (!animal) return `<div class="tmid"><div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span><span class="tvs">VS</span>${extra}</div>`;
+    const n = count * 2; const isRat = animal === RAT;
+    return `<div class="tmid tmpot"><div class="tpot" style="--pn:${n};--sp:${Math.min(22, Math.round(54 / Math.max(1, n - 1)))}px">${Array.from({ length: n }, (_, k) => `<span class="tpc" style="--k:${k}">${miniCard(animal, 'fill')}</span>`).join('')}</div>
+      <span class="tmidcnt">${count} gegen ${count}</span><small class="tpotl">${isRat ? `Verlierer bekommt alle ${n}` : `Gewinner bekommt alle ${n}`}</small><span class="tvs">VS</span>${extra}</div>`;
+  };
+  // (alt) Mitte zwischen den beiden Seiten: das umkämpfte Tier groß, darunter „um 2“
+  const tmidOld = (animal, count, extra = '') => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">um ${count}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span>${extra}</div>`;
   const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}">${miniCard(animal)}<span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b>${note ? `<small>${note}</small>` : ''}</span></div>`;
   if (state.phase === 'turn' && myTurn && local.tradeOpen) {
     const trades0 = possibleTrades(state, meId);
@@ -825,12 +842,12 @@ export function renderGame(root, ctx) {
         ${who(meId, 'Du')}
         <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
         <div class="tline"><b>${karten(local.sel.length)} · ${selSum}</b></div>
-        <small class="thas">du hast ${me.animals[chosen?.animal] || 0}× ${esc(aname(chosen?.animal))}</small>
+        ${stakeOf(meId, chosen?.animal, chosen?.count || 0, target.id)}
       </div>
       ${tmid(chosen?.animal, chosen?.count)}
       <div class="tpanel">
         ${who(target.id)}
-        <small class="thas">hat ${target.animals[chosen?.animal] || 0}× ${esc(aname(chosen?.animal))}</small>
+        ${stakeOf(target.id, chosen?.animal, chosen?.count || 0, meId)}
         <button type="button" class="pill pill-white pill-small tchange" data-a="tradeRepick">Gegner/Tier ändern</button>
       </div>
     </div>`;
@@ -873,7 +890,7 @@ export function renderGame(root, ctx) {
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
         <div class="kslots">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
         <div class="tline big"><b>${karten(offerCount)}${Array.isArray(t.offer) ? ` · ${sum(t.offer)}` : ''}</b><small>${Array.isArray(t.offer) ? 'dein Angebot' : 'verdeckt geboten'}</small></div>
-        ${t.challenger === meId ? myTiles(t.animal) : ''}
+        ${stakeOf(t.challenger, t.animal, t.count, t.target)}
         ${extra}
       </div>`;
     if (t.target === meId) {
@@ -884,6 +901,7 @@ export function renderGame(root, ctx) {
         ${tmid(t.animal, t.count, ttHtml)}
         <div class="tpanel">
           ${who(meId, 'Du')}
+          ${stakeOf(meId, t.animal, t.count, t.challenger)}
           <div class="kslots ${local.sel.length > 5 ? 'many' : ''}">${chosenCards(me.money, local.sel, 3, local.justAdded)}</div>
           ${counterBtn}
         </div>
@@ -897,6 +915,7 @@ export function renderGame(root, ctx) {
         ${tmid(t.animal, t.count, ttHtml)}
         <div class="tpanel">
           ${who(t.target)}
+          ${stakeOf(t.target, t.animal, t.count, t.challenger)}
           <div class="kslots"><div class="slot q">?</div></div>
           <div class="tline"><b>überlegt …</b></div>
         </div>
@@ -1449,9 +1468,11 @@ export function renderGame(root, ctx) {
         title = isRat ? `${nm(loser)} ${verb(loser, 'bekommst', 'bekommt')} ${e.count}× Ratte` : `${nm(e.winner)} ${verb(e.winner, 'gewinnst', 'gewinnt')} ${e.count}× ${esc(aname(e.animal))}`;
         kind += ` · um ${e.count}× ${esc(isRat ? 'Ratte' : aname(e.animal))}`;
         const winTag = isRat ? 'ist sie los' : 'gewinnt';
-        const mid = (sign) => `<div class="du-mid">${isRat ? playCard(RAT, 'rat') : playCard(e.animal)}<span class="trcount">×${e.count}</span>${sign}</div>`;
+        // Mitte: der Topf – alle eingesetzten Karten beider Seiten (um 2 → 4 Karten)
+        const potN = e.count * 2;
+        const mid = (sign) => `<div class="du-mid"><div class="tpot du-pot" style="--pn:${potN};--sp:${Math.min(20, Math.round(48 / Math.max(1, potN - 1)))}px">${Array.from({ length: potN }, (_, k) => `<span class="tpc" style="--k:${k}">${miniCard(e.animal, 'fill')}</span>`).join('')}</div><span class="du-potl">${e.count} gegen ${e.count}</span>${sign}</div>`;
         // Duell nebeneinander: links Herausforderer, rechts Gegner, Tier in der Mitte
-        const duSide = (id, role, inner, win) => `<div class="du-side ${win ? 'win' : 'lose'}">${win ? `<span class="du-tag">${winTag}</span>` : ''}${ecP(id)}<span class="du-role">${role}</span>${inner}</div>`;
+        const duSide = (id, role, inner, win, side = '') => `<div class="du-side ${win ? 'win' : 'lose'} ${side}">${win ? `<span class="du-tag">${winTag}</span>` : ''}${ecP(id)}<span class="du-role">${role}</span>${inner}</div>`;
         if (e.accepted) {
           const known = e.offerSum != null;
           const n = Array.isArray(e.offer) ? e.offer.length : e.offer;
@@ -1472,7 +1493,7 @@ export function renderGame(root, ctx) {
           };
           // Differenz sehen alle (auch Zuschauer) – groß in der Mitte unter dem Tier
           const diffBox = `<span class="du-diff ecr-after ${e.diff === 0 ? 'tie' : ''}"><small>Differenz</small><b>${e.diff}</b></span>`;
-          duel = `<div class="du-row">${duSide(e.challenger, verb(e.challenger, 'forderst heraus', 'fordert heraus'), stack(e.offer, amts ? e.offerSum : null), cw)}${mid(`<span class="du-vs">VS</span>${diffBox}`)}${duSide(e.target, 'Gegenangebot', stack(e.counter, amts ? e.counterSum : null), !cw)}</div>`;
+          duel = `<div class="du-row swap">${duSide(e.challenger, verb(e.challenger, 'forderst heraus', 'fordert heraus'), `<div class="du-pile">${stack(e.offer, amts ? e.offerSum : null)}</div>`, cw, 'sl')}${mid(`<span class="du-vs">VS</span>${diffBox}`)}${duSide(e.target, 'Gegenangebot', `<div class="du-pile">${stack(e.counter, amts ? e.counterSum : null)}</div>`, !cw, 'sr')}</div>`;
           const pills = e.diff === 0 ? [`Gleichstand – ${nm(e.challenger)} ${verb(e.challenger, 'gewinnst', 'gewinnt')}`] : [];
           if (amts && (e.challenger === meId || e.target === meId)) {
             const other = e.challenger === meId ? e.target : e.challenger;

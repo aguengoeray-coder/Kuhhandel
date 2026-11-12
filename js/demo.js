@@ -128,11 +128,27 @@ export function buildDemoState(kind, local) {
       g = closeAuction(g, 'u2', 'sell', Date.now() - 800); // gerade eben: Pause zum Anschauen läuft noch
       return g;
     }
+    case 'cantpaymany': { // „Kann nicht zahlen“ mit sehr vielen Scheinen (spät im Spiel): Zeile fasst zusammen
+      const t = Date.now() - 25000;
+      g = base(); g.turn = 1; g.deck[0] = 'kuh';
+      g.players[3].money = [0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 10, 20, 20, 20, 50, 50];
+      g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
+      g = bid(g, 'u4', 400, t + 2600);
+      g = closeAuction(g, 'u2', 'sell', Date.now() - 800);
+      return g;
+    }
     case 'tradesetup':
       g = base();
       local.key = `${g.phase}|${g.turn}|${g.log.length}`;
       local.tradeOpen = true; local.tradePicked = true; local.tradeTarget = 'u3'; local.tradeAnimal = 'kuh'; local.sel = [2, 3, 5];
       return g;
+    case 'tradeum2': { // Kuhhandel um 2 (beide haben 2 Gänse): Gewinner bekommt alle 4 → Quartett
+      g = base();
+      g.players[0].animals.gans = 2; g.players[2].animals.gans = 2;
+      local.key = `${g.phase}|${g.turn}|${g.log.length}`;
+      local.tradeOpen = true; local.tradePicked = true; local.tradeTarget = 'u3'; local.tradeAnimal = 'gans'; local.sel = [2, 5];
+      return g;
+    }
     case 'tradepick': { // Kuhhandel Schritt 1, spät im Spiel: viele gemeinsame Tiere (Gegner + Tier wählen)
       g = base();
       Object.assign(g.players[0].animals, { hahn: 2, gans: 2, katze: 1, hund: 1, schaf: 3, ziege: 1, esel: 2, schwein: 3, kuh: 1, pferd: 2 });
@@ -241,6 +257,15 @@ export function buildDemoState(kind, local) {
       g = base(); g.deck[0] = 'sp-schwein';
       g = drawForAuction(g, 'u1', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
       g = buzz(g, 'u2', t0 + SPECIAL_DELAY_MS + 3500);
+      return g;
+    }
+    case 'sppay10': { // Spezialkarte: du musst 10 Karten zahlen (Feld bleibt eine Reihe, kleinste sind vorgewählt)
+      const t0 = Date.now() - 60000;
+      g = base(); g.turn = 1; g.deck[0] = 'sp-schwein';
+      g.players[0].money = [0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 20, 20, 50, 50, 100];
+      g = drawForAuction(g, 'u2', t0); if (g.special) { g.special.batzen = null; g.special.startsAt = t0 + SPECIAL_DELAY_MS; }
+      g = buzz(g, 'u1', t0 + SPECIAL_DELAY_MS + 0);
+      g = specialDecide(g, 'u2', 'sell', t0 + 30000);
       return g;
     }
     case 'rps': {
