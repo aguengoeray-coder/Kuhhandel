@@ -1,9 +1,11 @@
-# Bei jedem Pull Request und jedem Push: Regel-Tests laufen lassen (grünes Häkchen / rotes Kreuz)
+# Regel- und Repository-Grundprüfungen bei Pull Requests.
 name: Tests
 on:
   pull_request:
   push:
     branches: [main]
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -12,4 +14,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm test
+      - name: Node-Tests
+        run: npm test
+      - name: Syntax- und Versionsprüfung
+        run: node scripts/check.mjs
