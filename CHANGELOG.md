@@ -1,5 +1,26 @@
 # Änderungsprotokoll
 
+## v0.45.0 – Geld in der Hand, große Momente
+
+**Dein Geld kommt und geht sichtbar aus deiner Hand**
+- [x] **Bezahlen:** Genau deine Scheine schieben sich kurz hoch und fliegen dann offen aus dem Fächer zum Empfänger. Bis dahin bleiben sie in der Hand, die Summe daneben stimmt jederzeit.
+- [x] **Bekommen:** Die Scheine fliegen offen in deinen Fächer, erscheinen erst bei der Landung und leuchten kurz.
+- [x] Bei Mitspielern bleiben es Rückseiten (ihr Geld ist verdeckt).
+- [x] Flüge starten jetzt sicher mit dem gemessenen Ziel (in manchen Browsern konnte ein Flug sonst am Startplatz hängen bleiben).
+
+**Ratte**
+- [x] Dein niedrigster Schein ist vorgewählt – nur noch „Verdeckt legen“ drücken oder einen anderen antippen. „Ratte nehmen“ bleibt getrennt in der Mitte.
+
+**Neue Einstellung im Warteraum**
+- [x] **💰 Geld zählt am Ende:** Übriges Geld wird zu den Punkten addiert (nicht multipliziert). Steht in der Abrechnung, auf dem Siegertreppchen („+300“) und in der Rechnung.
+
+**Große Auftritte – nur bei besonderen Ereignissen** (gleicher Stil wie „KUHHANDEL!“, höchstens einer pro Ergebnis)
+- [x] **GLEICHSTAND!** – Kuhhandel mit Differenz 0: der Herausforderer holt das Tier umsonst.
+- [x] **BLUFF!** – Kuhhandel mit lauter Nullen gewonnen (sehen nur die beiden Beteiligten, die Beträge bleiben sonst geheim).
+- [x] **GESCHENKT!** – niemand buzzert, die Spezialkarte gibt es umsonst.
+- [x] **QUARTETT!** – das vierte Tier.
+- [x] **RATTENKÖNIG!** – einer hat alle Ratten und muss ein Quartett blockieren.
+
 ## v0.44.0 – Kuhhandel: klarer auswählen
 
 - [x] **Schritt 1 – ein Fenster:** „Mit wem, um welches Tier?“ – oben die Gegner, darunter große Kärtchen nur mit den Tieren, die ihr beide habt. Jedes Kärtchen zeigt Wert, „um 1/2“ und wie viele ihr habt („Du 3 · Lea 1“).

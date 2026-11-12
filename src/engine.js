@@ -234,19 +234,21 @@ function allQuartetsComplete(state) {
 // Punkte eines Spielers. blockedAnimal = Quartett, das durch die Ratten nicht zählt.
 // Spezialkarte zum (nicht blockierten) Quartett: zählt vor dem Malnehmen mit.
 // Spezialkarte ohne zählendes Quartett: +250 nach dem Malnehmen.
-export function scoreFor(p, blockedAnimal = null) {
+// withMoney (Einstellung „Geld zählt am Ende“): übriges Geld wird am Schluss dazugezählt (nicht multipliziert)
+export function scoreFor(p, blockedAnimal = null, withMoney = false) {
   const specials = p.specials || [];
   const quartets = ANIMALS.filter((a) => p.animals[a.id] === 4 && a.id !== blockedAnimal);
   const base = quartets.reduce((s, a) => s + a.value + (specials.includes(a.id) ? SPECIAL_VALUE : 0), 0);
   const loose = specials.filter((id) => !quartets.some((a) => a.id === id)).length;
-  return { quartets: quartets.map((a) => a.id), score: base * quartets.length + loose * SPECIAL_VALUE };
+  const money = withMoney && Array.isArray(p.money) ? sum(p.money) : 0;
+  return { quartets: quartets.map((a) => a.id), score: base * quartets.length + loose * SPECIAL_VALUE + money, money };
 }
 
 export function scores(state) {
   return state.players.map((p) => {
     const blocked = state.blocked && state.blocked.player === p.id ? state.blocked.animal : null;
-    const r = scoreFor(p, blocked);
-    return { id: p.id, name: p.name, quartets: r.quartets, score: r.score, specials: (p.specials || []).slice(), rats: p.animals[RAT] || 0, blocked };
+    const r = scoreFor(p, blocked, !!(state.settings && state.settings.moneyCounts));
+    return { id: p.id, name: p.name, quartets: r.quartets, score: r.score, money: r.money, specials: (p.specials || []).slice(), rats: p.animals[RAT] || 0, blocked };
   });
 }
 

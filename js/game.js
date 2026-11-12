@@ -116,15 +116,16 @@ function playerChips(p, tradeable = new Set(), max = CHIP_MAX) {
 }
 
 // Rechnung für die Wertung, z. B. „(800 + 250★ + 1000) × 2 + 250★ = 4350“
-export function scoreFormula(p, blocked = null) {
+export function scoreFormula(p, blocked = null, withMoney = false) {
   const specials = p.specials || [];
   const quartets = ANIMALS.filter((a) => p.animals[a.id] === 4 && a.id !== blocked);
   const parts = [];
   for (const a of quartets) parts.push(specials.includes(a.id) ? `${a.value}+${SPECIAL_VALUE}★` : `${a.value}`);
   const loose = specials.filter((id) => !quartets.some((a) => a.id === id)).length;
-  const total = scoreFor(p, blocked).score;
+  const r = scoreFor(p, blocked, withMoney); const total = r.score;
   let text = quartets.length ? `(${parts.join(' + ')}) × ${quartets.length}` : '';
   if (loose) text += `${text ? ' + ' : ''}${loose > 1 ? `${loose} × ` : ''}${SPECIAL_VALUE}★`;
+  if (withMoney && r.money) text += `${text ? ' + ' : ''}${r.money} Geld`;
   return `${text || 'keine Quartette'} = ${total}`;
 }
 
@@ -262,6 +263,7 @@ function aimFly(root) {
   if (!stage) return;
   const sr = stage.getBoundingClientRect();
   const sc = sr.width / stage.offsetWidth || 1;
+  const aimed = [];
   root.querySelectorAll('.fly[data-flyto]').forEach((f) => {
     const id = f.dataset.flyto;
     const t = root.querySelector(`.auslage [data-animal="${id}"] .spile, .auslage [data-animal="${id}"] .acard`);
@@ -273,7 +275,12 @@ function aimFly(root) {
     f.style.setProperty('--tx', `${Math.round(cx - (f.offsetLeft + f.offsetWidth / 2))}px`);
     f.style.setProperty('--ty', `${Math.round(cy - (f.offsetTop + f.offsetHeight / 2))}px`);
     f.style.setProperty('--fs', (r.width / sc / f.offsetWidth).toFixed(3));
+    aimed.push(f);
   });
+  // wie in aimFx: Animation mit dem gemessenen Ziel neu anlegen
+  aimed.forEach((f) => { f.style.animationName = 'none'; });
+  if (aimed.length) void stage.offsetWidth;
+  aimed.forEach((f) => { f.style.animationName = ''; });
 }
 
 // Wo sitzt jemand auf der Bühne? Mitspieler: Mitte ihres Bildes am Platz · du: dein Geld unten (sonst unten Mitte)
@@ -291,20 +298,27 @@ function aimFx(root) {
   if (!stage) return;
   const sr = stage.getBoundingClientRect();
   const sc = sr.width / stage.offsetWidth || 1;
+  const aimed = [];
   root.querySelectorAll('[data-aim-to]').forEach((f) => {
     if (f.dataset.aimFrom) {
       const a = seatPoint(root, f.dataset.aimFrom, sr, sc);
-      f.style.left = `${Math.round(a.x - f.offsetWidth / 2)}px`;
+      f.style.left = `${Math.round(a.x - f.offsetWidth / 2 + (Number(f.dataset.aimFdx) || 0))}px`;
       f.style.top = `${Math.round(a.y - f.offsetHeight / 2)}px`;
     }
     const b = seatPoint(root, f.dataset.aimTo, sr, sc);
     // Bezugspunkt: Mitte des Elements (bei „center“ ist es schon per translate(-50%,-50%) mittig gesetzt)
     const cx = f.dataset.aimAnchor === 'center' ? f.offsetLeft : f.offsetLeft + f.offsetWidth / 2;
     const cy = f.dataset.aimAnchor === 'center' ? f.offsetTop : f.offsetTop + f.offsetHeight / 2;
-    f.style.setProperty('--tx', `${Math.round(b.x - cx)}px`);
+    f.style.setProperty('--tx', `${Math.round(b.x - cx + (Number(f.dataset.aimTdx) || 0))}px`);
     f.style.setProperty('--ty', `${Math.round(b.y - cy)}px`);
     if (f.dataset.aimScale) f.style.setProperty('--fs', f.dataset.aimScale);
+    aimed.push(f);
   });
+  // Animation neu anlegen, damit sie sicher mit dem gemessenen Ziel läuft (sonst fliegt sie in manchen Browsern
+  // mit dem Startwert 0 los, weil das Ziel erst nach dem Zeichnen feststeht). seekFx spult danach auf die richtige Zeit.
+  aimed.forEach((f) => { f.style.animationName = 'none'; });
+  if (aimed.length) void stage.offsetWidth;
+  aimed.forEach((f) => { f.style.animationName = ''; });
 }
 
 // Dauerschleifen (Wackeln, Leuchten, Sanduhr): an eine gemeinsame Uhr hängen, damit sie beim Neuzeichnen nicht auf Anfang springen
@@ -362,6 +376,26 @@ export function renderGame(root, ctx) {
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
   if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).haloAt }; // Rahmen wandert erst nach Tier + Geld + Ruhe
   if (local.turnHold && (Date.now() >= local.turnHold.until || state.phase !== 'turn')) local.turnHold = null;
+  // Dein Geld kommt und geht sichtbar aus deiner Hand: bezahlte Scheine bleiben im Fächer, bis sie losfliegen;
+  // bekommene erscheinen erst, wenn sie gelandet sind (und leuchten kurz).
+  if (evFresh && (state.phase === 'turn' || state.phase === 'ended') && EV_WAIT[v.lastEvent?.type] && Array.isArray(me.money) && local.prevMoney) {
+    const le0 = v.lastEvent; const t0 = Date.now();
+    const ch0 = choreo(le0, v.deck, undefined, le0.type === 'rat_taken' ? local.ratLaid : null);
+    const minus = (a, b) => { const r = [...a]; b.forEach((x) => { const i = r.indexOf(x); if (i >= 0) r.splice(i, 1); }); return r; };
+    let lose; let gain;
+    if (le0.type === 'trade' && (le0.challenger === meId || le0.target === meId) && Array.isArray(le0.offer)) {
+      const counter = le0.accepted || !Array.isArray(le0.counter) ? [] : le0.counter;
+      lose = le0.challenger === meId ? le0.offer : counter; gain = le0.challenger === meId ? counter : le0.offer;
+    } else { lose = minus(local.prevMoney, me.money); gain = minus(me.money, local.prevMoney); }
+    const outS = ch0.streams.find((x) => x.from === meId); const inS = ch0.streams.filter((x) => x.to === meId);
+    local.handFx = lose.length || gain.length ? {
+      lose: [...lose].sort((a, b) => a - b), gain: [...gain].sort((a, b) => a - b),
+      loseAt: outS ? t0 + outS.at : t0,
+      gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 60 : t0,
+    } : null;
+  }
+  if (Array.isArray(me.money)) local.prevMoney = me.money.slice();
+  if (local.handFx && Date.now() > Math.max(local.handFx.loseAt, local.handFx.gainAt) + 1000) local.handFx = null;
   const realHolder = state.phase === 'ended' || state.phase === 'block' ? null : state.phase === 'rat' ? ratCurrent(v) : currentPlayer(v).id;
   const shownHolder = local.turnHold ? local.turnHold.id : realHolder;
   local.prev = { logLen: state.log.length, phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? state.log.length : null };
@@ -576,6 +610,8 @@ export function renderGame(root, ctx) {
     if (turnId === meId) {
       const values = [...new Set(me.money)].sort((a, b) => a - b);
       if (local.ratSel != null && !values.includes(local.ratSel)) local.ratSel = null;
+      // Dein niedrigster Schein ist vorgewählt – nur noch „Verdeckt legen“ drücken (oder einen anderen antippen)
+      if (local.ratSel == null && values.length) local.ratSel = Math.min(...values);
       aucLeft = `${values.length ? `<button type="button" class="pill pill-white" data-a="ratGo" ${local.ratSel != null ? '' : 'disabled'}><small>VERDECKT LEGEN</small>${local.ratSel != null ? `${local.ratSel}er legen` : 'Schein antippen · 2× tippen legt'}</button>` : ''}`;
       if (values.length) pickMode = 'rat';
     } else {
@@ -587,7 +623,7 @@ export function renderGame(root, ctx) {
       const n = Number(val); const t = Date.now();
       if (local.ratTap && local.ratTap.m === n && t - local.ratTap.at < 400) { local.ratTap = null; local.ratSel = null; H.ratLay(n); return; }
       local.ratTap = { m: n, at: t };
-      local.ratSel = local.ratSel === n ? null : n; ctx.rerender();
+      local.ratSel = n; ctx.rerender();
     };
     H.ratGo = () => { if (local.ratSel != null) H.ratLay(local.ratSel); };
     H.ratTake = () => ctx.act((s) => ratTake(s, meId));
@@ -951,7 +987,14 @@ export function renderGame(root, ctx) {
   const iLead = state.phase === 'auction' && auction.high?.player === meId;
   // Viele Scheine: gleiche Werte zu einem Stapel mit „×N“ zusammenfassen, damit jeder Wert lesbar bleibt
   // Beim Auswählen (Bezahlen, Kuhhandel): ausgewählte Scheine liegen schon im Feld, im Fächer bleibt der Rest
-  const handMoney = pickMode === 'sel' ? me.money.filter((_, i) => !local.sel.includes(i)) : me.money;
+  let handMoney = pickMode === 'sel' ? me.money.filter((_, i) => !local.sel.includes(i)) : me.money;
+  const glowVals = [];
+  if (local.handFx && !pickMode) {
+    const hf = local.handFx; const tn = Date.now();
+    if (tn < hf.gainAt) { const r = [...handMoney]; hf.gain.forEach((x) => { const i = r.indexOf(x); if (i >= 0) r.splice(i, 1); }); handMoney = r; wakeLocal(hf.gainAt + 10); }
+    else if (tn < hf.gainAt + 1000) { glowVals.push(...hf.gain); wakeLocal(hf.gainAt + 1010); }
+    if (tn < hf.loseAt) { handMoney = [...handMoney, ...hf.lose]; wakeLocal(hf.loseAt + 10); }
+  }
   const grouped = handMoney.length > 11;
   const fanCards = grouped ? [...new Set(handMoney)].sort((x, y) => x - y).map((val) => [val, handMoney.filter((m) => m === val).length]) : [...handMoney].sort((x, y) => x - y).map((m) => [m, 1]);
   const nM = fanCards.length;
@@ -966,7 +1009,8 @@ export function renderGame(root, ctx) {
     if (lift) lifted = true;
     const style = `--m:${MONEY_COLORS[m]};margin-left:${i ? Math.round(step - 46) : 0}px;--rot:${rot}deg;--dy:${Math.min(14, Math.abs(off) * 2.5)}px`;
     const inner = `${mIn(m)}${cnt > 1 ? `<span class="mcount">×${cnt}</span>` : ''}`;
-    if (!pickMode) return `<div class="money fan ${cnt > 1 ? 'multi' : ''}" style="${style}">${inner}</div>`;
+    const gi = glowVals.indexOf(m); const glow = gi >= 0; if (glow) glowVals.splice(gi, grouped ? glowVals.length : 1);
+    if (!pickMode) return `<div class="money fan ${cnt > 1 ? 'multi' : ''} ${glow ? 'newcard' : ''}" style="${style}">${inner}</div>`;
     const label = pickMode === 'rat' ? `${m} zum Legen wählen` : `${m} ins Feld legen`;
     return `<button type="button" class="money fan pick ${cnt > 1 ? 'multi' : ''} ${lift ? 'lift' : ''}" style="${style}" data-a="${pickMode === 'rat' ? 'ratPick' : 'addv'}" data-v="${m}" aria-label="${label}"${lift ? ' aria-pressed="true"' : ''}>${inner}</button>`;
   }).join('');
@@ -992,7 +1036,7 @@ export function renderGame(root, ctx) {
     </div>`}</div>
     <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
-    <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${pickMode === 'sel' ? sum(handMoney) : sum(me.money)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
+    <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
 
   // ----- Menü oben links in der Tischecke -----
@@ -1020,7 +1064,7 @@ export function renderGame(root, ctx) {
   const standingsHtml = local.standings && state.settings?.standings && state.phase !== 'ended' ? (() => {
     const rows = v.players.map((p, i) => ({ p, i, sc: scoreFor(p) })).sort((a, b) => b.sc.score - a.sc.score);
     return `<div class="standings" data-a="standings" role="button" aria-label="Zwischenstand schließen">
-      <h3>📊 Zwischenstand <small>nur offene Quartette – Geld zählt nicht</small></h3>
+      <h3>📊 Zwischenstand <small>${state.settings?.moneyCounts ? 'nur offene Quartette – Geld kommt am Ende dazu' : 'nur offene Quartette – Geld zählt nicht'}</small></h3>
       ${rows.map((r, k) => `<div class="strow"><i>${k + 1}.</i>${avatar(r.p, r.i)}<span>${esc(r.p.id === meId ? 'Du' : r.p.name)}</span><span class="stq">${r.sc.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>`).join('') || '–'}</span><b>${r.sc.score}</b></div>`).join('')}
       <small class="sthint">Antippen schließt</small></div>`;
   })() : '';
@@ -1055,7 +1099,7 @@ export function renderGame(root, ctx) {
 
   // Blockieren läuft jetzt auf dem Tisch (siehe oben)
 
-  const iconsOf = (r) => `${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}`;
+  const iconsOf = (r) => `${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}${r.money ? `<span class="cimoney" title="übriges Geld zählt mit">+${r.money}</span>` : ''}`;
   // Börsenbericht: die Momente des Spiels im Stil eines Kurszettels (auch zum Teilen in der Gruppe)
   const reportList = () => {
     const list = awards(state);
@@ -1132,7 +1176,7 @@ export function renderGame(root, ctx) {
       <h2 style="--c:${SEAT_COLORS[winIdx]}">${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
       <div class="pods">${order.map(step).join('')}</div>
       ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
-      <div class="sform2">${openRow ? `${esc(openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(v.players[idxOf(openRow.id)], openRow.blocked)}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}` : ''}</div>
+      <div class="sform2">${openRow ? `${esc(openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(state.players[idxOf(openRow.id)], openRow.blocked, !!state.settings?.moneyCounts)}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}` : ''}</div>
       <div class="endbtns">
         <button type="button" class="pill pill-white" data-a="recap">📈 Börsenbericht</button>
         <button type="button" class="pill pill-red ${ctx.rematchId ? 'pulse' : ''}" data-a="rematch">${ctx.rematchId ? 'Revanche läuft – mitmachen' : 'Revanche'}</button>
@@ -1195,15 +1239,23 @@ export function renderGame(root, ctx) {
   if (local.turnHold) wakeLocal(local.turnHold.until + 30);
 
   // Geld fliegt (verdeckt) vom Platz des Zahlers zum Platz des Empfängers (Start und Ziel werden gemessen)
-  const moneyFly = (from, to, count, delay = 0) => {
+  const moneyFly = (from, to, count, delay = 0, vals = null) => {
     if (!count || idxOf(from) < 0 || idxOf(to) < 0) return '';
-    return Array.from({ length: Math.min(count, 15) }, (_, k) => `<div class="mfly" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" style="animation-delay:${delay + k * 70}ms"></div>`).join(''); // so viele Scheine, wie wirklich bezahlt werden
+    const n = Math.min(count, 15);
+    // deine eigenen Scheine fliegen offen: beim Bezahlen kurz hochgeschoben aus dem Fächer, beim Bekommen in den Fächer hinein
+    const mine = (from === meId || to === meId) && vals && vals.length >= n ? (from === meId ? 'out' : 'in') : '';
+    return Array.from({ length: n }, (_, k) => { const dx = Math.round((k - (n - 1) / 2) * Math.min(30, 200 / n));
+      return mine ? `<div class="mfly mine ${mine}" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" ${mine === 'out' ? `data-aim-fdx="${dx}"` : `data-aim-tdx="${dx}"`} style="--m:${MONEY_COLORS[vals[k]]};animation-delay:${delay + k * MSTEP}ms">${vals[k]}</div>`
+        : `<div class="mfly" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" style="animation-delay:${delay + k * MSTEP}ms"></div>`; }).join(''); // so viele Scheine, wie wirklich bezahlt werden
   };
   // Geld fliegt nach dem Ablauf-Plan: erst wenn das Tier gelandet ist; beim Kuhhandel das Gegenangebot erst, wenn das Angebot angekommen ist
   if (evFresh && le && (state.phase === 'turn' || state.phase === 'ended') && EV_WAIT[le.type]) {
     const tg = evDelay ? 'ev' : null;
     const ch = choreo(le, v.deck, evDelay, le.type === 'rat_taken' ? local.ratLaid : null);
-    ch.streams.forEach((x) => { if (x.from) keepFx(moneyFly(x.from, x.to, x.count, x.at), x.at + streamMs(x.count) + 100, tg); });
+    const hf = local.handFx; const gainLeft = hf ? [...hf.gain] : [];
+    ch.streams.forEach((x) => { if (!x.from) return;
+      const vals = !hf ? null : x.from === meId ? hf.lose : x.to === meId ? gainLeft.splice(0, Math.min(x.count, 15)) : null;
+      keepFx(moneyFly(x.from, x.to, x.count, x.at, vals), x.at + streamMs(x.count) + 100, tg); });
   }
   if (state.phase === 'rat') local.ratLaid = { ...v.rat.laid }; else if (state.phase !== 'turn') local.ratLaid = null;
 
@@ -1280,6 +1332,25 @@ export function renderGame(root, ctx) {
       <small>um ${t.count}× ${esc(isRat ? 'Ratte' : aname(t.animal))}</small></div>`, 1500);
     later.push(['drum', 0]);
   }
+  // Große Auftritte – nur bei besonderen Ereignissen, höchstens einer pro Ergebnis (Rang: Gleichstand > Bluff > Geschenkt > Quartett)
+  const boom = (title, sub, cls = '', delay = 0) => { keepFx(`<div class="khscrim" style="--d:${delay}ms" aria-hidden="true"></div><div class="khsplash boom ${cls}" style="--d:${delay}ms" aria-live="polite"><b>${title}</b><small>${sub}</small></div>`, delay + 1500); later.push(['wow', delay]); };
+  const vb = (id, du, er) => (id === meId ? du : er);
+  const nmB = (id) => esc(id === meId ? 'Du' : nameOf(id));
+  if (evNew && le) {
+    const isRatT = le.animal === RAT;
+    const thing = le.type === 'trade' ? `${le.count}× ${esc(isRatT ? 'Ratte' : aname(le.animal))}` : '';
+    const afterFlip = 1500; // Scheine sind umgedreht, Differenz steht da
+    const zeros = (c) => Array.isArray(c) && c.length > 0 && c.every((m) => m === 0);
+    const iAmIn = le.type === 'trade' && (le.challenger === meId || le.target === meId);
+    const winCards = le.type === 'trade' ? (le.accepted || le.winner === le.challenger ? le.offer : le.counter) : null;
+    if (le.type === 'trade' && !le.accepted && le.diff === 0) boom('GLEICHSTAND!', isRatT ? `${nmB(le.challenger)} ${vb(le.challenger, 'wirst', 'wird')} ${thing} los` : `${nmB(le.challenger)} ${vb(le.challenger, 'holst', 'holt')} ${thing} umsonst`, 'tie', afterFlip);
+    // Bluff: nur die beiden Beteiligten sehen die Beträge – also auch nur sie den Auftritt
+    else if (iAmIn && zeros(winCards)) boom('BLUFF!', `${nmB(le.winner)} ${vb(le.winner, 'gewinnst', 'gewinnt')} mit lauter Nullen`, 'bluff', le.accepted ? 300 : afterFlip);
+    else if (le.type === 'special_won' && !le.count) boom('GESCHENKT!', `Niemand buzzert – ${nmB(le.buyer)} ${vb(le.buyer, 'bekommst', 'bekommt')} die Spezialkarte umsonst`, 'gift', 0);
+    else if (local.qBadge === evSig) { const qp = receiverOf(le); boom('QUARTETT!', `${nmB(qp)} ${vb(qp, 'hast', 'hat')} alle 4× ${esc(aname(le.animal))}`, 'quartet', le.type === 'trade' && !le.accepted ? afterFlip : 300); }
+  }
+  // Alle Ratten bei einem: er muss ein Quartett blockieren
+  if (entered && state.phase === 'block' && v.block) boom('RATTENKÖNIG!', `${nmB(v.block.player)} ${vb(v.block.player, 'hast', 'hat')} alle Ratten – ein Quartett zählt nicht`, 'rat', 0);
   if (evFresh && v.lastEvent?.type === 'cant_pay' && v.lastEvent.player === meId) feel('heavy');
   local.qSound = false;
 
@@ -1321,6 +1392,7 @@ export function renderGame(root, ctx) {
     // Fenster früher zu: der ganze Ablauf (Flüge, Rahmen, Aufdecken) rückt um dieselbe Zeit vor
     if (left > 0 && local.turnHold) local.turnHold.until -= left;
     if (left > 0 && local.calmUntil) local.calmUntil -= left;
+    if (left > 0 && local.handFx) { local.handFx.loseAt -= left; local.handFx.gainAt -= left; }
     if (local.res.html) keepFx(`<div class="evout" aria-hidden="true">${local.res.html}</div>`, 280);
     local.res = null;
   };
