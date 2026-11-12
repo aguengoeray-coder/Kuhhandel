@@ -31,10 +31,10 @@ export const RAT = 'ratte';
 export const RAT_COUNT = 4;
 export const SPECIAL_VALUE = 250;
 export const SPECIAL_PREFIX = 'sp-';          // Spezialkarte im Stapel: 'sp-kuh' usw.
-export const SPECIAL_DELAY_MS = 3000;         // „Achtung“ vor dem Buzzer-Countdown
+export const SPECIAL_DELAY_MS = 2000;         // „Achtung“ vor dem Buzzer-Countdown
 export const SPECIAL_TICK_MS = 1000;          // eine Sekunde pro Zahl
 export const SPECIAL_FROM = 10;               // Countdown 10 … 1
-export const BATZEN_WAIT_MS = 5000;           // „Zeig Batzen!“: so lange kann jeder drücken
+export const BATZEN_WAIT_MS = 3000;           // „Zeig Batzen!“: so lange kann jeder drücken
 export const BATZEN_SHOW_MS = 3000;           // so lange liegen die Stapel auf dem Tisch
 export const CANTPAY_HOLD_MS = 5000;          // „Kann nicht zahlen“: so lange sehen alle die Scheine, erst danach geht es weiter
 export const RPS = ['stein', 'schere', 'papier'];
@@ -137,6 +137,12 @@ function stat(state, id) {
   if (!state.stats) state.stats = {};
   if (!state.stats[id]) state.stats[id] = { buys: 0, maxBuy: null, tradesWon: 0, tradesLost: 0, ratsTaken: 0, ratCards: 0, moneyDrawn: 0, specialsWon: 0, buzzes: 0 };
   return state.stats[id];
+}
+
+// Nullen im eigenen, gewonnenen Kuhhandel-Gebot (für die Auszeichnung „Bluffer“)
+function bluff(state, id, cards) {
+  const z = cards.filter((c) => c === 0).length;
+  if (z) { const st = stat(state, id); st.bluffZeros = (st.bluffZeros || 0) + z; }
 }
 
 function moveAnimals(from, to, animal, count) {
@@ -397,6 +403,7 @@ export function bid(prev, playerId, amount, now) {
   if (a.holdUntil != null && now != null && now < a.holdUntil - GRACE_MS) fail('Erst schauen alle die Scheine an – gleich geht es weiter.');
   a.high = { player: playerId, amount };
   a.passed = a.passed.filter((id) => id !== playerId);
+  const bs = stat(state, playerId); bs.bids = (bs.bids || 0) + 1; bs.maxBid = Math.max(bs.maxBid || 0, amount);
   if (a.endsAt != null && now != null) a.endsAt = Math.max(a.endsAt, now + AUCTION_BID_MS);
   log(state, `${me.name} bietet ${amount}.`);
   return state;
@@ -484,6 +491,7 @@ export function pay(prev, playerId, cardIndices) {
     return state;
   }
   if (sum(chosen) < pm.amount) fail(`Das reicht nicht – es fehlen noch ${pm.amount - sum(chosen)} Taler.`);
+  { const ps = stat(state, payer.id); ps.overpaid = (ps.overpaid || 0) + sum(chosen) - pm.amount; } // kein Wechselgeld
   const cards = takeCards(payer, cardIndices);
   giveCards(player(state, pm.payee), cards);
   const buyer = player(state, pm.buyer);
@@ -536,6 +544,7 @@ export function acceptTrade(prev, playerId) {
   }
   stat(state, ch.id).tradesWon += 1;
   stat(state, tg.id).tradesLost += 1;
+  bluff(state, ch.id, t.offer);
   state.lastEvent = { n: state.log.length, type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
   nextTurn(state);
   return state;
@@ -570,6 +579,8 @@ export function counterTrade(prev, playerId, cardIndices) {
   }
   stat(state, winner.id).tradesWon += 1;
   stat(state, loser.id).tradesLost += 1;
+  bluff(state, winner.id, challengerWins ? t.offer : counter);
+  if (Math.abs(offerSum - counterSum) <= 10) { const ls = stat(state, loser.id); ls.closeLosses = (ls.closeLosses || 0) + 1; }
   state.lastEvent = { n: state.log.length, type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
   nextTurn(state);
   return state;
@@ -805,10 +816,20 @@ export function awards(state) {
   const sw = best('specialsWon');
   if (sw) out.push({ key: 'special', title: 'Sternsammler', who: sw.id, name: name(sw.id), text: `${sw.v} Spezialkarte${sw.v === 1 ? '' : 'n'}` });
   const md = best('moneyDrawn', 10);
-  if (md) out.push({ key: 'money', title: 'Glückspilz', who: md.id, name: name(md.id), text: `${md.v} Taler aus dem Stapel gezogen` });
+  if (md) out.push({ key: 'money', title: 'Glückspilz', who: md.id, name: name(md.id), text: `${md.v} Taler gezogen` });
   let rich = null;
   for (const p of state.players) { const v = sum(p.money); if (!rich || v > rich.v) rich = { id: p.id, v }; }
   if (rich) out.push({ key: 'rich', title: 'Sparfuchs', who: rich.id, name: name(rich.id), text: `${rich.v} Taler übrig` });
+  // Momente zum Lachen
+  const bl = best('bluffZeros', 2);
+  if (bl) out.push({ key: 'bluff', title: 'Bluffer', who: bl.id, name: name(bl.id), text: `${bl.v} Nullen untergejubelt` });
+  const pv = best('closeLosses');
+  if (pv) out.push({ key: 'pech', title: 'Pechvogel', who: pv.id, name: name(pv.id), text: `${pv.v}× knapp verloren` });
+  const tg = best('overpaid', 30);
+  if (tg) out.push({ key: 'tip', title: 'Trinkgeld-König', who: tg.id, name: name(tg.id), text: `${tg.v} zu viel bezahlt` });
+  // Geizhals: wer am meisten mitgeboten hat, aber nie hoch – nur wenn es eindeutig ist
+  const bidders = state.players.map((p) => ({ id: p.id, b: st[p.id]?.bids || 0, m: st[p.id]?.maxBid || 0 })).filter((x) => x.b >= 3 && x.m <= 60);
+  if (bidders.length) { const g = bidders.sort((x, y) => x.m - y.m || y.b - x.b)[0]; out.push({ key: 'geiz', title: 'Geizhals', who: g.id, name: name(g.id), text: `${g.b} Gebote, nie über ${g.m}` }); }
   return out;
 }
 

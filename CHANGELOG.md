@@ -1,5 +1,36 @@
 # Änderungsprotokoll
 
+## v0.43.0 – Klarere Ergebnisse, schneller bezahlen
+
+**Ergebnis-Fenster nebeneinander**
+- [x] **Kuhhandel als Duell:** Links der Herausforderer, rechts der Gegner, das Tier in der Mitte („VS“). Jeder hat ein eigenes Feld mit großen Scheinen und großer Summe.
+- [x] Der Gewinner bekommt einen grünen Rahmen und das Schild „gewinnt“ (beim Rattenhandel „ist sie los“), der Verlierer wird leicht ausgegraut – erst nachdem die Scheine umgedreht sind.
+- [x] Die **Differenz** steht groß in der Mitte (sehen auch Zuschauer). Bei Gleichstand steht da, wer gewinnt; Beteiligte sehen „Du bekommst 60 · Nico 100“.
+- [x] Angenommenes Angebot im selben Stil: „bietet 60“ – ✓ – „nimmt an“.
+- [x] **Versteigerung und Spezialkarte** im selben Stil: links wer kauft und zahlt (mit Schild „kauft“ / „kauft selbst“), rechts wer das Geld bekommt.
+- [x] **Ratte genommen:** Wer sie nimmt, sieht die gewonnenen Scheine offen mit Summe; die anderen nur die Anzahl.
+- [x] In den ersten Runden steht „Tippen zum Schließen“ im Fenster.
+
+**Ablauf**
+- [x] **Erst das Tier, dann das Geld:** Das Tier wandert zum neuen Besitzer (sein Platz leuchtet kurz auf), danach fliegt das Geld. Beim Kuhhandel erst das Angebot hin, dann das Gegenangebot zurück.
+- [x] **Buzzer:** Sobald jemand buzzert, bleibt die Zahl stehen (mit Namen) und der Countdown tickt nicht weiter. Die kurze Zeit zum Gleichziehen läuft unsichtbar weiter.
+
+**Flotter**
+- [x] Ergebnis-Fenster stehen etwas kürzer (Versteigerung 3 s, Spezialkarte/Ratte 3,5 s) – „Karte aufdecken“ wird erst frei, wenn Tier und Geld gelandet sind.
+- [x] Spezialkarte: „Zeig Batzen!“ nur noch 3 s, „Achtung“ 2 s (vorher 5 s und 3 s).
+- [x] Auktionator lässt sich Zeit: nach 8 s steht bei ihm „Alle warten auf dich“ und die Knöpfe pulsieren; die anderen können ihn schon nach 12 s anstupsen (sonst 20 s).
+- [x] „Passend wählen“ erscheint beim Bezahlen nur noch, wenn nichts vorgewählt ist oder du die Auswahl geändert hast.
+
+**Bedienung**
+- [x] **Bezahlen:** Passen deine Scheine genau (mit höchstens 5 Scheinen), sind sie schon vorgewählt – nur noch „Bezahlen“ drücken. Bei der Spezialkarte sind die kleinsten Scheine vorgewählt. Passt nichts genau, wählst du selbst. Die Auswahl lässt sich vorher ändern.
+- [x] **Ratte:** Schein zweimal schnell antippen legt ihn direkt in die Mitte.
+- [x] Viele Scheine im Bezahl- oder Angebotsfeld liegen in einer überlappenden Reihe, statt nach unten in deine Tierreihe zu wachsen. „Zeit abgelaufen“ sitzt am Kartenrand statt auf deiner Tierreihe.
+**Spielende**
+- [x] **Abrechnung:** Bevor das Siegertreppchen kommt, werden die Punkte einzeln hochgezählt – vom letzten Platz bis zum Sieger, mit Trommelwirbel; beim Sieger Glitzer und Fanfare. Antippen überspringt.
+- [x] **Neue Auszeichnungen im Börsenbericht:** 🃏 Bluffer (Nullen in gewonnenen Kuhhandeln), 🌧️ Pechvogel (Kuhhandel knapp verloren), 💶 Trinkgeld-König (am meisten überzahlt), 🤏 Geizhals (oft geboten, nie hoch). Die Liste lässt sich scrollen.
+
+- [x] Neue Demo-Ansichten: `tradeseen`, `tradetie`, `traderatresult`, `specialhit`, `paynew`, `?ev=ratgot`, `?ev=specialself`.
+
 ## v0.42.0 – Ganzer Bildschirm
 
 - [x] **Der Tisch füllt jetzt den ganzen Bildschirm:** Bisher war er ein fester Rahmen, der oben/unten (iPhone) bzw. links/rechts (breite Handys) Platz verschenkt hat. Jetzt kleben Plätze, Menü, 💬, deine Knöpfe und dein Geld an den Rändern, die Mitte bekommt die zusätzliche Höhe bzw. Breite. Kamera-Aussparung und Home-Balken bleiben frei.

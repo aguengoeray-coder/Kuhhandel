@@ -155,6 +155,25 @@ export function buildDemoState(kind, local) {
       g = counterTrade(g, 'u1', [5, 6]);
       return g;
     }
+    case 'tradeseen': { // Kuhhandel zwischen zwei anderen: Zuschauer sehen nur Rückseiten
+      g = base(); g.turn = 1;
+      g = startTrade(g, 'u2', 'u3', 'kuh', [0, 2, 6]);
+      g = counterTrade(g, 'u3', [1, 5]);
+      return g;
+    }
+    case 'tradetie': { // Gleichstand: Herausforderer (du) gewinnt
+      g = base();
+      g = startTrade(g, 'u1', 'u2', 'kuh', [3, 4]);
+      g = counterTrade(g, 'u2', [3, 4]);
+      return g;
+    }
+    case 'traderatresult': {
+      g = base(); g.turn = 1;
+      g.players[0].animals[RAT] = 1;
+      g = startTrade(g, 'u2', 'u1', RAT, [0, 2, 6]);
+      g = counterTrade(g, 'u1', [5, 6]);
+      return g;
+    }
     case 'rat': {
       g = base(); g.turn = 1; g.deck[0] = RAT;
       g = drawForAuction(g, 'u2');
@@ -185,6 +204,20 @@ export function buildDemoState(kind, local) {
       g.players[2].money = [0, 10, 10, 20, 50]; g.players[3].money = [0, 0, 10, 10, 10, 20, 50, 50, 100, 200];
       g = drawForAuction(g, 'u2', Date.now() - 1500);
       g = showBatzen(g, 'u4', Date.now() - 400);
+      return g;
+    }
+    case 'specialhit': { // Lea hat bei 8 gebuzzert, die kurze Gleichzieh-Zeit läuft noch: Zahl bleibt stehen
+      g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
+      const t0 = Date.now() - 2900;
+      g = drawForAuction(g, 'u2', t0 - SPECIAL_DELAY_MS); if (g.special) { g.special.batzen = null; g.special.startsAt = t0; }
+      g = buzz(g, 'u3', t0 + 2100);
+      return g;
+    }
+    case 'paynew': { // Bezahlen ohne Auswahl: passende Scheine werden vorgewählt
+      g = base(); g.turn = 1; g.deck[0] = 'schwein';
+      g = drawForAuction(g, 'u2');
+      g = bid(g, 'u1', 70);
+      g = closeAuction(g, 'u2', 'sell');
       return g;
     }
     case 'specialbuzzed': {
@@ -286,6 +319,7 @@ export function buildDemoState(kind, local) {
       g.blocked = { player: 'u4', animal: 'hahn' };
       Object.assign(g.stats.u2, { buys: 5, maxBuy: { amount: 620, animal: 'pferd' }, tradesWon: 2 });
       Object.assign(g.stats.u1, { tradesWon: 4, ratsTaken: 2, ratCards: 6 });
+      Object.assign(g.stats.u3, { bluffZeros: 3, overpaid: 80 }); Object.assign(g.stats.u4, { closeLosses: 2, bids: 6, maxBid: 50 });
       Object.assign(g.stats.u4, { ratsTaken: 3, ratCards: 11, specialsWon: 3 });
       Object.assign(g.stats.u3, { moneyDrawn: 700 });
       g.players.forEach((p, i) => { p.money = [[0, 10, 50, 200], [0, 0, 10], [500, 100, 20], [10, 10]][i]; });

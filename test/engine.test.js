@@ -636,3 +636,27 @@ test('Ereignis-Nummer zeigt auf die eigene Protokoll-Zeile (auch bei „umsonst�
   assert.notEqual(g.lastEvent.n, free);
   assert.match(g.log[g.lastEvent.n], /Geldschein: 500/);
 });
+
+test('Auszeichnungen: Bluffer (Nullen im gewonnenen Gebot), Pechvogel (knapp verloren), Trinkgeld-König (überzahlt)', () => {
+  // Startgeld: [0, 0, 10, 10, 10, 20, 50]
+  let g = gameWithDeck(['hahn', 'gans']);
+  g.players[0].animals.kuh = 1; g.players[1].animals.kuh = 1;
+  g = startTrade(g, 'a', 'b', 'kuh', [0, 1, 2]); // 0 + 0 + 10 = 10, zwei Nullen
+  g = counterTrade(g, 'b', [2]); // 10 → Gleichstand, Herausforderer gewinnt, Nico verliert knapp
+  assert.equal(g.stats.a.bluffZeros, 2);
+  assert.equal(g.stats.b.closeLosses, 1);
+  g.players[0].animals.schaf = 1; g.players[1].animals.schaf = 1;
+  g = startTrade(g, 'b', 'a', 'schaf', [0, 1]); // Nico bietet zwei Nullen, Alp nimmt an → Nico blufft erfolgreich
+  g = acceptTrade(g, 'a');
+  assert.equal(g.stats.b.bluffZeros, 2);
+  // Versteigerung mit 50 bezahlen, obwohl 20 geboten: 30 zu viel
+  g = drawForAuction(g, currentPlayer(g).id);
+  const bidder = P.find((p) => p.id !== g.auction.auctioneer).id;
+  g = bid(g, bidder, 20);
+  g = closeAuction(g, g.auction.auctioneer, 'sell');
+  const pl = g.players.find((p) => p.id === bidder);
+  g = pay(g, bidder, [pl.money.indexOf(50)]);
+  assert.equal(g.stats[bidder].overpaid, 30);
+  const keys = awards(g).map((a) => a.key);
+  assert.ok(keys.includes('bluff') && keys.includes('pech') && keys.includes('tip'));
+});

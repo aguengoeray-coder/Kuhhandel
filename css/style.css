@@ -2242,3 +2242,104 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .fly, .qpop, .rpsshow, .moneyreveal, .outbid, .cantpop, .seattip, .evcard, .lastcard, .wowpop, .ratrun { margin-top: calc(var(--dh, 0px) * .4); }
 .stage .mebubble, .mflyc { margin-top: var(--dh, 0px); }
 .stage .deck-count.low { white-space: normal; width: 128px; border-radius: 10px; line-height: 1.25; text-align: center; }
+/* v0.43: Kuhhandel-Ergebnis als Duell nebeneinander */
+.evcard.duel { display: block; width: 520px; padding: 11px 16px 16px; }
+.evcard.duel .ec-title { display: block; font-size: 21px; margin-top: 1px; }
+.du-row { display: flex; align-items: stretch; gap: 10px; margin-top: 8px; }
+.du-side { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 6px 9px; border-radius: 14px; background: #F4F1EA; border: 2.5px solid transparent; }
+.du-side .ec-p { font-size: 15px; gap: 6px; }
+.du-side .ec-p .avatar { width: 30px; height: 30px; }
+.du-role { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #7A7468; margin-top: -3px; }
+.du-side .ecr-cards { gap: 3px; }
+.du-side .ecr-c { width: 30px; height: 42px; border-radius: 6px; border-width: 2px; font-size: 14px; box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+.du-side .ecr-c::after { border-radius: 6px; }
+.du-sum { font-family: var(--font-head); font-weight: 700; font-size: 26px; line-height: 1; }
+.du-sum.small { font-size: 17px; color: #7A7468; }
+.du-side.win { background: #E3F3E8; border-color: #2E7D4F; }
+.du-side.win .du-sum:not(.small) { color: #2E7D4F; }
+.du-side.win .du-sum.small { color: #2E7D4F; }
+.du-tag { position: absolute; top: -13px; right: -8px; background: #2E7D4F; color: #fff; font-family: var(--font-head); font-weight: 700; font-size: 12px; border: 2px solid #fff; border-radius: 999px; padding: 1px 9px; box-shadow: 0 2px 0 rgba(0,0,0,.2); white-space: nowrap; }
+.du-mid { flex: none; width: 86px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; }
+.du-mid .pcard { transform: scale(.62); margin: -22px -16px; flex: none; }
+.du-mid .trcount { position: absolute; right: 2px; top: 2px; bottom: auto; background: var(--ink); color: #fff; border-radius: 999px; padding: 0 7px; font-family: var(--font-head); font-weight: 700; font-size: 13px; line-height: 20px; border: 2px solid #fff; }
+.du-vs { position: relative; font-family: var(--font-head); font-weight: 700; font-size: 13px; color: #fff; background: var(--ink); border-radius: 999px; padding: 0 8px; line-height: 20px; }
+.du-vs.ok { background: #2E7D4F; }
+.du-foot { margin-top: 8px; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; font-weight: 700; color: #7A7468; }
+.du-pill { background: #F4F1EA; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.du-pill.me { background: #FFE7A3; color: var(--ink); }
+.du-pill b { color: var(--ink); }
+.du-q { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; }
+.du-q .ec-badge { position: static; transform: none; }
+/* Aufdecken: erst Scheine umdrehen, dann Gewinnerseite + Schild */
+.evcard.duel.reveal .du-side.win { animation: duwin .4s ease both; animation-delay: calc(var(--el, 0ms) + 1100ms); }
+.evcard.duel.reveal .du-side.lose { animation: dulose .4s ease both; animation-delay: calc(var(--el, 0ms) + 1100ms); }
+.evcard.duel.reveal .du-tag { animation: ecrin .35s var(--e-pop) both; animation-delay: calc(var(--el, 0ms) + 1200ms); }
+.evcard.duel .ecr-sum { animation-delay: calc(var(--el, 0ms) + 1000ms); }
+@keyframes duwin { from { background: #F4F1EA; border-color: transparent; } to { background: #E3F3E8; border-color: #2E7D4F; } }
+@keyframes dulose { to { opacity: .78; } }
+.evcard.duel:not(.reveal) .du-side.lose { opacity: .78; }
+@media (prefers-reduced-motion: reduce) { .evcard.duel .du-side, .evcard.duel .du-tag { animation: none !important; } .evcard.duel .du-side.lose { opacity: .78; } }
+.du-mid { gap: 4px; }
+.du-mid .pcard { margin: -26px -16px -24px; }
+.du-diff { display: flex; flex-direction: column; align-items: center; background: #FFE7A3; border: 2px solid var(--ink); border-radius: 10px; padding: 1px 8px 2px; line-height: 1; box-shadow: 0 2px 0 rgba(0,0,0,.15); }
+.du-diff small { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #6B5A2A; margin-top: 2px; }
+.du-diff b { font-family: var(--font-head); font-weight: 700; font-size: 22px; color: var(--ink); }
+.du-diff.tie { background: #fff; }
+/* Buzz: Zahl bleibt stehen, leuchtet kurz */
+.bignum.hit { color: var(--gold); animation: none; }
+.bignum.hit.hitin { animation: hitpop .45s var(--e-pop) both; }
+.bignum.hit small { opacity: 1; color: #fff; }
+@keyframes hitpop { 0% { transform: scale(1.5); } 100% { transform: none; } }
+/* Tier kommt an: Platz des neuen Besitzers leuchtet kurz */
+.landglow { position: absolute; left: 0; top: 0; width: 120px; height: 120px; border-radius: 50%; z-index: 19; pointer-events: none; background: radial-gradient(circle, rgba(255,211,78,.75) 0%, rgba(255,211,78,.25) 45%, transparent 70%); opacity: 0; transform: scale(.4); animation: landglow .7s ease-out both; }
+@keyframes landglow { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3); } }
+@media (prefers-reduced-motion: reduce) { .landglow { display: none; } }
+.du-note { font-size: 11.5px; font-weight: 700; color: #7A7468; margin-top: -2px; }
+.ec-bills { align-items: center; flex-wrap: wrap; }
+.ec-bills .ecr-c { width: 28px; height: 38px; border-radius: 6px; border-width: 2px; font-size: 13px; animation: none; }
+.ec-bills .ecr-c::after { display: none; }
+.ec-bills .ecr-c.back::after { display: block; animation: none; opacity: 1; border-radius: 6px; }
+.ec-bills .du-sum { font-size: 22px; margin-left: 6px; }
+.du-side:not(.win):not(.lose) .du-sum.small { color: var(--ink); }
+.du-side .ecr-c.back::after { animation: none; opacity: 1; }
+.ec-hint { position: absolute; right: 14px; top: 9px; font-size: 9.5px; font-weight: 700; color: #A39C8C; letter-spacing: .02em; }
+.evcard.duel { width: 484px; }
+.du-side .ecr-cards { flex-wrap: wrap; justify-content: center; max-width: 100%; }
+.du-sum { text-align: center; }
+/* Spielende: Abrechnung – Punkte einzeln hochzählen (vom letzten Platz zum Sieger) */
+@property --n { syntax: '<integer>'; inherits: false; initial-value: 0; }
+.overlay.endtable .ending.tally { justify-content: center; gap: 10px; cursor: pointer; }
+.ending.tally h2 { color: #fff; text-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.tallyrows { display: flex; flex-direction: column; gap: 7px; width: 400px; }
+.trow { display: flex; align-items: center; gap: 9px; background: #fff; color: var(--ink); border-radius: 14px; padding: 6px 14px 6px 10px; border-left: 6px solid var(--c); box-shadow: 0 4px 0 rgba(0,0,0,.18); opacity: 0; transform: translateX(-30px); animation: trowin .35s var(--e-pop) both; animation-delay: var(--d); }
+.trow i { font-style: normal; font-weight: 800; width: 24px; text-align: center; color: #7A7468; }
+.trow .avatar { width: 30px; height: 30px; border-width: 2px; font-size: 11px; flex: none; }
+.trow .tname { font-weight: 800; font-size: 15px; }
+.trow .picons { display: flex; gap: 2px; flex: 1; min-width: 0; overflow: hidden; }
+.trow .picons .ci { width: 20px; height: 20px; }
+.trow .tnum { font-family: var(--font-head); font-weight: 700; font-size: 24px; min-width: 70px; text-align: right; }
+.tally.cnt .tnum span { display: none; }
+.tally.cnt .tnum::after { --n: 0; counter-reset: n var(--n); content: counter(n); animation: tcount 1.1s cubic-bezier(.2,.7,.3,1) both; animation-delay: var(--d); }
+@keyframes tcount { from { --n: 0; } to { --n: var(--to); } }
+@keyframes trowin { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+.trow.win { background: #FFF6D6; outline: 3px solid var(--gold); transform-origin: center; animation: trowin .35s var(--e-pop) both, twin .6s ease 1 both; animation-delay: var(--d), calc(var(--d) + 1100ms); }
+.trow.win i { font-size: 18px; }
+.trow.win .tnum { color: #B8860B; }
+@keyframes twin { 0% { transform: none; box-shadow: 0 4px 0 rgba(0,0,0,.18); } 40% { transform: scale(1.06); box-shadow: 0 0 0 6px rgba(255,211,78,.5), 0 4px 0 rgba(0,0,0,.18); } 100% { transform: none; box-shadow: 0 0 0 0 rgba(255,211,78,0), 0 4px 0 rgba(0,0,0,.18); } }
+.ending.tally .sthint { color: rgba(255,255,255,.7); }
+@media (prefers-reduced-motion: reduce) { .trow, .trow.win, .tally.cnt .tnum::after { animation: none !important; opacity: 1; transform: none; } .tally.cnt .tnum span { display: inline; } .tally.cnt .tnum::after { content: none; } }
+/* Börsenbericht mit mehr Auszeichnungen: kompakter, notfalls scrollen */
+.overlay.endtable .ending.recap ul { max-height: 270px; overflow-y: auto; overscroll-behavior: contain; }
+.overlay.endtable .ending.recap li { flex: none; }
+.overlay.endtable .ending.recap li > :last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* Auktionator lässt sich Zeit: Hinweis + pulsierende Knöpfe */
+.timeup.urge { background: var(--gold); color: var(--ink); animation: pulse 1s ease-in-out infinite; }
+.urge.tbtn, .pill.urge { animation: urgepulse 1s ease-in-out infinite; }
+@keyframes urgepulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(255,211,78,.45); } }
+@media (prefers-reduced-motion: reduce) { .timeup.urge, .urge.tbtn, .pill.urge { animation: none; } }
+.aucmain .timeup { position: relative; z-index: 2; margin-top: -8px; } /* klebt am Kartenrand statt an deiner Tierreihe */
+/* Viele Scheine im Feld: eine Reihe, überlappend (statt nach unten in deine Tierreihe zu wachsen) */
+.kslots.many { flex-wrap: nowrap; gap: 0; }
+.kslots.many > * + * { margin-left: -7px; }
+.kslots.many > * { box-shadow: -2px 0 3px rgba(0,0,0,.18); }
+.tpanel .kslots.many > * + * { margin-left: -13px; }

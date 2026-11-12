@@ -11,7 +11,7 @@ import { haptic } from './haptics.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.42.0';
+export const APP_VERSION = '0.43.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -494,6 +494,8 @@ function toast(msg) {
 
 // Anstupsen: auf wen wird seit über 20 Sekunden gewartet?
 const NUDGE_AFTER_MS = 20000;
+// Versteigerung vorbei, Auktionator entscheidet nicht: schon nach 12 s anstupsen
+const nudgeAfter = (s) => (s.phase === 'auction' ? 12000 : NUDGE_AFTER_MS);
 let waitKey = '';
 let waitSince = 0;
 let lastNudgeAt = 0;
@@ -506,10 +508,10 @@ function waitingFor() {
   if (key !== waitKey) {
     waitKey = key;
     waitSince = Date.now();
-    if (who) setTimeout(() => { if (waitKey === key) render(); }, NUDGE_AFTER_MS + 100);
+    if (who) setTimeout(() => { if (waitKey === key) render(); }, nudgeAfter(s) + 100);
   }
   if (DEMO && params.get('nudge')) return params.get('nudge');
-  return who && Date.now() - waitSince >= NUDGE_AFTER_MS ? who : null;
+  return who && Date.now() - waitSince >= nudgeAfter(s) ? who : null;
 }
 function sendNudge(to) {
   if (Date.now() - lastNudgeAt < 15000) return toast('Gerade erst angestupst – kurz warten.');
@@ -1689,7 +1691,7 @@ function demo(kind) {
   if (kind === 'start') ui.myGames = [{ id: 'g9', players: [{ name: 'Alp' }, { name: 'Nico' }, { name: 'Lea' }], state: { phase: 'turn', turn: 0, players: [{ id: me.id }] } }];
   if (demoState && params.get('herd')) { const me0 = demoState.players[0]; ['hahn', 'gans', 'katze', 'hund', 'schaf', 'ziege', 'esel', 'schwein', 'kuh', 'pferd'].forEach((id, k) => { me0.animals[id] = 1 + (k % 3); }); me0.rats = 2; } // Screenshots: volle Auslage
   if (demoState && params.get('cash')) { const n = Number(params.get('cash')); const vals = [0, 10, 10, 20, 50, 100, 200, 500]; demoState.players[0].money = Array.from({ length: n }, (_, k) => vals[k % vals.length]).sort((x, y) => x - y); } // Screenshots: viele Geldkarten
-  if (demoState && params.get('ev')) demoState.lastEvent = { n: 1, ...({ special: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u2', animal: 'pferd', count: 3 }, auction: { type: 'auction_won', buyer: 'u3', payee: 'u4', animal: 'schwein', amount: 130 }, self: { type: 'auction_won', buyer: 'u2', payee: 'u3', animal: 'kuh', amount: 90, self: true }, trade: { type: 'trade', accepted: true, offer: [10, 20], offerSum: 30, winner: 'u2', challenger: 'u2', target: 'u4', animal: 'ziege', count: 2 }, money: { type: 'money_drawn', player: 'u1', value: 50 }, rat: { type: 'rat_taken', player: 'u3', count: 3 } })[params.get('ev')] }; // Screenshots: Ereigniszeile
+  if (demoState && params.get('ev')) demoState.lastEvent = { n: 1, ...({ special: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u2', animal: 'pferd', count: 3 }, auction: { type: 'auction_won', buyer: 'u3', payee: 'u4', animal: 'schwein', amount: 130 }, self: { type: 'auction_won', buyer: 'u2', payee: 'u3', animal: 'kuh', amount: 90, self: true }, trade: { type: 'trade', accepted: true, offer: [10, 20], offerSum: 30, winner: 'u2', challenger: 'u2', target: 'u4', animal: 'ziege', count: 2 }, money: { type: 'money_drawn', player: 'u1', value: 50 }, rat: { type: 'rat_taken', player: 'u3', count: 3 }, ratgot: { type: 'rat_taken', player: 'u1', count: 3, cards: [50, 10, 0] }, specialself: { type: 'special_won', buyer: 'u1', payer: 'u1', payee: 'u3', animal: 'kuh', count: 4, self: true } })[params.get('ev')] }; // Screenshots: Ereigniszeile
   if (demoState && params.get('bots')) demoState.autoplay = params.get('bots').split(',');
   if (params.get('takeover')) online = new Set(['u1', 'u2', 'u4']);
   if (demoState) {
