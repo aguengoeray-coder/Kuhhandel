@@ -49,7 +49,7 @@ export function renderShop(root, ctx) {
       ? '<span class="shop-active">Aktiv</span>'
       : has
         ? '<button class="shop-action shop-select" data-select="' + esc(item.id) + '" ' + (busy?'disabled':'') + '>Auswählen</button>'
-        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen</button>';
+        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" data-price="' + item.price + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen</button>';
     return '<article class="shop-item shop-avatar-item shop-tier-' + esc(item.tier) + '">' +
       '<div class="shop-art">' + shopAvatar(item.id) + '</div>' +
       '<div class="shop-avatar-info"><strong class="shop-item-name">' + esc(item.name) + '</strong>' +
