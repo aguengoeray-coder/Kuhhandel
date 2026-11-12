@@ -89,3 +89,30 @@ Dieses Protokoll wird fortlaufend ergänzt. Frühere Einträge nicht löschen. V
 
 ### Nächster Schritt
 Alp prüft die Dokumentationsstruktur. Erst nach seinem GO Änderungen nach `main` übernehmen. Vor einem Merge aktuellen `main` einholen und Änderungen erneut vergleichen.
+
+
+## 12.11.2026 – Codex: KI-Team und Kapazitätsprotokoll ergänzt
+
+**Branch:** `codex/ai-project-memory`  
+**Status:** Dokumentation angelegt; wartet auf Prüfung/Freigabe durch Alp. Nicht live.
+
+### Erledigt
+- `AI_TEAM.md` erstellt: Rollen, Verantwortungen, Owner-/Reviewer-Prinzip, Branch-Regeln, Review-Standard und Aufgabenablauf.
+- Kapazitätsprotokoll ergänzt: Modell/Modus, Kontextfenster, aktuelle Auslastung/Rest, Nutzungsgrenzen, Werkzeuge und Einschränkungen.
+- Regeln gegen erfundene Tokenzahlen ergänzt; Plattformdaten, Schätzungen und unbekannte Werte müssen klar unterschieden werden.
+- Aufgabenverteilung anhand Kompetenz, Werkzeugzugriff, Kontext, Kapazität und Risiko beschrieben.
+- `AGENTS.md` und `PROJECT_STATUS.md` verweisen auf das gemeinsame Teammodell.
+
+### Prüfungen
+- GitHub-Dateien und Branch-Stand gelesen.
+- Keine App-Dateien, Datenbank oder Live-Version geändert.
+- Keine Tests ausgeführt; ausschließlich Dokumentationsarbeit.
+
+### Offen
+- Copilot und Gemini sind noch nicht technisch eingerichtet.
+- Die KI-Systeme können ihre tatsächliche Token-/Nutzungskapazität nur melden, soweit die jeweilige Plattform sie offenlegt.
+- Alp muss die Dokumentation prüfen und freigeben.
+
+### Nächster Schritt
+- Nach Alps Freigabe Änderungen in `main` integrieren.
+- Anschließend Kapazitätsmeldungen in einem realen Claude/Codex-Übergabetest ausprobieren.
