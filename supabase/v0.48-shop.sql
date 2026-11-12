@@ -201,4 +201,16 @@ end $$;
 revoke all on function public.record_results(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.record_results(uuid, jsonb) to authenticated;
 
+-- 7. Aktive Avatare der Mitspieler anzeigen (nur Avatar-ID, kein Kontostand).
+create or replace function public.shop_public_avatars(p_ids uuid[])
+returns table (user_id uuid, active_avatar text)
+language sql stable security definer set search_path = public
+as $$
+  select w.user_id, w.active_avatar from public.shop_wallets w
+   where w.user_id = any(p_ids) and w.active_avatar is not null
+   limit 50;
+$$;
+revoke all on function public.shop_public_avatars(uuid[]) from public, anon;
+grant execute on function public.shop_public_avatars(uuid[]) to authenticated;
+
 -- Ende v0.48 Shop SQL.

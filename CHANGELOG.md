@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.48.0 – Shop: Dublonen, Börsen-Avatare und Sprüche
+
+- [x] **Shop geöffnet:** Startseite → 🛒 Shop. 11 eigene Börsen-Avatare (Selten 30 D, Episch 40 D, Legendär 60 D) und 8 Sprüche (10 D, „Ich habe nur gute Ideen“ 20 D).
+- [x] **Dublonen:** Jeder startet mit 0. Für jeden Sieg gibt es 10 Dublonen (einmal pro Spiel). Der Kontostand steht neben deinem Namen.
+- [x] **Gekaufter Avatar** ersetzt dein Profilbild – auf der Startseite, im Warteraum und am Spieltisch, für alle sichtbar.
+- [x] **Gekaufte Sprüche** erscheinen im 💬-Menü am Tisch.
+- [x] Preise und Käufe werden in der Datenbank geprüft (man kann nichts doppelt oder ohne genug Dublonen kaufen).
+
 ## v0.47.2 – Kleine Layout-Fehler (von den neuen Browser-Tests gefunden)
 
 - [x] **Warteraum auf flachen Handys (800×360):** „SPIEL STARTEN“ war unten angeschnitten – passt jetzt ganz ins Bild.

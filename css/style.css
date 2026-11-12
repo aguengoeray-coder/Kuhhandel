@@ -2565,3 +2565,9 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 /* v0.47.2: flache Handys – Warteraum-Knöpfe passen ganz ins Bild; Kuhhandel-Auswahl überdeckt die seitlichen Plätze nicht */
 @media (max-height: 370px) { .room { gap: 6px; } .room-actions .pill { min-height: 44px; } }
 @media (max-height: 440px) { .tp-grid .tp-nm { display: none; } .tp-t { gap: 2px; padding-top: 6px; } .tp-t .mcard { width: 42px; height: 42px; } }
+/* v0.48: Dublonen neben dem Namen + gekaufte Shop-Avatare in allen runden Spielerbildern */
+.hb-dub { font-family: var(--font-head); font-weight: 700; font-size: 14px; color: #FFD34E; background: rgba(0,0,0,.3); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.avatar.shopav { padding: 0; overflow: visible; background: transparent; border: 0; box-shadow: none; }
+.avatar.shopav .shop-avatar { width: 100%; height: 100%; border-width: 2px; box-shadow: none; }
+.avatar.shopav .shop-avatar::before { display: none; }
+.reactpick > button.bought { border-color: #C99A1E; background: #FFF4CF; }

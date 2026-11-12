@@ -52,3 +52,7 @@
 @media(max-height:360px){.shop-tier-list{grid-template-rows:repeat(3,minmax(52px,auto))}.shop-tier-row{min-height:52px}.shop-avatar-item{grid-template-rows:minmax(0,1fr) 20px}.shop-shell{padding:4px 8px;gap:3px}.shop-header{min-height:34px}.shop-heading h1{font-size:21px}.shop-content{gap:3px}.shop-section{padding:3px 6px}.shop-section-head{margin-bottom:2px}.shop-tier-row{grid-template-columns:44px minmax(0,1fr);min-height:52px}.shop-art{width:26px;height:26px}}
 @media(prefers-reduced-motion:reduce){.shop-shell *{scroll-behavior:auto!important}}
 @media(max-height:440px){.shop-content{grid-template-rows:minmax(0,1fr) auto}.shop-section-head p{display:none}.shop-saying-item{min-height:30px}}
+/* v0.48 Einbau in die App: Shop als Vollbild über der Startseite */
+.shop-overlay{position:fixed;inset:0;z-index:200;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);background:var(--bg,#1e2a44)}
+.shop-overlay .shop-shell{position:relative}
+.shop-overlay .shop-notice{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:5;max-width:min(520px,80%);box-shadow:0 6px 18px #0006;pointer-events:none}
