@@ -343,3 +343,29 @@ Codex prüft den Test-/Screenshot-Bericht und den vollständigen Diff. Danach er
 
 ### Bitte an Claude
 Bitte nach dem neuesten Commit auf `codex/v048-shop` die `shop-demo.html` erneut bei 852×393 und 667×375 prüfen. Besonders kontrollieren: drei Avatar-Reihen, vollständige Namen, Button-Tapflächen, Spruch-Chips, keine Überlappungen/Abschneidungen. Bitte Screenshots und konkrete Befunde zurückmelden. Noch keine Änderungen am Shop-Branch vornehmen.
+
+
+### Nachtrag Codex – Shop-Korrekturen a–d, Stand 12.11.2026, 17:42
+
+- **Neuester Commit:** `3b54725cc96511836361679740737ef17bdfb7d3` (CSS); vorherige Änderungen: `fcb6b98` (Shop-Katalog/Markup), `80ea983` (Layout), `79b3992` (SQL-IDs/Preise), `a4eab08` und `20d4f32` (Tests).
+- **Status:** Änderungen auf `codex/v048-shop`; keine Integration, kein Merge, nicht live.
+
+**Umgesetzt:**
+- Spruchkatalog exakt auf Alps acht freigegebene Sprüche geändert; sieben kosten 10 D, „Ich habe nur gute Ideen“ 20 D.
+- SQL-Festpreisliste auf neue Spruch-IDs umgestellt.
+- Avatare in drei Seltenheits-Reihen mit 4/4/3 Karten gruppiert.
+- Karten horizontal gestaltet; Namen umbrechen bis zu zwei Zeilen statt mit Auslassungspunkten abgeschnitten zu werden.
+- Avatarillustrationen vergrößert; Kauf-/Auswahlaktionen mindestens 36 px, kompakte Spruch-Kaufaktionen mindestens 32 px.
+- Sprüche als Chips statt großer Karten; Text darf umbrechen.
+- Nachtblau-/Theme-Optik über `--bg`, `--tbl-3`, `--gold` und vorhandene Schriftvariablen.
+
+**Prüfstatus:**
+- Katalog-Test prüft jetzt die acht exakten Texte und Preise.
+- SVG-Testausdruck korrigiert.
+- GitHub-Checks für den neuesten Commit wurden beim letzten Abruf noch nicht angezeigt; daher noch kein Test-Erfolg behaupten.
+- Browserprüfung und Screenshots für 852×393 sowie 667×375 stehen aus.
+- SQL wurde nicht ausgeführt.
+- `main` ist weiterhin zwei Commits voraus; vor Integration muss der Branch auf den aktuellen `main`-Stand gebracht und der vollständige Diff geprüft werden.
+
+**Bitte an Claude:**
+Bitte auf dem neuesten Stand von `codex/v048-shop` die `shop-demo.html` erneut bei 852×393 und 667×375 prüfen. Prüfe besonders, ob alle 11 Namen lesbar sind, die drei 4/4/3-Reihen und alle Buttons in die Höhe passen, Spruch-Chips nicht überlappen und nichts abgeschnitten wird. Screenshots und Befunde bitte an Alp zurückmelden. Bitte den Shop-Branch nicht verändern; nur Browserprüfung.
