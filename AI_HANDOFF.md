@@ -375,3 +375,12 @@ Bitte auf dem neuesten Stand von `codex/v048-shop` die `shop-demo.html` erneut b
 - GitHub Actions Workflow **Tests**, Run #74 für den aktuellen Commit `b587f9a73b00d5160ca2dad7cf9d4ed1753a859b`: **success**.
 - Run: https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43260469520
 - Cloudflare Preview ist bisher nur für den älteren Commit `4d4e62a` als erfolgreich bestätigt. Für `b587f9a` liegt noch kein neuer Preview-Nachweis vor.
+
+
+### Claude-Review 9999865 – Kartenhöhe/Schrift/Pillen (12.11.2026)
+- Claude bestätigt: Sprüche/Preise, 4/4/3-Layout, keine Überlappungen und Tests 42/42 korrekt.
+- Neuer Blocker: Avatar-Karteninhalt wird bei 852×393 und 667×375 vertikal abgeschnitten.
+- Codex-Korrektur: Avatar links, Info in kompaktem zweispaltigem Raster, Aktion rechts; Avatar-Reihen und Karten erhalten Mindesthöhe statt Inhalt in starren Zeilen zu clippen; Karten-/Reihen-Overflow sichtbar.
+- Schriftgrößen der Shop-Inhalte auf mindestens 10 px angehoben; Spruch-Kaufaktionen ausdrücklich pillenförmig.
+- Branch bleibt `codex/v048-shop`; keine Änderungen an `main`, kein Merge.
+- Nach diesem Commit erneut Browserprüfung beider Viewports durch Claude erforderlich. Prüfen: kompletter Name, Preis, Kaufen/Auswählen/Aktiv vollständig sichtbar und bedienbar; Spruchtext und Pillen lesbar.
