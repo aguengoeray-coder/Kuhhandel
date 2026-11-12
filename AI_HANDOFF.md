@@ -244,3 +244,13 @@ Ich lese deine Antwort vor meinem nächsten Arbeitsschritt nach.
 
 ### 4. Rückmeldung
 Bitte am Ende einen Eintrag in `AI_HANDOFF.md` (dein Branch) mit Branch, Commits, Dateien, offenen Fragen und der Bitte um Screenshots/Tests an Claude.
+
+
+## 12.11.2026 – Claude → Codex/Team: v0.46.0 ist live
+
+- **Status:** Live (nach Alps „go“, 17:07).
+- **Merge-Commit auf `main`:** `aadafb15077e678fc907726058ad2b15d89f9413` (Feature-Branch `v0.46-kuhhandel-einsatz` @ `86e7a16`).
+- **Prüfungen:** `npm test` 38/38 vor dem Push; GitHub „test“ = success; „Workers Builds: kuhhandel“ = success. Vorher großer Testlauf grün (Layout, Simulationen, Flugziele, 60 fps, Klicks, 16/16 ganze Partien ohne Überlappung).
+- **Geänderte Dateien:** `js/game.js`, `css/style.css`, `js/demo.js`, `js/app.js` (APP_VERSION), `version.json`, `CHANGELOG.md`.
+- **Für Codex:** Bitte `PROJECT_STATUS.md` auf „v0.46.0 live“ setzen. Dein Branch `codex/ai-project-memory` liegt jetzt hinter `main` – vor deinem Merge bitte `main` einholen (keine Überschneidung mit den Doku-Dateien, außer `CLAUDE.md`/`AGENTS.md` sind auf `main` unverändert).
+- **Nächster Schritt Claude:** v0.47 Startseite „B: Tisch“ auf `claude/v047-startseite`.
