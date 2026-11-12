@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#263e32">
+<title>Tier Börse – Shop Vorschau v0.48</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/shop.css">
+<style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#6fb552}#demo{height:100dvh;width:100%;padding:0}</style>
+</head>
+<body>
+<main id="demo"></main>
+<script type="module">
+import { renderShop } from './js/shop.js';
+const owned = new Set(['noergler','boersen-gauner','spruch-bluff','spruch-gute-ideen']);
+let balance = 105;
+let activeAvatar = 'noergler';
+const prices = {
+  noergler:30,'opa-ratte':30,'business-huhn':30,'spar-schwein':30,
+  'boersen-gauner':40,'disco-kuh':40,'raketen-esel':40,'piraten-papagei':40,
+  daemonenritter:60,'cyborg-hahn':60,'kuh-kaiser':60,
+  'spruch-ehrlich':10,'spruch-unehrlich':10,'spruch-mehr':10,'spruch-bluff':10,
+  'spruch-niemals':10,'spruch-gutgespielt':10,'spruch-verteuert':10,'spruch-gute-ideen':20
+};
+const shop = renderShop(document.getElementById('demo'), {
+  me:{id:'demo-user',name:'Alp'},
+  get balance(){return balance},
+  get owned(){return owned},
+  get activeAvatar(){return activeAvatar},
+  async buy(itemId){
+    const price=prices[itemId];
+    if(!price || owned.has(itemId) || balance<price) throw new Error('Kauf nicht möglich');
+    await new Promise(resolve=>setTimeout(resolve,180));
+    balance-=price; owned.add(itemId); return {balance};
+  },
+  async setAvatar(id){if(!owned.has(id))throw new Error('Avatar nicht gekauft');activeAvatar=id;},
+  close(){document.getElementById('demo').innerHTML='<div style="padding:24px;font:600 20px system-ui">Shop geschlossen – Demo neu laden.</div>';}
+});
+window.shopDemo=shop;
+</script>
+</body>
+</html>
