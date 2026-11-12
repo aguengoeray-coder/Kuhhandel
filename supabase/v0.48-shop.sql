@@ -198,6 +198,7 @@ begin
 
   perform public.shop_credit_game_winners(p_game);
 end $$;
+revoke all on function public.record_results(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.record_results(uuid, jsonb) to authenticated;
 
 -- Ende v0.48 Shop SQL.
