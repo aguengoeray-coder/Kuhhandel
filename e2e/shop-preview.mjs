@@ -82,6 +82,18 @@ test('Shop-Karten sind auf beiden iPhone-Landscape-Größen vollständig sichtba
         if (child.matches('.shop-item-name') && child.scrollHeight > child.clientHeight + 2) {
           issues.push(`Avatar-Karte ${index + 1}: Name wird abgeschnitten.`);
         }
+        if (child.matches('.shop-item-name,.shop-item-sub')) {
+          const infoRect = card.querySelector('.shop-avatar-info').getBoundingClientRect();
+          if (rect.height && rect.bottom > infoRect.bottom + 1) {
+            issues.push(`Avatar-Karte ${index + 1}: Text ragt in die Aktionszeile.`);
+          }
+        }
+        if (child.matches('.shop-action[data-price]') && innerWidth <= 700) {
+          const priceLabel = getComputedStyle(child, '::after').content;
+          if (!priceLabel.includes(String(child.dataset.price)) || !priceLabel.includes('D')) {
+            issues.push(`Avatar-Karte ${index + 1}: Preis fehlt auf dem schmalen Layout.`);
+          }
+        }
       }
       if (cardStyle.overflow === 'hidden' || cardStyle.overflow === 'clip') issues.push(`Avatar-Karte ${index + 1} schneidet Inhalte ab.`);
       return issues;
