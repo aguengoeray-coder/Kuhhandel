@@ -11,7 +11,7 @@ Hauptbranch: `main`
 - Letzter bestätigter Live-Stand aus der Projektübergabe: **v0.45.0**.
 - `version.json` auf `main` weist **v0.45.0** aus (zuletzt am 12.11.2026 geprüft).
 - `CHANGELOG.md` auf `main` dokumentiert v0.45.0 als jüngsten Eintrag.
-- Hosting: Cloudflare Worker; Änderungen auf `main` werden automatisch veröffentlicht.
+- Hosting: Cloudflare Worker; Änderungen auf `main` werden automatisch veröffentlicht; die umsetzende KI merged und pusht erst nach Alps ausdrücklichem „go“.
 - Datenbank/Echtzeit: Supabase.
 - Vor jeder Aussage zum aktuellen Live-Stand erneut `main`, `version.json` und Deployment prüfen.
 
@@ -19,8 +19,8 @@ Hauptbranch: `main`
 
 | Bereich | Bekannter Stand am 12.11.2026 | Zuständig | Nächster Schritt |
 |---|---|---|---|
-| v0.46 Kuhhandel-Einsatz | In Arbeit laut Übergabe | Claude | Branch/Code-Stand prüfen; Einsatzdarstellung fertigstellen |
-| v0.47 Startseite „B: Tisch“ | In Arbeit/geplant laut Übergabe | Claude | Branch/Code-Stand prüfen; Startseite und Navigation abschließen |
+| v0.46 Kuhhandel-Einsatz | **Technisch fertig – wartet auf Alps GO** | Claude | Screenshots/Testergebnisse vorlegen; nach ausdrücklichem GO eigener Merge durch Claude |
+| v0.47 Startseite „B: Tisch“ | **Freigegeben, noch nicht begonnen** | Claude | Umsetzung auf eigenem Branch beginnen; v0.46-Dateien/Änderungen sauber abgrenzen |
 | v0.48 Shop-Avatare | Umsetzung liegt auf `codex/shop-avatars` | Codex | Browserdarstellung prüfen; Tests nachholen |
 | v0.48 Shop-Oberfläche | Noch nicht umgesetzt laut Übergabe | Codex | Eigenständiges Modul planen/umsetzen |
 | v0.48 Dublonen/Käufe | Noch nicht umgesetzt laut Übergabe | Codex | Serverseitige Supabase-Funktionen und SQL vorbereiten |
@@ -69,8 +69,8 @@ Das verbindliche Rollenmodell, die Aufgabenverteilung und die Meldung von Kontex
 
 ## Zuständigkeiten und Konfliktregeln
 
-- Claude: v0.46/v0.47, insbesondere `js/game.js`, `js/app.js`, `css/style.css`.
-- Codex: Shop/Avatare und v0.48 zunächst in separaten Dateien/Modulen.
+- Claude: v0.46 (technisch fertig, wartet auf Alps GO; Branch `v0.46-kuhhandel-einsatz`) und v0.47 (von Alp freigegeben, noch nicht begonnen); insbesondere `js/game.js`, `js/app.js`, `css/style.css`.
+- Codex: Shop/Avatare und v0.48 zunächst in separaten Dateien/Modulen; Integration in `js/app.js`/`css/style.css` erst nach v0.47 und Abstimmung.
 - Keine gleichzeitige Bearbeitung derselben Datei.
 - Änderungen an Startseite/Spieltisch erst nach Abstimmung und Freigabe durch Alp.
 - Alp entscheidet über Umfang, Prioritäten, SQL-Ausführung und Veröffentlichung.
