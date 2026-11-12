@@ -143,10 +143,10 @@ begin
   if g.id is null or g.status <> 'ended' then raise exception 'Spiel ist nicht beendet'; end if;
 
   for v_player in
-    select distinct (p->>'id')::uuid
-      from jsonb_array_elements(g.players) as p
-      join jsonb_array_elements_text(coalesce(g.state->'winner','[]'::jsonb)) as w(id)
-        on w.id = p->>'id'
+    select distinct (pl.player->>'id')::uuid
+      from jsonb_array_elements(g.players) as pl(player)
+      join jsonb_array_elements_text(coalesce(g.state->'winner','[]'::jsonb)) as w(seat_id)
+        on w.seat_id = coalesce(pl.player->>'seat', pl.player->>'id')
   loop
     with inserted as (
       insert into public.shop_win_rewards (game_id, player_id, amount)
@@ -180,7 +180,13 @@ begin
     (game_id, player_id, name, score, quartets, won, players, extras)
   select p_game, (r->>'player_id')::uuid, left(r->>'name',16),
          (r->>'score')::int, (r->>'quartets')::int,
-         (g.state->'winner') @> jsonb_build_array(r->>'player_id'),
+         exists (
+           select 1
+             from jsonb_array_elements(g.players) as pl(player)
+             join jsonb_array_elements_text(coalesce(g.state->'winner','[]'::jsonb)) as w(seat_id)
+               on w.seat_id = coalesce(pl.player->>'seat', pl.player->>'id')
+            where pl.player->>'id' = r->>'player_id'
+         ),
          jsonb_array_length(g.players),
          case when jsonb_typeof(r->'extras')='object' then r->'extras' else null end
     from jsonb_array_elements(p_rows) r
