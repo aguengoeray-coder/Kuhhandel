@@ -1,9 +1,9 @@
 # PROJECT_STATUS.md – gemeinsamer Projektstand
 
-Stand: 12.11.2026  
+Stand: 12.11.2026, 19:46 Uhr  
 Repository: `aguengoeray-coder/Kuhhandel`  
 Hauptbranch: `main`  
-Bestätigter Live-Stand: **v0.47.1**, Commit `0c049e189a2e7d10050991f44f162cc49248555d`. Alp hat diesen Stand freigegeben; GitHub-Tests und Cloudflare Workers Build wurden als erfolgreich gemeldet.
+Bestätigter Live-Stand: **v0.47.2**, Commit `758865374d52c45b820e72f6f7b841dd2976e336`. Claude hat v0.47.2 nach Alps Freigabe gemergt; GitHub-Tests sind erfolgreich.
 
 > GitHub-Code und tatsächliche Workflow-Ergebnisse sind maßgeblich. Branchlokale Änderungen sind nicht live.
 
@@ -17,10 +17,10 @@ Bestätigter Live-Stand: **v0.47.1**, Commit `0c049e189a2e7d10050991f44f162cc492
 
 | Bereich | Branch | Owner | Status / nächster Schritt |
 |---|---|---|---|
-| Shop v0.48 | `codex/v048-shop` | Codex | Separater Feature-Zweig. Browserreview 9999865 fand bei 852×393 und 667×375 abgeschnittene Avatar-Namen und Aktionsbuttons. Gefordert: Mindestschrift 10 px, Avatare mindestens 48 px, Pillen-Buttons. Neueste Korrektur erneut visuell prüfen. |
-| Automatisierung A/B/E | `codex/automation-high` | Codex | Umsetzung auf Draft-PR #2. CI am Commit `169051cc` erfolgreich: npm test 42/42, Syntax 14 JS-Dateien, Versionsabgleich v0.47.1. Wartet auf Alps Review/GO je Schritt. |
+| Shop v0.48 | `codex/v048-shop` | Codex | Separater Feature-Zweig; Head `5eda017`. Tests und Cloudflare Preview erfolgreich. Nach CSS-Korrektur wartet die finale Claude-Sichtprüfung bei 852×393 und 667×375. Branch ist 10 Commits hinter `main`; erst nach Sichtprüfung aktualisieren und Gesamtdiff prüfen. Kein SQL ausgeführt, kein Merge. |
+| Automatisierung A/B/E | `codex/automation-high` | Codex | Draft-PR #2; Head `82fa018` plus anschließende PR-Bericht-Korrektur. Auf `main`-Stand synchronisiert (19 voraus, 0 zurück). Tests, Browser-Tests und PR-Bericht auf `82fa018` erfolgreich. PR-Bericht-Dateiliste korrigiert; neuer Lauf und acht-Dateien-Nachweis noch ausstehend. Wartet auf Alps Review/GO. |
 | Browser-/Layouttests C/D | `claude/e2e-layout` | Claude | Separater Owner/Branch. Playwright unter `e2e/**`, Workflow `.github/workflows/e2e.yml`; `package.json` bleibt unverändert. |
-| Live-App | `main` | — | v0.47.1. Im Automatisierungsauftrag unverändert lassen. |
+| Live-App | `main` | — | v0.47.2. Im Automatisierungsauftrag unverändert lassen. |
 
 ## Datei-Owner und Grenzen
 
