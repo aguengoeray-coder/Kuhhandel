@@ -206,6 +206,20 @@ export function buildDemoState(kind, local) {
       g = showBatzen(g, 'u4', Date.now() - 400);
       return g;
     }
+    case 'specialhit': { // Lea hat bei 8 gebuzzert, die kurze Gleichzieh-Zeit läuft noch: Zahl bleibt stehen
+      g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';
+      const t0 = Date.now() - 2900;
+      g = drawForAuction(g, 'u2', t0 - SPECIAL_DELAY_MS); if (g.special) { g.special.batzen = null; g.special.startsAt = t0; }
+      g = buzz(g, 'u3', t0 + 2100);
+      return g;
+    }
+    case 'paynew': { // Bezahlen ohne Auswahl: passende Scheine werden vorgewählt
+      g = base(); g.turn = 1; g.deck[0] = 'schwein';
+      g = drawForAuction(g, 'u2');
+      g = bid(g, 'u1', 70);
+      g = closeAuction(g, 'u2', 'sell');
+      return g;
+    }
     case 'specialbuzzed': {
       const t0 = Date.now() - SPECIAL_DELAY_MS - 4500;
       g = base(); g.turn = 1; g.deck[0] = 'sp-kuh';

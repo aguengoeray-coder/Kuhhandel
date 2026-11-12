@@ -2285,3 +2285,24 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .du-diff small { font-size: 9.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #6B5A2A; margin-top: 2px; }
 .du-diff b { font-family: var(--font-head); font-weight: 700; font-size: 22px; color: var(--ink); }
 .du-diff.tie { background: #fff; }
+/* Buzz: Zahl bleibt stehen, leuchtet kurz */
+.bignum.hit { color: var(--gold); animation: none; }
+.bignum.hit.hitin { animation: hitpop .45s var(--e-pop) both; }
+.bignum.hit small { opacity: 1; color: #fff; }
+@keyframes hitpop { 0% { transform: scale(1.5); } 100% { transform: none; } }
+/* Tier kommt an: Platz des neuen Besitzers leuchtet kurz */
+.landglow { position: absolute; left: 0; top: 0; width: 120px; height: 120px; border-radius: 50%; z-index: 19; pointer-events: none; background: radial-gradient(circle, rgba(255,211,78,.75) 0%, rgba(255,211,78,.25) 45%, transparent 70%); opacity: 0; transform: scale(.4); animation: landglow .7s ease-out both; }
+@keyframes landglow { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3); } }
+@media (prefers-reduced-motion: reduce) { .landglow { display: none; } }
+.du-note { font-size: 11.5px; font-weight: 700; color: #7A7468; margin-top: -2px; }
+.ec-bills { align-items: center; flex-wrap: wrap; }
+.ec-bills .ecr-c { width: 28px; height: 38px; border-radius: 6px; border-width: 2px; font-size: 13px; animation: none; }
+.ec-bills .ecr-c::after { display: none; }
+.ec-bills .ecr-c.back::after { display: block; animation: none; opacity: 1; border-radius: 6px; }
+.ec-bills .du-sum { font-size: 22px; margin-left: 6px; }
+.du-side:not(.win):not(.lose) .du-sum.small { color: var(--ink); }
+.du-side .ecr-c.back::after { animation: none; opacity: 1; }
+.ec-hint { position: absolute; right: 14px; top: 9px; font-size: 9.5px; font-weight: 700; color: #A39C8C; letter-spacing: .02em; }
+.evcard.duel { width: 484px; }
+.du-side .ecr-cards { flex-wrap: wrap; justify-content: center; max-width: 100%; }
+.du-sum { text-align: center; }

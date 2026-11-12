@@ -1,13 +1,24 @@
 # Änderungsprotokoll
 
-## v0.43.0 – Kuhhandel-Ergebnis als Duell
+## v0.43.0 – Klarere Ergebnisse, schneller bezahlen
 
-- [x] **Kuhhandel-Ergebnis nebeneinander:** Links der Herausforderer, rechts der Gegner, das Tier in der Mitte („VS“). Jeder hat ein eigenes Feld mit großen Scheinen und großer Summe.
+**Ergebnis-Fenster nebeneinander**
+- [x] **Kuhhandel als Duell:** Links der Herausforderer, rechts der Gegner, das Tier in der Mitte („VS“). Jeder hat ein eigenes Feld mit großen Scheinen und großer Summe.
 - [x] Der Gewinner bekommt einen grünen Rahmen und das Schild „gewinnt“ (beim Rattenhandel „ist sie los“), der Verlierer wird leicht ausgegraut – erst nachdem die Scheine umgedreht sind.
-- [x] Unten steht klar, was passiert: die **Differenz** groß in der Mitte (sehen auch Zuschauer), bei Gleichstand wer gewinnt, und für Beteiligte „Du bekommst 60 · Nico 100“.
-- [x] Zuschauer sehen weiter nur Rückseiten und die Kartenanzahl.
+- [x] Die **Differenz** steht groß in der Mitte (sehen auch Zuschauer). Bei Gleichstand steht da, wer gewinnt; Beteiligte sehen „Du bekommst 60 · Nico 100“.
 - [x] Angenommenes Angebot im selben Stil: „bietet 60“ – ✓ – „nimmt an“.
-- [x] Neue Demo-Ansichten für Screenshots: `tradeseen`, `tradetie`, `traderatresult`.
+- [x] **Versteigerung und Spezialkarte** im selben Stil: links wer kauft und zahlt (mit Schild „kauft“ / „kauft selbst“), rechts wer das Geld bekommt.
+- [x] **Ratte genommen:** Wer sie nimmt, sieht die gewonnenen Scheine offen mit Summe; die anderen nur die Anzahl.
+- [x] In den ersten Runden steht „Tippen zum Schließen“ im Fenster.
+
+**Ablauf**
+- [x] **Erst das Tier, dann das Geld:** Das Tier wandert zum neuen Besitzer (sein Platz leuchtet kurz auf), danach fliegt das Geld. Beim Kuhhandel erst das Angebot hin, dann das Gegenangebot zurück.
+- [x] **Buzzer:** Sobald jemand buzzert, bleibt die Zahl stehen (mit Namen) und der Countdown tickt nicht weiter. Die kurze Zeit zum Gleichziehen läuft unsichtbar weiter.
+
+**Bedienung**
+- [x] **Bezahlen:** Passen deine Scheine genau, sind sie schon vorgewählt (möglichst wenige Scheine) – nur noch „Bezahlen“ drücken. Bei der Spezialkarte sind die kleinsten Scheine vorgewählt. Passt nichts genau, wählst du selbst. Die Auswahl lässt sich vorher ändern.
+- [x] **Ratte:** Schein zweimal schnell antippen legt ihn direkt in die Mitte.
+- [x] Neue Demo-Ansichten: `tradeseen`, `tradetie`, `traderatresult`, `specialhit`, `paynew`, `?ev=ratgot`, `?ev=specialself`.
 
 ## v0.42.0 – Ganzer Bildschirm
 

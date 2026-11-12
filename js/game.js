@@ -318,7 +318,7 @@ export function renderGame(root, ctx) {
     local.ratSel = null;
     if (state.phase !== 'turn') local.tradeOpen = false;
   }
-  const selSum = local.sel.reduce((s, i) => s + (me.money[i] ?? 0), 0);
+  let selSum = local.sel.reduce((s, i) => s + (me.money[i] ?? 0), 0);
 
   // Animationen nur bei echten Neuigkeiten abspielen, nicht bei jedem Neuzeichnen
   const prev = local.prev || {};
@@ -538,13 +538,19 @@ export function renderGame(root, ctx) {
     if (turnId === meId) {
       const values = [...new Set(me.money)].sort((a, b) => a - b);
       if (local.ratSel != null && !values.includes(local.ratSel)) local.ratSel = null;
-      aucLeft = `${values.length ? `<button type="button" class="pill pill-white" data-a="ratGo" ${local.ratSel != null ? '' : 'disabled'}><small>VERDECKT LEGEN</small>${local.ratSel != null ? `${local.ratSel}er legen` : 'Schein antippen'}</button>` : ''}`;
+      aucLeft = `${values.length ? `<button type="button" class="pill pill-white" data-a="ratGo" ${local.ratSel != null ? '' : 'disabled'}><small>VERDECKT LEGEN</small>${local.ratSel != null ? `${local.ratSel}er legen` : 'Schein antippen · 2× tippen legt'}</button>` : ''}`;
       if (values.length) pickMode = 'rat';
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(turnId))} überlegt …</div>`;
     }
     H.ratLay = (val) => { const i = me.money.indexOf(Number(val)); if (i >= 0) ctx.act((s) => ratLay(s, meId, i)); };
-    H.ratPick = (val) => { const n = Number(val); local.ratSel = local.ratSel === n ? null : n; ctx.rerender(); };
+    // Antippen wählt den Schein, schnelles Doppeltippen legt ihn direkt in die Mitte
+    H.ratPick = (val) => {
+      const n = Number(val); const t = Date.now();
+      if (local.ratTap && local.ratTap.m === n && t - local.ratTap.at < 400) { local.ratTap = null; local.ratSel = null; H.ratLay(n); return; }
+      local.ratTap = { m: n, at: t };
+      local.ratSel = local.ratSel === n ? null : n; ctx.rerender();
+    };
     H.ratGo = () => { if (local.ratSel != null) H.ratLay(local.ratSel); };
     H.ratTake = () => ctx.act((s) => ratTake(s, meId));
   }
@@ -568,7 +574,9 @@ export function renderGame(root, ctx) {
     let big = '';
     if (bz === 'ask') big = `<button type="button" class="batzenbtn" data-a="batzen"><b>Zeig Batzen!</b><small>noch ${Math.max(1, Math.ceil((sp.batzen.until - now) / 1000))} s</small></button>`;
     else if (stage === 'wait') big = `<div class="bignum wait"><small>Achtung …</small>${SPECIAL_FROM}</div>`;
-    else if (stage === 'countdown') big = `<div class="bignum ${num <= 3 ? 'low' : ''}" ${fresh ? '' : ''}><small>Karten</small>${num}</div>`;
+    // Nach dem ersten Buzz bleibt die Zahl stehen (die kurze Gleichzieh-Zeit läuft unsichtbar weiter)
+    else if (stage === 'countdown' && top != null) big = `<div class="bignum hit ${(() => { const sig = `${sp.startsAt}|${top}|${buzzed.join()}`; if (local.hitSig !== sig) { local.hitSig = sig; local.hitAt = Date.now(); } return Date.now() - local.hitAt < 450 ? 'hitin' : ''; })()}"><small>${buzzed.map((id) => esc(id === meId ? 'Du' : nameOf(id))).join(' & ')}</small>${top}</div>`;
+    else if (stage === 'countdown') big = `<div class="bignum ${num <= 3 ? 'low' : ''}"><small>Karten</small>${num}</div>`;
     const ev = v.lastEvent;
     let info = '';
     if (ev?.type === 'cant_pay' && ev.special && !Object.keys(sp.buzzes).length) {
@@ -608,7 +616,7 @@ export function renderGame(root, ctx) {
         const cap = sp.caps[meId];
         const mine = sp.buzzes[meId];
         const blocked = stage === 'wait' || mine != null || (top != null && num < top) || (cap != null && num > cap);
-        const label = mine != null ? `Gebuzzert bei ${mine}` : cap === 0 ? 'Keine Karten – kein Buzz' : stage === 'wait' ? (cap != null ? `Gleich … · erst ab ${cap}` : 'Gleich …') : cap != null && num > cap ? `Erst ab ${cap}` : `bei ${num} = ${karten(num)}`;
+        const label = mine != null ? `Gebuzzert bei ${mine}` : cap === 0 ? 'Keine Karten – kein Buzz' : stage === 'wait' ? (cap != null ? `Gleich … · erst ab ${cap}` : 'Gleich …') : top != null && num < top ? 'Zu spät' : cap != null && num > cap ? `Erst ab ${cap}` : `bei ${num} = ${karten(num)}`;
         aucLeft = `<div class="lhead">Spezialkarte</div>
           <button type="button" class="buzzer" data-a="buzz" ${blocked ? 'disabled' : ''}><b>BUZZ!</b><small>${label}</small></button>`;
       }
@@ -650,6 +658,17 @@ export function renderGame(root, ctx) {
     const isSp = !!pm.special;
     const card = `<div class="aucard paycard">${isSp ? playCard(pm.special, 'special') : playCard(pm.animal)}<span class="stamp ${entered ? 'in' : ''}">Verkauft!</span></div>`;
     if (pm.payer === meId) {
+      // Einmal pro Zahlung vorwählen: genau passende Scheine (möglichst wenige) bzw. bei der Spezialkarte die kleinsten.
+      // Passt nichts genau, wählt man selbst. Die Auswahl lässt sich vor dem Bezahlen ändern.
+      if (local.autoKey !== local.key) {
+        local.autoKey = local.key;
+        if (!local.sel.length) {
+          if (isSp) { if (me.money.length >= pm.count) local.sel = me.money.map((m, i) => [m, i]).sort((a, b) => a[0] - b[0]).slice(0, pm.count).map(([, i]) => i); }
+          else { const idx = bestPay(me.money, pm.amount); if (idx.reduce((t, i) => t + me.money[i], 0) === pm.amount) local.sel = idx; }
+          local.autoPicked = local.sel.length > 0;
+        }
+      }
+      selSum = local.sel.reduce((t, i) => t + (me.money[i] ?? 0), 0);
       const n = local.sel.length;
       let status; let cls; let ready;
       if (isSp) {
@@ -1085,7 +1104,9 @@ export function renderGame(root, ctx) {
     const n = le.type === 'trade' ? le.count : 1;
     // Ziel wird nach dem Zeichnen gemessen: deine Auslage bzw. der Platz des Mitspielers
     keepFx(Array.from({ length: n }, (_, k) => `<div class="fly ${evDelay ? 'fromev' : ''}" ${mine ? `data-flyto="${flyAnimal}"` : `data-aim-to="${esc(to)}" data-aim-scale="0.32"`} style="--tx:0px;--ty:-120px;animation-delay:${evDelay + k * 120}ms">
-      <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join(''), evDelay + 1300 + n * 120, evDelay ? 'ev' : null);
+      <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join('')
+      // Ankunft: der Platz des neuen Besitzers leuchtet kurz auf (bei dir hüpft der Stapel)
+      + (mine ? '' : `<div class="landglow" data-aim-from="${esc(to)}" data-aim-to="${esc(to)}" style="animation-delay:${evDelay + 820 + (n - 1) * 120}ms"></div>`), evDelay + 1700 + n * 120, evDelay ? 'ev' : null);
   }
   // Der Zug wandert sichtbar im Uhrzeigersinn: ein goldener Schein gleitet vom alten zum neuen Platz
   const holder = shownHolder;
@@ -1100,17 +1121,20 @@ export function renderGame(root, ctx) {
   };
   // Ratte genommen: die vor den Plätzen gelegten Karten fliegen alle zum Nehmer
   if (evFresh && le?.type === 'rat_taken' && local.ratLaid) {
-    keepFx(Object.entries(local.ratLaid).filter(([pid]) => pid !== le.player).map(([pid, n]) => moneyFly(pid, le.player, n, evDelay + 150)).join(''), evDelay + 1900, evDelay ? 'ev' : null);
+    keepFx(Object.entries(local.ratLaid).filter(([pid]) => pid !== le.player).map(([pid, n]) => moneyFly(pid, le.player, n, evDelay + 900)).join(''), evDelay + 2600, evDelay ? 'ev' : null);
   }
   if (state.phase === 'rat') local.ratLaid = { ...v.rat.laid }; else if (state.phase !== 'turn') local.ratLaid = null;
   if (evFresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
     const tg = evDelay ? 'ev' : null;
-    if (le.type === 'auction_won' && le.amount > 0 && le.payer && le.payee) keepFx(moneyFly(le.payer, le.payee, le.cardCount || 1, evDelay + 250), evDelay + 1800, tg);
-    if (le.type === 'special_won' && le.count > 0 && le.payer && le.payee) keepFx(moneyFly(le.payer, le.payee, le.count, evDelay + 250), evDelay + 1800, tg);
+    // Erst wandert das Tier (≈0,9 s), dann wird bezahlt – beim Kuhhandel erst das Angebot hin, dann das Gegenangebot zurück
+    const animalN = le.type === 'trade' ? le.count || 1 : 1;
+    const PAY_AT = evDelay + 900 + (animalN - 1) * 120;
+    if (le.type === 'auction_won' && le.amount > 0 && le.payer && le.payee) keepFx(moneyFly(le.payer, le.payee, le.cardCount || 1, PAY_AT), PAY_AT + 1600, tg);
+    if (le.type === 'special_won' && le.count > 0 && le.payer && le.payee) keepFx(moneyFly(le.payer, le.payee, le.count, PAY_AT), PAY_AT + 1600, tg);
     if (le.type === 'trade') {
       const cnt = (x) => (Array.isArray(x) ? x.length : x || 0);
-      keepFx(moneyFly(le.challenger, le.target, cnt(le.offer), evDelay), evDelay + 1800, tg);
-      if (!le.accepted) keepFx(moneyFly(le.target, le.challenger, cnt(le.counter), evDelay + 150), evDelay + 1800, tg);
+      keepFx(moneyFly(le.challenger, le.target, cnt(le.offer), PAY_AT), PAY_AT + 1600, tg);
+      if (!le.accepted) keepFx(moneyFly(le.target, le.challenger, cnt(le.counter), PAY_AT + 700), PAY_AT + 2300, tg);
     }
   }
 
@@ -1133,7 +1157,7 @@ export function renderGame(root, ctx) {
     const t = ctx.now();
     const st = specialStage(v, t);
     const n = st === 'countdown' ? specialNumber(v, t) : null;
-    if (n != null && n <= 3 && n > 0 && local.lastTick !== `${sp.startsAt}|${n}`) { local.lastTick = `${sp.startsAt}|${n}`; sounds.push('tick'); }
+    if (n != null && n <= 3 && n > 0 && !Object.keys(sp.buzzes).length && local.lastTick !== `${sp.startsAt}|${n}`) { local.lastTick = `${sp.startsAt}|${n}`; sounds.push('tick'); }
     const nb = Object.keys(sp.buzzes).length;
     if ((local.prevBuzz ?? nb) < nb) sounds.push('buzz');
     local.prevBuzz = nb;
@@ -1201,7 +1225,12 @@ export function renderGame(root, ctx) {
 
   // Ergebnis-Fenster: bleibt eine feste Zeit stehen (auch wenn es weitergeht), Tipp schließt.
   // Beim Schließen fliegen Karte und Geld los (siehe oben: Effekte mit Merker „ev“).
-  if (evNew) local.res = { ev: JSON.parse(JSON.stringify(le)), at: Date.now(), dur: evWait(le.type, v.deck), quartet: local.qBadge === evSig };
+  if (evNew) {
+    local.res = { ev: JSON.parse(JSON.stringify(le)), at: Date.now(), dur: evWait(le.type, v.deck), quartet: local.qBadge === evSig };
+    // „Tippen zum Schließen“: nur bei den ersten Ergebnis-Fenstern auf diesem Gerät
+    let seen = 0; try { seen = Number(localStorage.getItem('kh_evseen')) || 0; localStorage.setItem('kh_evseen', String(seen + 1)); } catch { /* egal */ }
+    local.res.hint = seen < 8;
+  }
   const closeRes = () => {
     if (!local.res) return;
     const left = local.res.at + local.res.dur - Date.now();
@@ -1223,26 +1252,40 @@ export function renderGame(root, ctx) {
       const ecP = (id) => { const i = idxOf(id); return i >= 0 ? `<span class="ec-p">${avatar(v.players[i], i)}<b>${nm(id)}</b></span>` : ''; };
       const deal = (from, amt, to, cls = '') => `<div class="ec-deal">${ecP(from)}<span class="ec-arr">→</span><span class="ec-amt ${cls}">${amt}</span><span class="ec-arr">→</span>${ecP(to)}</div>`;
       let card = ''; let kind = ''; let title = ''; let body = ''; let tone = ''; let reveal = false; let duel = '';
+      // Bausteine für die Ergebnis-Fenster nebeneinander (Versteigerung, Spezialkarte)
+      const dSide = (id, role, inner, cls, tag) => `<div class="du-side ${cls}">${tag ? `<span class="du-tag">${tag}</span>` : ''}${ecP(id)}<span class="du-role">${role}</span>${inner}</div>`;
+      const dMid = (cardHtml, sign) => `<div class="du-mid">${cardHtml}${sign}</div>`;
       if (e.type === 'auction_won') {
         kind = '🔨 Versteigerung';
         card = playCard(e.animal);
         if (!e.amount) { title = `${nm(e.buyer)} ${verb(e.buyer, 'bekommst', 'bekommt')} ${theAnimal(e.animal)} umsonst`; body = '<span class="ec-sub">Niemand hat geboten</span>'; }
         else {
           title = `${nm(e.buyer)} ${verb(e.buyer, 'kaufst', 'kauft')} ${theAnimal(e.animal)}${e.self ? ' selbst' : ''}`;
-          body = deal(e.payer || e.buyer, e.amount, e.payee) + (e.self ? '<span class="ec-sub">Vorkaufsrecht: zum Höchstgebot</span>' : '');
+          // Käufer links (zahlt), Empfänger rechts – im selben Stil wie der Kuhhandel
+          const payer = e.payer || e.buyer;
+          duel = `<div class="du-row">${dSide(payer, e.self ? 'Auktionator' : 'höchstes Gebot', `<b class="du-sum">${e.amount}</b>${e.cardCount ? `<small class="du-note">mit ${karten(e.cardCount)}</small>` : ''}`, 'win', e.self ? 'kauft selbst' : verb(payer, 'kaufst', 'kauft'))}${dMid(playCard(e.animal), '<span class="du-vs">zahlt →</span>')}${dSide(e.payee, e.self ? 'höchstes Gebot' : 'Auktionator', `<b class="du-sum small">+ ${e.cardCount ? karten(e.cardCount) : e.amount}</b>`, '', '')}</div>`
+            + (e.self ? `<div class="du-foot"><span class="du-pill">Vorkaufsrecht: ${nm(payer)} ${verb(payer, 'kaufst', 'kauft')} zum Höchstgebot</span></div>` : '');
         }
         tone = e.buyer === meId ? 'good' : '';
       } else if (e.type === 'special_won') {
         kind = '⭐ Spezialkarte';
         card = playCard(e.animal, 'special');
         title = `${nm(e.buyer)} ${verb(e.buyer, e.count ? 'kaufst' : 'bekommst', e.count ? 'kauft' : 'bekommt')} die ${esc(aname(e.animal))}-Spezialkarte${e.count ? '' : ' umsonst'}`;
-        body = e.count ? deal(e.payer, karten(e.count), e.payee, 'cards') : '<span class="ec-sub">Niemand hat gebuzzert</span>';
+        if (e.count) {
+          // links wer kauft (und zahlt), rechts wer die Karten bekommt
+          const backs = `<div class="ecr-cards">${Array.from({ length: Math.min(e.count, 10) }, () => '<span class="ecr-c back"></span>').join('')}</div>`;
+          const buzzRole = `buzzert bei ${e.count}`;
+          duel = `<div class="du-row">${dSide(e.payer, e.self ? 'deckt auf' : buzzRole, `${backs}<b class="du-sum small">zahlt ${karten(e.count)}</b>`, 'win', e.self ? 'kauft selbst' : verb(e.payer, 'kaufst', 'kauft'))}${dMid(playCard(e.animal, 'special'), '<span class="du-vs">zahlt →</span>')}${dSide(e.payee, e.self ? buzzRole : 'deckt auf · verkauft', `<b class="du-sum small">+ ${karten(e.count)}</b>`, '', '')}</div>`;
+        } else body = '<span class="ec-sub">Niemand hat gebuzzert</span>';
         tone = e.buyer === meId ? 'good' : '';
       } else if (e.type === 'rat_taken') {
         kind = '🐀 Rattenrunde';
         card = playCard(RAT, 'rat');
         title = `${nm(e.player)} ${verb(e.player, 'nimmst', 'nimmt')} die Ratte`;
-        body = `<div class="ec-deal">${ecP(e.player)}<span class="ec-arr">←</span><span class="ec-amt cards">${e.count ? `+ ${karten(e.count)}` : 'keine Karten'}</span></div>
+        // Wer nimmt, sieht die gewonnenen Scheine offen (mit Summe), alle anderen nur Rückseiten
+        const got = Array.isArray(e.cards) ? [...e.cards].sort((x, y) => y - x) : null;
+        const bills = e.count ? `<div class="ecr-cards ec-bills">${(got || Array.from({ length: e.count }, () => null)).slice(0, 10).map((m) => `<span class="ecr-c ${m == null ? 'back' : ''}" style="--m:${m == null ? '#ccc' : MONEY_COLORS[m] || '#eee'}">${m == null ? '' : m}</span>`).join('')}${got ? `<b class="du-sum">= ${got.reduce((t, m) => t + m, 0)}</b>` : ''}</div>` : '';
+        body = `<div class="ec-deal">${ecP(e.player)}<span class="ec-arr">←</span><span class="ec-amt cards">${e.count ? `+ ${karten(e.count)}` : 'keine Karten'}</span></div>${bills}
           <span class="ec-sub">${e.count ? `Alle gelegten Karten gehören jetzt ${e.player === meId ? 'dir' : nm(e.player)}` : 'Es lag noch nichts in der Mitte'}</span>`;
       } else {
         const isRat = e.animal === RAT;
@@ -1287,10 +1330,10 @@ export function renderGame(root, ctx) {
       const badge = local.res.quartet ? '<span class="ec-badge">Quartett!</span>' : '';
       const html = duel ? `<div class="evcard duel ${tone} ${reveal ? 'reveal' : ''}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
         <small class="ec-kind">${kind}</small><b class="ec-title">${title}</b>${duel}${local.res.quartet ? `<span class="ec-sub du-q"><span class="ec-badge">Quartett!</span> ${nm(receiverOf(e))} ${verb(receiverOf(e), 'hast', 'hat')} jetzt alle 4× ${esc(aname(e.animal))}</span>` : ''}
-        <i class="rtimer"></i></div>` : `<div class="evcard ${tone} ${reveal ? 'reveal' : ''}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
+        ${local.res.hint ? '<small class="ec-hint">Tippen zum Schließen</small>' : ''}<i class="rtimer"></i></div>` : `<div class="evcard ${tone} ${reveal ? 'reveal' : ''}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">
         <div class="ec-art">${card}${badge}</div>
         <div class="ec-body"><small class="ec-kind">${kind}</small><b class="ec-title">${title}</b>${body}${local.res.quartet ? `<span class="ec-sub">${nm(receiverOf(e))} ${verb(receiverOf(e), 'hast', 'hat')} jetzt alle 4× ${esc(aname(e.animal))}</span>` : ''}</div>
-        <i class="rtimer"></i></div>`;
+        ${local.res.hint ? '<small class="ec-hint">Tippen zum Schließen</small>' : ''}<i class="rtimer"></i></div>`;
       local.res.html = html.replace('data-a="resClose" role="button" aria-live="polite" ', '');
       effects += html;
       wakeLocal(local.res.at + local.res.dur + 50);
