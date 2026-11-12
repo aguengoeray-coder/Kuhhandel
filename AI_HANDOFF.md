@@ -384,3 +384,39 @@ Bitte auf dem neuesten Stand von `codex/v048-shop` die `shop-demo.html` erneut b
 - Schriftgrößen der Shop-Inhalte auf mindestens 10 px angehoben; Spruch-Kaufaktionen ausdrücklich pillenförmig.
 - Branch bleibt `codex/v048-shop`; keine Änderungen an `main`, kein Merge.
 - Nach diesem Commit erneut Browserprüfung beider Viewports durch Claude erforderlich. Prüfen: kompletter Name, Preis, Kaufen/Auswählen/Aktiv vollständig sichtbar und bedienbar; Spruchtext und Pillen lesbar.
+
+
+## 12.11.2026, 20:00 – Codex: Shop-Demo, responsive Layout und automatisierte Sichtprüfung
+
+- **Branch:** `codex/v048-shop`
+- **Stand:** `75da997a6374eade51b6bd66725f1c0132e774a3`
+- **Draft-PR #1:** https://github.com/aguengoeray-coder/Kuhhandel/pull/1
+- **Status:** Shop-Vorschau und Unit-Tests erfolgreich; nicht gemergt, nicht live.
+
+### Umgesetzt
+- `shop-demo.html` bezieht Preise direkt aus `SHOP_AVATARS` und `SHOP_SAYINGS`; die zuvor veraltete Demo-Preisliste und alte Spruch-IDs sind beseitigt.
+- Avatar-Karten neu angeordnet: Illustration links, Name/Preis im Informationsbereich, Aktion in eigener Zeile.
+- Auf schmalen Querformaten wird der Preis direkt im Kaufen-Button angezeigt, damit zweizeilige Namen nicht mit der Preiszeile kollidieren.
+- Avatar- und Spruchbereiche in der Höhe angepasst; Beschreibungstexte werden auf schmalen Displays ausgeblendet, damit alle drei Avatar-Reihen Platz haben.
+- Playwright-Test `e2e/shop-preview.mjs` und separater Workflow `.github/workflows/shop-preview.yml` ergänzt.
+
+### Verifizierte Prüfungen
+- GitHub Actions **Tests** auf `75da997`: erfolgreich, einschließlich `npm test`.
+  https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43295672403
+- GitHub Actions **Shop-Vorschau** auf exakt `75da997`: erfolgreich.
+  https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43295672317
+- Playwright prüft `852×393` und `667×375`: 11 Avatare, 8 Sprüche, Text-/Button-Überläufe, Clipping, Bereichsgrenzen, JS-Fehler und Preislabel im schmalen Layout. Beide Größen bestanden.
+- Screenshots und Prüfartefakt (14 Tage verfügbar):
+  https://github.com/aguengoeray-coder/Kuhhandel/actions/runs/43295672317/artifacts/13978987804
+
+### Noch offen / Grenzen
+- Branch ist gegenüber aktuellem `main` noch **10 Commits zurück**. Vor dem späteren Shop-Merge muss `main` in den Shop-Branch integriert, der vollständige Diff geprüft und die Tests erneut ausgeführt werden.
+- Cloudflare Preview für den neuen Head `75da997` ist noch nicht bestätigt; der bisherige bestätigte Preview-Stand war `5eda017`.
+- Supabase-SQL ist weiterhin nur Entwurf und wurde nicht ausgeführt. Das dokumentierte Restrisiko bleibt: `games.state` kann vom Client geschrieben werden; die Dublonen-Siegprämie ist gegen Doppelgutschrift geschützt, aber der Sieg ist noch nicht manipulationssicher serverautoritativ.
+- Keine Integration in `js/app.js`, `js/game.js`, `css/style.css` oder `index.html`; keine Änderung an `main`.
+
+### Nächster Schritt
+1. Aktuellen `main`-Stand in `codex/v048-shop` integrieren.
+2. Vollständigen PR-Diff und SQL-Entwurf prüfen.
+3. Unit- und Shop-Playwright-Tests erneut ausführen.
+4. Alp erhält den vollständigen Abnahmestand. Merge nach `main` und Supabase-Ausführung weiterhin nur nach Alps ausdrücklichem GO.
