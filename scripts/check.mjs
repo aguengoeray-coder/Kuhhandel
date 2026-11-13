@@ -78,6 +78,18 @@ function main() {
     console.log(`✓ App-Version konsistent: ${version} (APP_VERSION = version.json = oberster CHANGELOG-Eintrag).`);
   }
 
+  // „Was ist neu?“ in der App muss die aktuelle Version kennen (sonst sehen Spieler alte Neuigkeiten)
+  const news = fs.existsSync(path.join(root, 'js/whatsnew.js')) ? fs.readFileSync(path.join(root, 'js/whatsnew.js'), 'utf8') : '';
+  const top = news.match(/v:\s*'([0-9.]+)'/);
+  const appV = (fs.readFileSync(path.join(root, 'js/app.js'), 'utf8').match(/APP_VERSION\s*=\s*'([0-9.]+)'/) || [])[1];
+  if (news && top && top[1] !== appV) { failed = true; console.error(`✗ js/whatsnew.js: oberster Eintrag ${top[1]} ≠ APP_VERSION ${appV} – bitte „Was ist neu?“ ergänzen.`); }
+  else if (news) console.log(`✓ „Was ist neu?“ kennt v${appV}.`);
+
+  // AGENTS.md (Codex) und CLAUDE.md (Claude) müssen identisch sein
+  const ag = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8'), cl = fs.readFileSync(path.join(root, 'CLAUDE.md'), 'utf8');
+  if (ag !== cl) { failed = true; console.error('✗ AGENTS.md und CLAUDE.md sind nicht identisch.'); }
+  else console.log('✓ AGENTS.md = CLAUDE.md.');
+
   // package.json.version ist bewusst ausgenommen: 0.1.0 sind npm-Paketmetadaten,
   // keine Versionsnummer der ausgelieferten Browser-App.
   if (failed) process.exitCode = 1;

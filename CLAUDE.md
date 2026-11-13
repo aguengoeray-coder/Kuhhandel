@@ -7,8 +7,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 1. **Nie direkt auf `main` hochladen.** Alles auf `main` geht über Cloudflare sofort live.
    Jede Änderung kommt auf einen eigenen Zweig (z. B. `nico/gebote-anzeige`) bzw. als Pull Request.
-2. **Erst zeigen, dann live:** Vor dem Zusammenführen in `main` immer Screenshots der Änderung schicken
-   und das Okay von Alp abwarten. Erst nach Freigabe mergen.
+2. **Erst zeigen, dann live:** Screenshots der Änderung schicken. Ob vor oder nach dem Merge, regelt die **Ampel**
+   (siehe unten): 🟢 Feinschliff/Bugfix → KI mergt bei grünen Tests und zeigt danach; 🟡 Neues → erst Alps Go; 🔴 SQL → nur Alp.
 3. **Bei Fragen erst prüfen und berichten**, nicht sofort umbauen.
 4. **Kleine, abgeschlossene Schritte.** Vorher absprechen, wer woran arbeitet – nicht gleichzeitig dieselbe Datei umbauen.
 5. **Änderungsprotokoll pflegen:** Jede Version bekommt einen Eintrag in `CHANGELOG.md` (Checkliste, kurz und verständlich).
@@ -43,6 +43,11 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `js/theme.js` | Aussehen: Farben/Muster für Spielfeld, Hintergrund, Kartenrücken (CSS-Variablen, pro Gerät gespeichert) |
 | `js/demo.js` | Beispiel-Spielstände für Screenshots (`?demo=turn`, `auction`, `tradesetup` …) |
 | `css/style.css` | Gestaltung |
+| `js/shop.js`, `css/shop.css` | Shop (Reiter Avatare/Sprüche, Kaufen/Auswählen) |
+| `js/shopavatars.js` | 14 Shop-Avatare als SVG: runder Kopf (Tisch) + Ganzkörper `shopAvatarFull` (Shop, Startseite) |
+| `js/whatsnew.js` | „Was ist neu?“ für Spieler – oberster Eintrag = `APP_VERSION` (Check prüft das) |
+| `e2e/` | Browser-Tests (Playwright): alle Ansichten × 4 Handygrößen, einheitliche Größen, komplette Partien |
+| `scripts/check.mjs` | Syntax, Versionen, „Was ist neu“, AGENTS = CLAUDE |
 | `worker/index.js` | Cloudflare Worker: liefert die Dateien aus, weckt Supabase täglich (Zeitplan in `wrangler.jsonc`), verschickt Push (`POST /push`, Secrets `PUSH_SECRET` + `VAPID_PRIVATE_JWK` nur im Cloudflare-Dashboard) |
 | `sw.js` | Service Worker: zeigt die Push-Benachrichtigung (speichert nichts zwischen) |
 | `.github/workflows/` | `tests.yml` (Tests bei jedem Pull Request), `supabase-wach.yml` (zweite Absicherung gegen Pausieren) |
@@ -50,7 +55,9 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 ## Testen
 
-- `npm test` – Regeln.
+- `npm test` – Regeln, Shop, Automatisierung.
+- `node scripts/check.mjs` – Syntax, Versionen, Doku-Gleichheit.
+- Browser-Tests: `NODE_PATH=$(npm root -g) node --test e2e/views.spec.mjs e2e/sizes.spec.mjs e2e/fullgame.spec.mjs` (der Test startet seinen eigenen kleinen Server).
 - Lokal starten: `python3 -m http.server 8765` im Repo, dann `http://localhost:8765/?demo=turn`
   (Demo-Ansichten brauchen keine Datenbank – gut für Screenshots im Querformat 844×390).
 - Debug-Modus im Browser: `?debug=1` → auf der Startseite „Testspiel“ (läuft nur auf dem Gerät, mit Test-Spielern).
@@ -95,12 +102,24 @@ Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …)
 2. Bei widersprüchlicher Dokumentation anhalten und den tatsächlichen Code-/Git-Stand klären.
 3. Pro Aufgabe genau ein schreibender Owner; Reviewer bleiben read-only. Die im neuesten Handoff genannten Dateigrenzen sind verbindlich.
 4. Nach jeder Arbeitseinheit passende Tests ausführen, `PROJECT_STATUS.md` aktualisieren und einen datierten Handoff-Eintrag mit Branch, Commit, Dateien, Tests und offenen Punkten ergänzen.
-5. Nur auf dem eigenen Branch committen. Nach jedem abgeschlossenen Schritt Alp um ein eigenes GO bitten.
+5. Nur auf dem eigenen Branch committen. Merge nach der **Ampel** unten.
+
+## Ampel: wer darf mergen? (von Alp am 13.11.2026 freigegeben)
+
+| Stufe | Was | Ablauf |
+|---|---|---|
+| 🟢 Grün | Bugfixes, Layout-/Design-Feinschliff, Tests, Doku, kleine Effekte – **und alles, wofür Alp ausdrücklich „ja“/„Go“ gesagt hat** | KI mergt selbst, sobald `npm test`, `node scripts/check.mjs` und die GitHub-Prüfungen (test, e2e, Workers Build) auf dem PR-Kopf grün sind. Danach Bericht mit Screenshots an Alp. |
+| 🟡 Gelb | Neue Features, Regeländerungen, neue Spielarten, alles rund um Shop/Dublonen | Erst Screenshots + Testergebnisse, dann auf Alps „Merge-Go #PR“ warten. |
+| 🔴 Rot | SQL/Datenbank, Daten oder Konten löschen, Secrets, Branch-Schutz-Einstellungen | Immer mit Alp: SQL nur vorbereiten und erklären, Alp führt aus. |
+
+- Merge immer über den PR (GitHub-API: `gh api -X PUT repos/aguengoeray-coder/Kuhhandel/pulls/<n>/merge -f merge_method=merge`), nie direkt auf `main` committen oder pushen – so funktioniert es auch mit Branch-Schutz.
+- Nur live gehen, wenn gerade niemand spielt. Sagt Alp „zurück“: sofort den letzten Merge rückgängig machen (`git revert -m 1 <merge>`), Tests, Push.
+- Vor jedem Merge vollständigen Diff gegen aktuellen `main` prüfen.
 
 ## Verbindliche Freigabe- und Sicherheitsregeln
 
-- **Kein automatischer Merge, kein Push auf `main`, kein automatisches Deployment.** Ein GO gilt nur für den konkret benannten Schritt.
-- Alp ist alleiniger Product Owner und entscheidet über Umfang, Prioritäten, Abnahme, SQL-Ausführung sowie jeden Merge.
+- **Kein direkter Commit auf `main`.** Merges nur nach der Ampel oben; ein „Go“ gilt nur für den konkret benannten Schritt.
+- Alp ist alleiniger Product Owner und entscheidet über Umfang, Prioritäten, Abnahme und SQL-Ausführung. Workflows (GitHub Actions) mergen nie selbst.
 - SQL niemals selbst ausführen. SQL-Dateien nur vorbereiten; Alp führt sie im Supabase-SQL-Editor aus.
 - Keine Secrets ins Repository. Supabase Secret-/Service-Role-Keys gehören ausschließlich in sichere Umgebungsvariablen/Secret Stores.
 - Automatisierte Workflows dürfen prüfen und berichten, aber keine Codeänderungen, Merges oder Pushes ausführen.
@@ -112,7 +131,7 @@ Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …)
 
 - `AGENTS.md` und `CLAUDE.md` müssen identisch sein.
 - `PROJECT_STATUS.md` ist die kompakte Quelle für aktuellen Projektstand und Roadmap; keine parallelen, redundanten Roadmap-/Teamdateien pflegen.
-- `AI_HANDOFF.md` enthält offene Übergaben; ältere abgeschlossene Einträge stehen im Archiv.
+- `AI_HANDOFF.md` enthält offene Übergaben (mit Vorlage); abgeschlossene Einträge stehen in `AI_HANDOFF_ARCHIV.md`.
 - App-Version: `APP_VERSION` in `js/app.js` = `version.json` = oberster Versionskopf in `CHANGELOG.md`.
 - `package.json`-Version ist npm-Paketmetadatum und derzeit bewusst `0.1.0`; nicht mit der App-Version verwechseln.
 - `npm test` und `node scripts/check.mjs` müssen vor einem PR grün sein.
