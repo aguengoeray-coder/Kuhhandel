@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.61.0 – Emote „Verprügeln“
+
+- [x] Neuer Shop-Reiter **Emotes**: „🥊 Verprügeln“ für 100 Dublonen – Admins haben es immer (SQL `supabase/v0.61-emote-pruegel.sql`).
+- [x] Im Spiel: eigene Figur antippen → 💬-Fenster → „🥊 Verprügeln“ → Mitspieler wählen.
+- [x] Deine Figur läuft zum Mitspieler, Comic-Prügelwolke mit POW! BAM! KLATSCH!, Sternen und Aufprall-Geräuschen, dann läuft sie zurück – alle sehen es live.
+- [x] 20 s Pause zwischen zwei Prügeleien.
+
 ## v0.60.1 – Respektloser Esel
 
 - [x] Esel-Bonus neu: Statt Geldregen schnappt sich der Esel die Scheine, knüllt sie zusammen und pfeffert jedem einzeln einen Papierball an den Kopf – BAM! ZACK! PATSCH! (mit Knüll- und Aufprall-Geräusch).

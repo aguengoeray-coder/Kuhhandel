@@ -17,6 +17,10 @@ export const SHOP_SAYINGS = [
   { id:'spruch-schmatz', text:'Schmatz nicht!!', price:10 },
   { id:'spruch-how-old', text:'Can I ask you by any chance how old you are? 📱', price:10 }
 ];
+// v0.61 Emotes: Fähigkeiten für deine Figur (Admins haben sie immer)
+export const SHOP_EMOTES = [
+  { id:'emote-pruegel', name:'Verprügeln', icon:'🥊', price:100, text:'Deine Figur läuft zu einem Mitspieler und verprügelt ihn – Comic-Staubwolke mit POW! BAM! KLATSCH!' }
+];
 const AVATARS = SHOP_AVATARS.map(({id,name,tier,price,animal}) => ({id,name,tier,price,animal}));
 const TIERS = [
   { id:'selten', label:'Selten', items:AVATARS.filter(x=>x.tier==='selten') },
@@ -80,6 +84,15 @@ export function renderShop(root, ctx) {
       '</article>';
   };
 
+  const emoteCard = (item) => {
+    const has = owned.has(item.id);
+    return '<article class="shop-item shop-emote-item' + (has ? ' is-owned' : '') + '"><div class="shop-emote-icon">' + item.icon + '</div>' +
+      '<strong class="shop-item-name">' + esc(item.name) + '</strong><p class="shop-emote-text">' + esc(item.text) + '</p>' +
+      (has ? '<span class="shop-owned">✓ hast du</span>'
+        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' ' + DUB + '</button>') +
+      '</article>';
+  };
+
   function render() {
     const nAv = AVATARS.filter((x) => owned.has(x.id)).length, nSp = SHOP_SAYINGS.filter((x) => owned.has(x.id)).length;
     root.innerHTML =
@@ -88,12 +101,16 @@ export function renderShop(root, ctx) {
         '<nav class="shop-tabs" role="tablist">' +
           '<button role="tab" data-tab="avatare" class="' + (tab === 'avatare' ? 'on' : '') + '">Avatare <small>' + nAv + '/' + AVATARS.length + '</small></button>' +
           '<button role="tab" data-tab="sprueche" class="' + (tab === 'sprueche' ? 'on' : '') + '">Sprüche <small>' + nSp + '/' + SHOP_SAYINGS.length + '</small></button>' +
+          '<button role="tab" data-tab="emotes" class="' + (tab === 'emotes' ? 'on' : '') + '">Emotes <small>' + SHOP_EMOTES.filter((x) => owned.has(x.id)).length + '/' + SHOP_EMOTES.length + '</small></button>' +
         '</nav>' +
         '<div class="shop-balance" title="Dein Guthaben">' + DUB + '<strong>' + new Intl.NumberFormat('de-DE').format(balance) + '</strong></div>' +
         '<button class="shop-close" data-close aria-label="Shop schließen">×</button></header>' +
         (notice?'<div class="shop-notice shop-notice-' + noticeKind + '" role="status">' + esc(notice) + '</div>':'') +
         '<div class="shop-content">' +
-          (tab === 'avatare'
+          (tab === 'emotes'
+            ? '<div class="shop-grid shop-emote-grid">' + SHOP_EMOTES.map(emoteCard).join('') + '</div>' +
+              '<p class="shop-hint">Im Spiel: auf deine Figur tippen → 💬 → Emote auswählen.</p>'
+            : tab === 'avatare'
             ? '<div class="shop-grid shop-avatar-grid">' + TIERS.flatMap((t) => t.items).map(avatarCard).join('') + '</div>' +
               '<p class="shop-hint">Dein aktiver Avatar ersetzt dein Profilbild – für alle am Tisch sichtbar.</p>'
             : (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
@@ -110,7 +127,7 @@ export function renderShop(root, ctx) {
 
   async function buy(id) {
     if (busy || owned.has(id)) return;
-    const item = [...AVATARS,...SHOP_SAYINGS].find(x => x.id === id);
+    const item = [...AVATARS,...SHOP_SAYINGS,...SHOP_EMOTES].find(x => x.id === id);
     if (!item) return;
     if (balance < item.price) { notice='Dafür reichen deine Dublonen noch nicht.'; noticeKind='error'; render(); return; }
     busy=true; notice=''; render();

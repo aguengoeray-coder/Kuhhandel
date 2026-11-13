@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.60.1';
+export const APP_VERSION = '0.61.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -69,6 +69,10 @@ const shopMe = { state: 'idle', balance: 0, owned: new Set(), active: null, free
 const SAYING_TEXTS = SHOP_SAYINGS.map((x) => x.text);
 try { if (!document.getElementById('shop-avatar-runtime-css')) { const st = document.createElement('style'); st.id = 'shop-avatar-runtime-css'; st.textContent = SHOP_AVATAR_CSS + SHOP_AVATAR_FULL_CSS; document.head.append(st); } } catch {}
 const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
+// v0.61 Admin-Fähigkeit „Verprügeln“: { from, to, at } – Animation läuft bei allen
+const punches = [];
+let lastPunchAt = 0;
+const PUNCH_COOLDOWN = 20000;
 let lastReactAt = 0;
 const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
 // EHRLICH: euer Insider – kommt als großer Spruch mit eigenem Ton
@@ -622,6 +626,10 @@ function renderPlaying() {
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
     seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
+    canPunch: canPunch(), // Emote „Verprügeln“: gekauft oder Admin
+    punchLabel: ui.isAdmin && !shopMe.owned.has('emote-pruegel') ? '🥊 Admin-Fähigkeit: Verprügeln' : '🥊 Emote: Verprügeln',
+    punch: sendPunch,
+    punches: punches.filter((x) => Date.now() - x.at < 4000),
     nudgeWho: waitingFor(),
     nudge: sendNudge,
     autoplay: ui.game.state?.autoplay || [],
@@ -1206,6 +1214,25 @@ function sendReaction(text, to = null) {
   if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'react', payload: { seat, text, to } });
 }
 
+// v0.61: nur Admins (Alp, Nico) – eigene Figur antippen → „Verprügeln“ → Mitspieler wählen
+function showPunch(from, to) {
+  punches.push({ from, to, at: Date.now() });
+  while (punches.length > 6) punches.shift();
+  render();
+  setTimeout(render, 3600);
+}
+function canPunch() { return !!ui.isAdmin || shopMe.owned.has('emote-pruegel'); }
+function sendPunch(to) {
+  if (!canPunch()) return;
+  const left = PUNCH_COOLDOWN - (Date.now() - lastPunchAt);
+  if (left > 0) return toast(`Die Fäuste brauchen noch ${Math.ceil(left / 1000)} s Pause.`);
+  lastPunchAt = Date.now();
+  const seat = ui.game.local ? dbg.viewAs : seatIn(ui.game);
+  if (!seat || seat === to) return;
+  showPunch(seat, to);
+  if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'punch', payload: { from: seat, to } });
+}
+
 // ---------- Erste-Runde-Hilfe ----------
 
 
@@ -1369,6 +1396,11 @@ function watchRoom(id) {
       showGame(payload.new);
     })
     .on('broadcast', { event: 'nudge' }, ({ payload }) => gotNudge(payload))
+    .on('broadcast', { event: 'punch' }, ({ payload }) => {
+      const ids = ui.game?.state?.players?.map((p) => p.id) || [];
+      if (!payload || !ids.includes(payload.from) || !ids.includes(payload.to) || payload.from === payload.to) return;
+      showPunch(payload.from, payload.to);
+    })
     .on('broadcast', { event: 'react' }, ({ payload }) => {
       if (!payload?.seat || !(REACTIONS.includes(payload.text) || SAYING_TEXTS.includes(payload.text) || REACT_EMOJI.includes(payload.text))) return;
       const to = typeof payload.to === 'string' && ui.game?.state?.players?.some((p) => p.id === payload.to) ? payload.to : null;
@@ -1863,6 +1895,7 @@ function demo(kind) {
   Object.entries(demoProfiles).forEach(([id, [name, animal, color]]) => profiles.set(id, { id, name, animal, color }));
   if (kind === 'testspiel' || kind === 'testspiel3') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(kind === 'testspiel3' ? 3 : 4); }
   me = { id: 'u1', name: 'Alp' };
+  if (params.get('punch')) { ui.isAdmin = true; setTimeout(() => showPunch(params.get('pfrom') || 'u1', params.get('punch')), 300); } // Screenshots: Prügel-Animation
   if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
   if (params.get('react')) reactions.set(params.get('react'), { text: params.get('rtext') === 'ehrlich' ? EHRLICH : params.get('rtext') === 'unehrlich' ? UNEHRLICH : params.get('rtext') === 'mehr' ? REACTIONS[2] : params.get('rtext') === 'lach' ? '😂' : params.get('rtext') === 'nico' ? 'Nico, schrei nicht!' : 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });
   if (params.get('pick')) gameLocal.reactTo = params.get('pick');

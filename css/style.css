@@ -3023,3 +3023,48 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @media (prefers-reduced-motion: reduce) { .eselthrow, .eball, .ebam { display: none; } }
 .eball { width: 34px; height: 32px; margin: -16px 0 0 -17px; background: radial-gradient(circle at 34% 30%, rgba(255,255,255,.55) 0 14%, transparent 15%),
   conic-gradient(from 10deg, #A8D5B5 0 55deg, #7fae8c 55deg 80deg, #F6D98B 80deg 150deg, #d9b860 150deg 175deg, #E7A1A0 175deg 250deg, #c98483 250deg 275deg, #A8D5B5 275deg 360deg); }
+/* ===== v0.61 Admin-Fähigkeit „Verprügeln“ (Comic-Prügelwolke, nur Admins können sie auslösen) ===== */
+.rp-lbl.rp-admin { color: var(--gold, #FFD34E); }
+.rp-punch { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.rp-punch .rp-pu { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px 3px 3px; border-radius: 999px; border: 2px solid #E5484D; background: #fff; color: var(--ink); font: 700 13px var(--font-head); cursor: pointer; }
+.rp-punch .rp-pu .avatar { width: 28px; height: 28px; font-size: 13px; }
+.rp-punch .rp-pu:active { transform: scale(.95); }
+.pwalk { position: absolute; z-index: 36; pointer-events: none; height: 92px; display: flex; align-items: flex-end; animation: pwalk 3.4s ease-in-out both; transform-origin: 50% 100%; }
+.pwalk.round { height: 56px; } .pwalk.round .avatar { width: 56px; height: 56px; }
+.pwalk .shop-avatar-full { height: 92px; width: auto; filter: drop-shadow(0 4px 5px rgba(0,0,0,.4)); }
+@keyframes pwalk {
+  0% { transform: translate(0, 0); opacity: 1; }
+  6% { transform: translate(calc(var(--tx) * .06), calc(var(--ty) * .06 - 10px)) rotate(-6deg); }
+  12% { transform: translate(calc(var(--tx) * .2), calc(var(--ty) * .2)) rotate(6deg); }
+  18% { transform: translate(calc(var(--tx) * .42), calc(var(--ty) * .42 - 10px)) rotate(-6deg); }
+  24% { transform: translate(calc(var(--tx) * .66), calc(var(--ty) * .66)) rotate(6deg); }
+  30% { transform: translate(calc(var(--tx) * .9), calc(var(--ty) * .9 - 10px)) rotate(-4deg); opacity: 1; }
+  33%, 74% { transform: translate(var(--tx), var(--ty)) scale(.6); opacity: 0; }
+  77% { transform: translate(var(--tx), var(--ty)); opacity: 1; }
+  84% { transform: translate(calc(var(--tx) * .6), calc(var(--ty) * .6 - 8px)) rotate(4deg); }
+  92% { transform: translate(calc(var(--tx) * .25), calc(var(--ty) * .25)) rotate(-4deg); }
+  100% { transform: translate(0, 0); opacity: 1; }
+}
+.stage:has(.pwalk.mine) .meplate .mefig { visibility: hidden; } /* deine Figur ist gerade unterwegs */
+.pcloud { position: absolute; z-index: 37; pointer-events: none; width: 120px; height: 100px; margin: -50px 0 0 -60px; opacity: 0; animation: pcloud 3.4s linear both; }
+@keyframes pcloud { 0%, 30% { opacity: 0; transform: scale(.3); } 34% { opacity: 1; transform: scale(1.15); } 38%, 72% { opacity: 1; transform: scale(1); } 78%, 100% { opacity: 0; transform: scale(.4); } }
+.pcloud .pc { position: absolute; border-radius: 50%; background: #F1EADB; border: 3px solid #3a2f25; box-shadow: inset -6px -6px 0 rgba(0,0,0,.1); animation: pchurn .28s linear infinite alternate; }
+.pcloud .c1 { left: 10px; top: 24px; width: 54px; height: 54px; } .pcloud .c2 { left: 46px; top: 12px; width: 62px; height: 62px; animation-delay: -.1s; }
+.pcloud .c3 { left: 28px; top: 44px; width: 58px; height: 48px; animation-delay: -.18s; } .pcloud .c4 { left: 70px; top: 46px; width: 44px; height: 44px; animation-delay: -.05s; }
+@keyframes pchurn { from { transform: translate(-2px, 1px) scale(.96); } to { transform: translate(2px, -2px) scale(1.05); } }
+.pcloud .pw { position: absolute; font: 900 16px var(--font-head); color: #fff; padding: 1px 7px; border: 2px solid #fff; border-radius: 6px; text-shadow: 0 2px 0 rgba(0,0,0,.35); opacity: 0; animation: ppop .45s cubic-bezier(.2,.9,.3,1.5) both; }
+.pcloud .w1 { left: -18px; top: 0; background: #E5484D; transform: rotate(-12deg); animation-delay: 1.2s; }
+.pcloud .w2 { right: -20px; top: 22px; background: #F28C1B; transform: rotate(10deg); animation-delay: 1.55s; }
+.pcloud .w3 { left: 18px; bottom: -14px; background: #6D3FC0; transform: rotate(-4deg); animation-delay: 1.9s; }
+@keyframes ppop { 0% { opacity: 0; scale: .2; } 60% { opacity: 1; scale: 1.25; } 100% { opacity: 1; scale: 1; } }
+.pcloud .ps { position: absolute; font-style: normal; font-size: 18px; animation: pspin 1s linear infinite; }
+.pcloud .s1 { left: 0; top: 52px; } .pcloud .s2 { right: 4px; top: -6px; animation-delay: -.4s; } .pcloud .s3 { right: 26px; bottom: -6px; animation-delay: -.7s; }
+@keyframes pspin { to { transform: rotate(360deg); } }
+.pcloud .pf { position: absolute; font-size: 24px; animation: pjab .32s ease-in-out infinite alternate; }
+.pcloud .f1 { left: 42px; top: -12px; } .pcloud .f2 { left: 74px; top: 62px; animation-delay: -.16s; }
+@keyframes pjab { from { transform: translate(-6px, 4px) rotate(-20deg); } to { transform: translate(6px, -4px) rotate(15deg); } }
+.pcloud .plabel { position: absolute; left: 50%; top: -34px; transform: translateX(-50%); white-space: nowrap; padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.72); color: #fff; font: 700 12px var(--font-body); }
+@media (prefers-reduced-motion: reduce) { .pwalk { animation: none; display: none; } .pcloud .pc, .pcloud .ps, .pcloud .pf { animation: none; } }
+.pcloud { margin-top: -24px; }
+.pcloud .plabel { top: auto; bottom: -38px; }
+.pcloud.low { margin-top: 18px; } /* Platz oben: Wolke unter das Bild, sonst ragt sie aus dem Bildschirm */

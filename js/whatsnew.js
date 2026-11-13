@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.61.0', date: '13.11.', items: ['🥊 Neues Emote im Shop: Verprügeln – deine Figur läuft hin und haut drauf'] },
   { v: '0.60.1', date: '13.11.', items: ['🫏 Der Esel verteilt den Bonus jetzt respektlos: Scheine zerknüllt und jedem an den Kopf geworfen'] },
   { v: '0.60.0', date: '13.11.', items: ['📈 Neue Spielart Börsen-Chaos: 8 Börsen-News mischen Kurse und Geld auf', '🧾 Steuerprüfung, 🔀 Marktpanik, 💰 Dividende, ⚡ Hektik, Kursrallye und Kurssturz'] },
   { v: '0.59.1', date: '13.11.', items: ['🐄 Deine Tiere vor dir sind jetzt deutlich größer'] },

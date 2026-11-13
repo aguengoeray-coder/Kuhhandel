@@ -41,6 +41,7 @@ const ART_AKK = { hahn: 'den', gans: 'die', katze: 'die', hund: 'den', schaf: 'd
 const theAnimal = (id) => `${ART_AKK[id] || 'die'} ${aname(id)}`;
 // Esel-Wurf: wann der erste Papierball fliegt, Abstand zwischen den Würfen, Flugzeit (ms ab Aufdecken)
 const ESEL_THROW_AT = 2350, ESEL_THROW_GAP = 330, ESEL_FLIGHT = 430;
+const PUNCH_MS = 3400; // Admin-Fähigkeit „Verprügeln“: Dauer der Animation
 // Börsen-Chaos: aktuelle Kurse des gerade gezeichneten Spiels (null = Grundwerte)
 let KURSE = null;
 const aval = (id) => (id === RAT ? null : kursValue(id, KURSE));
@@ -416,6 +417,16 @@ export function renderGame(root, ctx) {
   const me = v.players[meIdx];
   const idxOf = (id) => v.players.findIndex((p) => p.id === id);
   const nameOf = (id) => (id === meId ? 'Du' : v.players[idxOf(id)]?.name || '?');
+  // v0.61 Prügel-Animation (Comic, keine echte Gewalt): Laufen → Staubwolke mit POW/BAM → zurück
+  const punchFx = (pu) => {
+    const src = pu.from === meId ? '@me' : esc(pu.from); const dst = pu.to === meId ? '@me' : esc(pu.to);
+    const pr = avatarLookup(pu.from); const fp = v.players[idxOf(pu.from)];
+    const fig = pr?.shop ? shopAvatarFull(pr.shop) : avatar(fp, idxOf(pu.from));
+    const who = `${esc(pu.from === meId ? 'Du' : nameOf(pu.from))} ${pu.from === meId ? 'verprügelst' : 'verprügelt'} ${esc(pu.to === meId ? 'dich' : nameOf(pu.to))}!`;
+    return `<div class="pwalk ${pu.from === meId ? 'mine' : ''} ${pr?.shop ? 'full' : 'round'}" data-aim-from="${src}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" aria-hidden="true">${fig}</div>
+      <div class="pcloud ${pu.to !== meId && /^t/.test(seatOf(pu.to)) ? 'low' : ''}" data-aim-from="${dst}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" role="status"><i class="pc c1"></i><i class="pc c2"></i><i class="pc c3"></i><i class="pc c4"></i>
+        <b class="pw w1">POW!</b><b class="pw w2">BAM!</b><b class="pw w3">KLATSCH!</b><em class="ps s1">⭐</em><em class="ps s2">✨</em><em class="ps s3">⭐</em><span class="pf f1">👊</span><span class="pf f2">🦶</span><span class="plabel">${who}</span></div>`;
+  };
   const cur = currentPlayer(v);
   const myTurn = cur.id === meId;
 
@@ -1198,6 +1209,7 @@ export function renderGame(root, ctx) {
   H.takeover = (id) => ctx.takeover && ctx.takeover(id);
   H.selfPlay = () => ctx.selfPlay && ctx.selfPlay(meId);
   H.reactClose = () => { local.reactTo = null; ctx.rerender(); };
+  H.punch = (id) => { local.reactTo = null; if (ctx.punch) ctx.punch(id); ctx.rerender(); };
   H.react = (i) => { const to = local.reactTo; local.reactTo = null; ctx.react(ctx.reactionList[Number(i)], to === meId ? null : to); };
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
@@ -1422,6 +1434,17 @@ export function renderGame(root, ctx) {
     local.newsSig = newsSig;
     keepFx(newsReveal(lem, meId, nameOf), 3400);
     sounds.push('flip'); later.push([lem.kind === 'crash' || lem.kind === 'steuer' ? 'boo' : lem.kind === 'hektik' ? 'tick' : 'coins', 600]);
+  }
+  // v0.61 Admin-Fähigkeit „Verprügeln“: Figur läuft hin, Prügelwolke, läuft zurück (bei allen)
+  for (const pu of ctx.punches || []) {
+    const sig = `${pu.from}|${pu.to}|${pu.at}`;
+    local.punchSeen = local.punchSeen || [];
+    if (local.punchSeen.includes(sig)) continue;
+    local.punchSeen.push(sig); if (local.punchSeen.length > 20) local.punchSeen.shift();
+    if (Date.now() - pu.at > 2500 || idxOf(pu.from) < 0 || idxOf(pu.to) < 0) continue;
+    keepFx(punchFx(pu), PUNCH_MS);
+    [1150, 1380, 1560, 1790, 1980, 2200].forEach((t) => later.push(['thud', t]));
+    later.push(['wow', 2500]);
   }
   if (state.phase === 'special') {
     const sp = v.special;
@@ -1791,6 +1814,7 @@ export function renderGame(root, ctx) {
     const last = evStrip ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="evstrip in">${evStrip}</div></div>` : lastLog ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="tlog in">${esc(lastLog)}</div></div>` : '';
     return `<div class="reactpick v2 ${self ? 'self' : ''}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
+      ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">${esc(ctx.punchLabel || '🥊 Verprügeln')}</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
       ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}
