@@ -400,7 +400,6 @@ export function renderGame(root, ctx) {
   if (shownHolder && local.flashFor !== shownHolder) { if (local.flashFor !== undefined) local.turnFlashAt = Date.now(); local.flashFor = shownHolder; }
   const flashEl = local.turnFlashAt ? Date.now() - local.turnFlashAt : 1e9;
   const flashing = flashEl < 1600;
-  if (flashing) wakeLocal(local.turnFlashAt + 1650);
   local.prev = { logLen: state.log.length, phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? state.log.length : null };
 
   const H = {}; // Klick-Aktionen dieser Darstellung
@@ -495,6 +494,7 @@ export function renderGame(root, ctx) {
   // ----- Versteigerung: findet direkt auf dem Tisch statt -----
   let wake = null; // wann neu zeichnen (Aufdecken, Buzzer-Countdown) – in Serverzeit
   const wakeLocal = (t) => { const w = t + (ctx.now() - Date.now()); if (!wake || wake > w) wake = w; }; // Gerätezeit → Serverzeit
+  if (flashing) wakeLocal(local.turnFlashAt + 1650); // Aufleuchten „wer ist dran“ danach einmal beenden
   if (calmLeft) wakeLocal(Date.now() + calmLeft + 30);
   let pickMode = null; // 'sel': Scheine im Fächer antippen → ins Feld · 'rat': einen Schein zum Legen anheben
   let aucCenter = '';
