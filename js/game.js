@@ -306,9 +306,25 @@ function seatPoint(root, pid, sr, sc) {
   }
   // „@card“: Mitte der Karte in der Mitte · „@esel“: Wurfhand des Muskel-Esels (über der Karte, rechts)
   if (pid === '@card' || pid === '@esel') {
-    const el = root.querySelector('.tcenter .aucard') || root.querySelector('.tcenter');
+    const el = root.querySelector('.tcenter .aucard') || root.querySelector('.tcenter .bigcard') || root.querySelector('.tcenter');
     if (el) { const r = el.getBoundingClientRect(); const cx = (r.left + r.width / 2 - sr.left) / sc, cy = (r.top + r.height / 2 - sr.top) / sc, top = (r.top - sr.top) / sc;
       return pid === '@card' ? { x: cx, y: cy } : { x: cx + 60, y: top + 40 }; }
+  }
+  // v0.62 „Profilbild wird lebendig“: '@near:<pid>' = Stehplatz neben dem Profilbild Richtung Tischmitte,
+  // '@myfan' = Mitte deines Geldes, '@cl'/'@cr' = links/rechts der Tischmitte (Polonaise)
+  if (pid === '@cl' || pid === '@cr') return { x: sr.width / sc / 2 + (pid === '@cl' ? -150 : 150), y: sr.height / sc * 0.5 };
+  if (pid === '@myfan') {
+    const fans = [...root.querySelectorAll('.fan-wrap .money.fan')].map((e) => e.getBoundingClientRect());
+    if (fans.length) { const l = Math.min(...fans.map((r) => r.left)); const rr = Math.max(...fans.map((r) => r.right)); const t = Math.min(...fans.map((r) => r.top)); return { x: ((l + rr) / 2 - sr.left) / sc, y: (t + 10 - sr.top) / sc }; }
+    return { x: sr.width / sc / 2, y: sr.height / sc - 50 };
+  }
+  if (typeof pid === 'string' && pid.startsWith('@near:')) {
+    const who = pid.slice(6);
+    const a = seatPoint(root, who, sr, sc);
+    if (who === '@me') return { x: a.x - 6, y: a.y + 8 };
+    const cx = sr.width / sc / 2, cy = sr.height / sc / 2;
+    const dx = cx - a.x, dy = cy - a.y, d = Math.hypot(dx, dy) || 1;
+    return { x: a.x + (dx / d) * 64, y: a.y + (dy / d) * 64 + 26 };
   }
   // „@offer“: das verdeckte Angebot in der Mitte (Kuhhandel/Rattenhandel)
   if (pid === '@pot' || pid === '@offer') {
@@ -379,6 +395,21 @@ function syncLoops() {
   });
 }
 
+// v0.62 Laufwege mit mehreren Stationen: data-route="a;b;c", data-offs="0,.3,1" (optional), data-dur, data-delay (ms)
+function routeFx(root) {
+  const stage = root.querySelector('#stage');
+  if (!stage) return;
+  const sr = stage.getBoundingClientRect(); const sc = sr.width / stage.offsetWidth || 1;
+  root.querySelectorAll('[data-route]').forEach((f) => {
+    const pts = f.dataset.route.split(';').map((pid) => seatPoint(root, pid, sr, sc));
+    if (!pts.length || !f.animate) return;
+    f.style.left = `${Math.round(pts[0].x - f.offsetWidth / 2)}px`; f.style.top = `${Math.round(pts[0].y - f.offsetHeight / 2)}px`;
+    const offs = f.dataset.offs ? f.dataset.offs.split(',').map(Number) : pts.map((_, i) => i / Math.max(1, pts.length - 1));
+    const kf = pts.map((pt, i) => ({ transform: `translate(${Math.round(pt.x - pts[0].x)}px, ${Math.round(pt.y - pts[0].y)}px)`, offset: Math.min(1, Math.max(0, offs[i] ?? i / (pts.length - 1))) }));
+    try { f.animate(kf, { duration: Number(f.dataset.dur) || 2000, delay: Number(f.dataset.delay) || 0, fill: 'both', easing: 'ease-in-out' }); } catch { /* egal */ }
+  });
+}
+
 // Einmal-Effekte, die schon laufen: Animationen auf die vergangene Zeit vorspulen (statt von vorn zu beginnen)
 function seekFx(root) {
   root.querySelectorAll('[data-fxat]').forEach((w) => {
@@ -386,6 +417,22 @@ function seekFx(root) {
     if (el < 40) return;
     w.querySelectorAll('*').forEach((n) => (n.getAnimations ? n.getAnimations() : []).forEach((a) => { try { a.currentTime = el; } catch { /* egal */ } }));
   });
+}
+
+// ---------- v0.62 „Profilbild wird lebendig“ ----------
+// Standard-Körper für alle ohne Shop-Avatar: einfacher Körper in Platzfarbe, das runde Profilbild ist der Kopf
+function genericBody(color) {
+  const K = '#2B2B2B', S = `stroke="${K}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+  return `<svg class="gbody" viewBox="0 0 120 200" aria-hidden="true">
+    <path d="M48 150 44 190h15l3-38M72 150l4 40H61l-3-38" fill="#3B3F4A" ${S}/><path d="M40 188h21v8H38zM61 188h21l2 8H61z" fill="#2B2B2B" ${S}/>
+    <path class="garm l" d="M36 86c-12 6-18 22-18 38l10 2 8-24" fill="${color}" ${S}/><circle cx="23" cy="128" r="7" fill="#F2C9A0" ${S}/>
+    <path class="garm r" d="M84 86c12 6 18 22 18 38l-10 2-8-24" fill="${color}" ${S}/><circle cx="97" cy="128" r="7" fill="#F2C9A0" ${S}/>
+    <path d="M34 84c6-8 16-12 26-12s20 4 26 12l-4 70H38z" fill="${color}" ${S}/><path d="M60 76v74" stroke="rgba(0,0,0,.25)" stroke-width="3"/></svg>`;
+}
+// Ganzkörper-Figur eines Spielers: Shop-Avatar (eigener Körper) oder Standard-Körper + Profilbild als Kopf
+function aliveFig(p, i, shop) {
+  if (shop) return `<div class="afull">${shopAvatarFull(shop)}</div>`;
+  return `<div class="agen">${genericBody(SEAT_COLORS[i] || '#1D5FC2')}<div class="ahead">${avatar(p, i)}</div></div>`;
 }
 
 // ---------- v0.61.1 Muskel-Esel (Alps Wunsch): klettert aus der Karte, wirft mit Wucht, klettert zurück ----------
@@ -449,13 +496,33 @@ export function renderGame(root, ctx) {
   const me = v.players[meIdx];
   const idxOf = (id) => v.players.findIndex((p) => p.id === id);
   const nameOf = (id) => (id === meId ? 'Du' : v.players[idxOf(id)]?.name || '?');
+  // v0.62 „Profilbild wird lebendig“: Figur springt aus dem Profilbild (Kopf = Profilbildgröße) und steht daneben
+  const figOf = (pid) => { const i = idxOf(pid); const pr = avatarLookup(pid); return aliveFig(v.players[i], i, pr?.shop); };
+  const MOTH = '<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M20 12C14 2 4 0 2 6s6 10 16 8C10 18 6 24 12 24s8-6 8-10c0 4 2 10 8 10s2-6-6-10c10 2 18-2 16-8S26 2 20 12z" fill="#B9B1A3" stroke="#3a332c" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 8v10" stroke="#3a332c" stroke-width="2.4" stroke-linecap="round"/></svg>';
+  // Profilbild ist „leer“, solange die Figur draußen ist (Platz bekommt Klasse .out)
+  const outMark = (pid, from, until) => { local.out = local.out || {}; const o = local.out[pid]; local.out[pid] = { from: o && o.until > Date.now() ? Math.min(o.from, from) : from, until: Math.max(o && o.until > Date.now() ? o.until : 0, until) }; wakeLocal(from); wakeLocal(until + 20); };
+  // aliveGag: el = schon vergangene Zeit, delay = Start später (ms), raw = ohne eigene Vorspul-Hülle (für keepFx)
+  const aliveGag = (pid, kind, el, dur, delay = 0, raw = false) => {
+    if (idxOf(pid) < 0) return '';
+    const at = pid === meId ? '@me' : esc(pid);
+    const t0 = Date.now() - el;
+    outMark(pid, t0 + delay, t0 + delay + dur);
+    let extra = '';
+    if (kind === 'pleite') extra = `<i class="ptasche l"></i><i class="ptasche r"></i><i class="pstaub"></i>${[0, 1, 2].map((k) => `<i class="pmotte m${k}" style="animation-delay:${delay + 700 + k * 260}ms">${MOTH}</i>`).join('')}<b class="pstempel" style="animation-delay:${delay + 500}ms">PLEITE!</b>`;
+    if (kind === 'cheer') extra = `<b class="ameins" style="animation-delay:${delay + 350}ms">Meins!</b>${[0, 1, 2, 3, 4, 5].map((k) => `<i class="aconf c${k}" style="animation-delay:${delay + 300 + k * 40}ms"></i>`).join('')}`;
+    const html = `<div class="alive k-${kind} ${pid === meId ? 'mine' : ''}" data-aim-from="${at}" data-aim-to="@near:${at}" style="--tx:0px;--ty:0px;--dur:${dur}ms;animation-delay:${delay}ms" aria-hidden="true"><div class="afig" style="animation-delay:${delay}ms">${figOf(pid)}</div>${extra}</div>`;
+    return raw ? html : `<div class="fxk" data-fxat="${t0}">${html}</div>`;
+  };
+  // Tier-Figur (Kopf = Kartenbild) für Ratte, Polonaise, Kuhhandel-Koffer
+  const beast = (id, cls = '', inner = '') => `<div class="beast ${cls}" style="--a:${ANIMAL_COLORS[id] || '#888'}"><i class="blegs"><b></b><b></b></i><i class="bhead">${art(id)}</i>${inner}</div>`;
   // v0.61 Prügel-Animation (Comic, keine echte Gewalt): Laufen → Staubwolke mit POW/BAM → zurück
   const punchFx = (pu) => {
     const src = pu.from === meId ? '@me' : esc(pu.from); const dst = pu.to === meId ? '@me' : esc(pu.to);
-    const pr = avatarLookup(pu.from); const fp = v.players[idxOf(pu.from)];
-    const fig = pr?.shop ? shopAvatarFull(pr.shop) : avatar(fp, idxOf(pu.from));
+    const pr = avatarLookup(pu.from);
+    const fig = figOf(pu.from);
+    local.outUntil = local.outUntil || {}; local.outUntil[pu.from] = Math.max(local.outUntil[pu.from] || 0, pu.at + PUNCH_MS);
     const who = `${esc(pu.from === meId ? 'Du' : nameOf(pu.from))} ${pu.from === meId ? 'verprügelst' : 'verprügelt'} ${esc(pu.to === meId ? 'dich' : nameOf(pu.to))}!`;
-    return `<div class="pwalk ${pu.from === meId ? 'mine' : ''} ${pr?.shop ? 'full' : 'round'}" data-aim-from="${src}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" aria-hidden="true">${fig}</div>
+    return `<div class="pwalk ${pu.from === meId ? 'mine' : ''} ${pr?.shop ? 'full' : 'gen'}" data-aim-from="${src}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" aria-hidden="true">${fig}</div>
       <div class="pcloud ${pu.to !== meId && /^t/.test(seatOf(pu.to)) ? 'low' : ''}" data-aim-from="${dst}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" role="status"><i class="pc c1"></i><i class="pc c2"></i><i class="pc c3"></i><i class="pc c4"></i>
         <b class="pw w1">POW!</b><b class="pw w2">BAM!</b><b class="pw w3">KLATSCH!</b><em class="ps s1">⭐</em><em class="ps s2">✨</em><em class="ps s3">⭐</em><span class="pf f1">👊</span><span class="pf f2">🦶</span><span class="plabel">${who}</span></div>`;
   };
@@ -596,7 +663,7 @@ export function renderGame(root, ctx) {
     if (isMe) return said ? `<div class="mebubble ${state.phase === 'payment' || state.phase === 'trade' || state.phase === 'rat' || local.tradeOpen ? 'up' : ''}">${bubble}</div>` : '';
     const laidN = state.phase === 'rat' ? (v.rat.laid[p.id] || 0) : 0;
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
-    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
+    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}${avatar(p, i)}
@@ -1382,6 +1449,7 @@ export function renderGame(root, ctx) {
     const [qp, qa] = added.length ? added[0].split('|') : [];
     if (added.length) { local.qSound = true; if (qp === meId) local.qMine = true; }
     if (added.length && evNew && receiverOf(le) === qp && le.animal === qa) local.qBadge = `${evSig}`; // Quartett steht als Abzeichen im Ergebnis-Fenster
+    if (added.length) local.poloNext = { pid: qp, animal: qa, delay: evNew ? evDelay + 600 : 500 };
     else if (added.length) {
       const [pid, animal] = added[0].split('|');
       const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
@@ -1589,6 +1657,38 @@ export function renderGame(root, ctx) {
     let seen = 0; try { seen = Number(localStorage.getItem('kh_evseen')) || 0; localStorage.setItem('kh_evseen', String(seen + 1)); } catch { /* egal */ }
     local.res.hint = seen < 8;
   }
+  // ---------- v0.62 Gags ----------
+  if (evNew && le) {
+    // Versteigerung gewonnen: Gewinner springt aus dem Profilbild und jubelt (nach dem Ergebnis-Fenster)
+    if (le.type === 'auction_won' && idxOf(le.buyer) >= 0) keepFx(aliveGag(le.buyer, 'cheer', 0, 2300, evDelay + 700, true), evDelay + 3100);
+    // Kuhhandel entschieden: das Tier läuft beleidigt mit Koffer vom Abgeber zum Empfänger
+    if (le.type === 'trade') {
+      const to = receiverOf(le); const from = to === le.challenger ? le.target : le.challenger;
+      if (idxOf(to) >= 0 && idxOf(from) >= 0) {
+        const pt = (pid) => (pid === meId ? '@me' : pid);
+        keepFx(`<div class="tripwalk" data-route="${esc(pt(from))};${esc(pt(to))}" data-dur="1900" data-delay="${evDelay + 250}">${beast(le.animal, 'walk', `<i class="bkoffer"></i>${le.count > 1 ? `<b class="bcount">${le.count}×</b>` : ''}`)}</div>`, evDelay + 2300);
+        later.push(['trade', evDelay + 300]);
+      }
+    }
+  }
+  // Ratte aufgedeckt: die Ratte klettert aus der Karte, flitzt zu jedem Geldstapel, schnüffelt, und zurück
+  if (le?.type === 'rat_drawn' && evFresh && local.ratRunSig !== le.n) {
+    local.ratRunSig = le.n;
+    const stops = v.players.map((p) => (p.id === meId ? '@myfan' : p.id));
+    const SEG = 480, HOLD = 520, START = 900;
+    const route = ['@card']; const offs = [0]; let t = 0;
+    stops.forEach((st) => { t += SEG; route.push(st); offs.push(t); t += HOLD; route.push(st); offs.push(t); });
+    t += SEG; route.push('@card'); offs.push(t);
+    keepFx(`<div class="ratrun" data-route="${route.map(esc).join(';')}" data-offs="${offs.map((o) => (o / t).toFixed(3)).join(',')}" data-dur="${t}" data-delay="${START}">${beast(RAT, 'rat')}</div>`, START + t + 100);
+    stops.forEach((_, k) => later.push(['tick', START + SEG * (k + 1) + HOLD * k + 120]));
+  }
+  // Quartett komplett: die 4 Tiere tanzen eine Polonaise über den Tisch und zurück
+  if (local.poloNext) {
+    const { pid, animal, delay } = local.poloNext; local.poloNext = null;
+    const pt = pid === meId ? '@me' : pid;
+    keepFx([0, 1, 2, 3].map((k) => `<div class="polo" data-route="${esc(pt)};@cl;@cr;${esc(pt)}" data-offs="0,.3,.7,1" data-dur="3000" data-delay="${delay + k * 190}">${beast(animal, 'dance')}</div>`).join(''), delay + 3800);
+  }
+
   const closeRes = () => {
     if (!local.res) return;
     const left = local.res.at + local.res.dur - Date.now();
@@ -1753,15 +1853,8 @@ export function renderGame(root, ctx) {
       const need = e.special ? `${e.count} Karte${e.count === 1 ? '' : 'n'}` : `${e.amount} Taler`;
       const after = e.special ? `→ darf erst ab ${bills.length} buzzern` : `→ darf jetzt höchstens ${e.amount - BID_STEP} bieten`;
       const w = Math.max(30, Math.min(58, Math.floor(400 / Math.max(1, bills.length)) - 6));
-      // v0.61.1 Beispiel-Gag „Pleite!“: am Platz des Spielers stülpen sich die leeren Hosentaschen raus, Motten flattern heraus
-      if (el < 3200) {
-        const at = mine ? '@me' : esc(e.player);
-        const moth = '<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M20 12C14 2 4 0 2 6s6 10 16 8C10 18 6 24 12 24s8-6 8-10c0 4 2 10 8 10s2-6-6-10c10 2 18-2 16-8S26 2 20 12z" fill="#B9B1A3" stroke="#3a332c" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 8v10" stroke="#3a332c" stroke-width="2.4" stroke-linecap="round"/></svg>';
-        effects += `<div class="pleite" data-aim-from="${at}" data-aim-to="${at}" style="--tx:0px;--ty:0px;animation-delay:-${el}ms" aria-hidden="true">
-          <i class="ptasche l" style="animation-delay:-${el}ms"></i><i class="ptasche r" style="animation-delay:-${el}ms"></i><i class="pstaub" style="animation-delay:-${el}ms"></i>
-          ${[0, 1, 2].map((k) => `<i class="pmotte m${k}" style="animation-delay:${450 + k * 260 - el}ms">${moth}</i>`).join('')}
-          <b class="pstempel" style="animation-delay:${300 - el}ms">PLEITE!</b></div>`;
-      }
+      // v0.62 „Pleite!“: die Figur springt aus ihrem Profilbild, stülpt die leeren Hosentaschen raus, Motten flattern
+      if (el < 3400) effects += aliveGag(e.player, 'pleite', el, 3400);
       effects += `<div class="cantpop" data-a="cpClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${CANTPAY_MS}ms;--bw:${w}px">
         <small>Kann nicht zahlen</small>
         <b>${esc(mine ? 'Du' : nameOf(e.player))} ${mine ? 'kannst' : 'kann'} ${need} nicht zahlen</b>
@@ -1896,6 +1989,7 @@ export function renderGame(root, ctx) {
   fitAuslage(root);
   aimFly(root);
   aimFx(root);
+  routeFx(root);
   mouthBubbles(root);
   seekFx(root);
   syncLoops();

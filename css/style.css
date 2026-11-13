@@ -3138,3 +3138,65 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
   /* zurück: kurzer Hüpfer, dann reinplumpsen – der Kopf landet wieder genau im Kartenbild */
   88% { transform: translateY(-10px) rotate(-3deg); } 97% { transform: translateY(122px) rotate(2deg); } 100% { transform: translateY(118px) rotate(0); }
 }
+/* ===== v0.62 „Profilbild wird lebendig“ + Gags (Alps Wahl 14.11.) ===== */
+.prow.out .pid > .avatar { opacity: .18; filter: grayscale(1); transition: opacity .15s; } /* Figur ist gerade draußen */
+.stage:has(.alive.mine) .meplate .mefig { visibility: hidden; }
+.alive { position: absolute; z-index: 36; pointer-events: none; width: 72px; height: 120px; opacity: 0; animation: aliveout var(--dur, 2400ms) cubic-bezier(.3,.7,.3,1) both; transform-origin: 50% 20%; }
+@keyframes aliveout {
+  0% { opacity: 0; transform: translate(0, 0) scale(.3); }
+  9% { opacity: 1; transform: translate(calc(var(--tx) * .6), calc(var(--ty) * .6 - 24px)) scale(.9) rotate(-8deg); }
+  15% { transform: translate(var(--tx), var(--ty)) scale(1.08, .92) rotate(0); }
+  20%, 86% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1); }
+  95% { opacity: 1; transform: translate(calc(var(--tx) * .3), calc(var(--ty) * .3 - 16px)) scale(.6) rotate(8deg); }
+  100% { opacity: 0; transform: translate(0, 0) scale(.3); }
+}
+.alive .afig, .pwalk .agen, .pwalk .afull { width: 72px; height: 120px; position: relative; }
+.alive .afull .shop-avatar-full, .pwalk .afull .shop-avatar-full { width: 72px; height: 120px; filter: drop-shadow(0 4px 5px rgba(0,0,0,.45)); }
+.agen { position: relative; width: 72px; height: 120px; filter: drop-shadow(0 4px 5px rgba(0,0,0,.45)); }
+.agen .gbody { position: absolute; inset: 0; width: 72px; height: 120px; }
+.agen .ahead { position: absolute; left: 11px; top: 0; width: 50px; height: 50px; }
+.agen .ahead .avatar { width: 50px; height: 50px; font-size: 22px; }
+.pwalk.gen { height: 120px; }
+/* Jubel: Arme hoch, hüpfen, Konfetti, „Meins!“ */
+.alive.k-cheer .afig { animation: acheer .42s ease-in-out 5 alternate both; }
+@keyframes acheer { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-14px) rotate(4deg); } }
+.alive.k-cheer .garm.l { transform-box: view-box; transform-origin: 38px 88px; transform: rotate(140deg); }
+.alive.k-cheer .garm.r { transform-box: view-box; transform-origin: 82px 88px; transform: rotate(-140deg); }
+.alive .ameins { position: absolute; left: 50%; top: -26px; transform: translateX(-50%); padding: 2px 9px; border-radius: 999px; background: #fff; color: var(--ink, #1a1a1a); font: 800 13px var(--font-head); white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.25); animation: ppop .4s cubic-bezier(.2,.9,.3,1.5) both; }
+.alive .aconf { position: absolute; left: 34px; top: 10px; width: 7px; height: 11px; border-radius: 2px; opacity: 0; animation: aconf 1.4s ease-out both; }
+.alive .aconf.c0 { background: #FFD34E; --cx: -40px; } .alive .aconf.c1 { background: #E5484D; --cx: 36px; } .alive .aconf.c2 { background: #3CCB7F; --cx: -24px; }
+.alive .aconf.c3 { background: #6D3FC0; --cx: 46px; } .alive .aconf.c4 { background: #1D5FC2; --cx: -50px; } .alive .aconf.c5 { background: #F28C1B; --cx: 20px; }
+@keyframes aconf { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 40% { transform: translate(calc(var(--cx) * .7), -46px) rotate(200deg); } 100% { opacity: 0; transform: translate(var(--cx), 30px) rotate(520deg); } }
+/* Pleite an der Figur: Taschen auf Hüfthöhe */
+.alive.k-pleite .afig { animation: apleite 3.4s ease-in-out both; }
+@keyframes apleite { 0%, 20% { transform: none; } 24%, 32%, 40% { transform: rotate(-3deg); } 28%, 36% { transform: rotate(3deg); } 50%, 100% { transform: translateY(2px) scale(.98); } }
+.alive .ptasche { position: absolute; top: 74px; width: 20px; height: 24px; background: #F4EFE4; border: 2.5px solid #3a332c; border-radius: 3px 3px 10px 10px; transform-origin: 50% 0; animation: ptasche 3.4s cubic-bezier(.3,1.6,.5,1) both; animation-delay: inherit; }
+.alive .ptasche.l { left: 6px; --r: -18deg; } .alive .ptasche.r { right: 6px; --r: 18deg; }
+.alive .pstaub { position: absolute; left: 6px; top: 92px; width: 60px; height: 22px; border-radius: 50%; background: radial-gradient(closest-side, rgba(214,204,186,.9), rgba(214,204,186,0)); animation: pstaub 3.4s ease-out both; }
+.alive .pmotte { position: absolute; left: 20px; top: 80px; width: 32px; opacity: 0; animation: pmotte 2.2s ease-out both; }
+.alive .pmotte svg { width: 32px; height: 20px; animation: pflatter .14s linear infinite alternate; }
+.alive .pmotte.m0 { --mx: -46px; } .alive .pmotte.m1 { --mx: 8px; } .alive .pmotte.m2 { --mx: 52px; }
+.alive .pstempel { position: absolute; left: 50%; top: -24px; padding: 2px 9px; border: 3px solid #E5484D; border-radius: 6px; color: #E5484D; background: rgba(255,255,255,.94); font: 900 15px var(--font-head); letter-spacing: 1px; white-space: nowrap; opacity: 0; transform: translateX(-50%) rotate(-10deg); animation: pstempel .45s cubic-bezier(.2,.9,.3,1.4) both; }
+/* Tier-Figuren (Kopf = Kartenbild): Ratte, Polonaise, Kuhhandel-Koffer */
+.ratrun, .polo, .tripwalk { position: absolute; z-index: 35; pointer-events: none; width: 48px; height: 56px; }
+.beast { position: relative; width: 48px; height: 56px; }
+.beast .bhead { position: absolute; left: 2px; top: 0; width: 44px; height: 44px; border-radius: 50%; background: var(--a); border: 3px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,.4); overflow: hidden; display: grid; place-items: center; z-index: 2; }
+.beast .bhead svg { width: 40px; height: 40px; }
+.beast .blegs { position: absolute; left: 12px; top: 38px; width: 24px; height: 18px; }
+.beast .blegs b { position: absolute; top: 0; width: 8px; height: 17px; border-radius: 4px; background: #3B3F4A; border: 2px solid #2B2B2B; transform-origin: 50% 0; animation: bstep .22s ease-in-out infinite alternate; }
+.beast .blegs b:first-child { left: 0; } .beast .blegs b:last-child { right: 0; animation-direction: alternate-reverse; }
+@keyframes bstep { from { transform: rotate(-24deg); } to { transform: rotate(24deg); } }
+.beast.rat .bhead { width: 38px; height: 38px; left: 5px; background: #8E8E99; }
+.beast.rat::after { content: ''; position: absolute; left: 36px; top: 30px; width: 22px; height: 4px; border-radius: 4px; background: #E8A3B0; transform-origin: 0 50%; animation: rtail .3s ease-in-out infinite alternate; }
+@keyframes rtail { from { transform: rotate(-30deg); } to { transform: rotate(20deg); } }
+.ratrun .beast { animation: rsniff .18s ease-in-out infinite alternate; }
+@keyframes rsniff { from { transform: rotate(-6deg) translateY(0); } to { transform: rotate(6deg) translateY(-3px); } }
+.stage:has(.ratrun) .tcenter .bigcard .art { visibility: hidden; } /* die Ratte ist gerade aus ihrer Karte raus */
+.polo .beast { animation: pdance .3s ease-in-out infinite alternate; }
+@keyframes pdance { from { transform: rotate(-10deg) translateY(0); } to { transform: rotate(10deg) translateY(-8px); } }
+.tripwalk .beast { animation: bwob .25s ease-in-out infinite alternate; }
+@keyframes bwob { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+.beast .bkoffer { position: absolute; right: -14px; top: 34px; width: 20px; height: 15px; border-radius: 3px; background: #8B5A2B; border: 2px solid #2B2B2B; z-index: 3; }
+.beast .bkoffer::before { content: ''; position: absolute; left: 5px; top: -6px; width: 6px; height: 5px; border: 2px solid #2B2B2B; border-bottom: 0; border-radius: 3px 3px 0 0; }
+.beast .bcount { position: absolute; left: -8px; top: -6px; z-index: 3; padding: 0 5px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 11px var(--font-head); border: 2px solid #2B2B2B; }
+@media (prefers-reduced-motion: reduce) { .alive, .ratrun, .polo, .tripwalk { display: none; } }

@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.62.0 – Alles wird lebendig
+
+- [x] **Profilbild wird lebendig:** Figuren springen aus ihrem runden Profilbild (Kopf = Profilbildgröße) und stehen neben ihrem Platz; das Profilbild ist so lange leer. Shop-Avatare mit eigenem Körper, alle anderen bekommen einen Standard-Körper in ihrer Platzfarbe.
+- [x] Avatar-Gags: **Versteigerung gewonnen** → Gewinner jubelt („Meins!“, Konfetti) · **Pleite!** → Taschen raus, Motten · **Verprügeln** → die Figur selbst läuft hin. Bei „Überboten“ bewusst keine Animation.
+- [x] Tierkarten-Gags: **Ratte** klettert aus ihrer Karte und schnüffelt an jedem Geldstapel · **Quartett** → die 4 Tiere tanzen Polonaise · **Kuhhandel** → das Tier läuft beleidigt mit Koffer zum neuen Besitzer.
+
 ## v0.61.1 – Muskel-Esel & Pleite
 
 - [x] Esel-Bonus: Ein muskulöser Esel (Sixpack, Bizeps, rote Shorts) klettert aus der Karte – sein Kopf startet genau im Kartenbild –, knüllt die Scheine und wirft jedem mit Wucht einen Papierball an den Kopf, dann plumpst er zurück in die Karte.
