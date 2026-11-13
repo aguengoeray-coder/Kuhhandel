@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.59.1 – Größere Tiere
+
+- [x] Karte und Stapel in der Mitte etwas kleiner, dafür sind deine Tiere im Regal deutlich größer (bis 118 %, vorher 82 %).
+
 ## v0.59.0 – Dein Platz wie bei den Mitspielern, nur groß
 
 - [x] Deine Tiere stehen als Regal in **einer Reihe** direkt über deinem Geld – über die ganze Breite zwischen Knöpfen und Figur (am Ende deutlich größer als vorher); Anzahl-Plakette „2×“ liegt wie bei den Mitspielern auf der Karte; Ratten bleiben Karten.
