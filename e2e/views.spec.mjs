@@ -21,6 +21,11 @@ const PAGES = [
   { seite: 'start-regeln', q: '?demo=start&klick=1', klick: '[data-dock="rules"]' },
   { seite: 'warteraum', q: '?demo=room&klick=1' },
   ...GAME_DEMOS.map((d) => ({ seite: d, q: `?demo=${d}` })),
+  // 3 Spieler (Regression v0.52.2: Kuhhandel-Feld überdeckte „Abbrechen“ bzw. dein Geld) – nur Demos, die mit 3 Spielern funktionieren
+  ...['turn', 'tradesetup', 'tradeum2', 'traderespond', 'traderatrespond', 'auction3', 'block', 'ended'].filter((d) => GAME_DEMOS.includes(d)).map((d) => ({ seite: `${d}-3sp`, q: `?p=3&demo=${d}` })),
+  // Startseite mit großem Ganzkörper-Avatar (v0.52) und ohne Avatar
+  { seite: 'start-avatar', q: '?demo=start&klick=1&myav=kuh-kaiser' },
+  { seite: 'shop-avatare', q: '?demo=start&klick=1', klick: '[data-dock="shop"]' },
   // Shop (kommt mit v0.48): wird automatisch mitgeprüft, sobald shop-demo.html im Repo liegt
   ...(existsSync(new URL('../shop-demo.html', import.meta.url)) ? [{ seite: 'shop', q: 'shop-demo.html?' }] : []),
   ...['auction', 'self', 'trade', 'special', 'specialself', 'gift', 'money', 'rat', 'ratgot'].map((ev) => ({ seite: `ergebnis-${ev}`, q: `?demo=turn&ev=${ev}&pop=1` })),

@@ -2652,3 +2652,13 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .kslots.arr > * { animation: karr .25s ease-out both; animation-delay: var(--ad, 0ms); }
 @keyframes karr { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .kslots.arr > * { animation: none; } }
+/* v0.52.2: 3 Spieler – Kuhhandel-Feld sitzt so hoch wie bei 4 Spielern (überdeckte sonst „Abbrechen“ bzw. dein Geld) */
+.stage.p3 .tduel { margin-top: -18px; }
+.stage.p3 .tduel.respond { margin-top: 0; }
+.stage.p3 .tduel.respond .tline.big small { display: none; }
+.stage.p3 .tduel.respond .tpanel { gap: 2px; }
+.stage.p3 .tduel.respond .tbtn { min-height: 40px; }
+/* v0.52.2: ruhigerer Tisch – handelbare Tiere bekommen einen festen Goldrand statt zu pulsieren.
+   Bewegung bleibt nur für das Wichtige: wer dran ist (Rahmen/Leuchten), der Stapel zum Tippen, dein Hauptknopf und das Gebot. */
+.chip.tradechip, .chip.card.tradechip .mcard { animation: none; }
+.chip.tradechip::after { animation: none; opacity: 0; }
