@@ -1,4 +1,4 @@
-import { SHOP_AVATARS, SHOP_AVATAR_CSS, shopAvatar } from './shopavatars.js';
+import { SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS, shopAvatarFull } from './shopavatars.js';
 
 export const SHOP_SAYINGS = [
   { id:'spruch-daumen', text:'👍👍', price:10 },
@@ -26,7 +26,7 @@ function addAvatarCss() {
   if (document.getElementById('shop-avatar-runtime-css')) return;
   const style = document.createElement('style');
   style.id = 'shop-avatar-runtime-css';
-  style.textContent = SHOP_AVATAR_CSS;
+  style.textContent = SHOP_AVATAR_CSS + SHOP_AVATAR_FULL_CSS;
   document.head.append(style);
 }
 
@@ -58,7 +58,7 @@ export function renderShop(root, ctx) {
         : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' ' + DUB + '</button>';
     return '<article class="shop-item shop-avatar-item shop-tier-' + esc(item.tier) + (active ? ' is-active' : '') + (has ? ' is-owned' : '') + '">' +
       '<span class="shop-tier-tag">' + tierLabel[item.tier] + '</span>' +
-      '<div class="shop-art">' + shopAvatar(item.id) + '</div>' +
+      '<div class="shop-art full" data-tier="' + esc(item.tier) + '">' + shopAvatarFull(item.id) + '</div>' +
       '<strong class="shop-item-name">' + esc(item.name) + '</strong>' +
       action + '</article>';
   };

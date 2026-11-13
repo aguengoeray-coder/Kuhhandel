@@ -2639,3 +2639,12 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .ratrun.r2 { top: 290px; width: 38px; height: 38px; animation-duration: 1.35s; animation-delay: .5s; }
 @media (prefers-reduced-motion: reduce) { .moneyrain { display: none; } }
 .mbox { max-height: calc(100dvh - 16px); overflow-y: auto; } /* v0.51: lange Fenster (z. B. Einstellungen) scrollen statt unten abzuschneiden */
+/* v0.52: dein Avatar groß neben dem Tisch auf der Startseite */
+.hb-stage { padding: 0 clamp(96px, 16vw, 150px); }
+.hb-felt { width: 100%; max-width: 600px; }
+.hb-hero { position: absolute; right: 0; bottom: 0; top: 0; width: clamp(92px, 15vw, 140px); border: 0; background: none; padding: 0 0 2px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; color: #fff; cursor: pointer; z-index: 1; }
+.hb-hero::before { content: ""; position: absolute; left: 6%; right: 6%; bottom: 14px; height: 26px; border-radius: 50%; background: radial-gradient(ellipse at center, var(--pod, #FFD34E) 0%, transparent 70%); opacity: .55; }
+.hb-hero[data-tier="selten"] { --pod: #71A98A; } .hb-hero[data-tier="episch"] { --pod: #A66AD2; } .hb-hero[data-tier="kult"] { --pod: #E2557A; }
+.hb-hero .shop-avatar-full { flex: 0 1 auto; min-height: 0; height: calc(100% - 18px); max-height: 230px; width: auto; max-width: 100%; position: relative; }
+.hb-hero small { position: relative; font-weight: 800; font-size: 11px; line-height: 1.15; text-align: center; background: rgba(0,0,0,.35); border-radius: 10px; padding: 1px 8px; max-width: 100%; }
+.hb-ghost { flex: 0 1 auto; width: 70%; aspect-ratio: 3/5; max-height: calc(100% - 18px); border-radius: 46% 46% 30% 30%; border: 3px dashed rgba(255,255,255,.45); display: grid; place-items: center; font: 700 34px var(--font-head); color: rgba(255,255,255,.6); position: relative; }
