@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.55.0 – Dublonen für alle (+ Schutz der Spielstände)
+
+- [x] **Neue Dublonen** (nach dem SQL von Alp): +2 je echter Partie, +5 je Quartett (höchstens 5), +10 für den Sieg, höchstens 60 pro Tag. Echte Partie = mindestens 3 Konten, 6 Minuten, 25 Züge.
+- [x] **Siegertreppchen** zeigt deine Gutschrift dieser Partie („+2 Mitgespielt · +10 Quartette · +10 Sieg = +22“), der Kontostand wird neu geladen.
+- [x] **Schutz:** Die Datenbank lässt keine erfundenen Spielstände mehr zu (neues Spiel nur im Warteraum, Mitspieler nur per Beitreten, beendete Spiele fest). Revanche läuft über eine Server-Funktion.
+- [x] Ohne das neue SQL läuft alles wie bisher (+10 für den Sieg).
+- [x] Anleitung: `supabase/v0.55-anleitung.md`, Hintergrund: `supabase/v0.55-sicherheit-vorschlag.md`. Neuer Test prüft SQL-Beträge gegen die App.
+
 ## v0.54.1 – Aufgeräumter Tisch
 
 - [x] **Bezahlen:** Die Tierkarte bleibt nach der Versteigerung genau an ihrem Platz (nur der „Verkauft!“-Stempel kommt dazu). Links bleibt „Haben schon“, rechts erscheint die Kasse „Zahle … → Name“ – dort, wo vorher das Gebot stand.

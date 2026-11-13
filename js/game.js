@@ -1227,7 +1227,7 @@ export function renderGame(root, ctx) {
         ${r.place === 1 ? '<span class="crown">👑</span>' : ''}${figure(v.players[i], i, `hop${r.place === 1 ? ' win' : ''}`)}
         <span class="pname2">${esc(r.id === meId ? 'Du' : r.name)}</span>
         <span class="pblock"><b>${r.score}</b><span class="picons">${iconsOf(r)}</span><i>${r.place}.</i></span>
-        ${r.place === 1 && ctx.rewards ? '<span class="pdub">+10 <i class="dub" aria-label="Dublonen"></i></span>' : ''}</button>`;
+        ${r.place === 1 && ctx.rewards && !ctx.myRewards ? '<span class="pdub">+10 <i class="dub" aria-label="Dublonen"></i></span>' : ''}</button>`;
     };
     // Rechnung steht immer da: erst die des Gewinners, Antippen zeigt die eines anderen
     const openRow = ranked.find((r) => r.id === local.scoreOpen) || ranked[0];
@@ -1238,6 +1238,13 @@ export function renderGame(root, ctx) {
       <h2 style="--c:${SEAT_COLORS[winIdx]}">${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
       <div class="pods">${order.map(step).join('')}</div>
       ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
+      ${ctx.rewards && ctx.myRewards ? (() => {
+        // v0.55: was du in dieser Partie verdient hast (vom Server berechnet)
+        const lbl = { partie: 'Mitgespielt', quartett: 'Quartette', sieg: 'Sieg' };
+        const tot = ctx.myRewards.reduce((t, x) => t + x.amount, 0);
+        return ctx.myRewards.length ? `<div class="pdubs">${ctx.myRewards.map((x) => `<span>+${x.amount} ${lbl[x.kind] || ''}</span>`).join('')}<b>= +${tot} <i class="dub" aria-label="Dublonen"></i></b></div>`
+          : '<div class="pdubs none" title="Zählt erst ab 3 Spielern, 6 Minuten und 25 Zügen; höchstens 60 am Tag">Keine Dublonen<small>Partie zu kurz/klein oder Tageslimit</small></div>';
+      })() : ''}
       <div class="sform2">${openRow ? `${esc(openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(state.players[idxOf(openRow.id)], openRow.blocked, !!state.settings?.moneyCounts)}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}` : ''}</div>
       <div class="endbtns">
         <button type="button" class="pill pill-white" data-a="recap">📈 Börsenbericht</button>

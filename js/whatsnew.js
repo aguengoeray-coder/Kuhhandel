@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.55.0', date: '13.11.', items: ['🪙 Dublonen für alle: +2 fürs Mitspielen, +5 je Quartett, +10 für den Sieg (max. 60 am Tag)', '🏆 Am Siegertreppchen siehst du, was du verdient hast', '🔒 Schutz gegen erfundene Spielstände'] },
   { v: '0.54.1', date: '13.11.', items: ['🧹 Aufgeräumter Tisch: Karte bleibt beim Bezahlen stehen, Ergebnis als kompaktes Bild-Fenster', '🃏 Stapel und aufgedeckte Karte gleich groß · deine Sets größer', '💬 „Zuletzt passiert“ steht jetzt im 💬-Menü · goldener Rahmen, wenn du dran bist'] },
   { v: '0.54.0', date: '13.11.', items: ['🎉 Wer ein Tier gewinnt, dessen Avatar springt kurz jubelnd über seinem Platz', '🏆 Siegertreppchen: Shop-Avatare stehen in ganzer Figur auf dem Podest, der Sieger hüpft', '🪙 Am Podest siehst du die Dublonen für den Sieg'] },
   { v: '0.53.0', date: '13.11.', items: ['🃏 Große Karte in der Mitte: Stapel und Tierkarte 40 % größer', '🐮 Deine Tiere stehen jetzt rechts neben deinem Geld'] },
