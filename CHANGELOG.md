@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.52.0 – Avatare mit ganzem Körper
+
+- [x] Alle 14 Shop-Avatare haben jetzt einen ganzen Körper mit eigener Kleidung und Requisite (Aktenkoffer, Zepter, Krücke, Handy …).
+- [x] **Shop:** Die Figuren stehen komplett auf einem Podest in der Farbe ihrer Stufe.
+- [x] **Startseite:** Dein aktiver Avatar steht groß rechts neben dem Tisch; Tippen öffnet den Shop. Ohne Avatar: „? Avatar holen“.
+- [x] Am Spieltisch bleibt der runde Kopf (Platz).
+- [x] Neuer Test: jeder Avatar hat Kopf, Körper und Bewegung.
+
 ## v0.51.0 – Turbo-Spielart
 
 - [x] **⚡ Turbo** im Warteraum einschaltbar (Gastgeber): nur 7 Tierarten (ohne Hahn, Gans, Katze), Versteigerung 6 s statt 10 s, Kuhhandel-Bedenkzeit 12 s statt 20 s. Eine Partie ist etwa halb so lang.

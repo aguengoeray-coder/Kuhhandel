@@ -10,11 +10,11 @@ import { art } from './animals.js';
 import { haptic } from './haptics.js';
 import { renderShop, SHOP_SAYINGS } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
-import { shopAvatar, SHOP_AVATAR_CSS } from './shopavatars.js';
+import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.51.0';
+export const APP_VERSION = '0.52.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -67,7 +67,7 @@ const profiles = new Map(); // Anmelde-ID → { name, animal, color }
 const shopAvatars = new Map();
 const shopMe = { state: 'idle', balance: 0, owned: new Set(), active: null }; // state: idle | loading | ok | off (SQL noch nicht eingerichtet)
 const SAYING_TEXTS = SHOP_SAYINGS.map((x) => x.text);
-try { if (!document.getElementById('shop-avatar-runtime-css')) { const st = document.createElement('style'); st.id = 'shop-avatar-runtime-css'; st.textContent = SHOP_AVATAR_CSS; document.head.append(st); } } catch {}
+try { if (!document.getElementById('shop-avatar-runtime-css')) { const st = document.createElement('style'); st.id = 'shop-avatar-runtime-css'; st.textContent = SHOP_AVATAR_CSS + SHOP_AVATAR_FULL_CSS; document.head.append(st); } } catch {}
 const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
 let lastReactAt = 0;
 const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
@@ -271,6 +271,13 @@ function homeItems() {
   if (DEBUG) items.push({ kind: 'test' }); // Testspiel zuletzt – echte Spiele gehen vor
   return items;
 }
+// v0.52: dein aktiver Shop-Avatar steht groß neben dem Tisch (Tippen öffnet den Shop)
+function heroHtml() {
+  const a = SHOP_AVATARS.find((x) => x.id === shopMe.active);
+  return a ? `<button type="button" class="hb-hero" data-dock="shop" data-tier="${a.tier}" aria-label="Dein Avatar: ${esc(a.name)} – Shop öffnen">${shopAvatarFull(a.id)}<small>${esc(a.name)}</small></button>`
+    : `<button type="button" class="hb-hero empty" data-dock="shop" aria-label="Avatar im Shop holen"><span class="hb-ghost" aria-hidden="true">?</span><small>Avatar holen</small></button>`;
+}
+
 function renderStart() {
   if (shopMe.state === 'idle') loadShop();
   // nach einem Update einmal „Was ist neu?“ zeigen (nicht beim allerersten Start)
@@ -337,6 +344,7 @@ function renderStart() {
         <div class="hb-felt">${nav}${felt}
           ${ui.error ? `<div class="error hb-err" role="alert">${esc(ui.error)}</div>` : ui.homeNote ? `<div class="hb-note" role="status">${esc(ui.homeNote)}</div>` : ''}
         </div>
+        ${shopMe.state === 'ok' ? heroHtml() : ''}
         <div class="hb-side">
           ${it ? `<button class="pill pill-white pill-small" type="button" id="create" ${me.name ? '' : 'disabled'}>＋ Neues Spiel</button>` : ''}
           <button class="pill pill-white pill-small" type="button" data-modal="rejoin">🔑 Mit Code</button>
@@ -1038,8 +1046,9 @@ async function loadShop(force = false) {
   if (!me?.id || (!force && shopMe.state !== 'idle')) return;
   shopMe.state = 'loading';
   if (DEMO) {
-    Object.assign(shopMe, { state: 'ok', balance: 105, active: 'noergler', owned: new Set(['noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen']) });
-    shopAvatars.set(me.id, 'noergler');
+    const av = params.get('myav') || 'noergler';
+    Object.assign(shopMe, { state: 'ok', balance: 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen']) });
+    shopAvatars.set(me.id, av);
     return;
   }
   try {

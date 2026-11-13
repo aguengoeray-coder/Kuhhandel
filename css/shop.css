@@ -49,3 +49,11 @@
 .shop-balance .dub{width:22px;height:22px;align-self:center}
 .shop-tier-kult .shop-tier-tag{background:linear-gradient(90deg,#E2557A,#FF8FB1)}
 .shop-tier-kult{border-color:#E2557A88;background:linear-gradient(170deg,#ff6f9a26,#ffffff08)}
+
+/* v0.52 Ganzkörper-Avatare: die ganze Figur auf einem kleinen Podest */
+.shop-art.full{width:100%;height:150px;display:flex;align-items:flex-end;justify-content:center;position:relative}
+.shop-art.full::before{content:"";position:absolute;left:14%;right:14%;bottom:0;height:22px;border-radius:50%;background:radial-gradient(ellipse at center,var(--pod,#71A98A) 0%,transparent 72%);opacity:.75}
+.shop-art.full[data-tier="episch"]{--pod:#A66AD2}.shop-art.full[data-tier="legendaer"]{--pod:#E8B83F}.shop-art.full[data-tier="kult"]{--pod:#E2557A}
+.shop-art.full .shop-avatar-full{height:100%;width:auto;position:relative}
+.shop-avatar-grid{grid-template-columns:repeat(auto-fill,minmax(124px,1fr))}
+@media(max-width:720px){.shop-art.full{width:100%;height:132px}}

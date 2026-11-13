@@ -24,7 +24,7 @@ const AVATARS = [
     <ellipse cx="60" cy="73" rx="7" ry="5" fill="#E77E91"/><path d="M48 87q12 8 24 0" fill="none"/>
     <path d="M36 43q24-17 48 0l-4 8H40z" fill="#F4F0E8"/><path d="M34 42h52" stroke="#554C48" stroke-width="4"/>
     <path d="M83 65l19 4v16l-19-4z" fill="#E7C84C"/><path d="M88 70l8 2M88 75l8 2" stroke="#554C48" stroke-width="1.5"/>
-    <path d="M24 105l5-29 6 1-1 28M29 104h9" fill="none" stroke="#805B3D" stroke-width="5"/>
+    <g class="sa-low"><path d="M24 105l5-29 6 1-1 28M29 104h9" fill="none" stroke="#805B3D" stroke-width="5"/></g>
   `, '<g class="sa-hearing" fill="none" stroke="#F3D36A" stroke-width="2"><path d="M99 52q9-6 13 2M101 57q6-3 9 2"/></g>') },
   { id:'business-huhn', name:'Gestresstes Business-Huhn', tier:'selten', price:30, animal:'Huhn', motion:'shake', art: () => shell(`
     <path d="M42 30q-9-19 3-22q7 0 9 14q8-17 17-10q7 7-3 20" fill="#E64B3B"/>
@@ -132,8 +132,8 @@ const AVATARS = [
     <ellipse cx="60" cy="84" rx="20" ry="14" fill="#DCD8E0"/><ellipse cx="53" cy="83" rx="3" ry="4" fill="#5B5761"/><ellipse cx="67" cy="83" rx="3" ry="4" fill="#5B5761"/>
     <path d="M51 94q9-5 18 0" fill="none"/>
     <path d="M70 33l14 6-4 7-14-6z" fill="#F3E2C2"/><path d="M75 36l2 5M79 37l-3 4" stroke="#C9A06A" stroke-width="2"/>
-    <path d="M96 114l6-62" stroke="#8A6340" stroke-width="5"/><path d="M94 56h14" stroke="#8A6340" stroke-width="6"/>
-    <path d="M12 116l8-22 12 0 6 22" fill="#B7B4BE"/><rect x="15" y="98" width="22" height="9" rx="3" fill="#FFFFFF"/><path d="M18 100l16 5M18 105l16-5" stroke="#E46A6A" stroke-width="2"/>
+    <g class="sa-low"><path d="M96 114l6-62" stroke="#8A6340" stroke-width="5"/><path d="M94 56h14" stroke="#8A6340" stroke-width="6"/>
+    <path d="M12 116l8-22 12 0 6 22" fill="#B7B4BE"/><rect x="15" y="98" width="22" height="9" rx="3" fill="#FFFFFF"/><path d="M18 100l16 5M18 105l16-5" stroke="#E46A6A" stroke-width="2"/></g>
   `, '<g class="sa-ouch" fill="#FFD34E" stroke="#8A5A00" stroke-width="1.5"><path d="M30 86l3-6 3 6-3 6zM8 82l2-4 2 4-2 4z"/></g>') },
   { id:'nico-schreit', name:'Der schreiende Nico', tier:'kult', price:50, animal:'Schwein', motion:'shout', art: () => shell(`
     <path d="M31 42L22 17 46 30M89 42l9-25-24 13" fill="#F09AAE"/>
@@ -214,4 +214,90 @@ export function shopAvatarCard(id) {
 
 export function shopAvatarGallery() {
   return `<div class="shop-avatar-gallery">${AVATARS.map((a) => shopAvatarCard(a.id)).join('')}</div>`;
+}
+
+// ---------- Ganzkörper (v0.52): Kopf wie oben + Körper mit Kleidung und Requisite ----------
+// Nur für große Ansichten (Shop, Startseite). Am Tisch bleibt der runde Kopf.
+const limb = (d, color, w = 11) => `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 5}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`;
+const ARM = {
+  down: ['M36 96Q26 116 25 136', 'M84 96Q94 116 95 136', [25, 138], [95, 138]],
+  hip: ['M36 96Q20 112 32 128', 'M84 96Q100 112 88 128', [33, 129], [87, 129]],
+  up: ['M36 96Q20 84 18 62', 'M84 96Q100 84 102 62', [18, 60], [102, 60]],
+  hold: ['M36 96Q24 112 30 126', 'M84 96Q96 112 90 126', [30, 128], [90, 128]],
+};
+function figureBody(b) {
+  const [aL, , hL] = [ARM[b.armL || 'down'][0], 0, ARM[b.armL || 'down'][2]];
+  const aR = ARM[b.armR || 'down'][1], hR = ARM[b.armR || 'down'][3];
+  const sleeve = b.sleeve || b.top;
+  const hand = (x, y) => `<circle cx="${x}" cy="${y}" r="6.5" fill="${b.hand || b.fur}" stroke="${INK}" stroke-width="2.5"/>`;
+  return `${b.back || ''}
+    ${limb(b.legL || 'M48 150V188', b.pants, 13)}${limb(b.legR || 'M72 150V188', b.pants, 13)}
+    <path d="M33 194q1-9 15-9t14 9z" fill="${b.shoes}" stroke="${INK}" stroke-width="2.5"/><path d="M58 194q0-9 14-9t15 9z" fill="${b.shoes}" stroke="${INK}" stroke-width="2.5"/>
+    <path d="M36 90Q60 80 84 90L90 152Q60 162 30 152Z" fill="${b.top}" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+    ${b.chest || ''}
+    ${limb(aL, sleeve)}${limb(aR, sleeve)}${hand(...hL)}${hand(...hR)}
+    ${b.front || ''}`;
+}
+const BODIES = {
+  noergler: { fur: '#B99B75', top: '#7B6A57', pants: '#5A5047', shoes: '#3B332E', armL: 'hold', armR: 'hip',
+    chest: '<path d="M60 88v62" stroke="#2A2420" stroke-width="2"/><circle cx="64" cy="104" r="2.5" fill="#E8D8B5"/><circle cx="64" cy="118" r="2.5" fill="#E8D8B5"/><circle cx="64" cy="132" r="2.5" fill="#E8D8B5"/><path d="M44 96l16 14 16-14" fill="none" stroke="#5A4A3A" stroke-width="2"/>' },
+  'opa-ratte': { fur: '#9D98A8', hand: '#E7A6B4', top: '#6E8B5E', sleeve: '#D9D3C4', pants: '#8A7A66', shoes: '#5B4A3C', armL: 'hold',
+    chest: '<path d="M44 98h32M42 112h36M41 126h38M40 140h40" stroke="#5B744D" stroke-width="2.5" stroke-dasharray="3 3"/>',
+    front: '<path d="M30 130v62" stroke="#805B3D" stroke-width="5"/>' },
+  'business-huhn': { fur: '#FFF1D5', top: '#4D688B', pants: '#3E5573', shoes: '#22252B', armR: 'hold',
+    chest: '<path d="M50 88l10 30 10-30z" fill="#E9EEF4"/><path d="M57 92l3 30 3-30z" fill="#C8443A"/>',
+    front: '<rect x="80" y="128" width="26" height="20" rx="3" fill="#6B4A2E" stroke="#2A2420" stroke-width="2.5"/><path d="M88 128v-4h10v4" fill="none" stroke="#2A2420" stroke-width="2.5"/>' },
+  'spar-schwein': { fur: '#F6B7C5', top: '#E7C84C', pants: '#4E6FA3', shoes: '#C1443A', armL: 'hold', armR: 'hold',
+    chest: '<path d="M44 112h32" stroke="#B9982F" stroke-width="3"/>',
+    front: '<ellipse cx="60" cy="130" rx="22" ry="15" fill="#F6B7C5" stroke="#2A2420" stroke-width="2.5"/><path d="M52 118h16" stroke="#2A2420" stroke-width="3"/><circle cx="74" cy="128" r="2" fill="#2A2420"/>' },
+  'boersen-gauner': { fur: '#D98A49', top: '#3A3550', pants: '#2E2A40', shoes: '#151319', armL: 'hold', armR: 'up',
+    chest: '<path d="M44 96v52M52 92v60M68 92v60M76 96v52" stroke="#55507A" stroke-width="1.5"/><path d="M50 90l10 26 10-26" fill="#FFF8E8"/><path d="M46 104q14 14 28 0" fill="none" stroke="#E9C15D" stroke-width="3"/>',
+    front: '<rect x="94" y="44" width="22" height="13" rx="2" fill="#7FBF6E" stroke="#2A2420" stroke-width="2" transform="rotate(-12 105 50)"/><text x="105" y="54" font-size="9" font-weight="800" text-anchor="middle" fill="#2A5A30" font-family="sans-serif" transform="rotate(-12 105 50)">$</text>' },
+  'disco-kuh': { fur: '#FFFDF5', top: '#8E4FC2', pants: '#8E4FC2', shoes: '#F5D75B', armL: 'up', armR: 'hip',
+    legL: 'M48 150Q44 172 40 188', legR: 'M72 150Q76 172 80 188',
+    chest: '<g fill="#F5D75B"><circle cx="48" cy="104" r="2.5"/><circle cx="66" cy="112" r="2.5"/><circle cx="54" cy="128" r="2.5"/><circle cx="74" cy="136" r="2.5"/><circle cx="44" cy="142" r="2.5"/></g><path d="M44 92l16 22 16-22" fill="none" stroke="#F5D75B" stroke-width="3"/>' },
+  'raketen-esel': { fur: '#AEB7C0', hand: '#DCE3EA', top: '#E9EEF2', pants: '#E9EEF2', shoes: '#5B6670', armL: 'hip', armR: 'up',
+    back: '<rect x="28" y="96" width="64" height="44" rx="10" fill="#E2643A" stroke="#2A2420" stroke-width="3"/><path d="M34 140q-4 14 4 20q6-8 2-20M86 140q4 14-4 20q-6-8-2-20" fill="#F6B13A" stroke="#B74A27" stroke-width="2"/>',
+    chest: '<rect x="48" y="104" width="24" height="16" rx="3" fill="#5B6670" stroke="#2A2420" stroke-width="2"/><circle cx="54" cy="112" r="2.5" fill="#E2643A"/><circle cx="62" cy="112" r="2.5" fill="#F5D75B"/><circle cx="70" cy="112" r="2.5" fill="#57F5F1"/><path d="M32 150h56" stroke="#E2643A" stroke-width="4"/>' },
+  'piraten-papagei': { fur: '#35A978', hand: '#E8A52F', top: '#A2352E', pants: '#3B2A22', shoes: '#22201E', armL: 'hold', armR: 'up',
+    chest: '<path d="M60 90v60" stroke="#2A2420" stroke-width="2"/><g fill="#F4D44F" stroke="#8A5A12" stroke-width="1.5"><circle cx="53" cy="104" r="2.5"/><circle cx="67" cy="104" r="2.5"/><circle cx="53" cy="120" r="2.5"/><circle cx="67" cy="120" r="2.5"/></g><rect x="31" y="132" width="58" height="8" fill="#3B2A22"/><rect x="54" y="130" width="12" height="12" rx="2" fill="#F4D44F" stroke="#8A5A12" stroke-width="2"/>',
+    front: '<path d="M102 60L112 22" stroke="#C9D3DB" stroke-width="5"/><path d="M96 60h12" stroke="#8A5A12" stroke-width="5"/>' },
+  daemonenritter: { fur: '#4A3B49', hand: '#5A4E5C', top: '#5A4E5C', pants: '#4A4150', shoes: '#2A232B', armL: 'down', armR: 'hold',
+    back: '<path d="M34 92Q16 150 22 192H98Q104 150 86 92Z" fill="#7B3438" stroke="#2A2420" stroke-width="3"/>',
+    chest: '<path d="M38 100h44M36 120h48M34 140h52" stroke="#3A3040" stroke-width="2.5"/><path d="M52 104l8 18 8-18z" fill="#FF5A43"/>',
+    front: '<path d="M90 132V76" stroke="#C9D3DB" stroke-width="6"/><path d="M80 134h20" stroke="#D9B45A" stroke-width="5"/><path d="M90 76l-4 6h8z" fill="#C9D3DB"/>' },
+  'cyborg-hahn': { fur: '#D9E0E6', hand: '#8796A6', top: '#8796A6', pants: '#687A8C', shoes: '#344B5F', armL: 'up', armR: 'hip',
+    chest: '<rect x="46" y="100" width="28" height="22" rx="4" fill="#182D43" stroke="#34E8EF" stroke-width="2"/><path d="M50 112h6l3-6 4 12 3-6h4" fill="none" stroke="#57F5F1" stroke-width="2"/><path d="M40 136h40" stroke="#34E8EF" stroke-width="2.5" stroke-dasharray="5 4"/>' },
+  'kuh-kaiser': { fur: '#FFFDF5', top: '#B3242E', pants: '#7A1820', shoes: '#C58B25', armL: 'hold', armR: 'down',
+    back: '<path d="M34 92Q14 150 18 194H102Q106 150 86 92Z" fill="#8E1C26" stroke="#2A2420" stroke-width="3"/>',
+    chest: '<path d="M36 90Q60 106 84 90L84 100Q60 116 36 100Z" fill="#FFFDF5" stroke="#2A2420" stroke-width="2"/><g fill="#2A2420"><circle cx="46" cy="99" r="1.6"/><circle cx="60" cy="104" r="1.6"/><circle cx="74" cy="99" r="1.6"/></g><path d="M60 110v40" stroke="#E8B83F" stroke-width="3"/>',
+    front: '<path d="M30 128V70" stroke="#C58B25" stroke-width="5"/><circle cx="30" cy="66" r="7" fill="url(#gold-glow)" stroke="#8B5B12" stroke-width="2"/><circle cx="30" cy="66" r="2.5" fill="#E64D4D"/>' },
+  'bennet-verletzt': { fur: '#B7B4BE', top: '#5E86B8', pants: '#3E4E6A', shoes: '#2A2A30', armL: 'hold', armR: 'hold',
+    legL: 'M48 150Q50 168 44 184',
+    chest: '<path d="M38 96Q60 130 84 96" fill="none" stroke="#FFFFFF" stroke-width="7"/><path d="M38 96Q60 130 84 96" fill="none" stroke="#E46A6A" stroke-width="2" stroke-dasharray="4 4"/>',
+    front: '<rect x="62" y="160" width="20" height="30" rx="6" fill="#FFFFFF" stroke="#2A2420" stroke-width="2.5"/><path d="M66 168l12 4M66 176l12 4" stroke="#E46A6A" stroke-width="2"/><path d="M96 196L100 108" stroke="#8A6340" stroke-width="5"/><path d="M90 112h18" stroke="#8A6340" stroke-width="6"/>' },
+  'nico-schreit': { fur: '#F5A3B6', top: '#3A6FB0', pants: '#2E3B52', shoes: '#F2F2F2', armL: 'up', armR: 'up',
+    chest: '<path d="M46 92q14 14 28 0" fill="none" stroke="#2A4F80" stroke-width="3"/><rect x="44" y="124" width="32" height="14" rx="5" fill="#2F5C95" stroke="#2A2420" stroke-width="2"/><path d="M54 96v12M66 96v12" stroke="#F2F2F2" stroke-width="2"/>' },
+  'alp-quasselt': { fur: '#A86D42', top: '#F2F2F2', pants: '#2F3A4A', shoes: '#6B4A2E', armL: 'up', armR: 'hip',
+    chest: '<path d="M50 90l10 14 10-14" fill="none" stroke="#2A2420" stroke-width="2"/><path d="M60 104v46" stroke="#D0D4DA" stroke-width="2"/><circle cx="60" cy="116" r="1.8" fill="#9AA3AD"/><circle cx="60" cy="130" r="1.8" fill="#9AA3AD"/>',
+    front: '<rect x="8" y="42" width="14" height="22" rx="3" fill="#2A2420"/><rect x="10" y="45" width="10" height="15" rx="1" fill="#7FD3F0"/>' },
+};
+
+// Bewegungen der Ganzkörper-Figur: dieselben wie beim Kopf, nur am ganzen Körper (Drehpunkt an den Füßen)
+export const SHOP_AVATAR_FULL_CSS = SHOP_AVATAR_CSS.split('\n')
+  .filter((l) => /^\.shop-avatar(\[data-motion="[a-z]+"\])? \.(shop-avatar-art|sa-)/.test(l))
+  .map((l) => l.replace(/^\.shop-avatar/, '.shop-avatar-full').replace(/,\.shop-avatar \./g, ',.shop-avatar-full .'))
+  .join('\n') + `
+.shop-avatar-full{display:block;position:relative;aspect-ratio:120/200;isolation:isolate}
+.shop-avatar-full .shop-avatar-art{display:block;width:100%;height:100%;overflow:visible;transform-origin:50% 96%}
+.shop-avatar-full .sa-low{display:none}
+@media(prefers-reduced-motion:reduce){.shop-avatar-full *{animation:none!important}}`;
+
+export function shopAvatarFull(id, className = '') {
+  const item = AVATARS.find((a) => a.id === id);
+  if (!item) return '';
+  const head = item.art().replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
+  const b = BODIES[item.id];
+  const svg = `<svg class="shop-avatar-art" viewBox="0 0 120 200" role="img" aria-hidden="true" focusable="false"><g class="sa-body" stroke-linejoin="round" stroke-linecap="round">${b ? figureBody(b) : ''}</g><g class="sa-head" transform="translate(12 0) scale(.8)">${head}</g></svg>`;
+  return `<span class="shop-avatar-full ${className}" data-avatar="${item.id}" data-tier="${item.tier}" data-motion="${item.motion}" aria-label="${item.name}">${svg}</span>`;
 }
