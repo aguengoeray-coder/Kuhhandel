@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.59.0 – Dein Platz wie bei den Mitspielern, nur groß
+
+- [x] Deine Tiere stehen als Regal in **einer Reihe** direkt über deinem Geld – über die ganze Breite zwischen Knöpfen und Figur (am Ende deutlich größer als vorher); Anzahl-Plakette „2×“ liegt wie bei den Mitspielern auf der Karte; Ratten bleiben Karten.
+- [x] Geld als **Hand von unten mit festen Fächern**: 0, 10, 20, 50, 100, 200, 500 haben immer denselben Platz (fehlende Werte als blasser Platzhalter) – beim Zahlen verrutscht nichts.
+- [x] Deine **Figur rechts groß und immer sichtbar** (auch beim Kuhhandel und „Zeig Batzen“ – für 💬); wenn du dran bist, leuchtet der Rahmen um deine Figur.
+- [x] Karte in der Mitte etwa 8 % kleiner, damit Regal und Hand darunter Platz haben.
+
 ## v0.58.1 – Platz zwischen Karte und Figur
 
 - [x] Deine Figur unten ist etwas kleiner, damit die große Karte bei 3 Spielern bzw. mit Hinweiszeilen nicht an ihren Kopf stößt.

@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.59.0', date: '13.11.', items: ['🧺 Deine Tiere stehen jetzt in einem Regal über deinem Geld – größer und in einer Reihe', '💶 Dein Geld hat feste Fächer: jeder Wert immer am selben Platz', '🧍 Deine Figur steht rechts groß und ist immer zu sehen – auch beim Kuhhandel'] },
   { v: '0.58.1', date: '13.11.', items: ['🧍 Deine Figur hat jetzt etwas mehr Abstand zur Karte in der Mitte'] },
   { v: '0.58.0', date: '13.11.', items: ['🛒 9 neue Charaktere: Mr. Passt Schon (Kult), Die dumme Kuh (Legendär), Mama Sports, Dickes Huhn, Bontje Lebkuchen, Die schmatzenden Zwillinge, Nacht-Gohan, Der schielende Mogli, Der dicke Gojo', '💬 7 neue Sprüche – vom dicken Huhn bis „how old are you? 📱“', '🎁 Zwei Sprüche gratis für jeden – im Shop unter „Sprüche“', '⚖️ Dein Platz unten ist jetzt symmetrisch'] },
   { v: '0.57.1', date: '13.11.', items: ['🧾 Ergebnis-Fenster: der Preis steht in der Überschrift („… kauft das Schaf für 140“), darunter wer wem wie viele Karten gibt'] },

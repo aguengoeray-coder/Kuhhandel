@@ -2877,3 +2877,40 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .kasse.side .kslots.many { flex-wrap: nowrap; gap: 0; }
 .kasse.side .kslots.many > * + * { margin-left: calc(-1 * var(--ov, 7px)); }
 .kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 28px; height: 39px; font-size: 11px; }
+/* ===== v0.59 „Dein Platz wie bei den Mitspielern, nur groß“ (Alps Go 13.11.) =====
+   links deine Knöpfe · Mitte: Tier-Regal über dem Geld (Hand von unten, feste Fächer) · rechts deine Figur groß, immer sichtbar */
+.stage { --bk: 1.29; } /* Karte in der Mitte etwa 8 % kleiner, damit Regal + Hand darunter passen */
+/* Hand: 7 feste Fächer (0 … 500), unten leicht aus dem Bild – wie Karten auf der Hand */
+.stage .fan-wrap { left: 184px; right: 122px; bottom: -14px; justify-content: center; gap: 5px; padding: 0; }
+.stage .fan-wrap.slots > * { margin-left: 0; }
+.stage .fan-wrap .fanempty { display: none; }
+.mghost { width: 44px; height: 62px; flex-shrink: 0; border-radius: 8px; border: 2px dashed rgba(255,255,255,.22); background: rgba(255,255,255,.04);
+  display: flex; align-items: flex-start; justify-content: center; transform: rotate(var(--rot, 0deg)) translateY(var(--dy, 0px)); transform-origin: 50% 100%; }
+.mghost i { font: 700 12px var(--font-head); font-style: normal; color: rgba(255,255,255,.3); margin-top: 8px; }
+/* Regal: deine Tiere in einer Reihe direkt über der Hand – volle Breite zwischen Knöpfen und Figur */
+.stage .auslage.shelf { left: 184px; right: 122px; width: auto; bottom: 54px; max-height: none; height: auto; flex-wrap: nowrap; justify-content: center; align-items: flex-end; gap: 6px; }
+.stage .auslage.shelf > * { zoom: var(--sc, .9); }
+/* Figur rechts, groß und immer sichtbar (auch beim Kuhhandel – für 💬) */
+.stage .meplate, .stage .meplate.full { left: auto; right: 8px; width: 108px; height: 104px; bottom: 4px; }
+.stage .meplate.full .mefig .shop-avatar-full, .stage.p3 .meplate.full .mefig .shop-avatar-full { height: 92px; }
+.stage .meplate.round .mefig .avatar { width: 62px; height: 62px; }
+.stage:has(.tpick, .tduel, .batzen) .meplate { visibility: visible; }
+/* du bist dran: deine Figur leuchtet (statt eines großen Rahmens) */
+.stage .myglow { left: auto; right: 2px; bottom: 0; width: 120px; height: 112px; border-radius: 22px; }
+.stage .mebubble, .stage .mebubble.up { left: auto; right: 24px; top: auto; bottom: 118px; }
+.stage .mebubble .rbubble { transform-origin: 85% 100%; }
+.stage .mebubble .rbubble::after { left: auto; right: 22px; margin-left: 0; }
+/* Kuhhandel/Zeig Batzen: Regal tritt zurück, die Hand bleibt unten mittig */
+.stage:has(.tduel) .fan-wrap, .stage:has(.batzen) .fan-wrap { bottom: -14px; }
+/* Regal flacher: Anzahl-Plakette liegt wie bei den Mitspielern unten auf der Karte */
+.stage .auslage.shelf .stack, .stage .auslage.shelf .amini { position: relative; padding-bottom: 6px; }
+.stage .auslage.shelf .slabel { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); margin: 0; z-index: 2; }
+.stage .auslage.shelf { bottom: 50px; }
+.stage .fan-wrap { bottom: -18px; }
+/* Figur füllt ihren Rahmen */
+.stage .meplate, .stage .meplate.full { width: 104px; height: 114px; right: 10px; }
+.stage .meplate.full .mefig .shop-avatar-full, .stage.p3 .meplate.full .mefig .shop-avatar-full { height: 100px; }
+.stage .myglow { right: 4px; width: 116px; height: 118px; }
+/* Spezialkarte ohne eigenes Tier im Regal: Stern reicht, Name darunter weg (flacher) */
+.stage .auslage.shelf .amini.special span { display: none; }
+.stage .auslage.shelf .amini.special { padding-bottom: 6px; }

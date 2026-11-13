@@ -199,6 +199,7 @@ function figure(p, idx, cls = '') {
 // Nach einem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte, Geldschein) kurz Pause, bevor aufgedeckt werden darf
 // Auslage: bei wenigen Tieren etwas größer (mehr Platz ist zwischen Stapel und Geld nicht)
 const AUSLAGE_MAX = 1;
+const SHELF_MAX = 0.82; // v0.59: Regal über dem Geld – eine Reihe, höchstens 90 % (passt unter die Karte in der Mitte)
 const DEMO_JUB = typeof location !== 'undefined' && new URLSearchParams(location.search).has('mejub'); // Screenshot: deine Figur jubelt
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
@@ -1061,21 +1062,20 @@ export function renderGame(root, ctx) {
     else if (tn < hf.gainAt + 1000) { glowVals.push(...hf.gain); wakeLocal(hf.gainAt + 1010); }
     if (tn < hf.loseAt) { handMoney = [...handMoney, ...hf.lose]; wakeLocal(hf.loseAt + 10); }
   }
-  const grouped = handMoney.length > 3; // v0.57: Geld links von dir ist schmal → gleiche Scheine immer als Stapel (×2) // v0.56: Fächer ist schmaler (deine Figur steht rechts) → ab 10 Scheinen gleiche Werte stapeln (×2)
-  const fanCards = grouped ? [...new Set(handMoney)].sort((x, y) => x - y).map((val) => [val, handMoney.filter((m) => m === val).length]) : [...handMoney].sort((x, y) => x - y).map((m) => [m, 1]);
-  const nM = fanCards.length;
-  const mid = (nM - 1) / 2;
-  // beim Antippen etwas weiter auffächern, damit man auch auf kleinen Handys gut trifft
-  const step = nM > 1 ? Math.min(grouped ? 44 : 38, 200 / (nM - 1)) : 34; // v0.57: Geld links von deiner Figur // Abstand zwischen zwei Scheinen (v0.53: Fächer ist schmaler, rechts stehen deine Tiere)
+  // v0.59 „Dein Platz“: Geld als Hand mit festen Fächern – jeder Wert hat immer denselben Platz (0 … 500),
+  // fehlende Werte bleiben als blasser Platzhalter stehen, damit beim Zahlen/Bekommen nichts verrutscht
+  const SLOTS = Object.keys(MONEY_COLORS).map(Number).sort((x, y) => x - y);
+  const fanCards = SLOTS.map((val) => [val, handMoney.filter((m) => m === val).length]);
+  const mid = (SLOTS.length - 1) / 2;
   let lifted = false;
   const fan = fanCards.map(([m, cnt], i) => {
     const off = i - mid;
-    const rot = nM > 1 ? off * Math.min(6, 36 / nM) : 0;
+    const style = `--m:${MONEY_COLORS[m]};--rot:${(off * 2.5).toFixed(1)}deg;--dy:${Math.round(Math.abs(off) * 2.5)}px`;
+    if (!cnt) return `<span class="mghost" style="${style}" aria-hidden="true"><i>${m}</i></span>`;
     const lift = pickMode === 'rat' && local.ratSel === m && !lifted;
     if (lift) lifted = true;
-    const style = `--m:${MONEY_COLORS[m]};margin-left:${i ? Math.round(step - 46) : 0}px;--rot:${rot}deg;--dy:${Math.min(14, Math.abs(off) * 2.5)}px`;
     const inner = `${mIn(m)}${cnt > 1 ? `<span class="mcount">×${cnt}</span>` : ''}`;
-    const gi = glowVals.indexOf(m); const glow = gi >= 0; if (glow) glowVals.splice(gi, grouped ? glowVals.length : 1);
+    const gi = glowVals.indexOf(m); const glow = gi >= 0; if (glow) glowVals.splice(0, glowVals.length);
     if (!pickMode) return `<div class="money fan ${cnt > 1 ? 'multi' : ''} ${glow ? 'newcard' : ''}" style="${style}">${inner}</div>`;
     const label = pickMode === 'rat' ? `${m} zum Legen wählen` : `${m} ins Feld legen`;
     return `<button type="button" class="money fan pick ${cnt > 1 ? 'multi' : ''} ${lift ? 'lift' : ''}" style="${style}" data-a="${pickMode === 'rat' ? 'ratPick' : 'addv'}" data-v="${m}" aria-label="${label}"${lift ? ' aria-pressed="true"' : ''}>${inner}</button>`;
@@ -1104,9 +1104,9 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
     </div>`}</div>
-    <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)};--sc2:${Math.min(myItems.length <= 6 ? 1 : 0.7, 270 / (Math.max(1, myItems.length <= 6 ? myItems.length : Math.ceil(myItems.length / 2)) * 54)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 528 / Math.max(1, myItems.length * 47)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
-    <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
+    <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
 
   // ----- Menü oben links in der Tischecke -----
