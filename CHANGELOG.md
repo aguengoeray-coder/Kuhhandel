@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.56.0 – Dein Platz am Tisch (Variante C)
+
+- [x] **Deine Figur unten rechts:** dein Shop-Avatar in ganzer Figur (ohne Shop-Avatar: dein rundes Bild) mit Namensschild. Gewinnst du ein Tier, hüpft sie und das 🎉 kommt von ihr.
+- [x] **💬 als Sprechblase über deiner Figur**; deine eigenen Sprüche erscheinen dort.
+- [x] **Goldener Rahmen** („du bist dran“) umschließt jetzt Geld, Tiere und Figur vollständig – die Scheine sitzen höher und sind ganz sichtbar.
+- [x] Fächer staucht sich passend; ab 10 Scheinen werden gleiche Werte gestapelt (×2). Viele Tiere: 2 Reihen, etwas kleiner.
+- [x] Supabase: SQL führt ab jetzt Claude über den Supabase-Connector aus (Regel in AGENTS.md/CLAUDE.md, von Alp freigegeben).
+
 ## v0.55.0 – Dublonen für alle (+ Schutz der Spielstände)
 
 - [x] **Neue Dublonen** (nach dem SQL von Alp): +2 je echter Partie, +5 je Quartett (höchstens 5), +10 für den Sieg, höchstens 60 pro Tag. Echte Partie = mindestens 3 Konten, 6 Minuten, 25 Züge.

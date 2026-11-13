@@ -199,6 +199,7 @@ function figure(p, idx, cls = '') {
 // Nach einem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte, Geldschein) kurz Pause, bevor aufgedeckt werden darf
 // Auslage: bei wenigen Tieren etwas größer (mehr Platz ist zwischen Stapel und Geld nicht)
 const AUSLAGE_MAX = 1;
+const DEMO_JUB = typeof location !== 'undefined' && new URLSearchParams(location.search).has('mejub'); // Screenshot: deine Figur jubelt
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
 const EV_WAIT = { auction_won: 3000, special_won: 3500, trade: 4800, rat_taken: 3500 }; // Kuhhandel: inkl. ~1 s Aufdecken
@@ -292,6 +293,10 @@ function aimFly(root) {
 // Wo sitzt jemand auf der Bühne? Mitspieler: Mitte ihres Bildes am Platz · du: dein Geld unten (sonst unten Mitte)
 function seatPoint(root, pid, sr, sc) {
   // „@pot“: der Topf in der Mitte (Rattenrunde) – ist er schon weg, die Tischmitte
+  if (pid === '@me') {
+    const el = root.querySelector('.meplate .mefig');
+    if (el) { const r = el.getBoundingClientRect(); return { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height * 0.3 - sr.top) / sc }; }
+  }
   // „@offer“: das verdeckte Angebot in der Mitte (Kuhhandel/Rattenhandel)
   if (pid === '@pot' || pid === '@offer') {
     const el = pid === '@offer' ? root.querySelector('.tpanel .kslots') || root.querySelector('.tcenter') : root.querySelector('.potbox .pot') || root.querySelector('.tcenter');
@@ -1052,12 +1057,12 @@ export function renderGame(root, ctx) {
     else if (tn < hf.gainAt + 1000) { glowVals.push(...hf.gain); wakeLocal(hf.gainAt + 1010); }
     if (tn < hf.loseAt) { handMoney = [...handMoney, ...hf.lose]; wakeLocal(hf.loseAt + 10); }
   }
-  const grouped = handMoney.length > 11;
+  const grouped = handMoney.length > 9; // v0.56: Fächer ist schmaler (deine Figur steht rechts) → ab 10 Scheinen gleiche Werte stapeln (×2)
   const fanCards = grouped ? [...new Set(handMoney)].sort((x, y) => x - y).map((val) => [val, handMoney.filter((m) => m === val).length]) : [...handMoney].sort((x, y) => x - y).map((m) => [m, 1]);
   const nM = fanCards.length;
   const mid = (nM - 1) / 2;
   // beim Antippen etwas weiter auffächern, damit man auch auf kleinen Handys gut trifft
-  const step = nM > 1 ? Math.min(grouped ? 50 : pickMode ? 40 : 34, (pickMode ? 280 : 250) / (nM - 1)) : 34; // Abstand zwischen zwei Scheinen (v0.53: Fächer ist schmaler, rechts stehen deine Tiere)
+  const step = nM > 1 ? Math.min(grouped ? 50 : pickMode ? 40 : 34, (pickMode ? 220 : 200) / (nM - 1)) : 34; // Abstand zwischen zwei Scheinen (v0.53: Fächer ist schmaler, rechts stehen deine Tiere)
   let lifted = false;
   const fan = fanCards.map(([m, cnt], i) => {
     const off = i - mid;
@@ -1095,7 +1100,7 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
     </div>`}</div>
-    <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)};--sc2:${Math.min(1, 246 / (Math.max(1, myItems.length <= 4 ? myItems.length : Math.ceil(myItems.length / 2)) * 54)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)};--sc2:${Math.min(myItems.length <= 4 ? 1 : 0.8, 228 / (Math.max(1, myItems.length <= 4 ? myItems.length : Math.ceil(myItems.length / 2)) * 54)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
@@ -1327,7 +1332,11 @@ export function renderGame(root, ctx) {
     // v0.54: Jubel – wer das Tier bekommt (Versteigerung, Spezialkarte, Kuhhandel), dessen Figur hüpft kurz über seinem Platz
     const rid = le.type === 'rat_taken' ? null : receiverOf(le);
     const ri = rid ? idxOf(rid) : -1;
-    if (ri >= 0) {
+    if (rid === meId) {
+      // v0.56: du jubelst selbst – deine Figur unten rechts hüpft, das 🎉 kommt von ihr
+      local.meJubAt = Date.now() + ch.payAt - 150;
+      keepFx(`<div class="cheerfx me burst" data-aim-to="@me" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true"><i class="cheerstar">🎉</i></div>`, ch.payAt + 1700, tg);
+    } else if (ri >= 0) {
       const pr = avatarLookup(rid);
       const inner = pr?.shop ? shopAvatarFull(pr.shop) : `<span class="cheerhead">${avatar(v.players[ri], ri)}</span>`;
       keepFx(`<div class="cheerfx ${rid === meId ? 'me' : ''} ${pr?.shop ? 'full' : ''}" data-aim-to="${esc(rid)}" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true">${inner}<i class="cheerstar">🎉</i></div>`, ch.payAt + 1700, tg);
@@ -1716,7 +1725,13 @@ export function renderGame(root, ctx) {
   root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
     ${table}
-    ${ctx.reactionList ? '<button type="button" class="round chatbtn chat-br" data-a="reactTo" data-v="' + esc(meId) + '" aria-label="Reaktion an alle">💬</button>' : ''}
+    ${(() => { // v0.56: dein Platz unten rechts – deine Figur (Shop-Avatar ganz, sonst dein Bild), 💬 als Sprechblase über dem Kopf
+      const pr = avatarLookup(meId); const now = Date.now(); const jub = DEMO_JUB || (local.meJubAt && now >= local.meJubAt && now < local.meJubAt + 1700);
+      if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
+      return `<div class="meplate ${pr?.shop ? 'full' : 'round'} ${jub ? 'jub' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">
+        <span class="mefig">${pr?.shop ? shopAvatarFull(pr.shop) : avatar(me, meIdx)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}
+        ${ctx.reactionList ? `<button type="button" class="mechat" data-a="reactTo" data-v="${esc(meId)}" aria-label="Reaktion an alle">💬</button>` : ''}</div>`;
+    })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
     ${standingsHtml}
