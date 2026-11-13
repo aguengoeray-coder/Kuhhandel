@@ -6,6 +6,10 @@ on:
     branches: [main]
 permissions:
   contents: read
+# neuer Push auf denselben PR bricht den alten Lauf ab (keine doppelten Läufe)
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   test:
     runs-on: ubuntu-latest
