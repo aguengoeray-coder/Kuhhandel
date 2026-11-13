@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.54.1';
+export const APP_VERSION = '0.55.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -624,6 +624,7 @@ function renderPlaying() {
     takeover: (seat) => act((s) => withAutoplay(s, seat, true)),
     selfPlay: (seat) => act((s) => withAutoplay(s, seat, false)),
     rewards: !ui.game?.local, // Dublonen gibt es nur in echten Partien (nicht im Testspiel)
+    myRewards: DEMO && params.get('rw') ? (params.get('rw') === '0' ? [] : [{ kind: 'partie', amount: 2 }, { kind: 'quartett', amount: 10 }, { kind: 'sieg', amount: 10 }]) : myRewards && myRewards.game === ui.game?.id ? myRewards.list : null,
     onExit: () => { if (!ui.game?.local) store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
   if (DEBUG) injectDebug();
@@ -1155,6 +1156,7 @@ function sendReaction(text, to = null) {
 // ---------- Ergebnisse für die Bestenliste ----------
 
 const recorded = new Set();
+let myRewards = null; // { game, list: [{ kind, amount }] } – Dublonen dieser Partie (v0.55)
 function maybeRecordResults() {
   const g = ui.game;
   if (!g || g.local || DEMO || g.state?.phase !== 'ended' || recorded.has(g.id)) return;
@@ -1165,7 +1167,12 @@ function maybeRecordResults() {
     const extras = { animals: r.quartets, maxBuy: st.maxBuy || null, tradesWon: st.tradesWon || 0, tradesLost: st.tradesLost || 0, ratsTaken: st.ratsTaken || 0, specialsWon: st.specialsWon || 0 };
     return pl ? { player_id: pl.id, name: r.name, score: r.score, quartets: r.quartets.length, won: (g.state.winner || []).includes(r.id), extras } : null;
   }).filter(Boolean);
-  sb.rpc('record_results', { p_game: g.id, p_rows: rows }).then(({ error }) => { if (error) logError(`Ergebnisse: ${error.message}`); });
+  sb.rpc('record_results', { p_game: g.id, p_rows: rows }).then(async ({ error }) => {
+    if (error) { logError(`Ergebnisse: ${error.message}`); return; }
+    // v0.55: eigene Gutschriften dieser Partie fürs Siegertreppchen (fehlt die Funktion noch → altes „+10 am Sieger“)
+    const rw = await sb.rpc('shop_my_rewards', { p_game: g.id }).then((r) => r, () => ({ error: true }));
+    if (!rw.error) { myRewards = { game: g.id, list: rw.data || [] }; loadShop(true); render(); }
+  });
 }
 
 const DEMO_STATS = [

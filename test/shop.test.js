@@ -74,3 +74,24 @@ test('Jeder Avatar hat einen ganzen Körper (Shop + Startseite) mit Kopf, Körpe
   assert.match(SHOP_AVATAR_FULL_CSS, /\.shop-avatar-full \.sa-low\{display:none\}/);
   assert.equal(shopAvatarFull('gibt-es-nicht'), '');
 });
+
+test('v0.55 Dublonen-SQL: Wächter, Revanche per RPC, Beträge und Tagesgrenze passen zur App', () => {
+  const sql = readFileSync(new URL('../supabase/v0.55-dublonen-sicherheit.sql', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const game = readFileSync(new URL('../js/game.js', import.meta.url), 'utf8');
+  // Wächter auf games: Insert nur im Warteraum, Mitspieler nur per RPC, beendete Spiele fest
+  assert.match(sql, /create trigger games_guard before insert or update on public\.games/);
+  assert.match(sql, /Neue Spiele beginnen im Warteraum/);
+  assert.match(sql, /Mitspieler ändern sich nur über Beitreten\/Verlassen/);
+  assert.match(sql, /Beendete Spiele sind abgeschlossen/);
+  // echte Partie: ≥ 3 Konten, ≥ 6 Minuten (Serverzeit), ≥ 25 Züge
+  assert.match(sql, />= 3\s/); assert.match(sql, /now\(\) - g\.created_at >= interval '6 minutes'/); assert.match(sql, />= 25;/);
+  // Beträge + Tagesgrenze
+  assert.match(sql, /\('partie', 2\)/); assert.match(sql, /\('quartett', 5 \* least\(v_q, 5\)\)/); assert.match(sql, /then 10 else 0/); assert.match(sql, /select 60 - /);
+  // Revanche läuft über die Server-Funktion (mit Rückfall, solange das SQL fehlt)
+  assert.match(sql, /grant execute on function public\.create_rematch\(uuid, uuid, text, jsonb, jsonb\) to authenticated/);
+  assert.match(app, /sb\.rpc\('create_rematch'/);
+  // Siegertreppchen kennt alle Buchungsarten aus dem SQL
+  for (const kind of ['partie', 'quartett', 'sieg']) { assert.match(sql, new RegExp(`'${kind}'`)); assert.match(game, new RegExp(`${kind}: '`)); }
+  assert.match(app, /sb\.rpc\('shop_my_rewards'/);
+});

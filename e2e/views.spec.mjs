@@ -27,6 +27,9 @@ const PAGES = [
   { seite: 'start-avatar', q: '?demo=start&klick=1&myav=kuh-kaiser' },
   // Siegertreppchen mit Ganzkörper-Avataren (v0.54)
   { seite: 'podest-avatare', q: '?demo=ended&allav=1', klick: '[data-a="tallySkip"]' },
+  // v0.55: Dublonen-Aufstellung am Treppchen (mit Gutschrift / Partie zählt nicht)
+  { seite: 'podest-dublonen', q: '?demo=ended&allav=1&rw=1', klick: '[data-a="tallySkip"]' },
+  { seite: 'podest-keine-dublonen', q: '?demo=ended&rw=0', klick: '[data-a="tallySkip"]' },
   { seite: 'podest-avatare-3sp', q: '?p=3&demo=ended&allav=1', klick: '[data-a="tallySkip"]' },
   { seite: 'shop-avatare', q: '?demo=start&klick=1', klick: '[data-dock="shop"]' },
   // Shop (kommt mit v0.48): wird automatisch mitgeprüft, sobald shop-demo.html im Repo liegt

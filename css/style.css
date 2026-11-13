@@ -2784,3 +2784,14 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 @keyframes myglowin { 0% { opacity: 0; transform: scale(.97); } 35% { opacity: 1; transform: scale(1.01); } 100% { opacity: .9; transform: scale(1); } }
 @keyframes myglow { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
 body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)); } /* im Spiel unten links – rechts unten stehen jetzt deine Sets */
+/* v0.55: deine Dublonen dieser Partie am Siegertreppchen */
+.pdubs { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 6px; margin: 2px auto 0; padding: 4px 12px; border-radius: 999px; background: rgba(0,0,0,.35); color: #fff; font-size: 12.5px; font-weight: 700; max-width: 92%; }
+.pdubs span { background: rgba(255,255,255,.12); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.pdubs b { color: #FFD34E; font-family: var(--font-head); font-size: 15px; white-space: nowrap; }
+.pdubs.none { font-weight: 600; font-size: 11.5px; opacity: .85; border-radius: 12px; }
+.ending.podium { position: relative; }
+.pdubs { position: absolute; top: 10px; right: 12px; margin: 0; flex-direction: column; align-items: flex-end; gap: 2px; max-width: 150px; padding: 6px 10px; border-radius: 14px; font-size: 11.5px; }
+.pdubs span { padding: 0 7px; }
+.pdubs.none { align-items: center; text-align: center; font-size: 12px; }
+.pdubs.none small { display: block; font-size: 10px; font-weight: 600; opacity: .8; }
+.pdubs.none small { color: #fff; }
