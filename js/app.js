@@ -1475,9 +1475,14 @@ async function onRematch() {
   const state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: g.state.settings || null });
   loserStarts(state, g.state);
   state.minVersion = APP_VERSION;
-  const { data, error } = await sb.from('games')
-    .insert({ id: newId, code: randomCode(), host: me.id, status: 'playing', players, state, version: 1 })
-    .select().single();
+  // v0.55: Revanche über die Server-Funktion (prüft: nur nach Spielende, nur dieselben Spieler).
+  // Solange das v0.55-SQL noch nicht eingespielt ist, gibt es die Funktion nicht → wie bisher direkt anlegen.
+  let { data, error } = await sb.rpc('create_rematch', { p_from: g.id, p_id: newId, p_code: randomCode(), p_players: players, p_state: state });
+  if (error && (error.code === 'PGRST202' || /create_rematch/.test(error.message || ''))) {
+    ({ data, error } = await sb.from('games')
+      .insert({ id: newId, code: randomCode(), host: me.id, status: 'playing', players, state, version: 1 })
+      .select().single());
+  }
   if (error) { logError(`Revanche: ${error.message}`); return toast('Revanche konnte nicht starten.'); }
   enterRoom(data);
 }
