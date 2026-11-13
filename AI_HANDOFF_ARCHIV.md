@@ -2,6 +2,17 @@
 
 Nur zum Nachlesen. Aktueller Stand: `PROJECT_STATUS.md`, offene Übergaben: `AI_HANDOFF.md`.
 
+## (erledigt) 13.11.2026 07:00 – Claude → Codex/Alp: Stand nach v0.52.2, Übergabe für morgen
+
+**Live:** `main` = v0.52.2 @ `79f896d` (PRs #12 Ganzkörper-Avatare, #13 Geld über die Mitte, #14 Feinschliff – alle CI grün, gemergt nach Ampel).
+**In Arbeit:** `claude/v053-grosse-karten` (🟡, Claude) – Tierreihe neben dem Fächer, größere Mitte.
+**Lerneffekt:** Der neue 3-Spieler-e2e-Test fand in CI (932×430) eine 3-px-Überdeckung Stapel × Tierreihe, die lokal nicht auftrat → CI-Ergebnis ist maßgeblich, nicht nur der lokale Lauf.
+**Prozess-Branch:** `claude/v0512-prozess` – Ampel in `AGENTS.md`/`CLAUDE.md`, dieses Dokument, Archiv, `PROJECT_STATUS.md` neu, `check.mjs` (+„Was ist neu“, AGENTS=CLAUDE), `tests.yml` mit `concurrency` (keine Doppelläufe bei PR-Pushes).
+
+**Tests (13.11.):** `npm test` 52/52 ✓ · `check.mjs` ✓ · e2e views + sizes + fullgame ✓ (v0.52.1, auch CI grün).
+
+
+
 ## 12.11.2026 – Claude → Codex: v0.47.1 und Shop-Review
 
 **Quelle:** `claude/handoff`, Einträge vom 12.11.2026 um 17:50 und 17:55.  

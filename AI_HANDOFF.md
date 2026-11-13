@@ -15,14 +15,16 @@ Nächster Schritt / wer: …
 
 ---
 
-## 13.11.2026 07:00 – Claude → Codex/Alp: Stand nach v0.52.2, Übergabe für morgen
+## 13.11.2026 09:30 – Claude → Alp/ChatGPT/Codex: Stand nach v0.54.0
 
-**Live:** `main` = v0.52.2 @ `79f896d` (PRs #12 Ganzkörper-Avatare, #13 Geld über die Mitte, #14 Feinschliff – alle CI grün, gemergt nach Ampel).
-**In Arbeit:** `claude/v053-grosse-karten` (🟡, Claude) – Tierreihe neben dem Fächer, größere Mitte.
-**Lerneffekt:** Der neue 3-Spieler-e2e-Test fand in CI (932×430) eine 3-px-Überdeckung Stapel × Tierreihe, die lokal nicht auftrat → CI-Ergebnis ist maßgeblich, nicht nur der lokale Lauf.
-**Prozess-Branch:** `claude/v0512-prozess` – Ampel in `AGENTS.md`/`CLAUDE.md`, dieses Dokument, Archiv, `PROJECT_STATUS.md` neu, `check.mjs` (+„Was ist neu“, AGENTS=CLAUDE), `tests.yml` mit `concurrency` (keine Doppelläufe bei PR-Pushes).
+**Live:** `main` = v0.54.0 @ `7941850` (#16 größere Karten, #17 Avatare leben + Podest; vorher #12–#15). Jeder Merge nur bei grüner CI (test, e2e, Workers Build, report) und – bei 🟡 – nach Alps „Merge-Go“.
+**Wartet auf Go:** PR #18 `claude/v0541-bezahlen-quittung` (🟡) – Bezahlen ohne Springen + Ergebnis-Quittung (Alp hat Konzept A+C gewählt). Enthält auch diese Doku-Aktualisierung.
+**Vorbereitet, nicht gemergt:** `claude/v055-sicherheit` (🔴) – `supabase/v0.55-dublonen-sicherheit.sql` (lokal gegen Postgres 16 getestet: 4 Betrugsfälle abgelehnt, normale Partie/Revanche/doppelte Meldung ok) + `supabase/v0.55-sicherheit-vorschlag.md` + Revanche per RPC mit Rückfall in `js/app.js`. Wartet auf Alps Entscheidung.
+**Lerneffekte:**
+- Der neue 3-Spieler-e2e-Test fand in CI (932×430) eine Überdeckung, die lokal nicht auftrat → CI ist maßgeblich.
+- Die e2e-Komplettpartien fanden in v0.53 einen echten Bedienfehler (erster Geldschein unter dem Kuhhandel-Knopf → Partie hing). Vor jedem Layout-Merge **immer** `fullgame` laufen lassen.
 
-**Tests (13.11.):** `npm test` 52/52 ✓ · `check.mjs` ✓ · e2e views + sizes + fullgame ✓ (v0.52.1, auch CI grün).
+**Tests (09:30):** `npm test` 52/52 ✓ · `check.mjs` ✓ · e2e views + sizes + fullgame ✓ (lokal auf v0.54.1, CI auf #16/#17 grün).
 
 ### So mergt eine KI (Ampel 🟢 oder nach Alps Go)
 1. PR-Kopf: test, e2e, Workers Build, report grün (`gh api repos/aguengoeray-coder/Kuhhandel/commits/<sha>/check-runs`).
@@ -37,9 +39,9 @@ Nächster Schritt / wer: …
 | C-1 | Demos 3-spieler-fest machen: `auction`, `cantpay`, `cantpaymany`, `rat`, `ratme`, `batzenshow`, `rps`, `rpsshow` sollen mit `?p=3` laufen (u4/Mo nur nutzen, wenn vorhanden). Danach in `e2e/views.spec.mjs` die 3-Spieler-Liste erweitern. | `js/demo.js`, `e2e/views.spec.mjs` | 🟢 |
 | C-2 | Branch-Schutz-Anleitung für Alp prüfen (unten) und nach seiner Einrichtung den Status hier eintragen. | `AI_HANDOFF.md` | 🔴 Alp klickt |
 | C-3 | Alte, gemergte Branches auflisten (z. B. `v0.2x-…`, `kartenflug`, `codex/v048-shop`) und Alp eine Lösch-Liste vorlegen. **Nicht selbst löschen.** | – | 🔴 |
-| C-4 | Review von Claudes v0.53-PR (größere Karten), sobald er da ist: nur lesen + Kommentar. | – | – |
+| C-4 | Unabhängiges Review von PR #18 und `claude/v055-sicherheit` (SQL!): nur lesen + Kommentar. | – | – |
 
-Claude macht weiter (Owner `js/game.js`, `css/style.css`, `js/app.js`, `src/engine.js`): v0.53 größere Karten → v0.54 Avatare leben + Siegerehrung → v0.55 Dublonen-SQL → v0.56 Börsen-Chaos → v0.57 2 Spieler. **Codex bitte diese Dateien nicht parallel ändern.**
+Claude macht weiter (Owner `js/game.js`, `css/style.css`, `js/app.js`, `src/engine.js`, `supabase/v0.55-*`): v0.55 Dublonen (nach Alps Entscheidung) → v0.56 Börsen-Chaos (Regelvorschlag) → v0.57 2 Spieler (Regelprüfung). **Codex bitte diese Dateien nicht parallel ändern.**
 
 ### Branch-Schutz für `main` – Anleitung für Alp (nur erklären, nicht selbst einstellen)
 GitHub → Repo **Kuhhandel** → **Settings** → **Branches** (bzw. **Rules → Rulesets**) → **Add branch ruleset**:

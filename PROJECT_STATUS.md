@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md – gemeinsamer Projektstand
 
-Stand: 13.11.2026, 06:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
+Stand: 13.11.2026, 09:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
 
 > Maßgeblich sind GitHub (`main`, PRs, Workflow-Ergebnisse). Diese Datei wird nach jeder Arbeitseinheit aktualisiert.
 > Freigaben laufen nach der **Ampel** in `AGENTS.md` (🟢 KI mergt bei grünen Tests · 🟡 Alps Go · 🔴 nur Alp).
@@ -9,14 +9,18 @@ Stand: 13.11.2026, 06:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.52.2** – Merge-Commit `79f896d` (Cloudflare baut bei jedem Push auf `main` neu) |
-| In Arbeit | **v0.53** größere Karten – Branch `claude/v053-grosse-karten`, 🟡 (Entwurf) |
-| Nächste Versionen | v0.53 größere Karten · v0.54 Avatare leben + Siegerehrung · v0.55 Dublonen für alle (SQL) · v0.56 Börsen-Chaos · v0.57 2 Spieler |
+| Live-Version (`main`) | **v0.54.0** – Merge-Commit `7941850` (Cloudflare baut bei jedem Push auf `main` neu) |
+| Fertig, wartet auf Go | **v0.54.1** ruhiges Bezahlen + Quittung – PR #18, 🟡 |
+| In Arbeit | **v0.55** Dublonen für alle – Branch `claude/v055-sicherheit` (Sicherheitsanalyse + SQL-Entwurf, nicht ausgeführt) |
+| Nächste Versionen | v0.55 Dublonen (SQL, 🔴) · v0.56 Börsen-Chaos (Regelvorschlag zuerst) · v0.57 2 Spieler (Regelprüfung zuerst) |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.49-kult-avatare.sql` (von Alp bestätigt) |
 
 ### Zuletzt live gegangen
 | Version | Inhalt | PR |
 |---|---|---|
+| v0.54.0 | Avatare jubeln beim Gewinnen, Podest mit Ganzkörper-Avataren, „+10 Dublonen“ | #17 |
+| v0.53.0 | Größere Karten (×1,4): Tierreihe neben dem Geldfächer; Fächer staucht sich, max. 2 Tierreihen | #16 |
+| — | Prozess: Ampel, Projektstand, Handoff, Checks | #15 |
 | v0.52.2 | 3-Spieler-Kuhhandel/Stapel ohne Überdeckung, ruhigerer Tisch, 3-Spieler-Regressionstests | #14 |
 | v0.52.1 | Rattengeld fliegt über den Topf in der Mitte; Kuhhandel-Angebot fliegt in die Mitte | #13 |
 | v0.52.0 | Avatare mit ganzem Körper (Shop) + groß neben dem Tisch auf der Startseite | #12 |
@@ -29,8 +33,8 @@ Stand: 13.11.2026, 06:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | PR / Branch | Owner | Stufe | Status |
 |---|---|---|---|
-| `claude/v053-grosse-karten` | Claude | 🟡 | Entwurf: Tierreihe neben dem Geldfächer, Mitte ×1,3. Screenshots an Alp vor Merge. |
-| #15 `claude/v0512-prozess` | Claude | 🟢 | Doku (dieses Dokument, Handoff, Ampel), `scripts/check.mjs` (+ „Was ist neu“- und AGENTS=CLAUDE-Prüfung), `tests.yml` ohne Doppelläufe. |
+| #18 `claude/v0541-bezahlen-quittung` | Claude | 🟡 | Bezahlen ohne Springen (Karte bleibt, Kasse rechts) + Ergebnis als Quittung. Wartet auf „Merge-Go #18“. |
+| `claude/v055-sicherheit` | Claude | 🔴 | `supabase/v0.55-dublonen-sicherheit.sql` + `v0.55-sicherheit-vorschlag.md` (lokal gegen Postgres 16 getestet), Revanche per RPC mit Rückfall. Kein PR bis Alp entschieden hat. |
 | `ai/auftraege` | Codex/Claude | – | `AUFTRAEGE.md` (Auftragsliste A-001 …). Inhalt wird in Abschnitt 5 hier übernommen; Branch kann danach gelöscht werden. |
 | PR #5 `codex/v048-shop` | Codex | – | Geschlossen/überholt (Shop ist über #6–#8 live). |
 | alte Feature-Branches (`v0.2x-…`, `kartenflug` …) | – | – | Alle längst in `main`. Aufräumen nur mit Alps Okay (🔴 löschen). |
@@ -47,21 +51,23 @@ Stand: 13.11.2026, 06:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 | PR-Bericht | `pr-report.yml` | ein Kommentar pro PR: geänderte Dateien, Risiken, Testergebnisse |
 | Workers Build | Cloudflare | Vorschau-Build je Branch |
 
+Zusätzlich: e2e prüft Startseite mit Avatar, Shop, Podest mit Avataren (3/4 Spieler) und 3-Spieler-Ansichten.
 Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) sind nur für 4 Spieler gebaut und laufen mit `?p=3` nicht – reine Demo-Grenze, kein Spielfehler.
 
 ## 4. Offene Fehler / Risiken
 
-- Dublonen-Siegprämie: `games.state` ist clientseitig beschreibbar → ein manipulierter Endstand ist nicht völlig ausgeschlossen. Mit v0.55 Tagesgrenze einbauen.
-- Höhe der Tischmitte (~160 px zwischen Plätzen und eigener Reihe) begrenzt größere Karten → v0.53.
-- Branch-Schutz für `main` ist noch nicht eingerichtet (🔴, Alp; Anleitung im Handoff).
+- **Dublonen (wichtig vor v0.55):** `games` ist von jedem Mitspieler frei beschreibbar; man kann heute ein sofort beendetes Spiel mit sich als Sieger anlegen und +10 kassieren. Lösung vorbereitet: `supabase/v0.55-sicherheit-vorschlag.md` (Wächter-Trigger, Revanche per RPC, ≥3 echte Konten/≥6 min/≥25 Züge, Tagesgrenze 60). Restrisiko danach: Schummeln innerhalb einer echten Partie (Tagesgrenze begrenzt).
+- Branch-Schutz für `main` ist noch nicht eingerichtet (🔴, Alp; Anleitung in `AI_HANDOFF.md`).
+- 8 Demos laufen nicht mit `?p=3` (nur Demo-Grenze).
 
 ## 5. Roadmap (von Alp am 13.11. freigegeben, Reihenfolge optimiert)
 
 | Version | Inhalt | Stufe |
 |---|---|---|
 | v0.52.2 | 3-Spieler-Überdeckungen, ruhigerer Tisch | ✅ live |
-| v0.53 | Größere Karten: eigene Tierreihe neben den Geldfächer, Mitte ~25 % höher | 🟡 |
-| v0.54 | Avatare leben (Jubel-Moment bei Sieg/Versteigerung/Kuhhandel/Quartett) + Siegerehrung (Podest mit Ganzkörper-Avataren, Konfetti, Dublonen-Aufstellung) | 🟡 |
+| v0.53 | Größere Karten | ✅ live |
+| v0.54 | Avatare leben + Siegerehrung | ✅ live |
+| v0.54.1 | Ruhiges Bezahlen + Quittung (Alps Wahl A+C) | 🟡 PR #18 |
 | v0.55 | Dublonen für alle: +2 je Partie, +5 je Quartett, +10 Sieg, Tagesgrenze | 🔴 SQL |
 | v0.56 | Börsen-Chaos: dritte Spielart mit Ereigniskarten (Regelvorschlag vorher an Alp) + Bildkarten in der Spielarten-Auswahl | 🟡 |
 | v0.57 | 2-Spieler-Modus (Originalregeln prüfen, Vorschlag an Alp) | 🟡 |
@@ -80,8 +86,8 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 
 ## 7. Freigaben, die noch von Alp gebraucht werden
 
-- v0.53 Größere Karten: Merge-Go nach Vorher/Nachher-Screenshots.
-- v0.54 Siegerehrung/Avatare: Merge-Go nach Screenshots.
-- v0.55 SQL ausführen.
-- Börsen-Chaos-Regeln und 2-Spieler-Regeln absegnen.
-- Branch-Schutz für `main` selbst einrichten (Anleitung im Handoff).
+- „Merge-Go #18“ (Bezahlen + Quittung).
+- v0.55: Sicherheitsvorschlag lesen und entscheiden; danach SQL selbst ausführen.
+- Börsen-Chaos-Regeln und 2-Spieler-Regeln absegnen (Vorschläge folgen).
+- Branch-Schutz für `main` selbst einrichten (Anleitung in `AI_HANDOFF.md`).
+- Alte, gemergte Branches löschen lassen? (Liste auf Wunsch.)
