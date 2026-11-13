@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.54.1 – Ruhiges Bezahlen + Quittung
+
+- [x] **Bezahlen (A):** Die Tierkarte bleibt nach der Versteigerung genau an ihrem Platz (nur der „Verkauft!“-Stempel kommt dazu). Links bleibt „Haben schon“, rechts erscheint die Kasse mit „Zahle … → Name“ – dort, wo vorher das Gebot stand. Nichts springt mehr.
+- [x] **Quittung (C):** Ergebnisse von Versteigerung, Spezialkarte, Ratte und angenommenem Kuhhandel erscheinen als kleine Quittung links neben dem Stapel: Tier → wer es bekommt, darunter Geld: wer → wie viel → an wen. Der Stapel bleibt sichtbar.
+- [x] Der aufgedeckte Kuhhandel (Gebot gegen Gebot) bleibt der große Auftritt in der Mitte.
+
 ## v0.54.0 – Avatare leben + Siegerehrung
 
 - [x] **Jubel:** Wer bei Versteigerung, Spezialkarte oder Kuhhandel das Tier bekommt, dessen Avatar springt kurz mit 🎉 über seinem Platz (Shop-Avatar in ganzer Figur, sonst der runde Kopf).

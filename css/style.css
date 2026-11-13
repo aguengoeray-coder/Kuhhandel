@@ -2693,3 +2693,44 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 @keyframes cheerstar { 0%, 15% { opacity: 0; transform: scale(.2) rotate(-30deg); } 30% { opacity: 1; transform: scale(1.2) rotate(10deg); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1) rotate(0); } }
 @media (prefers-reduced-motion: reduce) { .cheerfx { display: none; } }
 .cheerfx:not(.full) { height: 50px; } .cheerfx.me:not(.full) { height: 56px; }
+/* v0.54.1 Bezahlen: Karte bleibt an ihrem Platz, die Kasse steht rechts – wo vorher das Gebot stand */
+.paymain .paystay { position: relative; }
+.paymain .paystay .stamp { z-index: 3; }
+.paymain .paystay .ring .ringbg { stroke: rgba(255,255,255,.18); }
+.kasse.side { width: 190px; padding: 6px 8px 5px; gap: 4px; background: rgba(0,0,0,.28); }
+.kasse.side .khead { display: flex; align-items: center; justify-content: center; gap: 5px; font-weight: 800; font-size: 13px; color: #fff; white-space: nowrap; }
+.kasse.side .khead .avatar { width: 22px; height: 22px; border-width: 2px; font-size: 10px; flex: none; }
+.kasse.side .kslots { flex-wrap: wrap; justify-content: center; gap: 4px; min-height: 40px; }
+.kasse.side .kline { flex-wrap: wrap; justify-content: center; gap: 2px 6px; font-size: 12px; }
+.kasse.side .paystatus { font-size: 11px; }
+/* v0.54.1 Ergebnis als Quittung links neben dem Stapel – der Tisch bleibt sichtbar */
+.evcard.receipt { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 196px; left: calc(var(--cx) - 172px); top: 100px; padding: 7px 10px 10px; border-width: 3px; border-radius: 14px; box-shadow: 0 8px 18px rgba(0,0,0,.35); }
+.evcard.receipt .ec-kind { font-size: 10px; letter-spacing: .04em; }
+.evcard.receipt .ec-title { font-size: 14px; line-height: 1.15; }
+.rc-line { display: flex; align-items: center; gap: 5px; justify-content: center; }
+.rc-line.rc-cash { background: #F4F1EA; border-radius: 10px; padding: 3px 4px; }
+.rc-card { position: relative; flex: none; }
+.rc-card .pcard { width: 38px; height: 52px; }
+.rc-card .pcard .pcart { width: 26px; height: 26px; margin-top: 8px; padding: 2px; }
+.rc-card .pcard .pval, .rc-card .pcard .pname, .rc-card .pcard .pv { display: none; }
+.rc-card em { position: absolute; right: -8px; top: -6px; font-style: normal; font: 700 11px var(--font-head); background: var(--ink); color: #fff; border-radius: 999px; padding: 0 5px; }
+.rc-card .ec-badge { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); font-size: 9px; padding: 0 5px; white-space: nowrap; }
+.rc-p { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; }
+.rc-p .avatar { width: 26px; height: 26px; border-width: 2px; font-size: 11px; }
+.rc-p b { font-size: 10.5px; max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-p.pot i { font-style: normal; font-size: 20px; line-height: 26px; }
+.rc-arr { color: #9a917f; font-weight: 800; }
+.rc-amt { font: 700 15px var(--font-head); color: var(--ink); white-space: nowrap; }
+.rc-note { text-align: center; font-size: 10.5px; color: #7A7468; font-weight: 700; }
+.rc-note.q { color: #B8860B; }
+.evcard.receipt .rtimer { bottom: 3px; }
+.rc-card .mcard { width: 34px; height: 46px; border-radius: 6px; }
+.rc-card.sp .mcard { box-shadow: 0 0 0 2px #E8B83F; }
+.rc-star { position: absolute; left: -6px; top: -6px; font-style: normal; color: #E8B83F; font-size: 14px; text-shadow: 0 1px 0 #7a5a00; }
+.gtable:has(.evcard.receipt) .evstrip { visibility: hidden; } /* die Quittung sagt dasselbe – Zeile erst danach zeigen */
+.evcard.receipt { width: 206px; left: calc(var(--cx) - 177px); gap: 3px; padding: 6px 9px 9px; }
+.evcard.receipt .ec-title { font-size: 13px; }
+.rc-p .avatar { width: 22px; height: 22px; }
+.rc-card .mcard { width: 30px; height: 40px; }
+.rc-amt { font-size: 14px; }
+.stage:has(.bidgrid) .evcard.receipt { display: none; } /* läuft schon die nächste Versteigerung: Bieten geht vor */
