@@ -2945,3 +2945,5 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 26px; }
 /* Spezialkarte im Regal so hoch wie ein Tierstapel (stieß bei 3 Spielern an die Karte in der Mitte) */
 .stage .auslage.shelf .amini.special .acard { width: 30px; height: 42px; }
+.stage .kasse.side { width: 180px; }
+.kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 24px; }
