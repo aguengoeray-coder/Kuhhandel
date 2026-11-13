@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.52.2 – Feinschliff
+
+- [x] **3 Spieler:** Das Kuhhandel-Feld überdeckt nicht mehr den „Abbrechen“-Knopf; beim Rattenhandel-Antworten nicht mehr dein Geld und nicht die Überschrift.
+- [x] **Ruhigerer Tisch:** Handelbare Tiere bei den Mitspielern haben einen festen Goldrand statt zu pulsieren. Bewegung bleibt nur für: wer dran ist, Stapel, Hauptknopf, Gebot/Zeit.
+
 ## v0.52.1 – Geld wandert über die Mitte
 
 - [x] **Rattenrunde:** Wer eine Karte legt, dessen Schein fliegt verdeckt vom Platz (bzw. aus deinem Fächer) in den Topf in der Mitte.

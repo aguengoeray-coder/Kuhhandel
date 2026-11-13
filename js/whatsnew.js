@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.52.2', date: '13.11.', items: ['🧘 Ruhigerer Tisch: handelbare Tiere blinken nicht mehr – nur noch das Wichtige bewegt sich', '👥 3 Spieler: Kuhhandel-Feld überdeckt keine Knöpfe und kein Geld mehr'] },
   { v: '0.52.1', date: '13.11.', items: ['🐀 Ratte: gelegte Scheine fliegen in den Topf in der Mitte – und von dort zum, der die Ratte nimmt', '🤝 Kuhhandel: dein Angebot fliegt sichtbar in die Mitte'] },
   { v: '0.52.0', date: '13.11.', items: ['🧍 Avatare jetzt mit ganzem Körper – im Shop komplett zu sehen', '⭐ Dein Avatar steht groß neben dem Tisch auf der Startseite (tippen → Shop)'] },
   { v: '0.51.0', date: '13.11.', items: ['⚡ Neue Spielart Turbo: 7 Tierarten, 6 s bieten – halb so lange Partien', '🎬 Esel: echter Geldregen über den Tisch · Ratte: ein ganzes Rudel flitzt vorbei', '📰 „Was ist neu“ in den Einstellungen'] },
