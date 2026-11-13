@@ -153,6 +153,85 @@ const AVATARS = [
     <ellipse cx="60" cy="86" rx="20" ry="16" fill="#C99470"/><circle cx="52" cy="80" r="2.5" fill="#5A3520"/><circle cx="68" cy="80" r="2.5" fill="#5A3520"/>
     <ellipse cx="60" cy="94" rx="11" ry="8" fill="#7A2A2A"/><path d="M52 98q8-5 16 0q-8 5-16 0z" fill="#E87A8C" stroke="none"/><path d="M50 89h20" stroke="#FFFFFF" stroke-width="3"/>
   `, '<g class="sa-chatter"><path d="M86 18h28v16h-18l-6 6v-6h-4z" fill="#FFFFFF" stroke="#2A2420" stroke-width="2"/><text x="100" y="30" font-size="9" font-weight="800" text-anchor="middle" fill="#2A2420" font-family="sans-serif">bla</text><path d="M4 30h26v14h-6v6l-6-6H4z" fill="#FFFFFF" stroke="#2A2420" stroke-width="2"/><text x="17" y="41" font-size="8" font-weight="800" text-anchor="middle" fill="#2A2420" font-family="sans-serif">bla</text></g>') },
+  // v0.58: neue Charaktere (Wunschliste Alp)
+  { id:'mr-passt-schon', name:'Mr. Passt Schon', tier:'kult', price:50, animal:'Hund', motion:'grin', art: () => shell(`
+    <path d="M30 44Q12 40 14 72Q26 78 34 62M90 44Q108 40 106 72Q94 78 86 62" fill="#8C5A34"/>
+    <ellipse cx="60" cy="64" rx="32" ry="38" fill="#C98E58"/>
+    <rect x="34" y="28" width="52" height="12" rx="6" fill="#2A2420"/><rect x="38" y="30" width="18" height="8" rx="4" fill="#6FB6E8" stroke="none"/><rect x="64" y="30" width="18" height="8" rx="4" fill="#6FB6E8" stroke="none"/>
+    <path d="M40 58q7 4 14 0M66 58q7 4 14 0" fill="none" stroke-width="3.5"/>
+    <ellipse cx="60" cy="80" rx="17" ry="12" fill="#E8C49A"/><ellipse cx="60" cy="74" rx="6" ry="4.5" fill="#2A2420"/>
+    <path d="M48 87q12 9 24 0" fill="none"/>
+  `, '<g class="sa-notes"><path d="M84 6h32v18H96l-6 6v-6h-6z" fill="#fff" stroke="#2A2420" stroke-width="2"/><text x="100" y="19" font-size="9" font-weight="800" text-anchor="middle" fill="#2A2420" font-family="sans-serif">passt!</text></g>') },
+  { id:'mama-sports', name:'Mama Sports', tier:'selten', price:30, animal:'Pferd', motion:'dance', art: () => shell(`
+    <path d="M40 40L34 14 52 32M80 40l6-26-18 18" fill="#B07A4E"/>
+    <path d="M36 50q24-26 48 0v30q-2 26-24 26q-22 0-24-26z" fill="#C98E62"/>
+    <path d="M34 36q26-12 52 0l-2 10q-24-10-48 0z" fill="#FF5C8A"/><path d="M40 38h40" stroke="#fff" stroke-width="2"/>
+    <path d="M44 22q16-14 32 0q-6 8-16 8q-10 0-16-8z" fill="#E8B83F"/>
+    ${eye(48,58,5)}${eye(72,58,5)}<path d="M43 51l9-2M77 51l-9-2" stroke-width="2.5"/>
+    <ellipse cx="60" cy="86" rx="18" ry="14" fill="#E2B790"/><circle cx="53" cy="82" r="2.5" fill="#5A3520"/><circle cx="67" cy="82" r="2.5" fill="#5A3520"/>
+    <path d="M52 92q8 6 16 0" fill="none"/>
+  `, '<g class="sa-notes"><circle cx="102" cy="78" r="7" fill="#C9D3DB" stroke="#2A2420" stroke-width="2"/><path d="M95 78l-12-14" stroke="#2A2420" stroke-width="2"/><path d="M12 22l6 6M18 22l-6 6" stroke="#FF5C8A" stroke-width="3"/></g>') },
+  { id:'dumme-kuh', name:'Die dumme Kuh', tier:'legendaer', price:60, animal:'Kuh', motion:'rock', art: () => shell(`
+    <path d="M30 42q-16-22-6-30q14 4 22 26M90 42q16-22 6-30q-14 4-22 26" fill="url(#gold-glow)"/>
+    <path d="M30 47q30-26 60 0v37q-30 32-60 0z" fill="#FFFDF5"/>
+    <path d="M36 48q-4-16 12-15q10 9-1 18zM74 66q16-8 15 10q-12 12-20 1z" fill="#302D2C"/>
+    <g><ellipse cx="47" cy="60" rx="6" ry="7" fill="#fff" stroke="#2A2420" stroke-width="2"/><circle cx="51" cy="61" r="3" fill="#2A2420"/><ellipse cx="73" cy="60" rx="6" ry="7" fill="#fff" stroke="#2A2420" stroke-width="2"/><circle cx="69" cy="61" r="3" fill="#2A2420"/></g>
+    <ellipse cx="60" cy="81" rx="21" ry="13" fill="#F1A9B8"/><circle cx="53" cy="79" r="3" fill="#A74760"/><circle cx="67" cy="79" r="3" fill="#A74760"/>
+    <path d="M52 90q8 4 16 0" fill="none"/><path d="M60 91q4 10 10 6q2-4-3-7" fill="#F27C94"/>
+    <path d="M44 104h32l-4 10H48z" fill="url(#gold-glow)" stroke="#8B5B12"/>
+  `, '<g class="sa-crown-glint" font-family="sans-serif" font-weight="800" fill="#FFD34E" stroke="#8B5B12" stroke-width="1"><text x="10" y="30" font-size="20">?</text><text x="100" y="24" font-size="16">?</text><text x="104" y="60" font-size="12">?</text></g>') },
+  { id:'dickes-huhn', name:'Dickes Huhn', tier:'selten', price:30, animal:'Huhn', motion:'sway', art: () => shell(`
+    <path d="M44 26q-8-18 4-20q7 2 8 14q8-16 17-9q6 7-4 18" fill="#E64B3B"/>
+    <ellipse cx="60" cy="68" rx="42" ry="40" fill="#FFF4DE"/>
+    <path d="M28 52q16-8 28 0M64 52q16-8 28 0" fill="none" stroke="#4CA5D8" stroke-width="5"/>
+    <ellipse cx="44" cy="58" rx="10" ry="8" fill="#BDE7FA" stroke="#2A72A8" stroke-width="3"/><ellipse cx="76" cy="58" rx="10" ry="8" fill="#BDE7FA" stroke="#2A72A8" stroke-width="3"/>
+    <circle cx="45" cy="59" r="3" fill="#2A2420"/><circle cx="75" cy="59" r="3" fill="#2A2420"/>
+    <path d="M52 72l8-6 8 6-8 8z" fill="#F0A52E"/><path d="M56 86q4 5 8 0" fill="#E64B3B"/>
+    <ellipse cx="60" cy="104" rx="38" ry="10" fill="#FF8A3D"/><ellipse cx="60" cy="104" rx="24" ry="5" fill="#FFF4DE"/>
+  `, '<g class="sa-notes" fill="#79C9E8"><circle cx="102" cy="30" r="4"/><circle cx="110" cy="18" r="3"/><circle cx="16" cy="34" r="3"/></g>') },
+  { id:'bontje-lebkuchen', name:'Bontje Lebkuchen', tier:'selten', price:30, animal:'Lebkuchen', motion:'dance', art: () => shell(`
+    <circle cx="60" cy="60" r="44" fill="#B5703A"/>
+    <path d="M24 60q4-30 36-36q32 6 36 36" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="4 5"/>
+    ${eye(46,56,5)}${eye(74,56,5)}
+    <circle cx="38" cy="72" r="5" fill="#F27C94" stroke="none"/><circle cx="82" cy="72" r="5" fill="#F27C94" stroke="none"/>
+    <path d="M44 78q16 14 32 0" fill="none" stroke="#fff" stroke-width="4"/>
+    <circle cx="60" cy="96" r="4" fill="#E64B3B"/><circle cx="48" cy="34" r="3" fill="#5BC0EB" stroke="none"/><circle cx="74" cy="32" r="3" fill="#8BD448" stroke="none"/>
+  `, '<g class="sa-notes"><path d="M100 18l3 6 6 1-5 4 1 6-5-3-5 3 1-6-5-4 6-1z" fill="#FFD34E" stroke="#8B5B12" stroke-width="1"/></g>') },
+  { id:'schmatz-zwillinge', name:'Die schmatzenden Zwillinge', tier:'selten', price:30, animal:'Schwein', motion:'grin', art: () => shell(`
+    <path d="M14 46l-4-18 14 8M48 46l4-18-14 8M72 46l-4-18 14 8M106 46l4-18-14 8" fill="#F4A7B8"/>
+    <ellipse cx="31" cy="66" rx="25" ry="28" fill="#F6B7C5"/><ellipse cx="89" cy="66" rx="25" ry="28" fill="#F6B7C5"/>
+    ${eye(23,58,4)}${eye(39,58,4)}${eye(81,58,4)}${eye(97,58,4)}
+    <ellipse cx="31" cy="72" rx="9" ry="6" fill="#E887A0"/><ellipse cx="89" cy="72" rx="9" ry="6" fill="#E887A0"/>
+    <circle cx="28" cy="72" r="1.8" fill="#963B54" stroke="none"/><circle cx="34" cy="72" r="1.8" fill="#963B54" stroke="none"/><circle cx="86" cy="72" r="1.8" fill="#963B54" stroke="none"/><circle cx="92" cy="72" r="1.8" fill="#963B54" stroke="none"/>
+    <path d="M22 84q9 6 18 0q-9 4-18 0zM80 84q9 6 18 0q-9 4-18 0z" fill="#7A1F33"/>
+    <circle cx="44" cy="84" r="3" fill="#E8B84F" stroke="none"/><circle cx="76" cy="86" r="2.5" fill="#E8B84F" stroke="none"/>
+  `, '<g class="sa-notes" fill="#E8B84F" stroke="#8B5B12" stroke-width="1"><circle cx="10" cy="98" r="3"/><circle cx="18" cy="106" r="2"/><circle cx="108" cy="100" r="3"/><circle cx="102" cy="108" r="2"/></g>') },
+  { id:'nacht-gohan', name:'Nacht-Gohan', tier:'selten', price:30, animal:'Katze', motion:'sigh', art: () => shell(`
+    <path d="M28 52L24 16 50 34M92 52l4-36-26 18" fill="#4A4E57"/><path d="M30 44l-2-20 14 12M90 44l2-20-14 12" fill="#7A6F8A" stroke="none"/>
+    <ellipse cx="60" cy="66" rx="36" ry="36" fill="#565B66"/>
+    <ellipse cx="46" cy="60" rx="7" ry="8" fill="#FFD34E" stroke="#2A2420" stroke-width="2"/><ellipse cx="74" cy="60" rx="7" ry="8" fill="#FFD34E" stroke="#2A2420" stroke-width="2"/>
+    <rect x="44.5" y="54" width="3" height="12" rx="1.5" fill="#2A2420" stroke="none"/><rect x="72.5" y="54" width="3" height="12" rx="1.5" fill="#2A2420" stroke="none"/>
+    <path d="M56 74l4 4 4-4z" fill="#F4A7B8"/><path d="M50 82q10 6 20 0" fill="none"/>
+    <path d="M22 76h18M22 82h16M80 76h18M82 82h16" stroke="#C9CCD3" stroke-width="2"/>
+  `, '<g class="sa-notes"><path d="M100 14a10 10 0 1 0 8 16a8 8 0 1 1-8-16z" fill="#FFE98A" stroke="#8B5B12" stroke-width="1.5"/><path d="M14 20l2 5 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z" fill="#FFF5B5"/></g>') },
+  { id:'mogli-schielt', name:'Der schielende Mogli', tier:'selten', price:30, animal:'Katze', motion:'rock', art: () => shell(`
+    <path d="M28 52L24 16 50 34M92 52l4-36-26 18" fill="#FFFFFF"/><path d="M30 44l-2-20 14 12M90 44l2-20-14 12" fill="#F4C6D0" stroke="none"/>
+    <ellipse cx="60" cy="66" rx="36" ry="36" fill="#FAFAF7"/>
+    <ellipse cx="46" cy="60" rx="8" ry="9" fill="#BFE6FF" stroke="#2A2420" stroke-width="2"/><ellipse cx="74" cy="60" rx="8" ry="9" fill="#BFE6FF" stroke="#2A2420" stroke-width="2"/>
+    <circle cx="50" cy="61" r="4" fill="#2D7BD8" stroke="none"/><circle cx="70" cy="61" r="4" fill="#2D7BD8" stroke="none"/><circle cx="51" cy="61" r="1.8" fill="#2A2420" stroke="none"/><circle cx="69" cy="61" r="1.8" fill="#2A2420" stroke="none"/>
+    <path d="M56 74l4 4 4-4z" fill="#F4A7B8"/><path d="M52 82q4 4 8 0q4 4 8 0" fill="none"/>
+    <path d="M22 76h18M22 82h16M80 76h18M82 82h16" stroke="#C9CCD3" stroke-width="2"/>
+  `, '<g class="sa-notes" fill="none" stroke="#6FB6E8" stroke-width="2.5"><path d="M98 30q8-8 0-14q-8 6 0 14M14 30q-6-6 2-12"/></g>') },
+  { id:'dicker-gojo', name:'Der dicke Gojo', tier:'selten', price:30, animal:'Katze', motion:'grin', art: () => shell(`
+    <path d="M26 50L24 22 46 36M94 50l2-28-22 14" fill="#E8B07A"/>
+    <ellipse cx="60" cy="70" rx="46" ry="38" fill="#F0BE88"/>
+    <path d="M44 34q6 8 0 14M60 32v14M76 34q-6 8 0 14" stroke="#C98A4E" stroke-width="4"/>
+    <path d="M38 60q8-6 16 0M66 60q8-6 16 0" fill="none" stroke-width="3.5"/>
+    <ellipse cx="34" cy="74" rx="8" ry="5" fill="#F4A7B8" stroke="none"/><ellipse cx="86" cy="74" rx="8" ry="5" fill="#F4A7B8" stroke="none"/>
+    <path d="M56 72l4 4 4-4z" fill="#E77E91"/><path d="M48 82q12 8 24 0" fill="none"/>
+    <path d="M30 96q30 18 60 0" fill="none" stroke="#C98A4E" stroke-width="3"/>
+    <path d="M14 76h20M16 84h18M86 76h20M86 84h18" stroke="#8A6340" stroke-width="2"/>
+  `, '<g class="sa-notes"><path d="M96 12q10 0 10 8t-10 8q4-8 0-16z" fill="#F7C34D" stroke="#8B5B12" stroke-width="1.5"/><circle cx="18" cy="22" r="3" fill="#E8B84F"/><circle cx="24" cy="14" r="2" fill="#E8B84F"/></g>') },
 ];
 
 export const SHOP_AVATARS = AVATARS.map(({ art, ...meta }) => ({ ...meta, render: art }));
@@ -281,6 +360,31 @@ const BODIES = {
   'alp-quasselt': { fur: '#A86D42', top: '#F2F2F2', pants: '#2F3A4A', shoes: '#6B4A2E', armL: 'up', armR: 'hip',
     chest: '<path d="M50 90l10 14 10-14" fill="none" stroke="#2A2420" stroke-width="2"/><path d="M60 104v46" stroke="#D0D4DA" stroke-width="2"/><circle cx="60" cy="116" r="1.8" fill="#9AA3AD"/><circle cx="60" cy="130" r="1.8" fill="#9AA3AD"/>',
     front: '<rect x="8" y="42" width="14" height="22" rx="3" fill="#2A2420"/><rect x="10" y="45" width="10" height="15" rx="1" fill="#7FD3F0"/>' },
+  'mr-passt-schon': { fur: '#C98E58', top: '#F2F2F2', sleeve: '#F2F2F2', pants: '#4E6FA3', shoes: '#F2F2F2', armL: 'hip', armR: 'up',
+    chest: '<path d="M44 92l16 18 16-18" fill="none" stroke="#C9D3DB" stroke-width="3"/><path d="M40 120h40" stroke="#E64B3B" stroke-width="5"/>' },
+  'mama-sports': { fur: '#C98E62', top: '#FF5C8A', sleeve: '#FF5C8A', pants: '#2F3A4A', shoes: '#F2F2F2', armL: 'up', armR: 'hip',
+    legL: 'M48 150Q44 172 40 188', legR: 'M72 150Q76 172 80 188',
+    chest: '<path d="M38 104h44M38 112h44" stroke="#fff" stroke-width="3"/><path d="M60 90l-4 40" stroke="#E8B83F" stroke-width="2"/><circle cx="56" cy="134" r="5" fill="#C9D3DB" stroke="#2A2420" stroke-width="2"/>' },
+  'dumme-kuh': { fur: '#FFFDF5', top: '#FFFDF5', pants: '#FFFDF5', shoes: '#302D2C', armL: 'up', armR: 'up',
+    back: '<path d="M34 92Q14 150 18 194H102Q106 150 86 92Z" fill="#E8B83F" stroke="#2A2420" stroke-width="3"/>',
+    chest: '<path d="M42 110q-6-12 8-12q8 8-2 16zM68 128q12-6 12 8q-8 10-16 2z" fill="#302D2C"/><path d="M40 92h40" stroke="#E8B83F" stroke-width="5"/>' },
+  'dickes-huhn': { fur: '#FFF4DE', hand: '#FFF4DE', top: '#FFF4DE', pants: '#F0A52E', shoes: '#F0A52E', armL: 'hip', armR: 'hip',
+    back: '<ellipse cx="60" cy="126" rx="40" ry="36" fill="#FFF4DE" stroke="#2A2420" stroke-width="3"/>',
+    chest: '<ellipse cx="60" cy="132" rx="44" ry="11" fill="#FF8A3D" stroke="#2A2420" stroke-width="3"/><ellipse cx="60" cy="132" rx="28" ry="5" fill="#FFF4DE" stroke="none"/>' },
+  'bontje-lebkuchen': { fur: '#B5703A', top: '#B5703A', sleeve: '#B5703A', pants: '#B5703A', shoes: '#B5703A', armL: 'up', armR: 'hip',
+    chest: '<circle cx="60" cy="104" r="4" fill="#E64B3B"/><circle cx="60" cy="120" r="4" fill="#5BC0EB"/><circle cx="60" cy="136" r="4" fill="#8BD448"/><path d="M38 96q22 8 44 0M36 146q24 8 48 0" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="3 4"/>' },
+  'schmatz-zwillinge': { fur: '#F6B7C5', top: '#7FD3A8', sleeve: '#7FD3A8', pants: '#3E5573', shoes: '#E64B3B', armL: 'hold', armR: 'hold',
+    front: '<path d="M44 128h32l-4 14H48z" fill="#F7C34D" stroke="#2A2420" stroke-width="2.5"/><circle cx="54" cy="128" r="4" fill="#E64B3B" stroke="#2A2420" stroke-width="1.5"/><circle cx="66" cy="127" r="4" fill="#8BD448" stroke="#2A2420" stroke-width="1.5"/>' },
+  'nacht-gohan': { fur: '#565B66', top: '#565B66', sleeve: '#565B66', pants: '#4A4E57', shoes: '#3B3F47', armL: 'hold', armR: 'down',
+    back: '<path d="M88 150q30 6 24 40q-10-24-24-26" fill="#4A4E57" stroke="#2A2420" stroke-width="3"/>',
+    chest: '<ellipse cx="60" cy="126" rx="16" ry="22" fill="#7A7F8A" stroke="none"/>' },
+  'mogli-schielt': { fur: '#FAFAF7', top: '#FAFAF7', sleeve: '#FAFAF7', pants: '#FAFAF7', shoes: '#F4C6D0', armL: 'down', armR: 'up',
+    back: '<path d="M88 150q30 6 24 40q-10-24-24-26" fill="#FAFAF7" stroke="#2A2420" stroke-width="3"/>',
+    chest: '<path d="M44 94q16 10 32 0" fill="none" stroke="#2D7BD8" stroke-width="5"/><circle cx="60" cy="102" r="5" fill="#E8B83F" stroke="#2A2420" stroke-width="2"/>' },
+  'dicker-gojo': { fur: '#F0BE88', top: '#F0BE88', sleeve: '#F0BE88', pants: '#F0BE88', shoes: '#C98A4E', armL: 'hold', armR: 'hip',
+    back: '<ellipse cx="60" cy="130" rx="44" ry="38" fill="#F0BE88" stroke="#2A2420" stroke-width="3"/>',
+    chest: '<ellipse cx="60" cy="134" rx="26" ry="24" fill="#FBE3C5" stroke="none"/>',
+    front: '<path d="M22 124q8-10 16 0q-8 8-16 0z" fill="#9BD3F0" stroke="#2A2420" stroke-width="2"/><path d="M16 124l-6-4v8z" fill="#9BD3F0" stroke="#2A2420" stroke-width="2"/>' },
 };
 
 // Bewegungen der Ganzkörper-Figur: dieselben wie beim Kopf, nur am ganzen Körper (Drehpunkt an den Füßen)

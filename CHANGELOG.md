@@ -1,5 +1,20 @@
 # Änderungsprotokoll
 
+## v0.58.0 – Neue Charaktere und Sprüche
+
+- [x] 9 neue Avatare (Kopf + ganzer Körper, mit Bewegung): Kult **Mr. Passt Schon** (50), Legendär **Die dumme Kuh** (60), Selten (30): Mama Sports, Dickes Huhn, Bontje Lebkuchen, Die schmatzenden Zwillinge, Nacht-Gohan, Der schielende Mogli, Der dicke Gojo.
+- [x] 7 neue Sprüche (je 10): „Ich bin das dicke Huhn und gehe heute schwimmen“, „Hey, du bist eine dumme Kuh!“, „Ich habe Hunger“, „Bau mal einen“, „Lass uns auf einen Kurzen zu den ukrainischen Nachbarn“, „Schmatz nicht!!“, „Can I ask you by any chance how old you are? 📱“.
+- [x] **Zwei Sprüche gratis:** jeder kann sich im Shop zwei Sprüche kostenlos aussuchen („🎁 Gratis nehmen“).
+- [x] 💬-Fenster zeigt nur noch Sprüche (die Emojis sind raus).
+- [x] Dein Rahmen unten ist symmetrisch: Figur genau in der Mitte, Geld links und Tiere rechts je mittig; Debug-Knöpfe oben rechts.
+- [x] „Überboten!“ erscheint direkt über dem Gebots-Schild des neuen Höchstbietenden (statt über der Karte).
+- [x] SQL `supabase/v0.58-neue-charaktere.sql` (Preisliste aus dem Katalog erzeugt, Test prüft Gleichheit) – führt Alp im SQL-Editor aus (Connector getrennt).
+
+## v0.57.1 – Preis in der Überschrift
+
+- [x] Ergebnis-Fenster: Überschrift mit Preis („Test 2 kauft das Schaf für 140 [Schein]“, „… Spezialkarte für 3 Karten“, „… ertauscht 2× Ziege für 3 Karten“, „Du nimmst die Ratte + 3 Karten“); darunter nur noch „Test 2 → 4 Karten → Test 1“.
+- [x] Neues kleines Geldschein-Zeichen für Taler (die goldene Münze bleibt den Dublonen vorbehalten).
+
 ## v0.57.0 – Wie am echten Tisch (Konzept 3)
 
 - [x] **Dein Platz:** deine Figur sitzt unten in der Mitte – genau gegenüber dem Platz oben. Geld links (linke Hand), Tiere rechts (rechte Hand), alles im goldenen Rahmen.

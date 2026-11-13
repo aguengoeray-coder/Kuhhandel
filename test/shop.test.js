@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs';
 import { SHOP_AVATARS, shopAvatar, shopAvatarFull, SHOP_AVATAR_FULL_CSS } from '../js/shopavatars.js';
 import { SHOP_SAYINGS, renderShop } from '../js/shop.js';
 
-test('Shop enthält 14 eindeutige Avatare (11 + 3 Kult) mit den vereinbarten Preisen', () => {
-  assert.equal(SHOP_AVATARS.length, 14);
-  assert.equal(new Set(SHOP_AVATARS.map((item) => item.id)).size, 14);
+test('Shop enthält 23 eindeutige Avatare mit den vereinbarten Preisen', () => {
+  assert.equal(SHOP_AVATARS.length, 23);
+  assert.equal(new Set(SHOP_AVATARS.map((item) => item.id)).size, 23);
   for (const item of SHOP_AVATARS) {
     assert.ok(item.id && item.name);
     assert.ok(['selten', 'episch', 'legendaer', 'kult'].includes(item.tier));
@@ -31,9 +31,16 @@ test('Shop-Sprüche entsprechen exakt dem freigegebenen Katalog und den Preisen'
     ['Das ist eine gute Idee!',10],
     ['IHH, du Ekliger!',10],
     ['Bastard',10],
-    ['Ich habe nur gute Ideen',20]
+    ['Ich habe nur gute Ideen',20],
+    ['Ich bin das dicke Huhn und gehe heute schwimmen',10],
+    ['Hey, du bist eine dumme Kuh!',10],
+    ['Ich habe Hunger',10],
+    ['Bau mal einen',10],
+    ['Lass uns auf einen Kurzen zu den ukrainischen Nachbarn',10],
+    ['Schmatz nicht!!',10],
+    ['Can I ask you by any chance how old you are? 📱',10]
   ]);
-  assert.equal(new Set(SHOP_SAYINGS.map((item) => item.id)).size, 8);
+  assert.equal(new Set(SHOP_SAYINGS.map((item) => item.id)).size, 15);
 });
 
 test('Shop-Modul exportiert den vereinbarten renderShop-Einstieg', () => {
@@ -58,7 +65,7 @@ test('Shop-SQL beschränkt Schreib-RPCs auf angemeldete Nutzer', () => {
 });
 
 test('Datenbank-Preisliste kennt jeden Shop-Artikel mit demselben Preis wie die App', () => {
-  const sql = readFileSync(new URL('../supabase/v0.48-shop.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.49-kult-avatare.sql', import.meta.url), 'utf8');
+  const sql = readFileSync(new URL('../supabase/v0.48-shop.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.58-neue-charaktere.sql', import.meta.url), 'utf8');
   for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), `${item.id} fehlt oder falscher Preis in der SQL`);
   for (const item of SHOP_AVATARS) assert.ok(sql.includes(`'${item.id}'`), `${item.id} fehlt in shop_set_avatar`);
 });
@@ -94,4 +101,16 @@ test('v0.55 Dublonen-SQL: Wächter, Revanche per RPC, Beträge und Tagesgrenze p
   // Siegertreppchen kennt alle Buchungsarten aus dem SQL
   for (const kind of ['partie', 'quartett', 'sieg']) { assert.match(sql, new RegExp(`'${kind}'`)); assert.match(game, new RegExp(`${kind}: '`)); }
   assert.match(app, /sb\.rpc\('shop_my_rewards'/);
+});
+
+test('v0.58: zwei Gratis-Sprüche – nur Sprüche, höchstens 2, App und SQL passen zusammen', () => {
+  const sql = readFileSync(new URL('../supabase/v0.58-neue-charaktere.sql', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(sql, /function public\.shop_claim_free\(p_item_id text\)/);
+  assert.match(sql, /if v_used >= 2 then/);
+  assert.match(sql, /not like 'spruch-%'/);
+  assert.match(sql, /check \(price >= 0\)/);
+  for (const item of SHOP_SAYINGS) assert.ok(sql.includes(`'${item.id}'`), item.id);
+  assert.match(app, /sb\.rpc\('shop_claim_free'/);
+  assert.match(app, /2 - freeUsed/);
 });

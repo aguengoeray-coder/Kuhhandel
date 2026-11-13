@@ -53,8 +53,9 @@ async function play(browser, url, g) {
     (ph.ev || []).forEach((x) => { st.events[x] = (st.events[x] || 0) + 1; });
     if (ph.podium) { st.ended = true; st.endS = Math.round((Date.now() - t0) / 1000); await page.waitForTimeout(1500); await tap('[data-a="recap"]'); await page.waitForTimeout(700); break; }
     if (ph.tally) continue;
-    // hängt? (Banner, Stapel und Geldanzahl 40 s unverändert)
-    const sig = await page.evaluate(() => [(document.querySelector('.tbanner') || {}).textContent, (document.querySelector('.deck-count') || {}).textContent, [...document.querySelectorAll('.prow .mcount, .prow b')].map((e) => e.textContent).join(',')].join('|')).catch(() => lastSig);
+    // hängt? (Banner, Stapel, Höchstgebot und Geldanzahl 40 s unverändert) – ein langes Bietgefecht
+    // der Test-Spieler (jedes Gebot startet die Uhr neu) ist Fortschritt, kein Hänger
+    const sig = await page.evaluate(() => [(document.querySelector('.tbanner') || {}).textContent, (document.querySelector('.deck-count') || {}).textContent, (document.querySelector('.bidbox b') || {}).textContent, [...document.querySelectorAll('.prow .mcount, .prow b')].map((e) => e.textContent).join(',')].join('|')).catch(() => lastSig);
     if (sig !== lastSig) { lastSig = sig; sigAt = Date.now(); }
     else if (Date.now() - sigAt > 40000) {
       st.stuck = sig.slice(0, 120);

@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.57.0';
+export const APP_VERSION = '0.58.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -65,7 +65,7 @@ let auth = { mode: 'login', error: '', busy: false }; // Anmelde-Bildschirm
 const profiles = new Map(); // Anmelde-ID → { name, animal, color }
 // v0.48 Shop: eigener Kontostand/Käufe + gekaufte Avatare aller Mitspieler (Anmelde-ID → Avatar-ID)
 const shopAvatars = new Map();
-const shopMe = { state: 'idle', balance: 0, owned: new Set(), active: null }; // state: idle | loading | ok | off (SQL noch nicht eingerichtet)
+const shopMe = { state: 'idle', balance: 0, owned: new Set(), active: null, freeLeft: 0 }; // state: idle | loading | ok | off (SQL noch nicht eingerichtet)
 const SAYING_TEXTS = SHOP_SAYINGS.map((x) => x.text);
 try { if (!document.getElementById('shop-avatar-runtime-css')) { const st = document.createElement('style'); st.id = 'shop-avatar-runtime-css'; st.textContent = SHOP_AVATAR_CSS + SHOP_AVATAR_FULL_CSS; document.head.append(st); } } catch {}
 const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
@@ -615,8 +615,8 @@ function renderPlaying() {
     playSound: (kind) => { if (soundOn() && !DEMO) playSound(kind); },
     reactions: activeReactions(),
     reactionList: myReactions(),
-    reactionEmoji: REACT_EMOJI.length,
-    reactionBase: REACT_EMOJI.length + REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
+    reactionEmoji: 0,
+    reactionBase: REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
     seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
@@ -1087,7 +1087,7 @@ async function loadProfiles(ids) {
 
 function myReactions() {
   if (DEMO && shopMe.state === 'idle') loadShop();
-  return [...REACT_EMOJI, ...REACTIONS, ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)];
+  return [...REACTIONS, ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)]; // v0.58: nur Sprüche (Emojis entfernt, Wunsch Alp)
 }
 
 async function loadShop(force = false) {
@@ -1095,16 +1095,18 @@ async function loadShop(force = false) {
   shopMe.state = 'loading';
   if (DEMO) {
     const av = params.get('myav') || 'noergler';
-    Object.assign(shopMe, { state: 'ok', balance: 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen']) });
+    Object.assign(shopMe, { state: 'ok', balance: 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen']), freeLeft: params.get('free') === '0' ? 0 : 2 });
     shopAvatars.set(me.id, av);
     return;
   }
   try {
     const w = await sb.from('shop_wallets').select('balance, active_avatar').eq('user_id', me.id).maybeSingle();
     if (w.error) throw w.error;
-    const p = await sb.from('shop_purchases').select('item_id').eq('user_id', me.id);
+    const p = await sb.from('shop_purchases').select('item_id, price').eq('user_id', me.id);
     if (p.error) throw p.error;
-    Object.assign(shopMe, { state: 'ok', balance: w.data?.balance || 0, active: w.data?.active_avatar || null, owned: new Set((p.data || []).map((x) => x.item_id)) });
+    // v0.58: zwei Sprüche gratis (Preis 0) – ob die Gratis-Funktion schon in der Datenbank ist, zeigt der Shop beim Tippen
+    const freeUsed = (p.data || []).filter((x) => Number(x.price) === 0).length;
+    Object.assign(shopMe, { state: 'ok', balance: w.data?.balance || 0, active: w.data?.active_avatar || null, owned: new Set((p.data || []).map((x) => x.item_id)), freeLeft: Math.max(0, 2 - freeUsed) });
     if (shopMe.active) shopAvatars.set(me.id, shopMe.active); else shopAvatars.delete(me.id);
   } catch { shopMe.state = 'off'; }
   render();
@@ -1119,7 +1121,12 @@ async function openShop() {
   const err = (e, fb) => new Error(String(e?.message || fb).replace(/^.*?:\s*/, '') || fb);
   renderShop(root, {
     me: { id: me.id, name: me.name },
-    balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active,
+    balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active, freeLeft: shopMe.freeLeft,
+    async claimFree(id) {
+      if (!DEMO) { const { error } = await sb.rpc('shop_claim_free', { p_item_id: id }); if (error) throw err(error, 'Der Gratis-Spruch hat nicht geklappt.'); }
+      shopMe.owned.add(id); shopMe.freeLeft = Math.max(0, shopMe.freeLeft - 1);
+      return { freeLeft: shopMe.freeLeft };
+    },
     async buy(id) {
       if (DEMO) { const it = [...SHOP_SAYINGS].find((x) => x.id === id); shopMe.balance -= it ? it.price : 30; shopMe.owned.add(id); return { balance: shopMe.balance }; }
       const { data, error } = await sb.rpc('shop_buy', { p_item_id: id });
