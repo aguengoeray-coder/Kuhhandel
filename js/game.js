@@ -1125,7 +1125,7 @@ export function renderGame(root, ctx) {
     </div>`}</div>
     <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 47)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
-    <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
+    <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum" aria-hidden="true">${sum(handMoney)}<i class="taler"></i></span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
 
   // ----- Menü oben links in der Tischecke -----
@@ -1764,7 +1764,7 @@ export function renderGame(root, ctx) {
       const pr = avatarLookup(meId); const now = Date.now(); const jub = DEMO_JUB || (local.meJubAt && now >= local.meJubAt && now < local.meJubAt + 1700);
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
       return `<div class="meplate ${pr?.shop ? 'full' : 'round'} ${jub ? 'jub' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">
-        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : avatar(me, meIdx)}</span><span class="mename">Du<b class="mesum">${sum(handMoney)}</b></span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
+        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : avatar(me, meIdx)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}

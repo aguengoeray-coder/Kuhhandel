@@ -2931,3 +2931,10 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .stage .prow .rbubble.mouth::after { left: 11px; right: auto; }
 .stage .prow .rbubble.mouth.rt { transform-origin: calc(100% - 18px) 0; }
 .stage .prow .rbubble.mouth.rt::after { left: auto; right: 11px; }
+/* Leuchten genau mittig hinter deiner Figur (Mitte der Figur = 772px) */
+.stage .myglow { left: 666px; right: auto; width: 172px; } /* liegt im Tisch (beginnt bei x = 20) */
+/* Summe deines Geldes direkt rechts neben der Hand (statt im Namensschild) */
+.stage .fan-wrap .fansum { display: inline-flex; align-items: center; gap: 4px; position: static; align-self: flex-start; margin: 12px 0 0 8px;
+  padding: 3px 10px; border-radius: 999px; background: rgba(0,0,0,.42); color: #fff; font: 700 17px var(--font-head); white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.stage:has(.tduel, .batzen) .fan-wrap .fansum { position: static; left: auto; bottom: auto; }
+.stage .meplate .mename { padding: 1px 14px; font-size: 13px; }
