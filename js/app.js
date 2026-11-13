@@ -1,6 +1,6 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
-import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS } from '../src/engine.js';
+import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf } from '../src/engine.js';
 import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.56.1';
+export const APP_VERSION = '0.57.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -607,6 +607,8 @@ function renderPlaying() {
       const pl = ui.game.players?.find((x) => (x.seat || x.id) === seat);
       // Testspiel: dein Platz heißt intern „me“ → dein echtes Konto (Profilbild + Shop-Avatar); Test-Spieler haben kein Konto
       const uid = local && seat === 'me' ? me.id : pl ? pl.id : seat;
+      // Testspiel: Test-Spieler bekommen zufällige Shop-Avatare (pro Testspiel fest)
+      if (local && seat !== 'me' && ui.game.botAvatars?.[seat]) return { shop: ui.game.botAvatars[seat] };
       const pr = profiles.get(uid) || null; const sa = shopAvatars.get(uid);
       return sa ? { ...(pr || {}), shop: sa } : pr;
     },
@@ -816,7 +818,10 @@ function startLocalGame(n) {
   }
   Object.keys(gameLocal).forEach((k) => delete gameLocal[k]);
   dbg.viewAs = 'me';
-  ui.game = { id: 'local', local: true, version: 0, status: 'playing', players, state };
+  // Test-Spieler: zufällige, verschiedene Shop-Avatare (nicht deiner)
+  const pool = SHOP_AVATARS.map((a) => a.id).filter((id) => id !== shopMe.active).sort(() => Math.random() - 0.5);
+  const botAvatars = Object.fromEntries(players.slice(1).map((p, i) => [p.id, pool[i]]));
+  ui.game = { id: 'local', local: true, version: 0, status: 'playing', players, state, botAvatars };
   ui.screen = 'playing';
   render();
 }
@@ -917,6 +922,46 @@ function debugShortcut(kind) {
   } else if (kind === 'broke') {
     s.players.find((p) => p.id === dbg.viewAs).money = [0, 10];
     s.log.push('Debug: Geld geleert.');
+  } else if (['quartets', 'end', 'trade22', 'rich', 'zoo'].includes(kind)) {
+    if (s.phase !== 'turn') return toast('Das geht nur, wenn gerade niemand versteigert oder handelt.');
+    const meP = s.players.find((p) => p.id === dbg.viewAs) || s.players[0];
+    const others = s.players.filter((p) => p !== meP);
+    // n Karten eines Tiers zu „to“ holen: erst aus dem Stapel, dann von den anderen
+    const take = (id, n, to) => {
+      let got = 0;
+      while (got < n) {
+        const i = s.deck.indexOf(id);
+        if (i >= 0) { s.deck.splice(i, 1); got++; continue; }
+        const from = s.players.find((p) => p !== to && (p.animals[id] || 0) > 0);
+        if (!from) break;
+        from.animals[id]--; if (!from.animals[id]) delete from.animals[id]; got++;
+      }
+      to.animals[id] = (to.animals[id] || 0) + got;
+    };
+    const kinds = animalsOf(s).map((a) => a.id);
+    if (kind === 'quartets' || kind === 'end') {
+      // jede Tierart komplett an einen Spieler (reihum, du zuerst), alle Ratten an den Nächsten
+      const order = [meP, ...others];
+      kinds.forEach((id, k) => take(id, 4, order[k % order.length]));
+      const ratTotal = s.players.reduce((t, p) => t + (p.animals[RAT] || 0), 0) + s.deck.filter((c) => c === RAT).length;
+      if (ratTotal) take(RAT, ratTotal, order[1] || meP);
+      s.log.push('Debug: Quartette verteilt.');
+      if (kind === 'end') {
+        s.deck = s.deck.filter((c) => !kinds.includes(c) && c !== RAT);
+        try { return applyLocal(debugEnd(s)); } catch (err) { return toast(err.message); }
+      }
+    } else if (kind === 'trade22') {
+      // du und der Nächste haben je 2× dieselbe Tierart → Kuhhandel um 2 testen
+      const id = kinds.find((a) => !s.players.some((p) => p.animals[a] === 4)) || kinds[0];
+      take(id, 2, meP); take(id, 2, others[0]);
+      s.log.push(`Debug: ${id} 2 gegen 2.`);
+    } else if (kind === 'rich') {
+      meP.money = [0, 0, 10, 10, 10, 20, 20, 50, 50, 100, 100, 200, 500];
+      s.log.push('Debug: viel Geld.');
+    } else if (kind === 'zoo') {
+      kinds.forEach((id, k) => take(id, 1 + (k % 3), meP));
+      s.log.push('Debug: viele Tiere.');
+    }
   }
   applyLocal(s);
 }
@@ -934,7 +979,7 @@ app.addEventListener('click', async (e) => {
   else if (k === 'bots') { dbg.bots = !dbg.bots; if (dbg.bots) { dbg.viewAs = 'me'; dbg.autoView = false; } }
   else if (k === 'fast') dbg.fast = !dbg.fast;
   else if (k === 'reload') { await resync(); }
-  else if (['forward', 'donkey', 'rat', 'special', 'broke'].includes(k)) { dbg.panel = false; return debugShortcut(k); }
+  else if (['forward', 'donkey', 'rat', 'special', 'broke', 'quartets', 'end', 'trade22', 'rich', 'zoo'].includes(k)) { dbg.panel = false; return debugShortcut(k); }
   else if (k === 'report') {
     const text = buildReport();
     try { await navigator.clipboard.writeText(text); dbg.reportText = ''; toast('Fehlerbericht kopiert – einfach an Claude schicken.'); return; }

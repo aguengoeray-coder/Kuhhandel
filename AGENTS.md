@@ -92,8 +92,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 Querformat, angelehnt an die Bedienung der Monopoly-App (eigene Gestaltung, keine fremden Grafiken/Figuren).
 Ein durchgehendes Spielfeld (Standard: Nachtblau mit Filz, frei wählbar unter „Aussehen“). Sitzordnung wie am echten Tisch:
-Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten: Geld links, Sets in der Mitte, deine Figur rechts (Shop-Avatar ganz, sonst rundes Bild) mit 💬 als Sprechblase; Reihenfolge im Uhrzeigersinn.
-Eigenes Geld als Fächer unten, deine Knöpfe unten links (Daumen), Menü oben links, 💬 an deiner Figur unten rechts. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
+Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten in der Mitte (deine Figur, gegenüber dem Platz oben; Antippen öffnet 💬), Geld links davon, Tiere rechts davon; Reihenfolge im Uhrzeigersinn.
+Eigenes Geld als Fächer unten, deine Knöpfe unten links (Daumen), Menü oben links, 💬 durch Antippen deiner Figur. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
 dem Zeichnen gemessen (`data-aim-to` / `data-aim-from`, `aimFx` in `js/game.js`), nicht fest eingebaut.
 Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …), nicht fest einbauen.
 

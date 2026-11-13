@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v0.57.0 – Wie am echten Tisch (Konzept 3)
+
+- [x] **Dein Platz:** deine Figur sitzt unten in der Mitte – genau gegenüber dem Platz oben. Geld links (linke Hand), Tiere rechts (rechte Hand), alles im goldenen Rahmen.
+- [x] Gleiche Geldscheine liegen als Stapel (×2, ×3), die Summe steht über dem Fächer.
+- [x] Testspiel: Test-Spieler bekommen zufällige Shop-Avatare, dein eigener Avatar wird angezeigt.
+- [x] Die 💬-Sprechblase über deiner Figur ist weg: **Tippen auf deine Figur** öffnet das Emoji-/Sprüche-Fenster.
+- [x] Deine Sets zeigen die Anzahl wie bei den Mitspielern („2×“, „3×“, Quartett grün) statt „noch 1“.
+- [x] **Debug (Testspiel)** – neue Abkürzungen: viel Geld, viele Tiere, Kuhhandel 2 gegen 2 vorbereiten, alle Quartette verteilen, Spiel sofort beenden (Abrechnung + Siegertreppchen). Neuer Regel-Test für „sofort beenden“.
+
 ## v0.56.1 – Testspiel zeigt deinen Avatar
 
 - [x] Fehler behoben: Im Testspiel (Debug) wurde dein eigenes Profilbild bzw. dein Shop-Avatar nicht angezeigt, weil dein Platz dort intern „me“ heißt. Test-Spieler haben weiterhin kein Bild (sie haben kein Konto).

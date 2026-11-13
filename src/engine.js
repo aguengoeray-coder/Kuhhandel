@@ -281,6 +281,15 @@ function endGame(state) {
   finishGame(state);
 }
 
+// Nur für den Debug-Modus: alle Quartette sind verteilt → regulär beenden (Ratten-Block bzw. Abrechnung wie im echten Spiel)
+export function debugEnd(prev) {
+  const state = clone(prev);
+  if (!allQuartetsComplete(state)) fail('Erst alle Quartette verteilen.');
+  state.deck = [];
+  endGame(state);
+  return state;
+}
+
 export function chooseBlock(prev, playerId, animal) {
   const state = clone(prev);
   if (state.phase !== 'block') fail('Gerade muss nichts blockiert werden.');

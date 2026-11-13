@@ -27,6 +27,11 @@ export function debugPanel(d) {
       <button type="button" data-dbg="rat">Ratte als nächste Karte</button>
       <button type="button" data-dbg="special">Spezialkarte als nächste Karte</button>
       <button type="button" data-dbg="broke">Geld von „${esc(d.viewName)}“ auf 0 + 10 setzen</button>
+      <button type="button" data-dbg="rich">„${esc(d.viewName)}“ bekommt viel Geld (13 Scheine)</button>
+      <button type="button" data-dbg="zoo">„${esc(d.viewName)}“ bekommt viele Tiere</button>
+      <button type="button" data-dbg="trade22">Kuhhandel 2 gegen 2 vorbereiten</button>
+      <button type="button" data-dbg="quartets">Alle Quartette verteilen (du zuerst)</button>
+      <button type="button" data-dbg="end" class="red">Spiel sofort beenden (Abrechnung + Siegertreppchen)</button>
     </div>` : '';
   return `<div class="dpanel" role="dialog" aria-label="Debug">
     <div class="dhead"><strong>Debug</strong><button type="button" data-dbg="panel" aria-label="Schließen">✕</button></div>
