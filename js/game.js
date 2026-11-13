@@ -311,6 +311,25 @@ function seatPoint(root, pid, sr, sc) {
   if (fans.length) { const l = Math.min(...fans.map((r) => r.left)); const rr = Math.max(...fans.map((r) => r.right)); const t = Math.min(...fans.map((r) => r.top)); return { x: ((l + rr) / 2 - sr.left) / sc, y: (t + 24 - sr.top) / sc }; }
   return { x: sr.width / sc / 2, y: sr.height / sc - 38 };
 }
+// v0.59: Sprechblasen kommen aus dem Mund – unter dem Bild des Mitspielers, Zipfel nach oben zum Mund.
+// Steht das Bild rechts auf der Bühne, wächst die Blase nach links (sonst ragte sie aus dem Bildschirm).
+function mouthBubbles(root) {
+  const stage = root.querySelector('#stage');
+  if (!stage) return;
+  const sr = stage.getBoundingClientRect();
+  const sc = sr.width / stage.offsetWidth || 1;
+  root.querySelectorAll('.prow > .rbubble').forEach((b) => {
+    const pr = b.parentElement; const av = pr.querySelector('.avatar');
+    if (!av) return;
+    const a = av.getBoundingClientRect(); const r = pr.getBoundingClientRect();
+    const ax = (a.left - r.left) / sc, ay = (a.top - r.top) / sc, aw = a.width / sc;
+    const right = (a.left + a.width / 2 - sr.left) / sc > stage.offsetWidth * 0.62;
+    b.classList.add('mouth'); b.classList.toggle('rt', right);
+    b.style.top = `${Math.round(ay + aw * 0.86)}px`;
+    if (right) { b.style.left = 'auto'; b.style.right = `${Math.round(r.width / sc - ax - aw * 0.5 - 18)}px`; }
+    else { b.style.right = 'auto'; b.style.left = `${Math.round(ax + aw * 0.5 - 18)}px`; }
+  });
+}
 // Effekte mit data-aim-to / data-aim-from: Start und Ziel nach dem Zeichnen messen (kein fest eingebautes Ziel mehr)
 function aimFx(root) {
   const stage = root.querySelector('#stage');
@@ -1104,7 +1123,7 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
     </div>`}</div>
-    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 528 / Math.max(1, myItems.length * 47)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 47)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
@@ -1770,6 +1789,7 @@ export function renderGame(root, ctx) {
   fitAuslage(root);
   aimFly(root);
   aimFx(root);
+  mouthBubbles(root);
   seekFx(root);
   syncLoops();
   if (ctx.playSound) {

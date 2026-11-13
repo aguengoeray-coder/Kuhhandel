@@ -2914,3 +2914,20 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 /* Spezialkarte ohne eigenes Tier im Regal: Stern reicht, Name darunter weg (flacher) */
 .stage .auslage.shelf .amini.special span { display: none; }
 .stage .auslage.shelf .amini.special { padding-bottom: 6px; }
+/* v0.59: Figur rechts größer, Leuchten statt Rahmen, Sprechblasen aus dem Mund */
+.stage .fan-wrap, .stage .auslage.shelf { right: 142px; }
+.stage .meplate, .stage .meplate.full { width: 128px; height: 148px; right: 8px; bottom: 2px; }
+.stage .meplate.full .mefig .shop-avatar-full, .stage.p3 .meplate.full .mefig .shop-avatar-full { height: 134px; }
+.stage .meplate.round .mefig .avatar { width: 76px; height: 76px; font-size: 30px; }
+/* du bist dran: weiches gelbes Licht hinter deiner Figur (kein Rahmen) */
+.stage .myglow { right: -14px; bottom: -20px; width: 172px; height: 190px; border: 0; border-radius: 50%; box-shadow: none;
+  background: radial-gradient(closest-side, rgba(255,211,78,.62), rgba(255,211,78,.28) 55%, rgba(255,211,78,0)); }
+/* deine Sprechblase: links aus dem Mund deiner Figur, Zipfel zeigt nach rechts zum Mund */
+.stage .mebubble, .stage .mebubble.up { left: auto; right: 112px; top: auto; bottom: 84px; z-index: 8; }
+.stage .mebubble .rbubble { transform-origin: 100% 60%; white-space: normal; width: max-content; max-width: 230px; text-align: center; line-height: 1.15; }
+.stage .mebubble .rbubble::after { left: auto; right: -10px; top: 50%; bottom: auto; margin: 0; transform: translateY(-50%); border-left: 9px solid var(--ink); border-right: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+/* Mitspieler: Blase direkt unter dem Bild, Zipfel nach oben zum Mund (Position misst mouthBubbles) */
+.stage .prow .rbubble.mouth { margin-left: 0; z-index: 9; white-space: normal; width: max-content; max-width: 220px; line-height: 1.15; transform-origin: 18px 0; }
+.stage .prow .rbubble.mouth::after { left: 11px; right: auto; }
+.stage .prow .rbubble.mouth.rt { transform-origin: calc(100% - 18px) 0; }
+.stage .prow .rbubble.mouth.rt::after { left: auto; right: 11px; }
