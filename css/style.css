@@ -2868,4 +2868,5 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .stage .auslage { left: 562px; right: 12px; width: auto; bottom: 8px; justify-content: center; align-content: center; }
 .stage .mebubble, .stage .mebubble.up { left: 450px; }
 /* Debug-Knöpfe (nur Testspiel) oben rechts statt über deinen Tieren */
-.stage .dchips { top: 6px; bottom: auto; right: 12px; }
+.stage .dchips { top: auto; bottom: 2px; left: 76px; right: auto; zoom: .78; } /* Debug: klein unten links neben der Versionsnummer – weg von Mitspielern und Tieren */
+.stage .auslage { max-height: 104px; }

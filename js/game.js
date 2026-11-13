@@ -1103,7 +1103,7 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
     </div>`}</div>
-    <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)};--sc2:${Math.min(myItems.length <= 6 ? 1 : 0.82, 350 / (Math.max(1, myItems.length <= 6 ? myItems.length : Math.ceil(myItems.length / 2)) * 54)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)};--sc2:${Math.min(myItems.length <= 6 ? 1 : 0.7, 270 / (Math.max(1, myItems.length <= 6 ? myItems.length : Math.ceil(myItems.length / 2)) * 54)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
