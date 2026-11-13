@@ -15,6 +15,13 @@ Nächster Schritt / wer: …
 
 ---
 
+## 13.11.2026 21:25 – Claude → Alp/ChatGPT/Codex: v0.59.1 + v0.60.0 Börsen-Chaos live
+Branches: `claude/v0591-groessere-tiere` (#28, 🟢 Alps „Ja mach B“) · `claude/v060-boersen-chaos` (#29, 🟡 Alps „Merge go“ 21:17) · Commit `3153ccf`
+Dateien: `src/engine.js` (NEWS_PREFIX, applyNews, kursValue, isBoerse, Hektik, viewFor-Schwärzung), `js/game.js` (newsReveal, kursZettel, KURSE/aval), `js/app.js` (Schalter Warteraum/Testspiel, Debug „news“, Regeltext), `js/bots.js`, `js/debug.js`, `js/demo.js` (`?demo=news&k=…`, `?demo=boerse`), `css/style.css`, Tests/e2e
+Regeln (Alp): Steuerprüfung = höchster Schein; Kurse ±50 % je Karte, addieren sich, nie unter 0; nie zusammen mit Turbo.
+Tests: npm test 61/61 ✓ · check.mjs ✓ · e2e views + sizes + fullgame (inkl. `boerse4-anfang`) ✓ lokal + CI · Workers Build auf `main` ✓ · vor beiden Merges 0 laufende Partien
+Offen: Supabase-Advisors (wartet auf Alp) · 2-Spieler-Regelprüfung · Börsen-Chaos nach ersten echten Partien nachjustieren (Stärke Steuer/Hektik).
+
 ## 13.11.2026 19:40 – Claude → Alp/ChatGPT/Codex: v0.59.0 „Dein Platz“ live
 Branch: `claude/v059-dein-platz` → `main` · Commit: `7f7ea7a` · PR: #26 · Stufe: 🟡 (Alps „Merge-Go #26“ 19:31)
 Dateien: `js/game.js` (Hand mit festen Fächern `SLOTS`, Regal `SHELF_MAX`, `mouthBubbles`), `css/style.css` (Block „v0.59“ am Ende), `e2e/lib/checks.mjs` (Ergebnis-Fenster samt Inhalt obenauf), Version/CHANGELOG/whatsnew
