@@ -131,7 +131,7 @@ export function tableOverlaps() {
     // Überschrift oben ist eine eigene Gruppe: Stapel/Karten dürfen nicht hineinragen (v0.54.1, Fund von Alp: 3 Spieler)
     head: '.gtable > .tbanner, .evstrip',
     center: '.tlog, .deck-wrap .deck, .deck-count, .aucard, .aside > *, .reveal-row, .pot, .potbox, .ratnow, .bigcard, .tsteps, .tduel, .tpanel, .tpick, .seatpick span, .tbox, .tradebox, .sptimer, .spstage, .batzen, .bstacks, .spinfo, .tstriprow, .evcard',
-    mine: '.auslage > *, .money.fan, .fansum, .hand-row, .dock > *',
+    mine: '.auslage > *, .money.fan, .fansum, .hand-row, .dock > *, .meplate .mefig',
   };
   if (!document.querySelector('.stage')) return [];
   const items = [];

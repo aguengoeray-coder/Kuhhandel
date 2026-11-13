@@ -699,3 +699,17 @@ test('Turbo: 100 zufällige Komplettspiele enden sauber mit 7 Quartetten', async
     assert.ok(g.winner.length >= 1);
   }
 });
+
+test('Debug: Spiel sofort beenden – nur wenn alle Quartette verteilt, dann regulär (Block oder Abrechnung)', async () => {
+  const { debugEnd } = await import('../src/engine.js');
+  const g = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }], seed: 3 });
+  assert.throws(() => debugEnd(g));
+  const s = JSON.parse(JSON.stringify(g));
+  const kinds = [...new Set(s.deck.filter((c) => typeof c === 'string' && !c.includes(':') && c !== 'ratte'))];
+  s.players.forEach((p) => { p.animals = {}; });
+  s.deck = s.deck.filter((c) => !kinds.includes(c) && c !== 'ratte');
+  kinds.forEach((id, k) => { s.players[k % 3].animals[id] = 4; });
+  s.players[1].animals.ratte = 4;
+  const e = debugEnd(s);
+  assert.ok(['block', 'ended'].includes(e.phase));
+});

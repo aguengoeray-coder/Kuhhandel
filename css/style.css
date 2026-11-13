@@ -2823,3 +2823,33 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .meplate .mejubstar { position: absolute; top: -8px; right: -8px; font-style: normal; font-size: 26px; animation: cheerstar 1.6s ease-out both; }
 .meplate.jub .mefig { animation-iteration-count: var(--jubn, 1); }
 .meplate.jub.demo .mefig, .meplate.demo .mejubstar { animation-iteration-count: infinite; }
+/* v0.56.2: Tippen auf deine Figur öffnet das 💬-Menü (keine extra Sprechblase mehr) */
+.meplate .mefig[data-a] { pointer-events: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.meplate .mefig[data-a]:active { transform: scale(.96); }
+/* deine Sets: Anzahl als Plakette „2×“ wie bei den Mitspielern */
+.auslage .slabel { display: inline-block; margin-top: 2px; padding: 0 7px; border-radius: 999px; background: var(--ink, #1d2433); color: #fff; border: 2px solid #fff; font: 700 12px/1.35 var(--font-head); box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.auslage .stack.done .slabel { background: #2E7D4F; }
+/* ===== v0.57 „Wie am echten Tisch“ (Alps Wahl, Konzept 3): du sitzt unten in der Mitte –
+   Geld links (linke Hand), Tiere rechts (rechte Hand), genau gegenüber dem Platz oben ===== */
+.stage .meplate { left: 380px; right: auto; width: 84px; bottom: 4px; height: 112px; }
+.stage .meplate.full .mefig .shop-avatar-full { height: 100px; }
+.stage .fan-wrap { left: 180px; right: 466px; bottom: 8px; }
+.stage .auslage { left: 470px; right: 8px; width: auto; bottom: 6px; }
+.stage .mebubble, .stage .mebubble.up { left: 360px; right: auto; bottom: 150px; }
+.stage .mebubble .rbubble { transform-origin: 50% 100%; }
+.stage .mebubble .rbubble::after { left: 50%; right: auto; margin-left: -8px; }
+.stage .fan-wrap { padding-left: 0; justify-content: center; }
+.stage .fan-wrap .fansum, .stage .fan-wrap .fanempty { position: absolute; right: 6px; top: -24px; margin: 0; }
+/* Summe: über dem Fächer – außer wenn in der Mitte ein Kuhhandel/„Zeig Batzen“ liegt, dann links unten am Fächer */
+.stage:has(.tduel, .batzen) .fan-wrap .fansum { top: auto; bottom: 2px; right: auto; left: -4px; z-index: 4; }
+.stage.p3 .meplate.full .mefig .shop-avatar-full { height: 88px; } .stage.p3 .tcenter > .deck-wrap { margin-top: 4px; }
+/* Summe deines Geldes steht jetzt im Namensschild „Du · 130“ (nicht mehr über dem Fächer – dort stieß sie an die Mitte) */
+.stage .fan-wrap .fansum { display: none; }
+.meplate .mename { display: flex; gap: 5px; align-items: center; white-space: nowrap; }
+.meplate .mesum { font: 700 12px var(--font-head); background: rgba(0,0,0,.35); border-radius: 999px; padding: 0 6px; }
+/* Kuhhandel-Auswahl liegt über deinem Platz: deine Figur tritt solange zurück */
+.stage:has(.tpick, .tduel, .batzen) .meplate { visibility: hidden; } /* große Felder in der Mitte (Kuhhandel, Zeig Batzen) reichen bis zu dir */
+/* deine Figur steht direkt unter der Karte in der Mitte – nur so hoch, dass sie die Karte nicht berührt */
+.stage .meplate { height: 88px; }
+.stage .meplate.full .mefig .shop-avatar-full, .stage.p3 .meplate.full .mefig .shop-avatar-full { height: 78px; }
+.stage .meplate.round .mefig .avatar { width: 48px; height: 48px; }
