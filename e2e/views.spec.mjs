@@ -28,6 +28,9 @@ const PAGES = [
   // v0.60 Börsen-Chaos: jede News-Karte + Kurszettel mit 3 Spielern
   ...['crash-pferd', 'dividende', 'steuer', 'panik', 'hektik'].map((k) => ({ seite: `news-${k}`, q: `?demo=news&k=${k}` })),
   { seite: 'boerse-3sp', q: '?p=3&demo=boerse' },
+  // v0.61 Admin-Fähigkeit: Prügel-Animation (Ziel oben und rechts)
+  { seite: 'pruegel-oben', q: '?demo=turn&allav=1&punch=u3' },
+  { seite: 'pruegel-rechts', q: '?demo=turn&allav=1&punch=u4&pfrom=u2' },
   { seite: 'turn-figur', q: '?demo=turn&allav=1' },
   { seite: 'turn-figur-3sp', q: '?p=3&demo=turn&allav=1' },
   { seite: 'start-avatar', q: '?demo=start&klick=1&myav=kuh-kaiser' },
