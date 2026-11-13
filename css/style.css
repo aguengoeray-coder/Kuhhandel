@@ -2795,3 +2795,31 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .pdubs.none { align-items: center; text-align: center; font-size: 12px; }
 .pdubs.none small { display: block; font-size: 10px; font-weight: 600; opacity: .8; }
 .pdubs.none small { color: #fff; }
+/* ===== v0.56 „Dein Platz“: deine Figur unten rechts, Sets daneben, Geld links – alles im goldenen Rahmen ===== */
+.stage .fan-wrap { left: 194px; right: 324px; bottom: 8px; }
+.stage .auslage { right: 88px; width: 232px; bottom: 6px; }
+.meplate { position: absolute; right: 8px; bottom: 6px; z-index: 6; width: 76px; height: 104px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; color: #fff; pointer-events: none; }
+.meplate .mefig { display: flex; align-items: flex-end; justify-content: center; height: 100%; transform-origin: 50% 100%; }
+.meplate.full .mefig .shop-avatar-full { height: 96px; width: auto; filter: drop-shadow(0 4px 5px rgba(0,0,0,.35)); }
+.meplate.round .mefig { height: auto; margin-bottom: 18px; }
+.meplate.round .mefig .avatar { width: 56px; height: 56px; border: 3px solid var(--c); font-size: 22px; }
+.meplate .mename { position: absolute; bottom: 0; font: 700 11px var(--font-head); background: var(--c); border-radius: 999px; padding: 1px 9px; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.meplate .mechat { pointer-events: auto; position: absolute; top: -30px; left: -18px; width: 38px; height: 32px; border: 0; border-radius: 16px 16px 16px 4px; background: #fff; color: var(--ink); font-size: 16px; box-shadow: 0 3px 0 rgba(0,0,0,.25); cursor: pointer; }
+.meplate.round .mechat { top: -6px; }
+.meplate.jub .mefig { animation: mejub 1.6s cubic-bezier(.3,.7,.4,1.3) both; }
+@keyframes mejub { 0% { transform: none; } 15% { transform: translateY(-14px) scale(1.06); } 30% { transform: none; } 45% { transform: translateY(-10px) scale(1.04); } 60%, 100% { transform: none; } }
+.cheerfx.burst { height: auto; }
+.cheerfx.burst .cheerstar { position: static; font-size: 34px; }
+.stage .chatbtn.chat-br { display: none; }
+/* der goldene Rahmen umschließt Geld, Tiere und deine Figur */
+.myglow { left: 184px; right: 4px; bottom: 2px; height: 108px; }
+/* deine Sprechblase kommt aus deiner Figur */
+.stage .mebubble, .stage .mebubble.up { left: auto; right: 18px; top: auto; bottom: 150px; }
+.stage .mebubble .rbubble { transform-origin: 85% 100%; }
+.stage .mebubble .rbubble::after { left: auto; right: 22px; }
+@media (prefers-reduced-motion: reduce) { .meplate.jub .mefig { animation: none; } }
+.stage:has(.tduel) .fan-wrap { bottom: -6px; } /* Kuhhandel-Feld braucht unten Platz */
+.stage:has(.batzen) .fan-wrap { bottom: -6px; }
+.meplate .mejubstar { position: absolute; top: -8px; right: -8px; font-style: normal; font-size: 26px; animation: cheerstar 1.6s ease-out both; }
+.meplate.jub .mefig { animation-iteration-count: var(--jubn, 1); }
+.meplate.jub.demo .mefig, .meplate.demo .mejubstar { animation-iteration-count: infinite; }

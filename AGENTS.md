@@ -8,15 +8,16 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 1. **Nie direkt auf `main` hochladen.** Alles auf `main` geht über Cloudflare sofort live.
    Jede Änderung kommt auf einen eigenen Zweig (z. B. `nico/gebote-anzeige`) bzw. als Pull Request.
 2. **Erst zeigen, dann live:** Screenshots der Änderung schicken. Ob vor oder nach dem Merge, regelt die **Ampel**
-   (siehe unten): 🟢 Feinschliff/Bugfix → KI mergt bei grünen Tests und zeigt danach; 🟡 Neues → erst Alps Go; 🔴 SQL → nur Alp.
+   (siehe unten): 🟢 Feinschliff/Bugfix → KI mergt bei grünen Tests und zeigt danach; 🟡 Neues → erst Alps Go; SQL führt Claude über den Supabase-Connector aus (Regel 7); 🔴 Löschen/Secrets → nur Alp.
 3. **Bei Fragen erst prüfen und berichten**, nicht sofort umbauen.
 4. **Kleine, abgeschlossene Schritte.** Vorher absprechen, wer woran arbeitet – nicht gleichzeitig dieselbe Datei umbauen.
 5. **Änderungsprotokoll pflegen:** Jede Version bekommt einen Eintrag in `CHANGELOG.md` (Checkliste, kurz und verständlich).
    Versionsnummer in `js/app.js` (`APP_VERSION`) **und** in `version.json` mit hochzählen (ein Test prüft, dass beide gleich sind;
    die App zeigt allen „Neue Version da – neu laden“, sobald `version.json` neuer ist).
 6. **Tests müssen grün sein:** `npm test` vor jedem Pull Request.
-7. **Datenbank-Änderungen** nicht selbst ausführen: neue SQL-Datei unter `supabase/` anlegen und Alp
-   Schritt für Schritt erklären, wie er sie im Supabase-SQL-Editor ausführt.
+7. **Datenbank-Änderungen** (seit 13.11.2026, von Alp freigegeben): Claude führt SQL selbst über den **Supabase-Connector** aus –
+   immer als SQL-Datei unter `supabase/` im Repo, vorher lokal getestet, nach dem Merge der passenden App-Version, danach Prüfabfrage
+   + Supabase-Advisors und Bericht an Alp. KIs ohne Connector (z. B. Codex) bereiten SQL nur vor. Daten oder Konten löschen bleibt bei Alp.
 8. Keine Geheimnisse ins Repo (der Supabase *Publishable Key* in `js/config.js` ist öffentlich und okay,
    ein *Secret/Service-Role Key* gehört niemals hierher).
 
@@ -91,8 +92,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 Querformat, angelehnt an die Bedienung der Monopoly-App (eigene Gestaltung, keine fremden Grafiken/Figuren).
 Ein durchgehendes Spielfeld (Standard: Nachtblau mit Filz, frei wählbar unter „Aussehen“). Sitzordnung wie am echten Tisch:
-Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten ohne eigenes Profil; Reihenfolge im Uhrzeigersinn.
-Eigenes Geld als Fächer unten, deine Knöpfe unten links (Daumen), Menü oben links, 💬 unten rechts. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
+Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten: Geld links, Sets in der Mitte, deine Figur rechts (Shop-Avatar ganz, sonst rundes Bild) mit 💬 als Sprechblase; Reihenfolge im Uhrzeigersinn.
+Eigenes Geld als Fächer unten, deine Knöpfe unten links (Daumen), Menü oben links, 💬 an deiner Figur unten rechts. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
 dem Zeichnen gemessen (`data-aim-to` / `data-aim-from`, `aimFx` in `js/game.js`), nicht fest eingebaut.
 Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …), nicht fest einbauen.
 
@@ -110,7 +111,8 @@ Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …)
 |---|---|---|
 | 🟢 Grün | Bugfixes, Layout-/Design-Feinschliff, Tests, Doku, kleine Effekte – **und alles, wofür Alp ausdrücklich „ja“/„Go“ gesagt hat** | KI mergt selbst, sobald `npm test`, `node scripts/check.mjs` und die GitHub-Prüfungen (test, e2e, Workers Build) auf dem PR-Kopf grün sind. Danach Bericht mit Screenshots an Alp. |
 | 🟡 Gelb | Neue Features, Regeländerungen, neue Spielarten, alles rund um Shop/Dublonen | Erst Screenshots + Testergebnisse, dann auf Alps „Merge-Go #PR“ warten. |
-| 🔴 Rot | SQL/Datenbank, Daten oder Konten löschen, Secrets, Branch-Schutz-Einstellungen | Immer mit Alp: SQL nur vorbereiten und erklären, Alp führt aus. |
+| 🟡 SQL | Schema-/Funktions-Änderungen per SQL-Datei | Claude führt sie über den Supabase-Connector aus (Datei im Repo, lokal getestet, Rückweg-Befehl notiert), nachdem die App-Version gemergt ist; danach Prüfabfrage + Advisors + Bericht. |
+| 🔴 Rot | Daten oder Konten löschen, Secrets, Branch-Schutz-Einstellungen | Immer mit Alp. |
 
 - Merge immer über den PR (GitHub-API: `gh api -X PUT repos/aguengoeray-coder/Kuhhandel/pulls/<n>/merge -f merge_method=merge`), nie direkt auf `main` committen oder pushen – so funktioniert es auch mit Branch-Schutz.
 - Nur live gehen, wenn gerade niemand spielt. Sagt Alp „zurück“: sofort den letzten Merge rückgängig machen (`git revert -m 1 <merge>`), Tests, Push.
@@ -119,8 +121,8 @@ Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …)
 ## Verbindliche Freigabe- und Sicherheitsregeln
 
 - **Kein direkter Commit auf `main`.** Merges nur nach der Ampel oben; ein „Go“ gilt nur für den konkret benannten Schritt.
-- Alp ist alleiniger Product Owner und entscheidet über Umfang, Prioritäten, Abnahme und SQL-Ausführung. Workflows (GitHub Actions) mergen nie selbst.
-- SQL niemals selbst ausführen. SQL-Dateien nur vorbereiten; Alp führt sie im Supabase-SQL-Editor aus.
+- Alp ist alleiniger Product Owner und entscheidet über Umfang, Prioritäten und Abnahme. Workflows (GitHub Actions) mergen nie selbst.
+- SQL nur über den Supabase-Connector (Claude) und nur aus einer SQL-Datei im Repo; keine spontanen Änderungen direkt in der Datenbank. Lesende Abfragen zur Prüfung sind jederzeit erlaubt.
 - Keine Secrets ins Repository. Supabase Secret-/Service-Role-Keys gehören ausschließlich in sichere Umgebungsvariablen/Secret Stores.
 - Automatisierte Workflows dürfen prüfen und berichten, aber keine Codeänderungen, Merges oder Pushes ausführen.
 - PR-Berichte erhalten nur minimale Berechtigungen: `contents: read` und `pull-requests: write`.

@@ -24,6 +24,9 @@ const PAGES = [
   // 3 Spieler (Regression v0.52.2: Kuhhandel-Feld überdeckte „Abbrechen“ bzw. dein Geld) – nur Demos, die mit 3 Spielern funktionieren
   ...['turn', 'tradesetup', 'tradeum2', 'traderespond', 'traderatrespond', 'auction3', 'block', 'ended'].filter((d) => GAME_DEMOS.includes(d)).map((d) => ({ seite: `${d}-3sp`, q: `?p=3&demo=${d}` })),
   // Startseite mit großem Ganzkörper-Avatar (v0.52) und ohne Avatar
+  // v0.56: deine Figur unten rechts (Shop-Avatar ganz) + 3 Spieler
+  { seite: 'turn-figur', q: '?demo=turn&allav=1' },
+  { seite: 'turn-figur-3sp', q: '?p=3&demo=turn&allav=1' },
   { seite: 'start-avatar', q: '?demo=start&klick=1&myav=kuh-kaiser' },
   // Siegertreppchen mit Ganzkörper-Avataren (v0.54)
   { seite: 'podest-avatare', q: '?demo=ended&allav=1', klick: '[data-a="tallySkip"]' },
