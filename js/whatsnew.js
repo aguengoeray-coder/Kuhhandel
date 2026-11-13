@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.56.1', date: '13.11.', items: ['🐞 Testspiel: dein eigener Avatar wird jetzt auch dort angezeigt'] },
   { v: '0.56.0', date: '13.11.', items: ['🧍 Dein Platz: deine Figur steht unten rechts am Tisch – sie jubelt, wenn du etwas gewinnst', '💬 Sprüche und Emojis kommen aus deiner Figur (Sprechblase über dem Kopf)', '✨ Der goldene Rahmen umschließt jetzt dein ganzes Geld und deine Tiere'] },
   { v: '0.55.0', date: '13.11.', items: ['🪙 Dublonen für alle: +2 fürs Mitspielen, +5 je Quartett, +10 für den Sieg (max. 60 am Tag)', '🏆 Am Siegertreppchen siehst du, was du verdient hast', '🔒 Schutz gegen erfundene Spielstände'] },
   { v: '0.54.1', date: '13.11.', items: ['🧹 Aufgeräumter Tisch: Karte bleibt beim Bezahlen stehen, Ergebnis als kompaktes Bild-Fenster', '🃏 Stapel und aufgedeckte Karte gleich groß · deine Sets größer', '💬 „Zuletzt passiert“ steht jetzt im 💬-Menü · goldener Rahmen, wenn du dran bist'] },
