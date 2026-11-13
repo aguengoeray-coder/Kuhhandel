@@ -3105,3 +3105,36 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .eclimb { width: 124px; height: 180px; margin-top: -80px; }
 .eclimb .efig { left: 3px; width: 117px; height: 164px; }
 .eclimb .mdonkey { width: 117px; height: 164px; }
+/* ===== v0.61.1 Gag „Pleite!“: leere Hosentaschen, Motten fliegen raus ===== */
+.pleite { position: absolute; z-index: 35; pointer-events: none; width: 120px; height: 90px; animation: pleite 3.2s linear both; }
+@keyframes pleite { 0% { opacity: 0; } 6%, 85% { opacity: 1; } 100% { opacity: 0; } }
+.pleite .ptasche { position: absolute; top: 44px; width: 30px; height: 34px; background: #F4EFE4; border: 3px solid #3a332c; border-radius: 4px 4px 14px 14px; transform-origin: 50% 0; animation: ptasche 3.2s cubic-bezier(.3,1.6,.5,1) both; }
+.pleite .ptasche::after { content: ''; position: absolute; left: 6px; right: 6px; top: 8px; height: 2px; border-top: 2px dashed #b3a991; }
+.pleite .ptasche.l { left: 22px; --r: -14deg; } .pleite .ptasche.r { right: 22px; --r: 14deg; }
+@keyframes ptasche { 0% { transform: scaleY(0) rotate(0); } 10% { transform: scaleY(1.15) rotate(var(--r)); } 16% { transform: scaleY(1) rotate(calc(var(--r) * -.5)); } 22%, 100% { transform: scaleY(1) rotate(var(--r)); } }
+.pleite .pstaub { position: absolute; left: 30px; top: 60px; width: 60px; height: 26px; border-radius: 50%; background: radial-gradient(closest-side, rgba(214,204,186,.9), rgba(214,204,186,0)); animation: pstaub 3.2s ease-out both; }
+@keyframes pstaub { 0%, 8% { opacity: 0; transform: scale(.3); } 16% { opacity: 1; transform: scale(1.2); } 40%, 100% { opacity: 0; transform: scale(1.8) translateY(-6px); } }
+.pleite .pmotte { position: absolute; left: 42px; top: 50px; width: 36px; opacity: 0; animation: pmotte 2.2s ease-out both; }
+.pleite .pmotte svg { width: 36px; height: 22px; animation: pflatter .14s linear infinite alternate; }
+.pleite .m0 { --mx: -46px; } .pleite .m1 { --mx: 8px; } .pleite .m2 { --mx: 52px; }
+@keyframes pmotte { 0% { opacity: 1; transform: translate(0, 0) scale(.4); } 25% { transform: translate(calc(var(--mx) * .4), -30px) scale(1) rotate(-10deg); } 55% { transform: translate(calc(var(--mx) * .8), -56px) rotate(12deg); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--mx), -96px) rotate(-8deg); } }
+@keyframes pflatter { from { transform: scaleY(1); } to { transform: scaleY(.35); } }
+.pleite .pstempel { position: absolute; left: 50%; top: 4px; padding: 2px 10px; border: 3px solid #E5484D; border-radius: 6px; color: #E5484D; background: rgba(255,255,255,.92); font: 900 17px var(--font-head); letter-spacing: 1px; white-space: nowrap; opacity: 0; transform: translateX(-50%) rotate(-10deg); animation: pstempel .45s cubic-bezier(.2,.9,.3,1.4) both; }
+@keyframes pstempel { 0% { opacity: 0; transform: translateX(-50%) rotate(-10deg) scale(2.2); } 100% { opacity: 1; transform: translateX(-50%) rotate(-10deg) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .pleite, .pleite * { animation: none !important; } .pleite { display: none; } }
+/* v0.61.1 (Alp): Esel so groß, dass sein Kopf genau dem Kopf auf der Karte entspricht – er kommt wirklich aus dem Bild.
+   Rahmen: oben 118 px über dem Kartenbild, unten = Kartenunterkante (die Beine bleiben in der Karte). */
+.eclimb { width: 170px; height: 219px; margin-top: -45px; }
+.eclimb .efig { left: 2px; top: 0; bottom: auto; width: 166px; height: 233px; transform: translateY(118px); animation-name: eclimb2; }
+.eclimb .mdonkey { width: 166px; height: 233px; }
+.stage:has(.eclimb) .aucard .art { visibility: hidden; } /* solange der Esel draußen ist, ist das Kartenbild leer */
+@keyframes eclimb2 {
+  0% { transform: translateY(118px); }
+  /* erst wackelt der Kopf im Bild, dann stemmt er sich raus */
+  4% { transform: translateY(118px) rotate(-4deg); } 8% { transform: translateY(116px) rotate(4deg); }
+  13% { transform: translateY(84px) rotate(-6deg); } 17% { transform: translateY(52px) rotate(5deg); }
+  21% { transform: translateY(18px) rotate(-3deg); } 24% { transform: translateY(-6px) rotate(1deg); } 27% { transform: translateY(0) rotate(0); }
+  84% { transform: translateY(0) rotate(0); }
+  /* zurück: kurzer Hüpfer, dann reinplumpsen – der Kopf landet wieder genau im Kartenbild */
+  88% { transform: translateY(-10px) rotate(-3deg); } 97% { transform: translateY(122px) rotate(2deg); } 100% { transform: translateY(118px) rotate(0); }
+}

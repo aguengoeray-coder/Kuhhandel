@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.61.1 – Muskel-Esel & Pleite
+
+- [x] Esel-Bonus: Ein muskulöser Esel (Sixpack, Bizeps, rote Shorts) klettert aus der Karte – sein Kopf startet genau im Kartenbild –, knüllt die Scheine und wirft jedem mit Wucht einen Papierball an den Kopf, dann plumpst er zurück in die Karte.
+- [x] Neuer Gag „Pleite!“: Wer nicht zahlen kann, stülpt die leeren Hosentaschen nach außen, Motten flattern heraus.
+- [x] Emote „Verprügeln“: nur noch 5 s Pause zwischen zwei Prügeleien.
+
 ## v0.61.0 – Emote „Verprügeln“
 
 - [x] Neuer Shop-Reiter **Emotes**: „🥊 Verprügeln“ für 100 Dublonen – Admins haben es immer (SQL `supabase/v0.61-emote-pruegel.sql`).

@@ -308,7 +308,7 @@ function seatPoint(root, pid, sr, sc) {
   if (pid === '@card' || pid === '@esel') {
     const el = root.querySelector('.tcenter .aucard') || root.querySelector('.tcenter');
     if (el) { const r = el.getBoundingClientRect(); const cx = (r.left + r.width / 2 - sr.left) / sc, cy = (r.top + r.height / 2 - sr.top) / sc, top = (r.top - sr.top) / sc;
-      return pid === '@card' ? { x: cx, y: cy } : { x: cx + 40, y: top - 2 }; }
+      return pid === '@card' ? { x: cx, y: cy } : { x: cx + 60, y: top + 40 }; }
   }
   // „@offer“: das verdeckte Angebot in der Mitte (Kuhhandel/Rattenhandel)
   if (pid === '@pot' || pid === '@offer') {
@@ -1753,6 +1753,15 @@ export function renderGame(root, ctx) {
       const need = e.special ? `${e.count} Karte${e.count === 1 ? '' : 'n'}` : `${e.amount} Taler`;
       const after = e.special ? `→ darf erst ab ${bills.length} buzzern` : `→ darf jetzt höchstens ${e.amount - BID_STEP} bieten`;
       const w = Math.max(30, Math.min(58, Math.floor(400 / Math.max(1, bills.length)) - 6));
+      // v0.61.1 Beispiel-Gag „Pleite!“: am Platz des Spielers stülpen sich die leeren Hosentaschen raus, Motten flattern heraus
+      if (el < 3200) {
+        const at = mine ? '@me' : esc(e.player);
+        const moth = '<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M20 12C14 2 4 0 2 6s6 10 16 8C10 18 6 24 12 24s8-6 8-10c0 4 2 10 8 10s2-6-6-10c10 2 18-2 16-8S26 2 20 12z" fill="#B9B1A3" stroke="#3a332c" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 8v10" stroke="#3a332c" stroke-width="2.4" stroke-linecap="round"/></svg>';
+        effects += `<div class="pleite" data-aim-from="${at}" data-aim-to="${at}" style="--tx:0px;--ty:0px;animation-delay:-${el}ms" aria-hidden="true">
+          <i class="ptasche l" style="animation-delay:-${el}ms"></i><i class="ptasche r" style="animation-delay:-${el}ms"></i><i class="pstaub" style="animation-delay:-${el}ms"></i>
+          ${[0, 1, 2].map((k) => `<i class="pmotte m${k}" style="animation-delay:${450 + k * 260 - el}ms">${moth}</i>`).join('')}
+          <b class="pstempel" style="animation-delay:${300 - el}ms">PLEITE!</b></div>`;
+      }
       effects += `<div class="cantpop" data-a="cpClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${CANTPAY_MS}ms;--bw:${w}px">
         <small>Kann nicht zahlen</small>
         <b>${esc(mine ? 'Du' : nameOf(e.player))} ${mine ? 'kannst' : 'kann'} ${need} nicht zahlen</b>
