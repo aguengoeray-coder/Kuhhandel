@@ -13,7 +13,7 @@ import { shopAvatar, SHOP_AVATAR_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.50.0';
+export const APP_VERSION = '0.51.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -395,7 +395,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['tradeTimer', '⏱ Bedenkzeit im Kuhhandel (20 s)'], ['standings', '📊 Zwischenstand im Menü'], ['moneyCounts', '💰 Geld zählt am Ende (+ Punkte)']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['turbo', '⚡ Turbo: 7 Tierarten, 6 s bieten'], ['tradeTimer', `⏱ Bedenkzeit im Kuhhandel (${g.state?.settings?.turbo ? 12 : 20} s)`], ['standings', '📊 Zwischenstand im Menü'], ['moneyCounts', '💰 Geld zählt am Ende (+ Punkte)']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
     </div>
     </div>
@@ -1785,7 +1785,7 @@ function demo(kind) {
   if (kind === 'room') {
     ui.screen = 'room';
     ui.game = { id: 'g0', code: 'HOFX', host: params.get('guest') ? 'u2' : 'u1', status: 'lobby', version: 2, players: [{ id: 'u1', name: 'Alp' }, { id: 'u2', name: 'Nico' }, { id: 'u3', name: 'Lea' }],
-      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : null };    if (params.get('join')) setTimeout(() => { ui.game = { ...ui.game, players: [...ui.game.players, { id: 'u4', name: 'Mo' }] }; render(); }, 300); // Screenshots: jemand steigt ein
+      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : params.get('turbo') ? { settings: { turbo: true, tradeTimer: 20 } } : null };    if (params.get('join')) setTimeout(() => { ui.game = { ...ui.game, players: [...ui.game.players, { id: 'u4', name: 'Mo' }] }; render(); }, 300); // Screenshots: jemand steigt ein
   }
   const demoState = buildDemoState(kind, gameLocal);
   if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen

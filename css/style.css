@@ -2619,3 +2619,4 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 @keyframes myglow { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
 @keyframes myglowin { 0% { opacity: 0; transform: scaleY(.4); transform-origin: 50% 100%; } 35% { opacity: 1; transform: scaleY(1.25); } 100% { opacity: .8; transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) { .stage .prow.turn, .stage .prow.turn.turnin, .gtable > .tbanner.flip, .myglow, .myglow.in { animation: none !important; } }
+.turbotag { display: block; margin-top: 3px; font-size: 12px; color: #FFD34E; letter-spacing: .03em; }

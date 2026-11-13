@@ -13,8 +13,9 @@ const PLAYERS = [
 
 // ?p=3: dieselben Beispiele mit 3 Spielern (ohne Mo) – für Screenshots/Tests der 3-Spieler-Ansicht
 const P3 = typeof location !== 'undefined' && new URLSearchParams(location.search).get('p') === '3';
+const TURBO = typeof location !== 'undefined' && new URLSearchParams(location.search).get('turbo') === '1';
 function base() {
-  const g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7 });
+  const g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: TURBO ? { turbo: true } : null });
   const set = (i, obj) => { if (g.players[i]) Object.assign(g.players[i].animals, obj); };
   set(0, { hund: 2, kuh: 1, ziege: 1, katze: 2 });
   set(1, { kuh: 1, pferd: 2, katze: 1, hund: 1 });

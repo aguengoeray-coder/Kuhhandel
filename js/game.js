@@ -1,7 +1,7 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
 import { shopAvatar } from './shopavatars.js';
 import {
-  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, CANTPAY_HOLD_MS, AUCTION_START_MS, AUCTION_BID_MS,
+  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, CANTPAY_HOLD_MS, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
   viewFor, possibleTrades, scores, currentPlayer,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
@@ -526,7 +526,7 @@ export function renderGame(root, ctx) {
     const now = ctx.now();
     const running = a.endsAt != null && now < a.endsAt && !revealing; // läuft auch während der Pause nach „kann nicht zahlen“ (Uhr zeigt 15 … 11, Bieten gesperrt)
     const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
-    const total = a.high ? AUCTION_BID_MS : AUCTION_START_MS;
+    const total = a.high ? auctionBidMs(state) : auctionStartMs(state);
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
     const card = revealing
       ? `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`
@@ -880,7 +880,7 @@ export function renderGame(root, ctx) {
 
   if (state.phase === 'trade') {
     const t = v.trade;
-    const TT = Number(state.settings?.tradeTimer) || 0;
+    const TT = (Number(state.settings?.tradeTimer) || 0) && (isTurbo(state) ? 12 : Number(state.settings.tradeTimer)); // Turbo: 12 s
     let ttHtml = '';
     if (TT) {
       const tkey = `${state.log.length}|${t.challenger}|${t.animal}`;
@@ -1063,7 +1063,7 @@ export function renderGame(root, ctx) {
     <div class="deck-wrap">
       ${canDraw ? `<button type="button" class="deck go" data-a="auction" aria-label="Karte aufdecken"><span class="deckcow">${art('kuh')}</span><span class="deckgo">Tippen</span></button>`
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
-      <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}</span>
+      <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
     </div>`}</div>
     <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
