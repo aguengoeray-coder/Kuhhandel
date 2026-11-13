@@ -2662,3 +2662,5 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
    Bewegung bleibt nur für das Wichtige: wer dran ist (Rahmen/Leuchten), der Stapel zum Tippen, dein Hauptknopf und das Gebot. */
 .chip.tradechip, .chip.card.tradechip .mcard { animation: none; }
 .chip.tradechip::after { animation: none; opacity: 0; }
+/* 3 Spieler: Stapel 10 px höher, sonst berührt er auf großen Handys deine Tierreihe (e2e turn-3sp @932×430) */
+.stage.p3 .tcenter > .deck-wrap { margin-top: -10px; }
