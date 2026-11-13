@@ -199,7 +199,7 @@ function figure(p, idx, cls = '') {
 // Nach einem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte, Geldschein) kurz Pause, bevor aufgedeckt werden darf
 // Auslage: bei wenigen Tieren etwas größer (mehr Platz ist zwischen Stapel und Geld nicht)
 const AUSLAGE_MAX = 1;
-const SHELF_MAX = 0.82; // v0.59: Regal über dem Geld – eine Reihe, höchstens 90 % (passt unter die Karte in der Mitte)
+const SHELF_MAX = 1.18; // v0.59.1: Mitte kleiner → Tiere größer (Alps Wahl B) // v0.59: Regal über dem Geld – eine Reihe, höchstens 90 % (passt unter die Karte in der Mitte)
 const DEMO_JUB = typeof location !== 'undefined' && new URLSearchParams(location.search).has('mejub'); // Screenshot: deine Figur jubelt
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
@@ -1123,7 +1123,7 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
     </div>`}</div>
-    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 47)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 36)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum" aria-hidden="true">${sum(handMoney)}<i class="taler"></i></span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;

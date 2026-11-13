@@ -2947,3 +2947,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .stage .auslage.shelf .amini.special .acard { width: 30px; height: 42px; }
 .stage .kasse.side { width: 180px; }
 .kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 24px; }
+/* v0.59.1 (Alps Wahl B): Karte + Stapel in der Mitte −22 %, dafür deine Tiere im Regal bis 118 % */
+.stage { --bk: 1.0; }
+.stage .auslage.shelf { gap: 4px; }
+.stage .auslage.shelf .slabel { font-size: 10px; line-height: 1.3; padding: 0 5px; bottom: -8px; border-width: 1.5px; }
