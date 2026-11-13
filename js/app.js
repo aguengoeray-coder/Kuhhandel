@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.56.0';
+export const APP_VERSION = '0.56.1';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -605,7 +605,8 @@ function renderPlaying() {
     rematchId: ui.game.state?.rematchId || null,
     avatarFor: (seat) => {
       const pl = ui.game.players?.find((x) => (x.seat || x.id) === seat);
-      const uid = pl ? pl.id : (local && seat === 'me' ? me.id : seat);
+      // Testspiel: dein Platz heißt intern „me“ → dein echtes Konto (Profilbild + Shop-Avatar); Test-Spieler haben kein Konto
+      const uid = local && seat === 'me' ? me.id : pl ? pl.id : seat;
       const pr = profiles.get(uid) || null; const sa = shopAvatars.get(uid);
       return sa ? { ...(pr || {}), shop: sa } : pr;
     },

@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.56.1 – Testspiel zeigt deinen Avatar
+
+- [x] Fehler behoben: Im Testspiel (Debug) wurde dein eigenes Profilbild bzw. dein Shop-Avatar nicht angezeigt, weil dein Platz dort intern „me“ heißt. Test-Spieler haben weiterhin kein Bild (sie haben kein Konto).
+
 ## v0.56.0 – Dein Platz am Tisch (Variante C)
 
 - [x] **Deine Figur unten rechts:** dein Shop-Avatar in ganzer Figur (ohne Shop-Avatar: dein rundes Bild) mit Namensschild. Gewinnst du ein Tier, hüpft sie und das 🎉 kommt von ihr.
