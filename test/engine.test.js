@@ -669,3 +669,33 @@ test('Einstellung „Geld zählt am Ende“: übriges Geld wird addiert (nicht m
   assert.equal(on[1].score, 50);
   assert.equal(off[1].score, 0);
 });
+
+// ---------- v0.51 Turbo-Spielart ----------
+test('Turbo: 7 Tierarten ohne Hahn, Gans, Katze – 39 Karten (28 Tiere, 7 Spezial, 4 Ratten), Versteigerung 6 s', async () => {
+  const { animalsOf, TURBO_AUCTION_MS } = await import('../src/engine.js');
+  const g = createGame({ players: P.slice(0, 3), seed: 5, settings: { turbo: true } });
+  assert.equal(g.deck.length, 39);
+  assert.deepEqual(animalsOf(g).map((a) => a.id).includes('hahn'), false);
+  assert.equal(animalsOf(g).length, 7);
+  for (const id of ['hahn', 'gans', 'katze']) assert.ok(!g.deck.some((c) => c.includes(id)), `${id} im Stapel`);
+  assert.equal(g.players[0].animals.hahn, undefined);
+  // erste Tierkarte nach vorne holen und versteigern
+  const i = g.deck.findIndex((c) => animalsOf(g).some((a) => a.id === c));
+  g.deck.unshift(...g.deck.splice(i, 1));
+  const h = drawForAuction(g, currentPlayer(g).id, 0);
+  if (h.phase === 'auction') assert.equal(h.auction.endsAt - h.auction.opensAt, TURBO_AUCTION_MS);
+});
+
+test('Turbo: 100 zufällige Komplettspiele enden sauber mit 7 Quartetten', async () => {
+  const { animalsOf } = await import('../src/engine.js');
+  for (let seed = 1; seed <= 100; seed++) {
+    let g = createGame({ players: P.slice(0, 3 + (seed % 2)), seed, settings: { turbo: true } });
+    let r = seed * 104729;
+    const rand = () => { r = (r * 16807) % 2147483647; return r / 2147483647; };
+    let steps = 0;
+    while (g.phase !== 'ended') { g = botStep(g, rand); if (++steps > 60000) throw new Error('Turbo-Spiel endet nicht (Seed ' + seed + ')'); }
+    assert.equal(g.players.reduce((n, p) => n + p.specials.length, 0), 7);
+    for (const a of animalsOf(g)) assert.equal(g.players.filter((p) => p.animals[a.id] === 4).length, 1, `${a.id} (Seed ${seed})`);
+    assert.ok(g.winner.length >= 1);
+  }
+});

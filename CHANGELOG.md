@@ -1,5 +1,19 @@
 # Änderungsprotokoll
 
+## v0.51.0 – Turbo-Spielart
+
+- [x] **⚡ Turbo** im Warteraum einschaltbar (Gastgeber): nur 7 Tierarten (ohne Hahn, Gans, Katze), Versteigerung 6 s statt 10 s, Kuhhandel-Bedenkzeit 12 s statt 20 s. Eine Partie ist etwa halb so lang.
+- [x] Am Stapel steht „⚡ Turbo“, damit alle wissen, welche Spielart läuft.
+- [x] Klassisch bleibt unverändert. Neue Regel-Tests: 100 Turbo-Komplettspiele.
+- [x] **Esel:** echter Geldregen über den ganzen Tisch. **Ratte:** ein Rudel aus drei Ratten flitzt vorbei.
+- [x] **📰 Was ist neu?** in den Einstellungen – nach einem Update erscheint es einmal automatisch.
+
+## v0.50.0 – Neuer „Wer ist dran“-Anzeiger
+
+- [x] **Kein wandernder gelber Kreis mehr.** Der Platz, der dran ist, leuchtet einmal hell auf und glimmt dann ruhig golden weiter.
+- [x] **Überschrift klappt um** wie eine Anzeigetafel und trägt die Farbe des Spielers, der dran ist.
+- [x] **Du bist dran:** dein Tischrand unten leuchtet golden.
+
 ## v0.49.0 – Kult-Avatare, Dublonen-Münze, einheitliche Größen
 
 - [x] **3 neue Kult-Avatare (je 50):** Der verletzte Bennet, Der schreiende Nico, Der quasselnde Alp.

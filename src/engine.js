@@ -15,6 +15,14 @@ export const ANIMALS = [
   { id: 'pferd', name: 'Pferd', value: 1000 },
 ];
 export const ANIMAL_BY_ID = Object.fromEntries(ANIMALS.map((a) => [a.id, a]));
+// Turbo-Spielart: ohne die drei günstigsten Tierarten (Hahn, Gans, Katze) → 7 Arten, kürzere Partie
+export const TURBO_DROP = ['hahn', 'gans', 'katze'];
+export const TURBO_AUCTION_MS = 6000;
+export function isTurbo(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.turbo); }
+// Tierarten dieser Partie
+export function animalsOf(stateOrSettings) { return isTurbo(stateOrSettings) ? ANIMALS.filter((a) => !TURBO_DROP.includes(a.id)) : ANIMALS; }
+export function auctionStartMs(state) { return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_START_MS; }
+export function auctionBidMs(state) { return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_BID_MS; }
 
 export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
 export const DONKEY_PAYOUTS = [50, 100, 200, 500]; // 1. bis 4. Esel: jeder Spieler bekommt so viel von der Bank
@@ -158,9 +166,10 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
   }
   const ids = new Set(players.map((p) => p.id));
   if (ids.size !== players.length) fail('Spieler-IDs müssen eindeutig sein.');
+  const kinds = animalsOf(settings);
   const cards = [
-    ...ANIMALS.flatMap((a) => [a.id, a.id, a.id, a.id]),
-    ...ANIMALS.map((a) => SPECIAL_PREFIX + a.id),
+    ...kinds.flatMap((a) => [a.id, a.id, a.id, a.id]),
+    ...kinds.map((a) => SPECIAL_PREFIX + a.id),
     ...Array(RAT_COUNT).fill(RAT),
     ...moneyDeckFrom(settings && settings.money).map((v) => MONEY_PREFIX + v),
   ];
@@ -171,7 +180,7 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
       id: p.id,
       name: p.name,
       money: START_MONEY.slice(),
-      animals: { ...Object.fromEntries(ANIMALS.map((a) => [a.id, 0])), [RAT]: 0 },
+      animals: { ...Object.fromEntries(kinds.map((a) => [a.id, 0])), [RAT]: 0 },
       specials: [],
     })),
     deck,
@@ -227,7 +236,7 @@ export function possibleTrades(state, playerId) {
 function allQuartetsComplete(state) {
   // Ratten müssen alle bei einem liegen (alte Spielstände ohne Ratten: entfällt)
   const rats = state.players.reduce((n, p) => n + (p.animals[RAT] || 0), 0) + state.deck.filter((c) => c === RAT).length;
-  return ANIMALS.every((a) => isQuartetComplete(state, a.id))
+  return animalsOf(state).every((a) => isQuartetComplete(state, a.id))
     && (rats === 0 || state.players.some((p) => (p.animals[RAT] || 0) === rats));
 }
 
@@ -384,7 +393,7 @@ export function drawForAuction(prev, playerId, now) {
   } else {
     state.lastEvent = { n: state.log.length, type: 'draw', animal };
   }
-  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + REVEAL_MS : null, endsAt: now != null ? now + REVEAL_MS + AUCTION_START_MS : null };
+  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + REVEAL_MS : null, endsAt: now != null ? now + REVEAL_MS + auctionStartMs(state) : null };
   state.phase = 'auction';
   return state;
 }
@@ -406,7 +415,7 @@ export function bid(prev, playerId, amount, now) {
   a.high = { player: playerId, amount };
   a.passed = a.passed.filter((id) => id !== playerId);
   const bs = stat(state, playerId); bs.bids = (bs.bids || 0) + 1; bs.maxBid = Math.max(bs.maxBid || 0, amount);
-  if (a.endsAt != null && now != null) a.endsAt = Math.max(a.endsAt, now + AUCTION_BID_MS);
+  if (a.endsAt != null && now != null) a.endsAt = Math.max(a.endsAt, now + auctionBidMs(state));
   log(state, `${me.name} bietet ${amount}.`);
   return state;
 }
@@ -460,7 +469,7 @@ export function closeAuction(prev, playerId, mode, now) {
     a.passed = [];
     if (a.endsAt != null && now != null) {
       a.holdUntil = now + CANTPAY_HOLD_MS; // alle schauen erst die Scheine an – vorher bietet niemand
-      a.endsAt = a.holdUntil + AUCTION_START_MS;
+      a.endsAt = a.holdUntil + auctionStartMs(state);
     }
     log(state, `${bidder.name} kann ${failed} nicht zahlen und muss alle Karten zeigen: ${bidder.money.join(', ') || 'keine'}. Die Versteigerung beginnt neu.`);
     return state; // Phase bleibt 'auction'

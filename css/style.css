@@ -2606,3 +2606,36 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 
 /* Dublone auch neben dem Namen auf der Startseite */
 .dub{display:inline-block;width:1.05em;height:1.05em;vertical-align:-.17em;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.35' cy='.3' r='.8'%3E%3Cstop offset='0' stop-color='%23FFF3B0'/%3E%3Cstop offset='.55' stop-color='%23F5C542'/%3E%3Cstop offset='1' stop-color='%23C98A12'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='14.5' fill='url%28%23g%29' stroke='%238A5A00' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='10.5' fill='none' stroke='%23B57D10' stroke-width='1.5' stroke-dasharray='2 1.6'/%3E%3Cpath d='M16 9.5l1.9 4.1 4.5.4-3.4 3 1 4.4L16 19.1l-4 2.3 1-4.4-3.4-3 4.5-.4z' fill='%23B57D10'/%3E%3C/svg%3E") center/contain no-repeat}
+/* v0.50 „Wer ist dran“: Leuchtrahmen am Platz + Überschrift klappt um (kein wandernder Kreis mehr) */
+.stage .gright > .prow.turn, .stage .prow.turn { background: rgba(255,211,78,.14); box-shadow: 0 0 0 2px rgba(255,211,78,.7), 0 0 18px 2px rgba(255,211,78,.28); animation: turnglow 2.6s ease-in-out infinite; }
+.stage .prow.turn.turnin { animation: turnin 1.2s cubic-bezier(.2,.8,.3,1) var(--fl, 0ms) both, turnglow 2.6s ease-in-out 1.2s infinite; }
+@keyframes turnglow { 0%, 100% { box-shadow: 0 0 0 2px rgba(255,211,78,.6), 0 0 14px 1px rgba(255,211,78,.22); } 50% { box-shadow: 0 0 0 2px rgba(255,211,78,.9), 0 0 24px 4px rgba(255,211,78,.4); } }
+@keyframes turnin { 0% { box-shadow: 0 0 0 0 rgba(255,211,78,0); transform: scale(1); } 30% { box-shadow: 0 0 0 4px #FFD34E, 0 0 38px 10px rgba(255,211,78,.75); transform: scale(1.045); } 100% { box-shadow: 0 0 0 2px rgba(255,211,78,.7), 0 0 18px 2px rgba(255,211,78,.28); transform: scale(1); } }
+.gtable > .tbanner.flip { animation: banflip .55s cubic-bezier(.3,.7,.3,1.2) var(--fl, 0ms) both; transform-origin: 50% 50%; }
+@keyframes banflip { 0% { transform: perspective(300px) rotateX(-90deg); opacity: .2; } 60% { transform: perspective(300px) rotateX(12deg); opacity: 1; } 100% { transform: perspective(300px) rotateX(0); } }
+/* du bist dran: der untere Rand (deine Seite des Tisches) leuchtet golden */
+.myglow { position: absolute; left: 0; right: 0; bottom: 0; height: 90px; z-index: 0; pointer-events: none; background: radial-gradient(ellipse 60% 100% at 50% 100%, rgba(255,211,78,.42), rgba(255,211,78,0) 70%); animation: myglow 2.6s ease-in-out infinite; }
+.myglow.in { animation: myglowin 1.2s ease-out var(--fl, 0ms) both, myglow 2.6s ease-in-out 1.2s infinite; }
+@keyframes myglow { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
+@keyframes myglowin { 0% { opacity: 0; transform: scaleY(.4); transform-origin: 50% 100%; } 35% { opacity: 1; transform: scaleY(1.25); } 100% { opacity: .8; transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .stage .prow.turn, .stage .prow.turn.turnin, .gtable > .tbanner.flip, .myglow, .myglow.in { animation: none !important; } }
+.turbotag { display: block; margin-top: 3px; font-size: 12px; color: #FFD34E; letter-spacing: .03em; }
+.room-settings .rs-extra { display: grid; grid-template-columns: repeat(2, minmax(0, auto)); gap: 6px; justify-content: end; } /* v0.51: 4 Schalter in 2 Spalten, damit der Warteraum auf flachen Handys passt */
+.room-settings .rs-extra .rs-chip { white-space: normal; text-align: left; line-height: 1.15; }
+/* v0.51 „Was ist neu?“ */
+.news { display: flex; flex-direction: column; gap: 10px; max-height: 62vh; overflow-y: auto; text-align: left; }
+.news section { background: #F4F1EA; border-radius: 14px; padding: 8px 12px; }
+.news section.cur { background: #FFF4CF; box-shadow: inset 0 0 0 2px #E8B83F; }
+.news h3 { margin: 0 0 4px; font-family: var(--font-head); font-size: 16px; display: flex; align-items: baseline; gap: 8px; }
+.news h3 small { font-weight: 600; font-size: 12px; color: #8a8478; }
+.news h3 em { margin-left: auto; font-style: normal; font-size: 11px; font-weight: 800; color: #1E6B43; background: #DFF7E8; border-radius: 999px; padding: 2px 8px; }
+.news ul { margin: 0; padding-left: 4px; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 14px; line-height: 1.3; }
+/* v0.51 Esel: Geldregen über den ganzen Tisch */
+.moneyrain { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
+.moneyrain .drop { position: absolute; top: -60px; width: 30px; height: 42px; border-radius: 5px; background: var(--m); border: 2px solid rgba(0,0,0,.55); box-shadow: 0 3px 6px rgba(0,0,0,.35); display: grid; place-items: center; font: 700 11px var(--font-head); color: #2a2420; opacity: 0; animation: drop var(--d, 1300ms) cubic-bezier(.35, .1, .7, .9) both; }
+@keyframes drop { 0% { opacity: 0; transform: translateY(0) rotate(0); } 8% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(470px) rotate(calc(var(--r) * 6)); } }
+/* Ratte: drei Ratten flitzen versetzt durch */
+.ratrun.r1 { top: 205px; width: 44px; height: 44px; animation-duration: 1.5s; animation-delay: .25s; }
+.ratrun.r2 { top: 290px; width: 38px; height: 38px; animation-duration: 1.35s; animation-delay: .5s; }
+@media (prefers-reduced-motion: reduce) { .moneyrain { display: none; } }
+.mbox { max-height: calc(100dvh - 16px); overflow-y: auto; } /* v0.51: lange Fenster (z. B. Einstellungen) scrollen statt unten abzuschneiden */
