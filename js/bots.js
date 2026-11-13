@@ -1,7 +1,7 @@
 // Test-Spieler für den Debug-Modus: spielen zufällig, aber halbwegs sinnvoll
 import {
   ANIMAL_BY_ID, possibleTrades, drawForAuction, bid, passAuction, closeAuction,
-  pay, startTrade, acceptTrade, counterTrade, ANIMALS, RAT, scoreFor,
+  pay, startTrade, acceptTrade, counterTrade, ANIMALS, RAT, scoreFor, kursValue,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, RPS, specialDecide, specialStage, specialNumber, specialResult, chooseBlock,
 } from '../src/engine.js';
 
@@ -38,7 +38,7 @@ export function botStep(s, bots, now, rand = Math.random) {
       const candidates = s.players.filter((p) => isBot(p.id) && p.id !== a.auctioneer && !a.passed.includes(p.id) && (!a.high || a.high.player !== p.id));
       if (!candidates.length || rand() > 0.45) return null; // nicht jede Runde reagieren
       const p = pick(candidates, rand);
-      const worth = ANIMAL_BY_ID[a.animal].value * 0.5 + 40;
+      const worth = kursValue(a.animal, s.kurse) * 0.5 + 40; // Börsen-Chaos: aktueller Kurs
       const limit = Math.min(worth, sum(p.money) + (rand() < 0.15 ? 60 : 0)); // ab und zu bluffen
       const amt = high + pick([10, 10, 20, 50], rand);
       const cap = a.caps[p.id];

@@ -713,3 +713,88 @@ test('Debug: Spiel sofort beenden – nur wenn alle Quartette verteilt, dann reg
   const e = debugEnd(s);
   assert.ok(['block', 'ended'].includes(e.phase));
 });
+
+// ---------- Börsen-Chaos ----------
+test('Börsen-Chaos: 62 Karten (54 + 8 News), nie zusammen mit Turbo', async () => {
+  const { isNewsCard, newsOf, isBoerse } = await import('../src/engine.js');
+  const g = createGame({ players: P, seed: 9, settings: { boerse: true } });
+  assert.equal(g.deck.length, 62);
+  const news = g.deck.filter(isNewsCard).map((c) => newsOf(c).kind).sort();
+  assert.deepEqual(news, ['crash', 'crash', 'dividende', 'hektik', 'panik', 'rallye', 'rallye', 'steuer']);
+  assert.deepEqual(g.kurse, {});
+  const t = createGame({ players: P.slice(0, 3), seed: 9, settings: { boerse: true, turbo: true } });
+  assert.equal(t.deck.filter(isNewsCard).length, 0);
+  assert.equal(isBoerse(t), false);
+  assert.equal(createGame({ players: P, seed: 9 }).deck.filter(isNewsCard).length, 0);
+});
+
+function boerseWithTop(card) {
+  const g = createGame({ players: P, seed: 1, settings: { boerse: true } });
+  g.deck = [card, 'kuh', 'hahn', 'esel', 'pferd', 'schaf'];
+  return g;
+}
+
+test('Börsen-News: Kursrallye/-sturz ändern den Wert (±50 %, stapelbar, nie unter 0) – Aufdecker deckt nochmal auf', async () => {
+  const { kursValue } = await import('../src/engine.js');
+  let g = drawForAuction(boerseWithTop('news-rallye-kuh'), 'a', 0);
+  assert.equal(g.kurse.kuh, 50);
+  assert.equal(kursValue('kuh', g.kurse), 1200);
+  assert.equal(g.phase, 'turn'); assert.equal(g.mustDraw, true); assert.equal(currentPlayer(g).id, 'a');
+  assert.equal(g.lastEvent.type, 'news'); assert.equal(g.lastEvent.from, 800); assert.equal(g.lastEvent.to, 1200);
+  g.deck.unshift('news-rallye-kuh'); g = drawForAuction(g, 'a', 0);
+  assert.equal(kursValue('kuh', g.kurse), 1600);
+  g.deck.unshift('news-crash-pferd', 'news-crash-pferd', 'news-crash-pferd');
+  g = drawForAuction(drawForAuction(drawForAuction(g, 'a', 0), 'a', 0), 'a', 0);
+  assert.equal(kursValue('pferd', g.kurse), 0);
+  // Wertung rechnet mit dem Kurs
+  g.players[1].animals.kuh = 4;
+  assert.equal(scores(g)[1].score, 1600);
+  assert.equal(scoreFor(g.players[1]).score, 800); // ohne Kurse: Grundwert
+});
+
+test('Börsen-News: Dividende +50 für alle; Steuerprüfung nimmt jedem den höchsten Schein (nur eigener sichtbar)', () => {
+  let g = drawForAuction(boerseWithTop('news-dividende'), 'a', 0);
+  for (const p of g.players) assert.equal(total(p.money), 150);
+  g.players[2].money = [0, 10, 500];
+  g.deck.unshift('news-steuer');
+  g = drawForAuction(g, 'a', 0);
+  assert.deepEqual(g.players[2].money, [0, 10]);
+  assert.equal(total(g.players[0].money), 100); // 100 + 50 − 50
+  const v = viewFor(g, 'c');
+  assert.deepEqual(v.lastEvent.lost, { c: 500 });
+  assert.deepEqual(viewFor(g, 'a').lastEvent.lost, { a: 50 });
+});
+
+test('Börsen-News: Marktpanik – jeder schiebt eine zufällige Karte nach links (Summe bleibt), jeder sieht nur Gegeben/Bekommen', () => {
+  const g0 = boerseWithTop('news-panik');
+  g0.players.forEach((p, i) => { p.money = [10 * (i + 1)]; });
+  const g = drawForAuction(g0, 'a', 0);
+  assert.deepEqual(g.players.map((p) => p.money), [[40], [10], [20], [30]]);
+  const v = viewFor(g, 'b');
+  assert.deepEqual(v.lastEvent.moved, { gave: 20, got: 10, from: 'a' });
+});
+
+test('Börsen-News: Hektik – die nächsten 3 Versteigerungen laufen 5 s (auch nach Geboten), dann wieder 10 s', async () => {
+  const { HEKTIK_MS } = await import('../src/engine.js');
+  let g = drawForAuction(boerseWithTop('news-hektik'), 'a', 0);
+  assert.equal(g.hektik, 3);
+  g = drawForAuction(g, 'a', 1000);
+  assert.equal(g.auction.endsAt - g.auction.opensAt, HEKTIK_MS);
+  const t = g.auction.opensAt + 100;
+  g = bid(g, 'b', 10, t);
+  assert.equal(g.auction.endsAt - t, HEKTIK_MS);
+  assert.equal(g.hektik, 2);
+});
+
+test('Börsen-Chaos: 100 zufällige Komplettspiele enden sauber, Kurse nie negativ', async () => {
+  const { kursValue } = await import('../src/engine.js');
+  for (let seed = 1; seed <= 100; seed++) {
+    let g = createGame({ players: P.slice(0, 3 + (seed % 2)), seed, settings: { boerse: true } });
+    let r = seed * 7919;
+    const rand = () => { r = (r * 16807) % 2147483647; return r / 2147483647; };
+    let steps = 0;
+    while (g.phase !== 'ended') { g = botStep(g, rand); if (++steps > 80000) throw new Error('Börsen-Spiel endet nicht (Seed ' + seed + ')'); }
+    for (const a of ANIMALS) { assert.equal(g.players.filter((p) => p.animals[a.id] === 4).length, 1, `${a.id} (Seed ${seed})`); assert.ok(kursValue(a.id, g.kurse) >= 0); }
+    assert.ok(g.winner.length >= 1);
+  }
+});

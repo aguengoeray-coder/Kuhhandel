@@ -25,6 +25,9 @@ const PAGES = [
   ...['turn', 'tradesetup', 'tradeum2', 'traderespond', 'traderatrespond', 'auction3', 'block', 'ended'].filter((d) => GAME_DEMOS.includes(d)).map((d) => ({ seite: `${d}-3sp`, q: `?p=3&demo=${d}` })),
   // Startseite mit großem Ganzkörper-Avatar (v0.52) und ohne Avatar
   // v0.56: deine Figur unten rechts (Shop-Avatar ganz) + 3 Spieler
+  // v0.60 Börsen-Chaos: jede News-Karte + Kurszettel mit 3 Spielern
+  ...['crash-pferd', 'dividende', 'steuer', 'panik', 'hektik'].map((k) => ({ seite: `news-${k}`, q: `?demo=news&k=${k}` })),
+  { seite: 'boerse-3sp', q: '?p=3&demo=boerse' },
   { seite: 'turn-figur', q: '?demo=turn&allav=1' },
   { seite: 'turn-figur-3sp', q: '?p=3&demo=turn&allav=1' },
   { seite: 'start-avatar', q: '?demo=start&klick=1&myav=kuh-kaiser' },

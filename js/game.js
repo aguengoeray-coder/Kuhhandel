@@ -6,6 +6,7 @@ import {
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
+  isBoerse, kursValue, KURS_STEP, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
@@ -38,7 +39,9 @@ const aname = (id) => (id === RAT ? 'Ratte' : ANIMAL_BY_ID[id].name);
 // Tier mit Artikel im Akkusativ: „den Hahn“, „die Kuh“, „das Schwein“
 const ART_AKK = { hahn: 'den', gans: 'die', katze: 'die', hund: 'den', schaf: 'das', ziege: 'die', esel: 'den', schwein: 'das', kuh: 'die', pferd: 'das', [RAT]: 'die' };
 const theAnimal = (id) => `${ART_AKK[id] || 'die'} ${aname(id)}`;
-const aval = (id) => (id === RAT ? null : ANIMAL_BY_ID[id].value);
+// Börsen-Chaos: aktuelle Kurse des gerade gezeichneten Spiels (null = Grundwerte)
+let KURSE = null;
+const aval = (id) => (id === RAT ? null : kursValue(id, KURSE));
 const specialsOf = (p) => p.specials || [];
 const ratsOf = (p) => p.animals[RAT] || 0;
 const karten = (n) => (n === 1 ? '1 Karte' : `${n} Karten`);
@@ -121,9 +124,9 @@ export function scoreFormula(p, blocked = null, withMoney = false) {
   const specials = p.specials || [];
   const quartets = ANIMALS.filter((a) => p.animals[a.id] === 4 && a.id !== blocked);
   const parts = [];
-  for (const a of quartets) parts.push(specials.includes(a.id) ? `${a.value}+${SPECIAL_VALUE}★` : `${a.value}`);
+  for (const a of quartets) parts.push(specials.includes(a.id) ? `${aval(a.id)}+${SPECIAL_VALUE}★` : `${aval(a.id)}`);
   const loose = specials.filter((id) => !quartets.some((a) => a.id === id)).length;
-  const r = scoreFor(p, blocked, withMoney); const total = r.score;
+  const r = scoreFor(p, blocked, withMoney, KURSE); const total = r.score;
   let text = quartets.length ? `(${parts.join(' + ')}) × ${quartets.length}` : '';
   if (loose) text += `${text ? ' + ' : ''}${loose > 1 ? `${loose} × ` : ''}${SPECIAL_VALUE}★`;
   if (withMoney && r.money) text += `${text ? ' + ' : ''}${r.money} Geld`;
@@ -135,13 +138,13 @@ function playerDetail(p, withScore = false) {
   const items = [];
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
-    if (n) items.push(`<span class="pd ${n === 4 ? 'done' : ''}">${miniCard(a.id)}<b>${n}×</b><small>${a.value}</small></span>`);
+    if (n) items.push(`<span class="pd ${n === 4 ? 'done' : ''}">${miniCard(a.id)}<b>${n}×</b><small>${aval(a.id)}</small></span>`);
   }
   const r = ratsOf(p);
   if (r) items.push(`<span class="pd">${miniCard(RAT)}<b>${r}×</b><small>Ratte</small></span>`);
   for (const id of specialsOf(p)) items.push(`<span class="pd sp"><span class="pdsp">${miniCard(id)}${STAR}</span><b>★</b><small>${SPECIAL_VALUE}</small></span>`);
   const count = Array.isArray(p.money) ? p.money.length : p.money;
-  const pts = withScore ? `<div class="pdscore"><span>Punkte</span><b>${scoreFor(p).score}</b><small>${scoreFormula(p)}</small></div>` : '';
+  const pts = withScore ? `<div class="pdscore"><span>Punkte</span><b>${scoreFor(p, null, false, KURSE).score}</b><small>${scoreFormula(p)}</small></div>` : '';
   return `<div class="pdetail">${pts}<div class="pdgrid">${items.join('') || '<em>Noch keine Karten</em>'}</div>${withScore ? '' : `<small>${karten(count)} Geld</small>`}</div>`;
 }
 
@@ -376,8 +379,32 @@ function seekFx(root) {
   });
 }
 
+// ---------- Börsen-Chaos: News-Karte, Kurszettel ----------
+const NEWS_ICON = { rallye: '📈', crash: '📉', dividende: '💰', steuer: '🧾', panik: '🔀', hektik: '⚡' };
+function newsTitle(e) {
+  if (e.kind === 'rallye') return `Kursrallye ${aname(e.animal)}`;
+  if (e.kind === 'crash') return `Kurssturz ${aname(e.animal)}`;
+  return ({ dividende: 'Dividende', steuer: 'Steuerprüfung', panik: 'Marktpanik', hektik: 'Hektik' })[e.kind] || 'Börsen-News';
+}
+function newsReveal(e, meId, nameOf) {
+  let body = '';
+  let mine = '';
+  if (e.kind === 'rallye' || e.kind === 'crash') body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${e.kind === 'rallye' ? 'up' : 'down'}">${e.to} ${e.kind === 'rallye' ? '▲' : '▼'}</b></div><small>${e.kind === 'rallye' ? '+' : '−'}${KURS_STEP} % bis Spielende</small>`;
+  else if (e.kind === 'dividende') body = `<p>Alle bekommen <b>${e.amount ?? DIVIDENDE}</b> aus der Bank.</p>`;
+  else if (e.kind === 'steuer') { body = '<p>Alle geben ihren <b>höchsten Schein</b> ab.</p>'; const l = e.lost && e.lost[meId]; mine = l != null ? `Du gibst <b>${l}</b> ab` : 'Du hattest keinen Schein'; }
+  else if (e.kind === 'panik') { body = '<p>Jeder schiebt einen <b>zufälligen Schein</b> nach links.</p>'; const m = e.moved || {}; mine = `${m.gave != null ? `Du gibst <b>${m.gave}</b>` : 'Du gibst nichts'} · ${m.got != null ? `bekommst <b>${m.got}</b> von ${esc(nameOf(m.from))}` : 'bekommst nichts'}`; }
+  else if (e.kind === 'hektik') body = `<p>Die nächsten <b>${HEKTIK_COUNT}</b> Versteigerungen laufen nur <b>${HEKTIK_MS / 1000} s</b>.</p>`;
+  return `<div class="newsreveal k-${e.kind}" role="status"><div class="nwcard"><span class="nwtag">Börsen-News</span><i class="nwicon">${NEWS_ICON[e.kind] || '📰'}</i><b class="nwtitle">${esc(newsTitle(e))}</b>${body}${mine ? `<span class="nwmine">${mine}</span>` : ''}</div></div>`;
+}
+function kursZettel(state) {
+  if (!isBoerse(state) || !state.kurse) return '';
+  const rows = ANIMALS.filter((a) => state.kurse[a.id]).map((a) => { const up = state.kurse[a.id] > 0; return `<span class="kz ${up ? 'up' : 'down'}" style="--a:${ANIMAL_COLORS[a.id]}" title="${aname(a.id)}"><em>${art(a.id)}</em><b>${aval(a.id)}</b><i>${up ? '▲' : '▼'}</i></span>`; });
+  return rows.length ? `<span class="kurszettel" aria-label="Kurse">${rows.join('')}</span>` : '';
+}
+
 export function renderGame(root, ctx) {
   const { state, meId, local } = ctx;
+  KURSE = state.kurse || null;
   avatarLookup = ctx.avatarFor || (() => null);
   const sounds = [];
   const later = []; // Geräusche mit Verzögerung (z. B. Tierlaut, wenn die Karte umgedreht ist)
@@ -1001,7 +1028,7 @@ export function renderGame(root, ctx) {
       aucCenter = `<div class="blockpanel ${entered ? 'pop' : ''}">
         <p>Welches Quartett fällt weg?</p>
         <div class="blockgrid">${opts.map((a) => `<button type="button" class="blockopt" data-a="block" data-v="${a.id}" style="--a:${ANIMAL_COLORS[a.id]}">
-          ${miniCard(a.id, 'big')}<b>${a.name}${specialsOf(me).includes(a.id) ? ` ${STAR}` : ''}</b><small>${scoreFor(me, a.id).score} Punkte</small></button>`).join('')}</div>
+          ${miniCard(a.id, 'big')}<b>${a.name}${specialsOf(me).includes(a.id) ? ` ${STAR}` : ''}</b><small>${scoreFor(me, a.id, false, KURSE).score} Punkte</small></button>`).join('')}</div>
       </div>`;
       aucLeft = `<div class="ldecide">Quartett wählen …</div>`;
       H.block = (id) => ctx.act((s) => chooseBlock(s, meId, id));
@@ -1043,6 +1070,7 @@ export function renderGame(root, ctx) {
       const loser = le0.winner === le0.challenger ? le0.target : le0.challenger;
       evStrip = `${who2(le0.winner)}${ea(hat(le0.winner))}${ea(`<b>${le0.count}×</b> ${aname(le0.animal)}`)}${miniCard(le0.animal)}${ea('von')}${who2(loser, 'dir')}${ea('ertauscht')}`;
     } else if (le0.type === 'money_drawn') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} einen Geldschein gezogen`)}${moneyCard(le0.value)}`;
+    else if (le0.type === 'news') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} Börsen-News aufgedeckt:`)}${ea(`<b>${esc(newsTitle(le0))}</b>`)}`;
     else if (le0.type === 'rat_taken') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} die Ratte genommen`)}${miniCard(RAT)}${ea(`und ${karten(le0.count)} bekommen`)}`;
   }
   // Auslage: immer sichtbar über dem Geld. Spezialkarte steckt im Stapel ihres Tiers.
@@ -1121,7 +1149,7 @@ export function renderGame(root, ctx) {
     <div class="deck-wrap">
       ${canDraw ? `<button type="button" class="deck go" data-a="auction" aria-label="Karte aufdecken"><span class="deckcow">${art('kuh')}</span><span class="deckgo">Tippen</span></button>`
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
-      <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
+      <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
     <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 36)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
@@ -1151,7 +1179,7 @@ export function renderGame(root, ctx) {
   // Zwischenstand (nur wenn im Warteraum erlaubt): rechnet nur mit dem, was offen liegt – Geld bleibt verdeckt
   H.standings = () => { local.standings = !local.standings; local.menu = false; ctx.rerender(); };
   const standingsHtml = local.standings && state.settings?.standings && state.phase !== 'ended' ? (() => {
-    const rows = v.players.map((p, i) => ({ p, i, sc: scoreFor(p) })).sort((a, b) => b.sc.score - a.sc.score);
+    const rows = v.players.map((p, i) => ({ p, i, sc: scoreFor(p, null, false, KURSE) })).sort((a, b) => b.sc.score - a.sc.score);
     return `<div class="standings" data-a="standings" role="button" aria-label="Zwischenstand schließen">
       <h3>📊 Zwischenstand <small>${state.settings?.moneyCounts ? 'nur offene Quartette – Geld kommt am Ende dazu' : 'nur offene Quartette – Geld zählt nicht'}</small></h3>
       ${rows.map((r, k) => `<div class="strow"><i>${k + 1}.</i>${avatar(r.p, r.i)}<span>${esc(r.p.id === meId ? 'Du' : r.p.name)}</span><span class="stq">${r.sc.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>`).join('') || '–'}</span><b>${r.sc.score}</b></div>`).join('')}
@@ -1385,6 +1413,13 @@ export function renderGame(root, ctx) {
     keepFx(`<div class="moneyreveal" data-aim-to="${esc(lem.player)}" data-aim-anchor="center" style="--ty:0px;--tx:0px">
       <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${mIn(lem.value)}${lem.value >= 100 ? glitz(lem.value >= 500 ? 14 : lem.value >= 200 ? 10 : 6, lem.value >= 500 ? 'gold' : '') : ''}</div>
       <span class="mrlabel">${esc(lem.player === meId ? 'Du' : nameOf(lem.player))} ${lem.player === meId ? 'ziehst' : 'zieht'} <b>${lem.value}</b></span></div>`, 2700);
+  }
+  // Börsen-News aufgedeckt: große Karte in der Mitte (3,4 s), mit deinem persönlichen Teil (Steuer/Marktpanik)
+  const newsSig = lem?.type === 'news' ? `${lem.n}|${lem.kind}` : null;
+  if (newsSig && evFresh && local.newsSig !== newsSig) {
+    local.newsSig = newsSig;
+    keepFx(newsReveal(lem, meId, nameOf), 3400);
+    sounds.push('flip'); later.push([lem.kind === 'crash' || lem.kind === 'steuer' ? 'boo' : lem.kind === 'hektik' ? 'tick' : 'coins', 600]);
   }
   if (state.phase === 'special') {
     const sp = v.special;
