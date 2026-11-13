@@ -2727,7 +2727,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .rc-card .mcard { width: 34px; height: 46px; border-radius: 6px; }
 .rc-card.sp .mcard { box-shadow: 0 0 0 2px #E8B83F; }
 .rc-star { position: absolute; left: -6px; top: -6px; font-style: normal; color: #E8B83F; font-size: 14px; text-shadow: 0 1px 0 #7a5a00; }
-.gtable:has(.evcard.receipt) .evstrip { visibility: hidden; } /* die Quittung sagt dasselbe – Zeile erst danach zeigen */
+.stage:has(.evcard.receipt) .evstrip { visibility: hidden; } /* die Quittung sagt dasselbe – Zeile erst danach zeigen */
 .evcard.receipt { width: 206px; left: calc(var(--cx) - 177px); gap: 3px; padding: 6px 9px 9px; }
 .evcard.receipt .ec-title { font-size: 13px; }
 .rc-p .avatar { width: 22px; height: 22px; }
