@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md – gemeinsamer Projektstand
 
-Stand: 13.11.2026, 16:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
+Stand: 13.11.2026, 19:40 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
 
 > Maßgeblich sind GitHub (`main`, PRs, Workflow-Ergebnisse). Diese Datei wird nach jeder Arbeitseinheit aktualisiert.
 > Freigaben laufen nach der **Ampel** in `AGENTS.md` (🟢 KI mergt bei grünen Tests · 🟡 Alps Go · 🔴 nur Alp).
@@ -9,7 +9,7 @@ Stand: 13.11.2026, 16:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.58.0** – Merge-Commit `5f621ad` (#24, enthält auch v0.57.1 aus #23); Cloudflare-Build erfolgreich |
+| Live-Version (`main`) | **v0.59.0** – Merge-Commit `7f7ea7a` (#26); Cloudflare-Build erfolgreich (der Build von #25/v0.58.1 war fehlgeschlagen, ist in v0.59 enthalten) |
 | In Arbeit | – |
 | Nächste Versionen | Börsen-Chaos (Regelvorschlag zuerst) · 2-Spieler-Modus (Regelprüfung zuerst) |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.58-neue-charaktere.sql` (Alp im SQL-Editor, Prüfabfrage 13.11. 15:58 ✓) |
@@ -17,6 +17,8 @@ Stand: 13.11.2026, 16:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 ### Zuletzt live gegangen
 | Version | Inhalt | PR |
 |---|---|---|
+| v0.59.0 | Dein Platz: Tier-Regal über dem Geld, Hand mit festen Fächern + Summe, Figur rechts groß mit Leuchten, Sprechblasen aus dem Mund | #26 |
+| v0.58.1 | Figur kleiner, Doku | #25 |
 | v0.58.0 | 9 neue Charaktere, 7 Sprüche, 2 Gratis-Sprüche (SQL `shop_claim_free`), 💬 nur Sprüche, symmetrischer Rahmen unten, „Überboten!“ über dem Gebot, Bezahl-Box einreihig | #24 |
 | v0.57.1 | Preis in der Ergebnis-Überschrift, Taler-Schein-Zeichen | #23 (in #24) |
 | v0.57.0 | Wie am echten Tisch (Figur unten Mitte, Geld links, Tiere rechts) + Debug-Abkürzungen | #22 |
@@ -30,7 +32,7 @@ Stand: 13.11.2026, 16:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | PR / Branch | Owner | Stufe | Status |
 |---|---|---|---|
-| `claude/doku-v058` (#25) | Claude | 🟢 | v0.58.1: Figur etwas kleiner (Abstand zur Karte) + diese Doku-Aktualisierung. |
+| `claude/doku-v059` | Claude | 🟢 | Diese Doku-Aktualisierung. |
 | `ai/auftraege` | Codex/Claude | – | Ersetzt durch Abschnitt 5; löschen nur mit Alps Okay. |
 | alte Feature-Branches | – | 🔴 | Alle in `main`. Aufräumen nur mit Alps Okay. |
 
@@ -61,7 +63,7 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 
 | Version | Inhalt | Stufe |
 |---|---|---|
-| v0.52–v0.58 | Avatare, größere Karten, Siegerehrung, Dublonen für alle, Platz am Tisch, neue Charaktere | ✅ live |
+| v0.52–v0.59 | Avatare, größere Karten, Siegerehrung, Dublonen für alle, Platz am Tisch, neue Charaktere | ✅ live |
 | nächste | Börsen-Chaos: dritte Spielart mit Ereigniskarten (Regelvorschlag vorher an Alp) | 🟡 |
 | danach | 2-Spieler-Modus (Originalregeln prüfen, Vorschlag an Alp) | 🟡 |
 | später | Erfolge + Saison-Rangliste (SQL), Zuschauen, Zug-Zeitlimit mit Bot-Vertretung, Shop: Tischdesigns/Kartenrücken | – |
