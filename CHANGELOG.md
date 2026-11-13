@@ -4,6 +4,7 @@
 
 - [x] Deine Tierreihe steht jetzt rechts neben deinem Geldfächer (zwei Reihen, wenn es viele sind) – antippen für Kuhhandel wie bisher.
 - [x] Dadurch wird die Tischmitte frei: Stapel, Tierkarte bei Versteigerung, Ratte und Spezialkarte sind **40 % größer** – in allen Phasen gleich groß.
+- [x] Viele Geldscheine: der Fächer staucht sich, damit der erste Schein nicht unter dem „Kuhhandel“-Knopf liegt. Viele Tiere: höchstens 2 Reihen, dann kleiner (beides von den Browser-Testpartien gefunden).
 - [x] Geprüft: alle Ansichten in 4 Handygrößen, mit 3 und 4 Spielern, ohne Überdeckungen.
 
 ## v0.52.2 – Feinschliff
