@@ -8,7 +8,14 @@ export const SHOP_SAYINGS = [
   { id:'spruch-gute-idee', text:'Das ist eine gute Idee!', price:10 },
   { id:'spruch-ihh', text:'IHH, du Ekliger!', price:10 },
   { id:'spruch-bastard', text:'Bastard', price:10 },
-  { id:'spruch-gute-ideen', text:'Ich habe nur gute Ideen', price:20 }
+  { id:'spruch-gute-ideen', text:'Ich habe nur gute Ideen', price:20 },
+  { id:'spruch-dickes-huhn', text:'Ich bin das dicke Huhn und gehe heute schwimmen', price:10 },
+  { id:'spruch-dumme-kuh', text:'Hey, du bist eine dumme Kuh!', price:10 },
+  { id:'spruch-hunger', text:'Ich habe Hunger', price:10 },
+  { id:'spruch-bau-mal', text:'Bau mal einen', price:10 },
+  { id:'spruch-kurzer', text:'Lass uns auf einen Kurzen zu den ukrainischen Nachbarn', price:10 },
+  { id:'spruch-schmatz', text:'Schmatz nicht!!', price:10 },
+  { id:'spruch-how-old', text:'Can I ask you by any chance how old you are? 📱', price:10 }
 ];
 const AVATARS = SHOP_AVATARS.map(({id,name,tier,price,animal}) => ({id,name,tier,price,animal}));
 const TIERS = [

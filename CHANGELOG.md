@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.58.0 – Neue Charaktere und Sprüche
+
+- [x] 9 neue Avatare (Kopf + ganzer Körper, mit Bewegung): Kult **Mr. Passt Schon** (50), Legendär **Die dumme Kuh** (60), Selten (30): Mama Sports, Dickes Huhn, Bontje Lebkuchen, Die schmatzenden Zwillinge, Nacht-Gohan, Der schielende Mogli, Der dicke Gojo.
+- [x] 7 neue Sprüche (je 10): „Ich bin das dicke Huhn und gehe heute schwimmen“, „Hey, du bist eine dumme Kuh!“, „Ich habe Hunger“, „Bau mal einen“, „Lass uns auf einen Kurzen zu den ukrainischen Nachbarn“, „Schmatz nicht!!“, „Can I ask you by any chance how old you are? 📱“.
+- [x] SQL `supabase/v0.58-neue-charaktere.sql` (Preisliste aus dem Katalog erzeugt, Test prüft Gleichheit) – spielt Claude nach dem Merge über den Supabase-Connector ein.
+
 ## v0.57.1 – Preis in der Überschrift
 
 - [x] Ergebnis-Fenster: Überschrift mit Preis („Test 2 kauft das Schaf für 140 [Schein]“, „… Spezialkarte für 3 Karten“, „… ertauscht 2× Ziege für 3 Karten“, „Du nimmst die Ratte + 3 Karten“); darunter nur noch „Test 2 → 4 Karten → Test 1“.
