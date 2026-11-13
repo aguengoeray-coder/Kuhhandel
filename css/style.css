@@ -2664,3 +2664,10 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .chip.tradechip::after { animation: none; opacity: 0; }
 /* 3 Spieler: Stapel 10 px höher, sonst berührt er auf großen Handys deine Tierreihe (e2e turn-3sp @932×430) */
 .stage.p3 .tcenter > .deck-wrap { margin-top: -10px; }
+/* v0.53: deine Tierreihe rechts neben dem Geldfächer → die Mitte wird höher und größer */
+.stage .fan-wrap { right: 252px; }
+.stage .auslage { left: auto; right: 54px; bottom: -14px; width: 196px; height: auto; max-height: 112px; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start; align-items: flex-end; gap: 2px 6px; }
+.stage .auslage > * { zoom: .84; }
+/* größer wird die Karte selbst (Stapel, Tierkarte), nicht die ganze Reihe – sonst ragt sie seitlich in die Plätze */
+.stage { --bk: 1.4; }
+.gtable .tcenter .deck-wrap, .gtable .tcenter .aucard, .gtable .tcenter .bigcard { zoom: var(--bk); }
