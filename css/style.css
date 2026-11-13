@@ -2864,6 +2864,9 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 /* v0.58: dein Rahmen symmetrisch – Figur genau in der Mitte des goldenen Rahmens, Geld links und Tiere rechts je mittig in ihrer Hälfte */
 .stage .myglow { left: 184px; right: 4px; bottom: 2px; height: 108px; }
 .stage .meplate { left: 470px; width: 84px; }
+/* v0.58.1: Figur etwas kleiner – die große Karte rutscht in manchen Lagen tiefer (3 Spieler, Hinweiszeilen) */
+.stage .meplate { height: 80px; }
+.stage .meplate.full .mefig .shop-avatar-full, .stage.p3 .meplate.full .mefig .shop-avatar-full { height: 70px; }
 .stage .fan-wrap { left: 192px; right: 382px; bottom: 10px; justify-content: center; }
 .stage .auslage { left: 562px; right: 12px; width: auto; bottom: 8px; justify-content: center; align-content: center; }
 .stage .mebubble, .stage .mebubble.up { left: 450px; }

@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md – gemeinsamer Projektstand
 
-Stand: 13.11.2026, 09:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
+Stand: 13.11.2026, 16:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
 
 > Maßgeblich sind GitHub (`main`, PRs, Workflow-Ergebnisse). Diese Datei wird nach jeder Arbeitseinheit aktualisiert.
 > Freigaben laufen nach der **Ampel** in `AGENTS.md` (🟢 KI mergt bei grünen Tests · 🟡 Alps Go · 🔴 nur Alp).
@@ -9,45 +9,40 @@ Stand: 13.11.2026, 09:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.54.0** – Merge-Commit `7941850` (Cloudflare baut bei jedem Push auf `main` neu) |
-| Fertig, wartet auf Go | **v0.54.1** ruhiges Bezahlen + Quittung – PR #18, 🟡 |
-| In Arbeit | **v0.55** Dublonen für alle – Branch `claude/v055-sicherheit` (Sicherheitsanalyse + SQL-Entwurf, nicht ausgeführt) |
-| Nächste Versionen | v0.55 Dublonen (SQL, 🔴) · v0.56 Börsen-Chaos (Regelvorschlag zuerst) · v0.57 2 Spieler (Regelprüfung zuerst) |
-| Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.49-kult-avatare.sql` (von Alp bestätigt) |
+| Live-Version (`main`) | **v0.58.0** – Merge-Commit `5f621ad` (#24, enthält auch v0.57.1 aus #23); Cloudflare-Build erfolgreich |
+| In Arbeit | – |
+| Nächste Versionen | Börsen-Chaos (Regelvorschlag zuerst) · 2-Spieler-Modus (Regelprüfung zuerst) |
+| Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.58-neue-charaktere.sql` (Alp im SQL-Editor, Prüfabfrage 13.11. 15:58 ✓) |
 
 ### Zuletzt live gegangen
 | Version | Inhalt | PR |
 |---|---|---|
-| v0.54.0 | Avatare jubeln beim Gewinnen, Podest mit Ganzkörper-Avataren, „+10 Dublonen“ | #17 |
-| v0.53.0 | Größere Karten (×1,4): Tierreihe neben dem Geldfächer; Fächer staucht sich, max. 2 Tierreihen | #16 |
-| — | Prozess: Ampel, Projektstand, Handoff, Checks | #15 |
-| v0.52.2 | 3-Spieler-Kuhhandel/Stapel ohne Überdeckung, ruhigerer Tisch, 3-Spieler-Regressionstests | #14 |
-| v0.52.1 | Rattengeld fliegt über den Topf in der Mitte; Kuhhandel-Angebot fliegt in die Mitte | #13 |
-| v0.52.0 | Avatare mit ganzem Körper (Shop) + groß neben dem Tisch auf der Startseite | #12 |
-| v0.51.0 | Turbo-Spielart, „Was ist neu?“, Esel-Geldregen, Ratten-Rudel | #11 |
-| v0.50.0 | „Wer ist dran“ als Leuchtrahmen + Banner-Flip | #10 |
-| v0.49.0 | Kult-Avatare, Dublonen-Münze, einheitliche Größen | #9 |
-| v0.48.x | Shop (Dublonen, 11 Avatare, 8 Sprüche), Chat-Menü mit Emojis | #6–#8 |
+| v0.58.0 | 9 neue Charaktere, 7 Sprüche, 2 Gratis-Sprüche (SQL `shop_claim_free`), 💬 nur Sprüche, symmetrischer Rahmen unten, „Überboten!“ über dem Gebot, Bezahl-Box einreihig | #24 |
+| v0.57.1 | Preis in der Ergebnis-Überschrift, Taler-Schein-Zeichen | #23 (in #24) |
+| v0.57.0 | Wie am echten Tisch (Figur unten Mitte, Geld links, Tiere rechts) + Debug-Abkürzungen | #22 |
+| v0.56.x | Eigene Figur am Tisch, Testspiel mit deinem Avatar | #20, #21 |
+| v0.55.0 | Dublonen für alle + Schutz der Spielstände (SQL von Alp ausgeführt) | #19 |
+| v0.54.x | Avatare jubeln, Podest; aufgeräumter Tisch, ruhiges Bezahlen | #17, #18 |
+| v0.53.0 | Größere Karten | #16 |
+| v0.52.x | Ganzkörper-Avatare, Geld über die Mitte, 3-Spieler-Feinschliff | #12–#14 |
 
 ## 2. Offene PRs und Branches
 
 | PR / Branch | Owner | Stufe | Status |
 |---|---|---|---|
-| #18 `claude/v0541-bezahlen-quittung` | Claude | 🟡 | Bezahlen ohne Springen (Karte bleibt, Kasse rechts) + Ergebnis als Quittung. Wartet auf „Merge-Go #18“. |
-| `claude/v055-sicherheit` | Claude | 🔴 | `supabase/v0.55-dublonen-sicherheit.sql` + `v0.55-sicherheit-vorschlag.md` (lokal gegen Postgres 16 getestet), Revanche per RPC mit Rückfall. Kein PR bis Alp entschieden hat. |
-| `ai/auftraege` | Codex/Claude | – | `AUFTRAEGE.md` (Auftragsliste A-001 …). Inhalt wird in Abschnitt 5 hier übernommen; Branch kann danach gelöscht werden. |
-| PR #5 `codex/v048-shop` | Codex | – | Geschlossen/überholt (Shop ist über #6–#8 live). |
-| alte Feature-Branches (`v0.2x-…`, `kartenflug` …) | – | – | Alle längst in `main`. Aufräumen nur mit Alps Okay (🔴 löschen). |
+| `claude/doku-v058` (#25) | Claude | 🟢 | v0.58.1: Figur etwas kleiner (Abstand zur Karte) + diese Doku-Aktualisierung. |
+| `ai/auftraege` | Codex/Claude | – | Ersetzt durch Abschnitt 5; löschen nur mit Alps Okay. |
+| alte Feature-Branches | – | 🔴 | Alle in `main`. Aufräumen nur mit Alps Okay. |
 
 ## 3. Qualitätsprüfungen (alle müssen vor einem Merge grün sein)
 
 | Prüfung | Wo | Was sie findet |
 |---|---|---|
-| `npm test` (52 Tests) | lokal + Workflow `tests.yml` | Spielregeln (inkl. 100 simulierte Turbo- und klassische Komplettspiele), Shop-Katalog/Preise = SQL-Preise, Ganzkörper-Avatare, Automatisierung |
+| `npm test` (55 Tests) | lokal + Workflow `tests.yml` | Spielregeln (inkl. 100 simulierte Turbo- und klassische Komplettspiele), Shop-Katalog/Preise = SQL-Preise, Ganzkörper-Avatare, Automatisierung |
 | `node scripts/check.mjs` | lokal + `tests.yml` | JS-Syntax aller Dateien, `APP_VERSION` = `version.json` = CHANGELOG, „Was ist neu“ kennt die Version, `AGENTS.md` = `CLAUDE.md` |
 | e2e Ansichten | `e2e.yml` → `e2e/views.spec.mjs` | alle Demo-Ansichten × 4 Handygrößen + 3-Spieler-Ansichten + Startseite/Shop: JS-Fehler, Überlappungen, abgeschnittener Text, zu kleine Schrift |
 | e2e Größen | `e2e/sizes.spec.mjs` | große Karte + Überschrift in allen Phasen gleich groß |
-| e2e Partien | `e2e/fullgame.spec.mjs` | 4 komplette Partien mit Test-Spielern im Browser (3 und 4 Spieler) ohne JS-Fehler |
+| e2e Partien | `e2e/fullgame.spec.mjs` | 4 komplette Partien mit Test-Spielern im Browser (3 und 4 Spieler) ohne JS-Fehler; „hängt“ = 40 s ohne Änderung an Banner, Stapel, Höchstgebot oder Geld |
 | PR-Bericht | `pr-report.yml` | ein Kommentar pro PR: geänderte Dateien, Risiken, Testergebnisse |
 | Workers Build | Cloudflare | Vorschau-Build je Branch |
 
@@ -56,21 +51,19 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 
 ## 4. Offene Fehler / Risiken
 
-- **Dublonen (wichtig vor v0.55):** `games` ist von jedem Mitspieler frei beschreibbar; man kann heute ein sofort beendetes Spiel mit sich als Sieger anlegen und +10 kassieren. Lösung vorbereitet: `supabase/v0.55-sicherheit-vorschlag.md` (Wächter-Trigger, Revanche per RPC, ≥3 echte Konten/≥6 min/≥25 Züge, Tagesgrenze 60). Restrisiko danach: Schummeln innerhalb einer echten Partie (Tagesgrenze begrenzt).
-- Branch-Schutz für `main` ist noch nicht eingerichtet (🔴, Alp; Anleitung in `AI_HANDOFF.md`).
+- Restrisiko Dublonen: Schummeln innerhalb einer echten Partie (Tagesgrenze 60 begrenzt den Schaden); Stufe 2 = Züge über den Worker (siehe `supabase/v0.55-sicherheit-vorschlag.md`).
+- Supabase-Advisors (angeboten, wartet auf Alps „ja“): `anon`-Ausführrecht der `admin_*`-Funktionen entziehen, Schutz vor geleakten Passwörtern einschalten.
+- Supabase-Connector war am 13.11. nachmittags getrennt → SQL v0.58 hat Alp selbst ausgeführt.
+- Branch-Schutz für `main` noch nicht eingerichtet (🔴, Alp; Anleitung in `AI_HANDOFF_ARCHIV.md`).
 - 8 Demos laufen nicht mit `?p=3` (nur Demo-Grenze).
 
-## 5. Roadmap (von Alp am 13.11. freigegeben, Reihenfolge optimiert)
+## 5. Roadmap
 
 | Version | Inhalt | Stufe |
 |---|---|---|
-| v0.52.2 | 3-Spieler-Überdeckungen, ruhigerer Tisch | ✅ live |
-| v0.53 | Größere Karten | ✅ live |
-| v0.54 | Avatare leben + Siegerehrung | ✅ live |
-| v0.54.1 | Ruhiges Bezahlen + Quittung (Alps Wahl A+C) | 🟡 PR #18 |
-| v0.55 | Dublonen für alle: +2 je Partie, +5 je Quartett, +10 Sieg, Tagesgrenze | 🔴 SQL |
-| v0.56 | Börsen-Chaos: dritte Spielart mit Ereigniskarten (Regelvorschlag vorher an Alp) + Bildkarten in der Spielarten-Auswahl | 🟡 |
-| v0.57 | 2-Spieler-Modus (Originalregeln prüfen, Vorschlag an Alp) | 🟡 |
+| v0.52–v0.58 | Avatare, größere Karten, Siegerehrung, Dublonen für alle, Platz am Tisch, neue Charaktere | ✅ live |
+| nächste | Börsen-Chaos: dritte Spielart mit Ereigniskarten (Regelvorschlag vorher an Alp) | 🟡 |
+| danach | 2-Spieler-Modus (Originalregeln prüfen, Vorschlag an Alp) | 🟡 |
 | später | Erfolge + Saison-Rangliste (SQL), Zuschauen, Zug-Zeitlimit mit Bot-Vertretung, Shop: Tischdesigns/Kartenrücken | – |
 
 ## 6. Datei-Owner (pro Aufgabe genau ein schreibender Owner)
@@ -82,12 +75,11 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 | Regeln | `src/engine.js`, `test/engine.test.js` | Claude (bei Regeländerung 🟡) |
 | Browser-Tests | `e2e/**`, `.github/workflows/e2e.yml` | Claude |
 | Doku/Prozess | `PROJECT_STATUS.md`, `AI_HANDOFF.md`, `AGENTS.md`/`CLAUDE.md`, `scripts/check.mjs`, `tests.yml`, `pr-report.yml` | Claude (Codex übernimmt nach Absprache, siehe Handoff) |
-| SQL | `supabase/*.sql` | KI bereitet vor, **Alp führt aus** |
+| SQL | `supabase/*.sql` | Claude führt über den Supabase-Connector aus (Regel 7); ohne Connector führt Alp aus |
 
 ## 7. Freigaben, die noch von Alp gebraucht werden
 
-- „Merge-Go #18“ (Bezahlen + Quittung).
-- v0.55: Sicherheitsvorschlag lesen und entscheiden; danach SQL selbst ausführen.
+- Supabase-Advisors: `anon` von `admin_*` entziehen + Passwort-Leak-Schutz – „ja“?
 - Börsen-Chaos-Regeln und 2-Spieler-Regeln absegnen (Vorschläge folgen).
-- Branch-Schutz für `main` selbst einrichten (Anleitung in `AI_HANDOFF.md`).
+- Branch-Schutz für `main` selbst einrichten.
 - Alte, gemergte Branches löschen lassen? (Liste auf Wunsch.)
