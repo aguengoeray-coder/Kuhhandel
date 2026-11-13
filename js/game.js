@@ -206,6 +206,8 @@ const FLY_MS = 1200; // Tierkarte (.fly)
 const MFLY_MS = 1000; // ein Geldschein (.mfly)
 const MSTEP = 70; // Abstand zwischen zwei Scheinen
 const HALO_PAUSE = 700; // Ruhe nach dem letzten Schein
+const OFFER_FLY = 1350; // Kuhhandel: Angebot fliegt los, wenn der „KUHHANDEL!“-Auftritt ausblendet
+const OFFER_LAND = OFFER_FLY + MFLY_MS - 150; // … und liegt dann in der Mitte
 const HALO_MS = 900; // Rahmen wandert
 const cntOf = (x) => (Array.isArray(x) ? x.length : x || 0);
 const streamMs = (c) => (Math.min(c, 15) - 1) * MSTEP + MFLY_MS;
@@ -217,8 +219,8 @@ export function choreo(le, deckLeft, W = evWait(le.type, deckLeft) || 0, piles =
   if (le.type === 'special_won' && le.count > 0 && le.payer && le.payee) streams.push({ from: le.payer, to: le.payee, count: le.count, at: payAt });
   // Kuhhandel: das Geld wird schon im Ergebnisfenster getauscht (Stapel rutschen auf die andere Seite) – danach fliegt nur das Tier
   if (le.type === 'rat_taken') {
-    if (piles) Object.entries(piles).filter(([pid, c]) => pid !== le.player && c).forEach(([pid, c]) => streams.push({ from: pid, to: le.player, count: c, at: payAt }));
-    else if (le.count) streams.push({ from: null, to: le.player, count: le.count, at: payAt }); // ohne Stapel-Info: obere Grenze
+    // v0.52.1: der Topf liegt in der Mitte – von dort fliegt das ganze Geld zum Nehmer (nicht aus den Händen der anderen)
+    if (le.count) streams.push({ from: '@pot', to: le.player, count: le.count, at: payAt });
   }
   const end = Math.max(payAt, ...streams.map((x) => x.at + streamMs(x.count)));
   return { W, payAt, streams, end, haloAt: end + HALO_PAUSE, calm: end + HALO_PAUSE + HALO_MS };
@@ -283,6 +285,13 @@ function aimFly(root) {
 
 // Wo sitzt jemand auf der Bühne? Mitspieler: Mitte ihres Bildes am Platz · du: dein Geld unten (sonst unten Mitte)
 function seatPoint(root, pid, sr, sc) {
+  // „@pot“: der Topf in der Mitte (Rattenrunde) – ist er schon weg, die Tischmitte
+  // „@offer“: das verdeckte Angebot in der Mitte (Kuhhandel/Rattenhandel)
+  if (pid === '@pot' || pid === '@offer') {
+    const el = pid === '@offer' ? root.querySelector('.tpanel .kslots') || root.querySelector('.tcenter') : root.querySelector('.potbox .pot') || root.querySelector('.tcenter');
+    if (el) { const r = el.getBoundingClientRect(); return { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height / 2 - sr.top) / sc }; }
+    return { x: sr.width / sc / 2, y: sr.height / sc / 2 };
+  }
   const seat = root.querySelector(`.prow[data-pid="${CSS.escape(pid)}"] .avatar`);
   if (seat) { const r = seat.getBoundingClientRect(); return { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height / 2 - sr.top) / sc }; }
   // du (kein Platz oben): Mitte deines Geldfächers – oder unten Mitte, wenn gerade keiner da ist
@@ -893,10 +902,16 @@ export function renderGame(root, ctx) {
     const offerCount = Array.isArray(t.offer) ? t.offer.length : t.offer;
     const offerCards = Array.isArray(t.offer) ? t.offer.map((m) => moneyCard(m, { size: 'xs' })).join('') : Array.from({ length: offerCount }, () => '<div class="money xs back"></div>').join('');
     const isRat = t.animal === RAT;
+    // v0.52.1: das Angebot fliegt nach dem „KUHHANDEL!“-Auftritt vom Platz in die Mitte – erst dann liegen die Scheine dort
+    const okey = `${state.log.length}|${t.challenger}|${t.target}|${t.animal}`;
+    if (local.offerKey !== okey) { local.offerKey = okey; local.offerAt = entered ? Date.now() : 0; }
+    const oel = local.offerAt ? Date.now() - local.offerAt : 1e9;
+    const arr = oel < OFFER_LAND + 400 ? ` arr" style="--ad:${OFFER_LAND - oel}ms` : '';
+    if (oel < OFFER_LAND + 400) wakeLocal(local.offerAt + OFFER_LAND + 450);
     aucBanner = `${isRat ? 'Rattenhandel' : 'Kuhhandel'}: ${esc(nameOf(t.challenger))} gegen ${esc(nameOf(t.target))}`;
     const challengerPanel = (extra = '') => `<div class="tpanel">
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
-        <div class="kslots">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
+        <div class="kslots${arr}">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
         <div class="tline big"><b>${karten(offerCount)}${Array.isArray(t.offer) ? ` · ${sum(t.offer)}` : ''}</b><small>${Array.isArray(t.offer) ? 'dein Angebot' : 'verdeckt geboten'}</small></div>
         ${stakeOf(t.challenger, t.animal, t.count, t.target)}
         ${extra}
@@ -1270,7 +1285,7 @@ export function renderGame(root, ctx) {
 
   // Geld fliegt (verdeckt) vom Platz des Zahlers zum Platz des Empfängers (Start und Ziel werden gemessen)
   const moneyFly = (from, to, count, delay = 0, vals = null) => {
-    if (!count || idxOf(from) < 0 || idxOf(to) < 0) return '';
+    if (!count || (from !== '@pot' && idxOf(from) < 0) || idxOf(to) < 0) return '';
     const n = Math.min(count, 15);
     // deine eigenen Scheine fliegen offen: beim Bezahlen kurz hochgeschoben aus dem Fächer, beim Bekommen in den Fächer hinein
     const mine = (from === meId || to === meId) && vals && vals.length >= n ? (from === meId ? 'out' : 'in') : '';
@@ -1286,6 +1301,11 @@ export function renderGame(root, ctx) {
     ch.streams.forEach((x) => { if (!x.from) return;
       const vals = !hf ? null : x.from === meId ? hf.lose : x.to === meId ? gainLeft.splice(0, Math.min(x.count, 15)) : null;
       keepFx(moneyFly(x.from, x.to, x.count, x.at, vals), x.at + streamMs(x.count) + 100, tg); });
+  }
+  // v0.52.1: Rattenrunde – wer eine Karte legt, dessen Schein fliegt verdeckt in den Topf in der Mitte
+  if (state.phase === 'rat' && local.ratLaid && !entered) {
+    Object.entries(v.rat.laid).forEach(([pid, c]) => { const d = c - (local.ratLaid[pid] || 0);
+      if (d > 0 && idxOf(pid) >= 0) keepFx(Array.from({ length: Math.min(d, 3) }, (_, k) => `<div class="mfly topot" data-aim-from="${esc(pid)}" data-aim-to="@pot" style="animation-delay:${k * MSTEP}ms"></div>`).join(''), 1000 + 3 * MSTEP); });
   }
   if (state.phase === 'rat') local.ratLaid = { ...v.rat.laid }; else if (state.phase !== 'turn') local.ratLaid = null;
 
@@ -1361,6 +1381,8 @@ export function renderGame(root, ctx) {
       <div class="khduo"><span class="khl" style="--c:${SEAT_COLORS[ci]}">${avatar(v.players[ci], ci)}<i>${nmx(t.challenger)}</i></span><em>⚔</em><span class="khr" style="--c:${SEAT_COLORS[ti]}">${avatar(v.players[ti], ti)}<i>${nmx(t.target)}</i></span></div>
       <small>um ${t.count}× ${esc(isRat ? 'Ratte' : aname(t.animal))}</small></div>`, 1500);
     later.push(['drum', 0]);
+    const oc = Math.min(Array.isArray(t.offer) ? t.offer.length : t.offer || 0, 8);
+    if (oc) keepFx(Array.from({ length: oc }, (_, k) => `<div class="mfly topot" data-aim-from="${esc(t.challenger)}" data-aim-to="@offer" style="animation-delay:${OFFER_FLY + k * MSTEP}ms"></div>`).join(''), OFFER_FLY + MFLY_MS + oc * MSTEP + 100);
   }
   // Große Auftritte – nur bei besonderen Ereignissen, höchstens einer pro Ergebnis (Rang: Gleichstand > Bluff > Geschenkt > Quartett)
   const boom = (title, sub, cls = '', delay = 0) => { keepFx(`<div class="khscrim" style="--d:${delay}ms" aria-hidden="true"></div><div class="khsplash boom ${cls}" style="--d:${delay}ms" aria-live="polite"><b>${title}</b><small>${sub}</small></div>`, delay + 1500); later.push(['wow', delay]); };

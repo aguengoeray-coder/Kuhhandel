@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.52.1 – Geld wandert über die Mitte
+
+- [x] **Rattenrunde:** Wer eine Karte legt, dessen Schein fliegt verdeckt vom Platz (bzw. aus deinem Fächer) in den Topf in der Mitte.
+- [x] **Ratte nehmen:** Der ganze Topf fliegt aus der Mitte zum Nehmer (bei dir offen in den Fächer) – nicht mehr aus den Händen der anderen.
+- [x] **Kuhhandel/Rattenhandel:** Nach dem „KUHHANDEL!“-Auftritt fliegt das Angebot vom Platz in die Mitte; erst dann liegen die Scheine dort.
+- [x] Geldschein ziehen kam schon aus der Mitte – unverändert.
+
 ## v0.52.0 – Avatare mit ganzem Körper
 
 - [x] Alle 14 Shop-Avatare haben jetzt einen ganzen Körper mit eigener Kleidung und Requisite (Aktenkoffer, Zepter, Krücke, Handy …).

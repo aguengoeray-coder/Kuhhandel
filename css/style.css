@@ -2648,3 +2648,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .hb-hero .shop-avatar-full { flex: 0 1 auto; min-height: 0; height: calc(100% - 18px); max-height: 230px; width: auto; max-width: 100%; position: relative; }
 .hb-hero small { position: relative; font-weight: 800; font-size: 11px; line-height: 1.15; text-align: center; background: rgba(0,0,0,.35); border-radius: 10px; padding: 1px 8px; max-width: 100%; }
 .hb-ghost { flex: 0 1 auto; width: 70%; aspect-ratio: 3/5; max-height: calc(100% - 18px); border-radius: 46% 46% 30% 30%; border: 3px dashed rgba(255,255,255,.45); display: grid; place-items: center; font: 700 34px var(--font-head); color: rgba(255,255,255,.6); position: relative; }
+/* v0.52.1: Geld wandert über die Mitte – Kuhhandel-Angebot erscheint erst, wenn es in der Mitte gelandet ist */
+.kslots.arr > * { animation: karr .25s ease-out both; animation-delay: var(--ad, 0ms); }
+@keyframes karr { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .kslots.arr > * { animation: none; } }
