@@ -1473,6 +1473,10 @@ body, .stage { background: var(--bg-pat), var(--bg); }
 .outbid { position: absolute; left: 319px; top: 52px; transform: translateX(-50%); z-index: 33; pointer-events: none; background: var(--red); color: #fff; font-family: var(--font-head); font-weight: 700; font-size: 18px; padding: 4px 18px; border-radius: 999px; border: 3px solid #fff; box-shadow: 0 8px 18px rgba(0,0,0,.35); animation: outbid 1.6s ease-out both; }
 @keyframes outbid { 0% { opacity: 0; transform: translateX(-50%) scale(.6); } 15% { opacity: 1; transform: translateX(-50%) scale(1.1); } 25%, 75% { transform: translateX(-50%) scale(1); opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
 
+/* v0.58: „Überboten!“ sitzt direkt über dem Schild des neuen Höchstbietenden */
+.bidbox { position: relative; }
+.bidbox .outbid { left: 50%; top: auto; bottom: calc(100% + 6px); font-size: 16px; padding: 3px 14px; white-space: nowrap; }
+
 /* Revanche läuft */
 .pill.pulse { animation: rpulse 1.4s ease-in-out infinite; }
 @keyframes rpulse { 0%, 100% { box-shadow: 0 5px 0 #9E2A22, 0 0 0 0 rgba(255,211,78,.7); } 50% { box-shadow: 0 5px 0 #9E2A22, 0 0 0 7px rgba(255,211,78,0); } }
@@ -2857,3 +2861,11 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .taler { display: inline-block; width: 1.05em; height: .72em; vertical-align: -.02em; margin-left: .1em; border-radius: .14em; background: linear-gradient(135deg, #F6D98B, #E8B84F); border: .09em solid #8a6a1c; box-shadow: inset 0 0 0 .1em #fff6; position: relative; }
 .taler::after { content: ""; position: absolute; left: 50%; top: 50%; width: .3em; height: .3em; margin: -.15em 0 0 -.15em; border-radius: 50%; border: .07em solid #8a6a1c; }
 .evcard.receipt { width: 330px; }
+/* v0.58: dein Rahmen symmetrisch – Figur genau in der Mitte des goldenen Rahmens, Geld links und Tiere rechts je mittig in ihrer Hälfte */
+.stage .myglow { left: 184px; right: 4px; bottom: 2px; height: 108px; }
+.stage .meplate { left: 470px; width: 84px; }
+.stage .fan-wrap { left: 192px; right: 382px; bottom: 10px; justify-content: center; }
+.stage .auslage { left: 562px; right: 12px; width: auto; bottom: 8px; justify-content: center; align-content: center; }
+.stage .mebubble, .stage .mebubble.up { left: 450px; }
+/* Debug-Knöpfe (nur Testspiel) oben rechts statt über deinen Tieren */
+.stage .dchips { top: 6px; bottom: auto; right: 12px; }

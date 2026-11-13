@@ -1,8 +1,9 @@
 -- v0.58 Neue Charaktere + Sprüche: 9 Avatare (Kult: Mr. Passt Schon · Legendär: Die dumme Kuh · Selten: Mama Sports,
 -- Dickes Huhn, Bontje Lebkuchen, Die schmatzenden Zwillinge, Nacht-Gohan, Der schielende Mogli, Der dicke Gojo) + 7 Sprüche.
--- Ersetzt nur shop_buy (Preisliste) und shop_set_avatar (erlaubte Avatare). Keine Daten werden verändert.
+-- Ersetzt shop_buy (Preisliste) und shop_set_avatar (erlaubte Avatare), neu: shop_claim_free (2 Sprüche gratis).
+-- Keine Daten werden verändert (nur die Preis-Prüfung erlaubt jetzt 0 für Gratis-Sprüche).
 -- Preisliste wird aus js/shopavatars.js + js/shop.js erzeugt; test/shop.test.js prüft, dass beides übereinstimmt.
--- Rückweg: supabase/v0.49-kult-avatare.sql erneut ausführen.
+-- Rückweg: supabase/v0.49-kult-avatare.sql erneut ausführen + drop function public.shop_claim_free(text);
 
 -- 3. Serverseitiger Festpreis, Sperre des Wallets und atomarer Kauf.
 create or replace function public.shop_buy(p_item_id text)
@@ -93,5 +94,31 @@ begin
 end $$;
 revoke all on function public.shop_set_avatar(text) from public, anon;
 grant execute on function public.shop_set_avatar(text) to authenticated;
+
+-- 5. Zwei Sprüche gratis für jeden (Preis 0, nur Sprüche, höchstens 2 pro Konto)
+alter table public.shop_purchases drop constraint if exists shop_purchases_price_check;
+alter table public.shop_purchases add constraint shop_purchases_price_check check (price >= 0);
+
+create or replace function public.shop_claim_free(p_item_id text)
+returns text language plpgsql security definer set search_path = public
+as $$
+declare v_used int;
+begin
+  if auth.uid() is null then raise exception 'Bitte anmelden'; end if;
+  if p_item_id not like 'spruch-%' then raise exception 'Gratis gibt es nur Sprüche'; end if;
+  -- muss ein echter Shop-Spruch sein (Preisliste aus shop_buy)
+  if p_item_id not in ('spruch-daumen','spruch-passt-schon','spruch-blablabla','spruch-nico','spruch-gute-idee','spruch-ihh','spruch-bastard','spruch-gute-ideen','spruch-dickes-huhn','spruch-dumme-kuh','spruch-hunger','spruch-bau-mal','spruch-kurzer','spruch-schmatz','spruch-how-old') then raise exception 'Unbekannter Spruch'; end if;
+  insert into public.shop_wallets (user_id, balance) values (auth.uid(), 0) on conflict (user_id) do nothing;
+  perform 1 from public.shop_wallets where user_id = auth.uid() for update; -- gleichzeitiges Doppeltippen sperren
+  select count(*) into v_used from public.shop_purchases where user_id = auth.uid() and price = 0;
+  if v_used >= 2 then raise exception 'Deine zwei Gratis-Sprüche hast du schon'; end if;
+  if exists (select 1 from public.shop_purchases where user_id = auth.uid() and item_id = p_item_id) then
+    raise exception 'Diesen Spruch hast du bereits';
+  end if;
+  insert into public.shop_purchases (user_id, item_id, price) values (auth.uid(), p_item_id, 0);
+  return p_item_id;
+end $$;
+revoke all on function public.shop_claim_free(text) from public, anon;
+grant execute on function public.shop_claim_free(text) to authenticated;
 
 -- Ende v0.58 neue Charaktere.

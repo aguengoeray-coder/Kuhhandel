@@ -4,7 +4,11 @@
 
 - [x] 9 neue Avatare (Kopf + ganzer Körper, mit Bewegung): Kult **Mr. Passt Schon** (50), Legendär **Die dumme Kuh** (60), Selten (30): Mama Sports, Dickes Huhn, Bontje Lebkuchen, Die schmatzenden Zwillinge, Nacht-Gohan, Der schielende Mogli, Der dicke Gojo.
 - [x] 7 neue Sprüche (je 10): „Ich bin das dicke Huhn und gehe heute schwimmen“, „Hey, du bist eine dumme Kuh!“, „Ich habe Hunger“, „Bau mal einen“, „Lass uns auf einen Kurzen zu den ukrainischen Nachbarn“, „Schmatz nicht!!“, „Can I ask you by any chance how old you are? 📱“.
-- [x] SQL `supabase/v0.58-neue-charaktere.sql` (Preisliste aus dem Katalog erzeugt, Test prüft Gleichheit) – spielt Claude nach dem Merge über den Supabase-Connector ein.
+- [x] **Zwei Sprüche gratis:** jeder kann sich im Shop zwei Sprüche kostenlos aussuchen („🎁 Gratis nehmen“).
+- [x] 💬-Fenster zeigt nur noch Sprüche (die Emojis sind raus).
+- [x] Dein Rahmen unten ist symmetrisch: Figur genau in der Mitte, Geld links und Tiere rechts je mittig; Debug-Knöpfe oben rechts.
+- [x] „Überboten!“ erscheint direkt über dem Gebots-Schild des neuen Höchstbietenden (statt über der Karte).
+- [x] SQL `supabase/v0.58-neue-charaktere.sql` (Preisliste aus dem Katalog erzeugt, Test prüft Gleichheit) – führt Alp im SQL-Editor aus (Connector getrennt).
 
 ## v0.57.1 – Preis in der Überschrift
 

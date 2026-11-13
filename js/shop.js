@@ -48,6 +48,7 @@ export function renderShop(root, ctx) {
   let balance = Math.max(0, Number(ctx.balance) || 0);
   const owned = new Set(ctx.owned || []);
   let activeAvatar = ctx.activeAvatar || null;
+  let freeLeft = Math.max(0, Number(ctx.freeLeft) || 0); // v0.58: zwei Sprüche gratis
   let busy = false;
   let notice = '';
   let noticeKind = 'info';
@@ -73,7 +74,9 @@ export function renderShop(root, ctx) {
   const sayingCard = (item) => {
     const has = owned.has(item.id);
     return '<article class="shop-item shop-saying-item' + (has ? ' is-owned' : '') + '"><div class="shop-bubble">' + esc(item.text) + '</div>' +
-      (has ? '<span class="shop-owned">✓ hast du</span>' : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' ' + DUB + '</button>') +
+      (has ? '<span class="shop-owned">✓ hast du</span>'
+        : freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<button class="shop-action shop-free" data-free="' + esc(item.id) + '" ' + (busy?'disabled':'') + '>🎁 Gratis nehmen</button>'
+        : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' ' + DUB + '</button>') +
       '</article>';
   };
 
@@ -93,13 +96,15 @@ export function renderShop(root, ctx) {
           (tab === 'avatare'
             ? '<div class="shop-grid shop-avatar-grid">' + TIERS.flatMap((t) => t.items).map(avatarCard).join('') + '</div>' +
               '<p class="shop-hint">Dein aktiver Avatar ersetzt dein Profilbild – für alle am Tisch sichtbar.</p>'
-            : '<div class="shop-grid shop-saying-grid">' + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
+            : (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
+              '<div class="shop-grid shop-saying-grid">' + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
               '<p class="shop-hint">Gekaufte Sprüche findest du im Spiel unter 💬.</p>') +
         '</div><footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer></section>';
 
     root.querySelector('[data-close]')?.addEventListener('click', () => ctx.close());
     root.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; notice = ''; render(); }));
     root.querySelectorAll('[data-buy]').forEach(b => b.addEventListener('click', () => buy(b.dataset.buy)));
+    root.querySelectorAll('[data-free]').forEach(b => b.addEventListener('click', () => claim(b.dataset.free)));
     root.querySelectorAll('[data-select]').forEach(b => b.addEventListener('click', () => select(b.dataset.select)));
   }
 
@@ -115,6 +120,17 @@ export function renderShop(root, ctx) {
       balance = Number.isFinite(Number(result?.balance)) ? Number(result.balance) : balance-item.price;
       notice = 'Gekauft! 🎉'; noticeKind='success';
     } catch (e) { notice=e?.message || 'Der Kauf konnte nicht abgeschlossen werden.'; noticeKind='error'; }
+    finally { busy=false; render(); }
+  }
+
+  async function claim(id) {
+    if (busy || owned.has(id) || freeLeft <= 0) return;
+    busy=true; notice=''; render();
+    try {
+      const r = await ctx.claimFree(id);
+      owned.add(id); freeLeft = Number.isFinite(Number(r?.freeLeft)) ? Number(r.freeLeft) : freeLeft-1;
+      notice = 'Geschenkt! 🎁'; noticeKind='success';
+    } catch (e) { notice=e?.message || 'Das hat nicht geklappt.'; noticeKind='error'; }
     finally { busy=false; render(); }
   }
 

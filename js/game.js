@@ -414,12 +414,15 @@ export function renderGame(root, ctx) {
   }
   if (Array.isArray(me.money)) local.prevMoney = me.money.slice();
   if (local.handFx && Date.now() > Math.max(local.handFx.loseAt, local.handFx.gainAt) + 1000) local.handFx = null;
+  const outbidTag = () => { const t = Date.now() - (local.outbidAt || 0); return t < 1600 ? `<span class="outbid" aria-live="polite" style="animation-delay:-${t}ms">Überboten!</span>` : ''; };
   const realHolder = state.phase === 'ended' || state.phase === 'block' ? null : state.phase === 'rat' ? ratCurrent(v) : currentPlayer(v).id;
   const shownHolder = local.turnHold ? local.turnHold.id : realHolder;
   // „Wer ist dran“ wechselt: Platz leuchtet kurz auf, Überschrift klappt um (statt wandernder Kreis)
   if (shownHolder && local.flashFor !== shownHolder) { if (local.flashFor !== undefined) local.turnFlashAt = Date.now(); local.flashFor = shownHolder; }
   const flashEl = local.turnFlashAt ? Date.now() - local.turnFlashAt : 1e9;
   const flashing = flashEl < 1600;
+  // Überboten: du lagst vorne, jetzt jemand anderes – das Schild erscheint über dem neuen Höchstgebot
+  if (state.phase === 'auction' && prev.phase === 'auction' && prev.highMe && state.auction?.high && state.auction.high.player !== meId) local.outbidAt = Date.now();
   local.prev = { logLen: state.log.length, phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? state.log.length : null };
 
   const H = {}; // Klick-Aktionen dieser Darstellung
@@ -577,7 +580,7 @@ export function renderGame(root, ctx) {
         const isNew = local.bidKey !== key;
         local.bidKey = key;
         return `<div class="bidbox ${isNew ? 'pop' : ''}" style="--c:${SEAT_COLORS[bi]}">
-          ${avatar(v.players[bi], bi)}<span class="bwho">${a.high.player === meId ? '🔨 Du<small>führst</small>' : `${esc(nameOf(a.high.player))}<small>bietet</small>`}</span><b>${high}</b></div>`;
+          ${avatar(v.players[bi], bi)}<span class="bwho">${a.high.player === meId ? '🔨 Du<small>führst</small>' : `${esc(nameOf(a.high.player))}<small>bietet</small>`}</span><b>${high}</b>${outbidTag()}</div>`;
       })();
 
     aucBanner = urge ? 'Alle warten auf dich!' : `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
@@ -1062,7 +1065,7 @@ export function renderGame(root, ctx) {
   const nM = fanCards.length;
   const mid = (nM - 1) / 2;
   // beim Antippen etwas weiter auffächern, damit man auch auf kleinen Handys gut trifft
-  const step = nM > 1 ? Math.min(grouped ? 44 : 38, 150 / (nM - 1)) : 34; // v0.57: Geld links von deiner Figur // Abstand zwischen zwei Scheinen (v0.53: Fächer ist schmaler, rechts stehen deine Tiere)
+  const step = nM > 1 ? Math.min(grouped ? 44 : 38, 200 / (nM - 1)) : 34; // v0.57: Geld links von deiner Figur // Abstand zwischen zwei Scheinen (v0.53: Fächer ist schmaler, rechts stehen deine Tiere)
   let lifted = false;
   const fan = fanCards.map(([m, cnt], i) => {
     const off = i - mid;
@@ -1398,7 +1401,6 @@ export function renderGame(root, ctx) {
   // Überboten: du lagst vorne, jetzt jemand anderes
   if (state.phase === 'auction' && prev.phase === 'auction' && prev.highMe && auction.high && auction.high.player !== meId) {
     sounds.push('outbid'); feel('outbid');
-    effects += `<div class="outbid" aria-live="polite">Überboten!</div>`;
   }
   if (evFresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
     if (le.type === 'auction_won') { sounds.push('gavel'); if (le.amount > 0) sounds.push('coins'); if (le.buyer === meId) feel('won'); }

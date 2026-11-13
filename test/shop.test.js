@@ -102,3 +102,15 @@ test('v0.55 Dublonen-SQL: Wächter, Revanche per RPC, Beträge und Tagesgrenze p
   for (const kind of ['partie', 'quartett', 'sieg']) { assert.match(sql, new RegExp(`'${kind}'`)); assert.match(game, new RegExp(`${kind}: '`)); }
   assert.match(app, /sb\.rpc\('shop_my_rewards'/);
 });
+
+test('v0.58: zwei Gratis-Sprüche – nur Sprüche, höchstens 2, App und SQL passen zusammen', () => {
+  const sql = readFileSync(new URL('../supabase/v0.58-neue-charaktere.sql', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(sql, /function public\.shop_claim_free\(p_item_id text\)/);
+  assert.match(sql, /if v_used >= 2 then/);
+  assert.match(sql, /not like 'spruch-%'/);
+  assert.match(sql, /check \(price >= 0\)/);
+  for (const item of SHOP_SAYINGS) assert.ok(sql.includes(`'${item.id}'`), item.id);
+  assert.match(app, /sb\.rpc\('shop_claim_free'/);
+  assert.match(app, /2 - freeUsed/);
+});
