@@ -5,6 +5,8 @@
 - [x] **⚡ Turbo** im Warteraum einschaltbar (Gastgeber): nur 7 Tierarten (ohne Hahn, Gans, Katze), Versteigerung 6 s statt 10 s, Kuhhandel-Bedenkzeit 12 s statt 20 s. Eine Partie ist etwa halb so lang.
 - [x] Am Stapel steht „⚡ Turbo“, damit alle wissen, welche Spielart läuft.
 - [x] Klassisch bleibt unverändert. Neue Regel-Tests: 100 Turbo-Komplettspiele.
+- [x] **Esel:** echter Geldregen über den ganzen Tisch. **Ratte:** ein Rudel aus drei Ratten flitzt vorbei.
+- [x] **📰 Was ist neu?** in den Einstellungen – nach einem Update erscheint es einmal automatisch.
 
 ## v0.50.0 – Neuer „Wer ist dran“-Anzeiger
 

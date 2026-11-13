@@ -2622,3 +2622,19 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .turbotag { display: block; margin-top: 3px; font-size: 12px; color: #FFD34E; letter-spacing: .03em; }
 .room-settings .rs-extra { display: grid; grid-template-columns: repeat(2, minmax(0, auto)); gap: 6px; justify-content: end; } /* v0.51: 4 Schalter in 2 Spalten, damit der Warteraum auf flachen Handys passt */
 .room-settings .rs-extra .rs-chip { white-space: normal; text-align: left; line-height: 1.15; }
+/* v0.51 „Was ist neu?“ */
+.news { display: flex; flex-direction: column; gap: 10px; max-height: 62vh; overflow-y: auto; text-align: left; }
+.news section { background: #F4F1EA; border-radius: 14px; padding: 8px 12px; }
+.news section.cur { background: #FFF4CF; box-shadow: inset 0 0 0 2px #E8B83F; }
+.news h3 { margin: 0 0 4px; font-family: var(--font-head); font-size: 16px; display: flex; align-items: baseline; gap: 8px; }
+.news h3 small { font-weight: 600; font-size: 12px; color: #8a8478; }
+.news h3 em { margin-left: auto; font-style: normal; font-size: 11px; font-weight: 800; color: #1E6B43; background: #DFF7E8; border-radius: 999px; padding: 2px 8px; }
+.news ul { margin: 0; padding-left: 4px; list-style: none; display: flex; flex-direction: column; gap: 3px; font-size: 14px; line-height: 1.3; }
+/* v0.51 Esel: Geldregen über den ganzen Tisch */
+.moneyrain { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
+.moneyrain .drop { position: absolute; top: -60px; width: 30px; height: 42px; border-radius: 5px; background: var(--m); border: 2px solid rgba(0,0,0,.55); box-shadow: 0 3px 6px rgba(0,0,0,.35); display: grid; place-items: center; font: 700 11px var(--font-head); color: #2a2420; opacity: 0; animation: drop var(--d, 1300ms) cubic-bezier(.35, .1, .7, .9) both; }
+@keyframes drop { 0% { opacity: 0; transform: translateY(0) rotate(0); } 8% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(470px) rotate(calc(var(--r) * 6)); } }
+/* Ratte: drei Ratten flitzen versetzt durch */
+.ratrun.r1 { top: 205px; width: 44px; height: 44px; animation-duration: 1.5s; animation-delay: .25s; }
+.ratrun.r2 { top: 290px; width: 38px; height: 38px; animation-duration: 1.35s; animation-delay: .5s; }
+@media (prefers-reduced-motion: reduce) { .moneyrain { display: none; } }

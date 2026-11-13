@@ -1292,7 +1292,7 @@ export function renderGame(root, ctx) {
   // Geräusche zu den Ereignissen
   if (entered && (state.phase === 'rat' || state.phase === 'special')) sounds.push('flip');
   // Ratte aufgedeckt: Quieken, eine kleine Ratte huscht über den Tisch
-  if (entered && state.phase === 'rat') { later.push(['quiek', 500]); keepFx(`<div class="ratrun" aria-hidden="true">${art(RAT)}</div>`, 1900); }
+  if (entered && state.phase === 'rat') { later.push(['quiek', 500]); keepFx([0, 1, 2].map((k) => `<div class="ratrun r${k}" aria-hidden="true">${art(RAT)}</div>`).join(''), 2600); } // ein ganzes Rattenrudel flitzt über den Tisch
   if (fresh && state.phase === 'rat' && !entered) sounds.push('bid');
   // Geldschein aus dem Stapel: Karte groß für alle zeigen, dann fliegt sie zum Spieler
   const lem = v.lastEvent;
@@ -1565,6 +1565,11 @@ export function renderGame(root, ctx) {
     if (local.donkeyAt && el < 4500) {
       // Esel-Bonus: es regnet Scheine auf alle Plätze (je 3, leicht versetzt)
       if (el < 3700) effects += v.players.map((p, pi) => [0, 1, 2].map((k) => `<div class="mflyc rain" data-aim-to="${esc(p.id)}" style="animation-delay:${2300 + k * 140 + pi * 40 - el}ms;--ty:0px;--tx:0px;margin-left:${(k - 1) * 14}px"></div>`).join('')).join('');
+      // … und vorher ein richtiger Geldregen über den ganzen Tisch
+      if (el < 4400) {
+        const vals = [10, 50, 20, 100, 10, 200, 50, 500, 10, 20, 50, 100];
+        effects += `<div class="moneyrain" aria-hidden="true">${Array.from({ length: 28 }, (_, i) => { const x = (i * 37 + 11) % 100; const r = ((i * 53) % 70) - 35; const v = vals[i % vals.length]; return `<i class="drop" style="left:${x}%;--r:${r}deg;--d:${1100 + (i * 97) % 700}ms;animation-delay:${1900 + (i * 61) % 1300 - el}ms;--m:${({ 10: '#F6D98B', 20: '#F2B880', 50: '#A8D5B5', 100: '#9FC9E8', 200: '#C9B6E4', 500: '#E7A1A0' })[v]}">${v}</i>`; }).join('')}</div>`;
+      }
       wakeLocal(Date.now() + 4600 - el); // danach einmal aufräumen
     }
   }

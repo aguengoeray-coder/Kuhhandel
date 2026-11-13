@@ -9,6 +9,7 @@ import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
 import { haptic } from './haptics.js';
 import { renderShop, SHOP_SAYINGS } from './shop.js';
+import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, SHOP_AVATAR_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
@@ -272,6 +273,14 @@ function homeItems() {
 }
 function renderStart() {
   if (shopMe.state === 'idle') loadShop();
+  // nach einem Update einmal „Was ist neu?“ zeigen (nicht beim allerersten Start)
+  try {
+    const seen = localStorage.getItem('kh_seen_version');
+    if ((seen !== APP_VERSION && !DEMO) || (DEMO && params.get('news') && !ui.newsShown)) {
+      localStorage.setItem('kh_seen_version', APP_VERSION); ui.newsShown = true;
+      if ((seen || DEMO) && WHATS_NEW[0]?.v === APP_VERSION && !modal) setTimeout(() => openModal('news'), 600);
+    }
+  } catch {}
   const items = homeItems();
   // Was liegt auf dem Tisch? Dein laufendes Spiel zuerst, sonst das erste offene; mit ‹ › blättern
   if (!items.length) ui.homeIdx = 0;
@@ -1551,6 +1560,9 @@ function renderModal() {
       </table>`}
       ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
   }
+  if (modal.kind === 'news') {
+    body = `<h2>📰 Was ist neu?</h2><div class="news">${WHATS_NEW.map((n, i) => `<section class="${i === 0 ? 'cur' : ''}"><h3>v${n.v} <small>${n.date}</small>${n.v === APP_VERSION ? '<em>deine Version</em>' : ''}</h3><ul>${n.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></section>`).join('')}</div>`;
+  }
   if (modal.kind === 'settings') {
     const row = (m, v, icon, label, right = '›', cls = '') => `<button type="button" class="srow ${cls}" data-m="${m}" ${v ? `data-v="${v}"` : ''}><i>${icon}</i><span>${label}</span><em>${right}</em></button>`;
     const pr = profiles.get(me.id);
@@ -1560,6 +1572,7 @@ function renderModal() {
       ${PUSH_PUBLIC_KEY ? row('push', '', '🔔', 'Benachrichtigen', `<span class="stog ${pushOn() ? 'on' : ''}"></span>`) : ''}
       ${isStandalone() ? '' : row('go', 'install', '📲', 'Als App installieren')}
       ${row('go', 'mystats', '📊', 'Meine Statistik')}
+      ${row('go', 'news', '📰', 'Was ist neu?', `v${APP_VERSION} ›`)}
       ${ui.isAdmin ? row('go', 'admin', '🛠️', 'Admin') : ''}
       ${row('logout', '', '🚪', 'Abmelden', '', 'out')}
     </div>`;
