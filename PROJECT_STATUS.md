@@ -9,14 +9,15 @@ Stand: 13.11.2026, 06:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.52.1** – Merge-Commit `4fba8d6` (Cloudflare baut bei jedem Push auf `main` neu) |
-| In Arbeit | **v0.52.2** Feinschliff – PR #14 (`claude/v0522-feinschliff`), 🟢 |
+| Live-Version (`main`) | **v0.52.2** – Merge-Commit `79f896d` (Cloudflare baut bei jedem Push auf `main` neu) |
+| In Arbeit | **v0.53** größere Karten – Branch `claude/v053-grosse-karten`, 🟡 (Entwurf) |
 | Nächste Versionen | v0.53 größere Karten · v0.54 Avatare leben + Siegerehrung · v0.55 Dublonen für alle (SQL) · v0.56 Börsen-Chaos · v0.57 2 Spieler |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.49-kult-avatare.sql` (von Alp bestätigt) |
 
 ### Zuletzt live gegangen
 | Version | Inhalt | PR |
 |---|---|---|
+| v0.52.2 | 3-Spieler-Kuhhandel/Stapel ohne Überdeckung, ruhigerer Tisch, 3-Spieler-Regressionstests | #14 |
 | v0.52.1 | Rattengeld fliegt über den Topf in der Mitte; Kuhhandel-Angebot fliegt in die Mitte | #13 |
 | v0.52.0 | Avatare mit ganzem Körper (Shop) + groß neben dem Tisch auf der Startseite | #12 |
 | v0.51.0 | Turbo-Spielart, „Was ist neu?“, Esel-Geldregen, Ratten-Rudel | #11 |
@@ -28,8 +29,8 @@ Stand: 13.11.2026, 06:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | PR / Branch | Owner | Stufe | Status |
 |---|---|---|---|
-| #14 `claude/v0522-feinschliff` | Claude | 🟢 | 3-Spieler-Überdeckungen behoben, ruhigerer Tisch, neue 3-Spieler-Regressionstests. Merge, sobald CI grün. |
-| `claude/v0512-prozess` | Claude | 🟢 | Doku (dieses Dokument, Handoff, Ampel), `scripts/check.mjs` (+ „Was ist neu“- und AGENTS=CLAUDE-Prüfung), `tests.yml` ohne Doppelläufe. |
+| `claude/v053-grosse-karten` | Claude | 🟡 | Entwurf: Tierreihe neben dem Geldfächer, Mitte ×1,3. Screenshots an Alp vor Merge. |
+| #15 `claude/v0512-prozess` | Claude | 🟢 | Doku (dieses Dokument, Handoff, Ampel), `scripts/check.mjs` (+ „Was ist neu“- und AGENTS=CLAUDE-Prüfung), `tests.yml` ohne Doppelläufe. |
 | `ai/auftraege` | Codex/Claude | – | `AUFTRAEGE.md` (Auftragsliste A-001 …). Inhalt wird in Abschnitt 5 hier übernommen; Branch kann danach gelöscht werden. |
 | PR #5 `codex/v048-shop` | Codex | – | Geschlossen/überholt (Shop ist über #6–#8 live). |
 | alte Feature-Branches (`v0.2x-…`, `kartenflug` …) | – | – | Alle längst in `main`. Aufräumen nur mit Alps Okay (🔴 löschen). |
@@ -38,7 +39,7 @@ Stand: 13.11.2026, 06:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | Prüfung | Wo | Was sie findet |
 |---|---|---|
-| `npm test` (53 Tests) | lokal + Workflow `tests.yml` | Spielregeln (inkl. 100 simulierte Turbo- und klassische Komplettspiele), Shop-Katalog/Preise = SQL-Preise, Ganzkörper-Avatare, Automatisierung |
+| `npm test` (52 Tests) | lokal + Workflow `tests.yml` | Spielregeln (inkl. 100 simulierte Turbo- und klassische Komplettspiele), Shop-Katalog/Preise = SQL-Preise, Ganzkörper-Avatare, Automatisierung |
 | `node scripts/check.mjs` | lokal + `tests.yml` | JS-Syntax aller Dateien, `APP_VERSION` = `version.json` = CHANGELOG, „Was ist neu“ kennt die Version, `AGENTS.md` = `CLAUDE.md` |
 | e2e Ansichten | `e2e.yml` → `e2e/views.spec.mjs` | alle Demo-Ansichten × 4 Handygrößen + 3-Spieler-Ansichten + Startseite/Shop: JS-Fehler, Überlappungen, abgeschnittener Text, zu kleine Schrift |
 | e2e Größen | `e2e/sizes.spec.mjs` | große Karte + Überschrift in allen Phasen gleich groß |
@@ -58,7 +59,7 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 
 | Version | Inhalt | Stufe |
 |---|---|---|
-| v0.52.2 | 3-Spieler-Überdeckungen, ruhigerer Tisch | 🟢 |
+| v0.52.2 | 3-Spieler-Überdeckungen, ruhigerer Tisch | ✅ live |
 | v0.53 | Größere Karten: eigene Tierreihe neben den Geldfächer, Mitte ~25 % höher | 🟡 |
 | v0.54 | Avatare leben (Jubel-Moment bei Sieg/Versteigerung/Kuhhandel/Quartett) + Siegerehrung (Podest mit Ganzkörper-Avataren, Konfetti, Dublonen-Aufstellung) | 🟡 |
 | v0.55 | Dublonen für alle: +2 je Partie, +5 je Quartett, +10 Sieg, Tagesgrenze | 🔴 SQL |

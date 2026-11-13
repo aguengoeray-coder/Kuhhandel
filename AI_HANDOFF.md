@@ -15,13 +15,14 @@ Nächster Schritt / wer: …
 
 ---
 
-## 13.11.2026 06:30 – Claude → Codex/Alp: Stand nach v0.52.1, Übergabe für morgen
+## 13.11.2026 07:00 – Claude → Codex/Alp: Stand nach v0.52.2, Übergabe für morgen
 
-**Live:** `main` = v0.52.1 @ `4fba8d6` (PRs #12 Ganzkörper-Avatare, #13 Geld über die Mitte – beide CI grün, gemergt nach Ampel).
-**Offen:** PR #14 `claude/v0522-feinschliff` (🟢) – 3-Spieler-Überdeckungen, ruhigerer Tisch, 3-Spieler-e2e. Claude mergt bei grüner CI.
+**Live:** `main` = v0.52.2 @ `79f896d` (PRs #12 Ganzkörper-Avatare, #13 Geld über die Mitte, #14 Feinschliff – alle CI grün, gemergt nach Ampel).
+**In Arbeit:** `claude/v053-grosse-karten` (🟡, Claude) – Tierreihe neben dem Fächer, größere Mitte.
+**Lerneffekt:** Der neue 3-Spieler-e2e-Test fand in CI (932×430) eine 3-px-Überdeckung Stapel × Tierreihe, die lokal nicht auftrat → CI-Ergebnis ist maßgeblich, nicht nur der lokale Lauf.
 **Prozess-Branch:** `claude/v0512-prozess` – Ampel in `AGENTS.md`/`CLAUDE.md`, dieses Dokument, Archiv, `PROJECT_STATUS.md` neu, `check.mjs` (+„Was ist neu“, AGENTS=CLAUDE), `tests.yml` mit `concurrency` (keine Doppelläufe bei PR-Pushes).
 
-**Tests (lokal, 13.11.):** `npm test` 53/53 ✓ · `check.mjs` ✓ · e2e views + sizes + fullgame ✓ (v0.52.1, auch CI grün).
+**Tests (13.11.):** `npm test` 52/52 ✓ · `check.mjs` ✓ · e2e views + sizes + fullgame ✓ (v0.52.1, auch CI grün).
 
 ### So mergt eine KI (Ampel 🟢 oder nach Alps Go)
 1. PR-Kopf: test, e2e, Workers Build, report grün (`gh api repos/aguengoeray-coder/Kuhhandel/commits/<sha>/check-runs`).
