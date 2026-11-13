@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.60.1 – Respektloser Esel
+
+- [x] Esel-Bonus neu: Statt Geldregen schnappt sich der Esel die Scheine, knüllt sie zusammen und pfeffert jedem einzeln einen Papierball an den Kopf – BAM! ZACK! PATSCH! (mit Knüll- und Aufprall-Geräusch).
+
 ## v0.60.0 – Börsen-Chaos
 
 - [x] Neue Spielart **📈 Börsen-Chaos** (im Warteraum einschaltbar, nie zusammen mit Turbo): 8 Börsen-News im Stapel (62 Karten).

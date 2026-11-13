@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.60.1', date: '13.11.', items: ['🫏 Der Esel verteilt den Bonus jetzt respektlos: Scheine zerknüllt und jedem an den Kopf geworfen'] },
   { v: '0.60.0', date: '13.11.', items: ['📈 Neue Spielart Börsen-Chaos: 8 Börsen-News mischen Kurse und Geld auf', '🧾 Steuerprüfung, 🔀 Marktpanik, 💰 Dividende, ⚡ Hektik, Kursrallye und Kurssturz'] },
   { v: '0.59.1', date: '13.11.', items: ['🐄 Deine Tiere vor dir sind jetzt deutlich größer'] },
   { v: '0.59.0', date: '13.11.', items: ['🧺 Deine Tiere stehen jetzt in einem Regal über deinem Geld – größer und in einer Reihe', '💶 Dein Geld hat feste Fächer: jeder Wert immer am selben Platz', '🧍 Deine Figur steht rechts groß und ist immer zu sehen – auch beim Kuhhandel', '💬 Sprüche kommen jetzt als Sprechblase aus dem Mund'] },
