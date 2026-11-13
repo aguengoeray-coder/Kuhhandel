@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.54.0', date: '13.11.', items: ['🎉 Wer ein Tier gewinnt, dessen Avatar springt kurz jubelnd über seinem Platz', '🏆 Siegertreppchen: Shop-Avatare stehen in ganzer Figur auf dem Podest, der Sieger hüpft', '🪙 Am Podest siehst du die Dublonen für den Sieg'] },
   { v: '0.53.0', date: '13.11.', items: ['🃏 Große Karte in der Mitte: Stapel und Tierkarte 40 % größer', '🐮 Deine Tiere stehen jetzt rechts neben deinem Geld'] },
   { v: '0.52.2', date: '13.11.', items: ['🧘 Ruhigerer Tisch: handelbare Tiere blinken nicht mehr – nur noch das Wichtige bewegt sich', '👥 3 Spieler: Kuhhandel-Feld überdeckt keine Knöpfe und kein Geld mehr'] },
   { v: '0.52.1', date: '13.11.', items: ['🐀 Ratte: gelegte Scheine fliegen in den Topf in der Mitte – und von dort zum, der die Ratte nimmt', '🤝 Kuhhandel: dein Angebot fliegt sichtbar in die Mitte'] },

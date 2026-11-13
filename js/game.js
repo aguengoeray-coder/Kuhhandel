@@ -1,5 +1,5 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
-import { shopAvatar } from './shopavatars.js';
+import { shopAvatar, shopAvatarFull } from './shopavatars.js';
 import {
   ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, CANTPAY_HOLD_MS, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
   viewFor, possibleTrades, scores, currentPlayer,
@@ -186,6 +186,12 @@ function avatar(p, idx, extra = '') {
   if (pr?.shop) return `<div class="avatar pic shopav" style="--c:${SEAT_COLORS[idx]}" aria-hidden="true">${shopAvatar(pr.shop)}</div>${extra}`;
   if (pr) return `<div class="avatar pic" style="--c:${SEAT_COLORS[idx]};--bg:${pr.color}" aria-hidden="true">${art(pr.animal)}</div>${extra}`;
   return `<div class="avatar" style="--c:${SEAT_COLORS[idx]}" aria-hidden="true">${initial(p.name)}</div>${extra}`;
+}
+
+// v0.54: Ganzkörper-Figur (Siegertreppchen, Jubel) – ohne Shop-Avatar der runde Kopf
+function figure(p, idx, cls = '') {
+  const pr = avatarLookup(p.id);
+  return pr?.shop ? `<span class="pfig ${cls}" style="--c:${SEAT_COLORS[idx]}" aria-hidden="true">${shopAvatarFull(pr.shop)}</span>` : avatar(p, idx);
 }
 
 // ---------- Hauptfunktion ----------
@@ -1209,9 +1215,10 @@ export function renderGame(root, ctx) {
     const step = (r) => {
       const i = idxOf(r.id);
       return `<button type="button" class="pod p${Math.min(r.place, 3)} ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}" style="--c:${SEAT_COLORS[i]}">
-        ${r.place === 1 ? '<span class="crown">👑</span>' : ''}${avatar(v.players[i], i)}
+        ${r.place === 1 ? '<span class="crown">👑</span>' : ''}${figure(v.players[i], i, `hop${r.place === 1 ? ' win' : ''}`)}
         <span class="pname2">${esc(r.id === meId ? 'Du' : r.name)}</span>
-        <span class="pblock"><b>${r.score}</b><span class="picons">${iconsOf(r)}</span><i>${r.place}.</i></span></button>`;
+        <span class="pblock"><b>${r.score}</b><span class="picons">${iconsOf(r)}</span><i>${r.place}.</i></span>
+        ${r.place === 1 && ctx.rewards ? '<span class="pdub">+10 <i class="dub" aria-label="Dublonen"></i></span>' : ''}</button>`;
     };
     // Rechnung steht immer da: erst die des Gewinners, Antippen zeigt die eines anderen
     const openRow = ranked.find((r) => r.id === local.scoreOpen) || ranked[0];
@@ -1301,6 +1308,14 @@ export function renderGame(root, ctx) {
     ch.streams.forEach((x) => { if (!x.from) return;
       const vals = !hf ? null : x.from === meId ? hf.lose : x.to === meId ? gainLeft.splice(0, Math.min(x.count, 15)) : null;
       keepFx(moneyFly(x.from, x.to, x.count, x.at, vals), x.at + streamMs(x.count) + 100, tg); });
+    // v0.54: Jubel – wer das Tier bekommt (Versteigerung, Spezialkarte, Kuhhandel), dessen Figur hüpft kurz über seinem Platz
+    const rid = le.type === 'rat_taken' ? null : receiverOf(le);
+    const ri = rid ? idxOf(rid) : -1;
+    if (ri >= 0) {
+      const pr = avatarLookup(rid);
+      const inner = pr?.shop ? shopAvatarFull(pr.shop) : `<span class="cheerhead">${avatar(v.players[ri], ri)}</span>`;
+      keepFx(`<div class="cheerfx ${rid === meId ? 'me' : ''} ${pr?.shop ? 'full' : ''}" data-aim-to="${esc(rid)}" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true">${inner}<i class="cheerstar">🎉</i></div>`, ch.payAt + 1700, tg);
+    }
   }
   // v0.52.1: Rattenrunde – wer eine Karte legt, dessen Schein fliegt verdeckt in den Topf in der Mitte
   if (state.phase === 'rat' && local.ratLaid && !entered) {

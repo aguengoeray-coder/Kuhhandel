@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.54.0 – Avatare leben + Siegerehrung
+
+- [x] **Jubel:** Wer bei Versteigerung, Spezialkarte oder Kuhhandel das Tier bekommt, dessen Avatar springt kurz mit 🎉 über seinem Platz (Shop-Avatar in ganzer Figur, sonst der runde Kopf).
+- [x] **Siegertreppchen:** Shop-Avatare stehen in ganzer Figur auf dem Podest, springen auf, der Sieger hüpft weiter. „+10 Dublonen“ am Sieger (nur in echten Partien, nicht im Testspiel).
+- [x] Neue Browser-Tests: Podest mit Avataren (3 und 4 Spieler).
+
 ## v0.53.0 – Größere Karten
 
 - [x] Deine Tierreihe steht jetzt rechts neben deinem Geldfächer (zwei Reihen, wenn es viele sind) – antippen für Kuhhandel wie bisher.

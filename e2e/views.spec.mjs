@@ -25,6 +25,9 @@ const PAGES = [
   ...['turn', 'tradesetup', 'tradeum2', 'traderespond', 'traderatrespond', 'auction3', 'block', 'ended'].filter((d) => GAME_DEMOS.includes(d)).map((d) => ({ seite: `${d}-3sp`, q: `?p=3&demo=${d}` })),
   // Startseite mit großem Ganzkörper-Avatar (v0.52) und ohne Avatar
   { seite: 'start-avatar', q: '?demo=start&klick=1&myav=kuh-kaiser' },
+  // Siegertreppchen mit Ganzkörper-Avataren (v0.54)
+  { seite: 'podest-avatare', q: '?demo=ended&allav=1', klick: '[data-a="tallySkip"]' },
+  { seite: 'podest-avatare-3sp', q: '?p=3&demo=ended&allav=1', klick: '[data-a="tallySkip"]' },
   { seite: 'shop-avatare', q: '?demo=start&klick=1', klick: '[data-dock="shop"]' },
   // Shop (kommt mit v0.48): wird automatisch mitgeprüft, sobald shop-demo.html im Repo liegt
   ...(existsSync(new URL('../shop-demo.html', import.meta.url)) ? [{ seite: 'shop', q: 'shop-demo.html?' }] : []),
