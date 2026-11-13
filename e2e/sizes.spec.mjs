@@ -7,7 +7,7 @@ import { chromium, VIEWPORTS } from './lib/pw.mjs';
 import { startServer } from './lib/server.mjs';
 import { writeReport, appendSummary } from './lib/report.mjs';
 
-const DEMOS = ['turn', 'mustdraw', 'auction', 'auctionrun', 'auctioneer', 'rat', 'ratme', 'special', 'specialdecide', 'specialbuzzed', 'auction3'];
+const DEMOS = ['turn', 'mustdraw', 'auction', 'auctionrun', 'auctioneer', 'rat', 'ratme', 'special', 'specialdecide', 'specialbuzzed', 'auction3', 'revealbig', 'payment'];
 const TOL = 2;
 
 test('Große Karte und Überschrift sind in allen Phasen gleich groß', { timeout: 10 * 60 * 1000 }, async () => {
@@ -22,11 +22,12 @@ test('Große Karte und Überschrift sind in allen Phasen gleich groß', { timeou
         await page.goto(`${srv.url}/?demo=${d}`); await page.waitForTimeout(1300);
         const m = await page.evaluate(() => {
           const st = document.getElementById('stage'); const sc = st.getBoundingClientRect().width / st.offsetWidth;
-          const card = document.querySelector('.tcenter .aucard .pcard, .tcenter .bigcard .pcard, .tcenter .deck');
+          const card = document.querySelector('.tcenter .aucard .pcard, .tcenter .bigcard .pcard, .tcenter .revealcard .pcard, .tcenter .deck'); // v0.54.1: auch die Karte beim Umdrehen
           const ban = document.querySelector('.gtable > .tbanner');
           const r = card?.getBoundingClientRect();
           // Layout-Größe (ohne Animationen wie Wackeln/Pulsieren)
-          return { p: document.querySelectorAll('.prow').length + 1, card: card ? [card.offsetWidth, card.offsetHeight] : null, font: ban ? parseFloat(getComputedStyle(ban).fontSize) : null };
+          const z = card ? parseFloat(getComputedStyle(card.closest('.deck-wrap, .aucard, .bigcard, .revealcard') || card).zoom || 1) : 1;
+          return { p: document.querySelectorAll('.prow').length + 1, card: card ? [Math.round(card.offsetWidth * z), Math.round(card.offsetHeight * z)] : null, font: ban ? parseFloat(getComputedStyle(ban).fontSize) : null };
         });
         (groups[m.p] = groups[m.p] || []).push({ d, ...m });
       }
