@@ -39,6 +39,8 @@ const aname = (id) => (id === RAT ? 'Ratte' : ANIMAL_BY_ID[id].name);
 // Tier mit Artikel im Akkusativ: „den Hahn“, „die Kuh“, „das Schwein“
 const ART_AKK = { hahn: 'den', gans: 'die', katze: 'die', hund: 'den', schaf: 'das', ziege: 'die', esel: 'den', schwein: 'das', kuh: 'die', pferd: 'das', [RAT]: 'die' };
 const theAnimal = (id) => `${ART_AKK[id] || 'die'} ${aname(id)}`;
+// Esel-Wurf: wann der erste Papierball fliegt, Abstand zwischen den Würfen, Flugzeit (ms ab Aufdecken)
+const ESEL_THROW_AT = 2350, ESEL_THROW_GAP = 330, ESEL_FLIGHT = 430;
 // Börsen-Chaos: aktuelle Kurse des gerade gezeichneten Spiels (null = Grundwerte)
 let KURSE = null;
 const aval = (id) => (id === RAT ? null : kursValue(id, KURSE));
@@ -1447,7 +1449,7 @@ export function renderGame(root, ctx) {
   }
   if (entered && state.phase === 'auction') {
     sounds.push('flip');
-    if (v.lastEvent?.type === 'donkey') { sounds.push('coins'); later.push(['rain', 2300]); }
+    if (v.lastEvent?.type === 'donkey') { later.push(['crumple', 1850]); v.players.forEach((_, pi) => later.push(['thud', ESEL_THROW_AT + pi * ESEL_THROW_GAP + ESEL_FLIGHT - 20])); later.push(['coins', ESEL_THROW_AT + v.players.length * ESEL_THROW_GAP + ESEL_FLIGHT]); }
     const VOICE = { kuh: 'muh', esel: 'iah', hahn: 'kikeriki' };
     if (aval(auction.animal) >= 650) { sounds.push('drum'); later.push(['glitz', 1050]); } // teure Karte: Trommelwirbel, nach dem Umdrehen Glitzern
     if (VOICE[auction.animal]) later.push([VOICE[auction.animal], 1350]);
@@ -1715,12 +1717,17 @@ export function renderGame(root, ctx) {
     if (local.donkeySig !== dSig) { local.donkeySig = dSig; local.donkeyAt = entered ? Date.now() : 0; }
     const el = Date.now() - (local.donkeyAt || 0);
     if (local.donkeyAt && el < 4500) {
-      // Esel-Bonus: es regnet Scheine auf alle Plätze (je 3, leicht versetzt)
-      if (el < 3700) effects += v.players.map((p, pi) => [0, 1, 2].map((k) => `<div class="mflyc rain" data-aim-to="${esc(p.id)}" style="animation-delay:${2300 + k * 140 + pi * 40 - el}ms;--ty:0px;--tx:0px;margin-left:${(k - 1) * 14}px"></div>`).join('')).join('');
-      // … und vorher ein richtiger Geldregen über den ganzen Tisch
-      if (el < 4400) {
-        const vals = [10, 50, 20, 100, 10, 200, 50, 500, 10, 20, 50, 100];
-        effects += `<div class="moneyrain" aria-hidden="true">${Array.from({ length: 28 }, (_, i) => { const x = (i * 37 + 11) % 100; const r = ((i * 53) % 70) - 35; const v = vals[i % vals.length]; return `<i class="drop" style="left:${x}%;--r:${r}deg;--d:${1100 + (i * 97) % 700}ms;animation-delay:${1900 + (i * 61) % 1300 - el}ms;--m:${({ 10: '#F6D98B', 20: '#F2B880', 50: '#A8D5B5', 100: '#9FC9E8', 200: '#C9B6E4', 500: '#E7A1A0' })[v]}">${v}</i>`; }).join('')}</div>`;
+      // v0.60.1 Esel-Bonus (Alps Idee): Der Esel schnappt sich die Scheine, knüllt sie zusammen
+      // und pfeffert jedem einzeln einen Papierball an den Kopf – BAM, BAM, BAM.
+      if (el < 4500) {
+        const BAMS = ['BAM!', 'ZACK!', 'PATSCH!', 'BAM!'];
+        effects += `<div class="eselthrow" data-aim-from="@pot" data-aim-to="@pot" style="animation-delay:${1500 - el}ms;--ty:0px;--tx:0px" aria-hidden="true"><i class="eart">${art('esel')}</i><i class="ebundle"><b></b><b></b><b></b></i></div>`;
+        effects += v.players.map((p, pi) => {
+          const t = ESEL_THROW_AT + pi * ESEL_THROW_GAP;
+          const to = p.id === meId ? '@me' : esc(p.id);
+          return `<div class="eball" data-aim-from="@pot" data-aim-to="${to}" style="animation-delay:${t - el}ms;--ty:0px;--tx:0px" aria-hidden="true"></div>`
+            + `<div class="ebam" data-aim-from="${to}" data-aim-to="${to}" style="animation-delay:${t + ESEL_FLIGHT - el}ms;--ty:0px;--tx:0px;--rot:${pi % 2 ? 9 : -8}deg" aria-hidden="true">${BAMS[pi % BAMS.length]}</div>`;
+        }).join('');
       }
       wakeLocal(Date.now() + 4600 - el); // danach einmal aufräumen
     }

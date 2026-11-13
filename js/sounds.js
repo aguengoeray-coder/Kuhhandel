@@ -76,6 +76,9 @@ const SOUNDS = {
   last: () => [[784, 0, .12], [988, .12, .12], [1175, .24, .3]].forEach(([f, d, l]) => tone(f, d, l, { type: 'square', vol: 0.1 })),
   flipcard: () => noise(0, 0.05, { freq: 3800, vol: 0.18 }),
   glitz: () => [2093, 2637, 3136, 2637, 3520].forEach((f, i) => tone(f, i * 0.07, 0.16, { type: 'sine', vol: 0.06 })), // Glitzern: helles Funkeln
+  // Esel knüllt Scheine zusammen / Papierball trifft
+  crumple: () => { for (let i = 0; i < 7; i++) noise(i * 0.045, 0.05, { freq: 2400 + (i % 3) * 700, vol: 0.22, q: 0.6 }); },
+  thud: () => { tone(120, 0, 0.16, { type: 'square', vol: 0.2, slide: -50 }); noise(0, 0.07, { freq: 700, vol: 0.45 }); },
   rain: () => { for (let i = 0; i < 9; i++) tone(1400 + ((i * 337) % 900), i * 0.06, 0.1, { type: 'sine', vol: 0.09 }); },
 };
 
