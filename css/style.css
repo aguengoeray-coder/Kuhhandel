@@ -2870,3 +2870,6 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 /* Debug-Knöpfe (nur Testspiel) oben rechts statt über deinen Tieren */
 .stage .dchips { top: auto; bottom: 2px; left: 76px; right: auto; zoom: .78; } /* Debug: klein unten links neben der Versionsnummer – weg von Mitspielern und Tieren */
 .stage .auslage { max-height: 104px; }
+/* Bezahl-Box: viele Scheine bleiben in einer Reihe (enger gefächert), damit die Box nicht in Banner und Mitspieler wächst */
+.kasse.side .kslots.many { flex-wrap: nowrap; gap: 0; }
+.kasse.side .kslots.many > * + * { margin-left: calc(-1 * var(--ov, 7px)); }
