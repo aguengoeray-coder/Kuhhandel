@@ -2942,3 +2942,6 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .stage .tpick { left: calc(50% - 30px); scale: .92; transform-origin: 50% 100%; }
 /* Bezahl-Box neben der (kleineren) Karte etwas schmaler – bleibt frei vom Platz oben rechts */
 .stage .kasse.side { width: 176px; }
+.kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 26px; }
+/* Spezialkarte im Regal so hoch wie ein Tierstapel (stieß bei 3 Spielern an die Karte in der Mitte) */
+.stage .auslage.shelf .amini.special .acard { width: 30px; height: 42px; }
