@@ -797,7 +797,7 @@ export function renderGame(root, ctx) {
       const kN = Math.max(local.sel.length, isSp ? pm.count : 0); // viele Scheine: enger fächern statt zweite Reihe
       aucCenter = payRow(`<div class="kasse side ${entered ? 'pop' : ''}">
           <div class="khead">Zahle ${isSp ? karten(pm.count) : pm.amount} → ${avatar(v.players[idxOf(pm.payee)], idxOf(pm.payee))}<b>${esc(nameOf(pm.payee))}</b></div>
-          <div class="kslots ${kN > 4 ? 'many' : ''}" style="--ov:${kN > 4 ? Math.max(7, Math.ceil((kN * 32 - 170) / (kN - 1))) : 0}px">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3, local.justAdded)}</div>
+          <div class="kslots ${kN > 4 ? 'many' : ''} ${kN > 6 ? 'lots' : ''}" style="--ov:${kN > 4 ? Math.max(7, Math.ceil((kN * (kN > 6 ? 28 : 32) - 172) / (kN - 1))) : 0}px">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3, local.justAdded)}</div>
           <div class="kline"><span>${isSp ? `${karten(n)} von ${pm.count}` : `${karten(n)} · ${selSum}`}</span><b class="paystatus ${cls}">${status}</b></div>
         </div>`);
       aucLeft = `<div class="lhead">${isSp ? `${esc(aname(pm.special))}-Spezialkarte` : `Für: ${esc(aname(pm.animal))}`}</div>

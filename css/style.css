@@ -2873,3 +2873,4 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 /* Bezahl-Box: viele Scheine bleiben in einer Reihe (enger gefächert), damit die Box nicht in Banner und Mitspieler wächst */
 .kasse.side .kslots.many { flex-wrap: nowrap; gap: 0; }
 .kasse.side .kslots.many > * + * { margin-left: calc(-1 * var(--ov, 7px)); }
+.kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 28px; height: 39px; font-size: 11px; }
