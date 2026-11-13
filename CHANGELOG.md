@@ -1,8 +1,9 @@
 # Änderungsprotokoll
 
-## v0.61.0 – Admin-Fähigkeit „Verprügeln“
+## v0.61.0 – Emote „Verprügeln“
 
-- [x] Nur für Admins: eigene Figur antippen → 💬-Fenster → „🥊 Admin-Fähigkeit: Verprügeln“ → Mitspieler wählen.
+- [x] Neuer Shop-Reiter **Emotes**: „🥊 Verprügeln“ für 100 Dublonen – Admins haben es immer (SQL `supabase/v0.61-emote-pruegel.sql`).
+- [x] Im Spiel: eigene Figur antippen → 💬-Fenster → „🥊 Verprügeln“ → Mitspieler wählen.
 - [x] Deine Figur läuft zum Mitspieler, Comic-Prügelwolke mit POW! BAM! KLATSCH!, Sternen und Aufprall-Geräuschen, dann läuft sie zurück – alle sehen es live.
 - [x] 20 s Pause zwischen zwei Prügeleien.
 

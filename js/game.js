@@ -1814,7 +1814,7 @@ export function renderGame(root, ctx) {
     const last = evStrip ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="evstrip in">${evStrip}</div></div>` : lastLog ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="tlog in">${esc(lastLog)}</div></div>` : '';
     return `<div class="reactpick v2 ${self ? 'self' : ''}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
-      ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">🥊 Admin-Fähigkeit: Verprügeln</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
+      ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">${esc(ctx.punchLabel || '🥊 Verprügeln')}</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
       ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}

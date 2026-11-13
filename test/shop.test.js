@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { SHOP_AVATARS, shopAvatar, shopAvatarFull, SHOP_AVATAR_FULL_CSS } from '../js/shopavatars.js';
-import { SHOP_SAYINGS, renderShop } from '../js/shop.js';
+import { SHOP_SAYINGS, SHOP_EMOTES, renderShop } from '../js/shop.js';
 
 test('Shop enthält 23 eindeutige Avatare mit den vereinbarten Preisen', () => {
   assert.equal(SHOP_AVATARS.length, 23);
@@ -65,8 +65,8 @@ test('Shop-SQL beschränkt Schreib-RPCs auf angemeldete Nutzer', () => {
 });
 
 test('Datenbank-Preisliste kennt jeden Shop-Artikel mit demselben Preis wie die App', () => {
-  const sql = readFileSync(new URL('../supabase/v0.48-shop.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.58-neue-charaktere.sql', import.meta.url), 'utf8');
-  for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), `${item.id} fehlt oder falscher Preis in der SQL`);
+  const sql = readFileSync(new URL('../supabase/v0.48-shop.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.58-neue-charaktere.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.61-emote-pruegel.sql', import.meta.url), 'utf8');
+  for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), `${item.id} fehlt oder falscher Preis in der SQL`);
   for (const item of SHOP_AVATARS) assert.ok(sql.includes(`'${item.id}'`), `${item.id} fehlt in shop_set_avatar`);
 });
 
@@ -113,4 +113,13 @@ test('v0.58: zwei Gratis-Sprüche – nur Sprüche, höchstens 2, App und SQL pa
   for (const item of SHOP_SAYINGS) assert.ok(sql.includes(`'${item.id}'`), item.id);
   assert.match(app, /sb\.rpc\('shop_claim_free'/);
   assert.match(app, /2 - freeUsed/);
+});
+
+test('v0.61: Emote „Verprügeln“ – im Shop, SQL-Preis aktuell, App erlaubt es Käufern und Admins', () => {
+  assert.deepEqual(SHOP_EMOTES.map(({ id, price }) => [id, price]), [['emote-pruegel', 100]]);
+  const sql = readFileSync(new URL('../supabase/v0.61-emote-pruegel.sql', import.meta.url), 'utf8');
+  // die neue shop_buy kennt weiterhin alle Avatare und Sprüche (sie ersetzt die Funktion komplett)
+  for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), item.id);
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(app, /function canPunch\(\) \{ return !!ui\.isAdmin \|\| shopMe\.owned\.has\('emote-pruegel'\); \}/);
 });

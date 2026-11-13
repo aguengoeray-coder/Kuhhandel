@@ -626,7 +626,8 @@ function renderPlaying() {
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
     seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
-    canPunch: !!ui.isAdmin, // Admin-Fähigkeit „Verprügeln“
+    canPunch: canPunch(), // Emote „Verprügeln“: gekauft oder Admin
+    punchLabel: ui.isAdmin && !shopMe.owned.has('emote-pruegel') ? '🥊 Admin-Fähigkeit: Verprügeln' : '🥊 Emote: Verprügeln',
     punch: sendPunch,
     punches: punches.filter((x) => Date.now() - x.at < 4000),
     nudgeWho: waitingFor(),
@@ -1220,8 +1221,9 @@ function showPunch(from, to) {
   render();
   setTimeout(render, 3600);
 }
+function canPunch() { return !!ui.isAdmin || shopMe.owned.has('emote-pruegel'); }
 function sendPunch(to) {
-  if (!ui.isAdmin) return;
+  if (!canPunch()) return;
   const left = PUNCH_COOLDOWN - (Date.now() - lastPunchAt);
   if (left > 0) return toast(`Die Fäuste brauchen noch ${Math.ceil(left / 1000)} s Pause.`);
   lastPunchAt = Date.now();
