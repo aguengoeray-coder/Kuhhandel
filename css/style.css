@@ -2938,3 +2938,5 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
   padding: 3px 10px; border-radius: 999px; background: rgba(0,0,0,.42); color: #fff; font: 700 17px var(--font-head); white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
 .stage:has(.tduel, .batzen) .fan-wrap .fansum { position: static; left: auto; bottom: auto; }
 .stage .meplate .mename { padding: 1px 14px; font-size: 13px; }
+/* Kuhhandel-Auswahl (Schritt 1) etwas schmaler und leicht nach links, damit deine Figur rechts frei bleibt */
+.stage .tpick { left: calc(50% - 30px); scale: .92; transform-origin: 50% 100%; }

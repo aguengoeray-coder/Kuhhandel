@@ -141,7 +141,7 @@ export function tableOverlaps() {
     const [ga, ea, a] = items[i]; const [gb, eb, bb] = items[j];
     if (ga === gb || ea.contains(eb) || eb.contains(ea)) continue;
     if (ga === 'center' && gb === 'mine' && eb.classList.contains('dock')) continue;
-    if (ea.classList.contains('evcard') || eb.classList.contains('evcard')) continue; // Ergebnis-Fenster liegt bewusst obenauf
+    if (ea.closest('.evcard') || eb.closest('.evcard')) continue; // Ergebnis-Fenster (samt Inhalt) liegt bewusst obenauf
     const ox = Math.min(a.right, bb.right) - Math.max(a.left, bb.left), oy = Math.min(a.bottom, bb.bottom) - Math.max(a.top, bb.top);
     if (ox > 3 && oy > 3) res.push({ art: 'ueberlappung', stufe: 'fehler', ziel: `${ga}:${String(ea.className).split(' ')[0]} × ${gb}:${String(eb.className).split(' ')[0]}`, text: `${Math.round(ox)}×${Math.round(oy)}px überdeckt` });
   }
