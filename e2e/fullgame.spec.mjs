@@ -15,6 +15,8 @@ const GAMES = [
   // von Anfang an: eine ganze Partie dauert 10+ Minuten → hier nur 4 Minuten spielen (darf nicht hängen, keine Fehler)
   { name: 'spiel4-anfang', q: '?debug=1&demo=testspiel', vp: [932, 430], seed: 11, dauer: 240000 },
   { name: 'spiel3-anfang', q: '?debug=1&demo=testspiel3', vp: [800, 360], seed: 23, dauer: 240000 },
+  // v0.60 Börsen-Chaos: News, Kurse, Hektik im echten Ablauf (3 Minuten)
+  { name: 'boerse4-anfang', q: '?debug=1&demo=testspiel&boerse=1', vp: [844, 390], seed: 31, dauer: 180000 },
 ];
 const MAX_MS = Number(process.env.E2E_GAME_MS || 420000);
 

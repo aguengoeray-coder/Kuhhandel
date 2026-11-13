@@ -12,9 +12,9 @@ import { renderShop, SHOP_SAYINGS } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
-import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
+import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.59.1';
+export const APP_VERSION = '0.60.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -308,6 +308,7 @@ function renderStart() {
     felt = `<b class="hb-title">Testspiel <span class="hb-tag">Debug</span></b><small class="hb-sub">Nur auf diesem Gerät, mit Test-Spielern</small>
       <div class="hb-row">
         <button class="pill pill-white pill-small toggle-pill ${on ? 'on' : ''}" type="button" id="dbgMoney" aria-pressed="${on}">Geld im Stapel: ${on ? 'an' : 'aus'}</button>
+        <button class="pill pill-white pill-small toggle-pill ${store.get('kh_dbg_boerse') ? 'on' : ''}" type="button" id="dbgBoerse" aria-pressed="${!!store.get('kh_dbg_boerse')}">📈 Börsen-Chaos: ${store.get('kh_dbg_boerse') ? 'an' : 'aus'}</button>
         <button class="pill pill-white pill-small" type="button" data-test="3">3 Spieler</button>
         <button class="pill pill-red pill-small" type="button" data-test="4">4 Spieler</button>
       </div>`;
@@ -364,6 +365,7 @@ function renderStart() {
     if (k === 'shop') { openShop(); return; }
     openModal(k);
   }));
+  document.getElementById('dbgBoerse')?.addEventListener('click', () => { if (store.get('kh_dbg_boerse')) store.del('kh_dbg_boerse'); else store.set('kh_dbg_boerse', '1'); render(); });
   document.getElementById('dbgMoney')?.addEventListener('click', () => { if (store.get('kh_dbg_money')) store.del('kh_dbg_money'); else store.set('kh_dbg_money', '1'); render(); });
   app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
     const { data } = await sb.from('games').select('*').eq('id', b.dataset.resume).maybeSingle();
@@ -412,7 +414,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['standings', '📊 Zwischenstand'], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (8 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['standings', '📊 Zwischenstand'], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
     </div>
     </div>
@@ -449,7 +451,7 @@ function renderRoom() {
   }));
   document.getElementById('start')?.addEventListener('click', onStart);
   document.getElementById('moneyToggle')?.addEventListener('click', () => saveSettings({ money: money ? null : { ...DEFAULT_MONEY } }));
-  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true) }); }));
+  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true), ...(!cur && k === 'turbo' ? { boerse: null } : {}), ...(!cur && k === 'boerse' ? { turbo: null } : {}) }); })); // Turbo und Börsen-Chaos schließen sich aus
   app.querySelectorAll('[data-money]').forEach((b) => b.addEventListener('click', () => {
     const v = b.dataset.money;
     const next = { ...money, [v]: Math.max(0, (money[v] || 0) + Number(b.dataset.d)) };
@@ -809,7 +811,7 @@ setInterval(() => {
 
 function startLocalGame(n) {
   const players = [{ id: 'me', name: me.name || 'Ich' }, ...Array.from({ length: n - 1 }, (_, i) => ({ id: `t${i + 1}`, name: `Test ${i + 1}` }))];
-  let state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: store.get('kh_dbg_money') ? { money: { ...DEFAULT_MONEY } } : null });
+  let state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: (store.get('kh_dbg_money') || store.get('kh_dbg_boerse') || new URLSearchParams(location.search).has('boerse')) ? { ...(store.get('kh_dbg_money') ? { money: { ...DEFAULT_MONEY } } : {}), ...(store.get('kh_dbg_boerse') || new URLSearchParams(location.search).has('boerse') ? { boerse: true } : {}) } : null });
   // Debug „?spaet=1“: Test-Spieler spielen bis kurz vor Schluss vor (viele Tiere, viel Geld) – zum Prüfen voller Plätze
   if (new URLSearchParams(location.search).has('spaet')) {
     let t = now(), k = 0;
@@ -903,6 +905,7 @@ function debugShortcut(kind) {
         s.players.forEach((p) => { p.money.push(payout); p.money.sort((a, b) => a - b); });
       }
       const lucky = s.players[Math.floor(Math.random() * s.players.length)];
+      if (isNewsCard(card)) continue; // Börsen-News beim Vorspulen einfach weglegen
       if (isMoneyCard(card)) { lucky.money.push(moneyValue(card)); lucky.money.sort((a, b) => a - b); }
       else if (isSpecialCard(card)) (lucky.specials = lucky.specials || []).push(specialAnimal(card));
       else lucky.animals[card] = (lucky.animals[card] || 0) + 1;
@@ -914,11 +917,11 @@ function debugShortcut(kind) {
     s.deck.splice(i, 1);
     s.deck.unshift('esel');
     s.log.push('Debug: Esel liegt oben.');
-  } else if (kind === 'rat' || kind === 'special') {
-    const i = s.deck.findIndex((c) => (kind === 'rat' ? c === RAT : isSpecialCard(c)));
-    if (i < 0) return toast(kind === 'rat' ? 'Keine Ratte mehr im Stapel.' : 'Keine Spezialkarte mehr im Stapel.');
+  } else if (kind === 'rat' || kind === 'special' || kind === 'news') {
+    const i = s.deck.findIndex((c) => (kind === 'rat' ? c === RAT : kind === 'news' ? isNewsCard(c) : isSpecialCard(c)));
+    if (i < 0) return toast(kind === 'rat' ? 'Keine Ratte mehr im Stapel.' : kind === 'news' ? 'Keine Börsen-News im Stapel (nur in der Spielart Börsen-Chaos).' : 'Keine Spezialkarte mehr im Stapel.');
     s.deck.unshift(...s.deck.splice(i, 1));
-    s.log.push(kind === 'rat' ? 'Debug: Ratte liegt oben.' : 'Debug: Spezialkarte liegt oben.');
+    s.log.push(kind === 'rat' ? 'Debug: Ratte liegt oben.' : kind === 'news' ? 'Debug: Börsen-News liegt oben.' : 'Debug: Spezialkarte liegt oben.');
   } else if (kind === 'broke') {
     s.players.find((p) => p.id === dbg.viewAs).money = [0, 10];
     s.log.push('Debug: Geld geleert.');
@@ -979,7 +982,7 @@ app.addEventListener('click', async (e) => {
   else if (k === 'bots') { dbg.bots = !dbg.bots; if (dbg.bots) { dbg.viewAs = 'me'; dbg.autoView = false; } }
   else if (k === 'fast') dbg.fast = !dbg.fast;
   else if (k === 'reload') { await resync(); }
-  else if (['forward', 'donkey', 'rat', 'special', 'broke', 'quartets', 'end', 'trade22', 'rich', 'zoo'].includes(k)) { dbg.panel = false; return debugShortcut(k); }
+  else if (['forward', 'donkey', 'rat', 'special', 'news', 'broke', 'quartets', 'end', 'trade22', 'rich', 'zoo'].includes(k)) { dbg.panel = false; return debugShortcut(k); }
   else if (k === 'report') {
     const text = buildReport();
     try { await navigator.clipboard.writeText(text); dbg.reportText = ''; toast('Fehlerbericht kopiert – einfach an Claude schicken.'); return; }
@@ -1579,6 +1582,7 @@ const RULES = `
   <h3>Ratte</h3><p>Wird eine Ratte aufgedeckt, geht es reihum (links vom Aufdecker, er selbst macht mit): Jeder legt eine Karte verdeckt in die Mitte (auch ein 0er) – oder nimmt die Ratte und bekommt alle gelegten Karten. Wer keine Karten mehr hat, muss sie nehmen. Danach deckt der Aufdecker noch eine Karte auf (ist der Stapel leer: Kuhhandel).<br>
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
   Am Ende hat einer alle 4 Ratten – er wählt eines seiner Quartette, das nicht zählt.</p>
+  <h3>📈 Börsen-Chaos (eigene Spielart)</h3><p>Wie Klassisch, dazu 8 Börsen-News im Stapel. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf. <b>Kursrallye</b> (2×): ein Tier +50 % bis Spielende · <b>Kurssturz</b> (2×): ein Tier −50 % (stapelbar, nie unter 0) · <b>Dividende</b>: alle +50 · <b>Steuerprüfung</b>: jeder gibt seinen höchsten Schein ab · <b>Marktpanik</b>: jeder schiebt einen zufälligen Schein verdeckt nach links · <b>Hektik</b>: die nächsten 3 Versteigerungen nur 5 s. Die Wertung rechnet mit den aktuellen Kursen (Kurszettel neben dem Stapel). Nicht zusammen mit Turbo.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Alle außer dem Aufdecker sehen einen Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
   <h3>Geldscheine im Stapel</h3><p>Kann der Gastgeber im Warteraum einschalten (bis zu 20 Scheine, Werte frei wählbar). Wird ein Geldschein aufgedeckt, bekommt ihn der Aufdecker – alle sehen den Betrag – und sein Zug ist vorbei.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
@@ -1691,6 +1695,7 @@ function renderModal() {
       const v = b.dataset.v;
       const nameOf = (id) => modal.adminData?.users?.find((u) => u.id === id)?.name || 'Spieler';
       if (b.dataset.m === 'dbgToggle') { if (DEBUG) store.del('kh_debug'); else store.set('kh_debug', '1'); if (!DEMO) location.reload(); return; }
+      if (b.dataset.m === 'dbgBoerse') { if (store.get('kh_dbg_boerse')) store.del('kh_dbg_boerse'); else store.set('kh_dbg_boerse', '1'); return render(); }
       if (b.dataset.m === 'dbgMoney') { if (store.get('kh_dbg_money')) store.del('kh_dbg_money'); else store.set('kh_dbg_money', '1'); return render(); }
       if (b.dataset.m === 'dbgStart') {
         if (DEMO) return;
@@ -1808,6 +1813,7 @@ function adminBody() {
         <div class="aacts"><button type="button" class="toggle ${DEBUG ? 'on' : ''}" data-m="dbgToggle" aria-pressed="${DEBUG}" aria-label="Debug-Modus"><i></i></button></div></li>
       <li><div class="arow"><b>Testspiel</b><small>Läuft nur auf diesem Gerät mit Test-Spielern – ohne Datenbank, echte Spiele bleiben unberührt.${DEBUG ? '' : ' Schaltet den Debug-Modus dafür mit ein.'}</small></div>
         <div class="aacts"><button type="button" class="abtn" data-m="dbgMoney">Geld im Stapel: ${money ? 'an' : 'aus'}</button>
+          <button type="button" class="abtn" data-m="dbgBoerse">📈 Börsen-Chaos: ${store.get('kh_dbg_boerse') ? 'an' : 'aus'}</button>
           <button type="button" class="abtn primary" data-m="dbgStart" data-v="3">3 Spieler</button>
           <button type="button" class="abtn primary" data-m="dbgStart" data-v="4">4 Spieler</button></div></li>
     </ul>`;

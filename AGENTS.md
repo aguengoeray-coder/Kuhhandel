@@ -85,6 +85,10 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   (jeder wählt selbst). Aufdecker entscheidet: kaufen (er zahlt dem Buzzer die Karten) oder verkaufen (Buzzer zahlt ihm).
   Der Zahler wählt die Karten selbst. Niemand buzzert → Aufdecker bekommt sie umsonst. Buzzer kann nicht zahlen → Karten offen,
   Countdown neu, er darf erst ab seiner Kartenanzahl drücken. Aufdecker mit zu wenig Karten muss verkaufen.
+- **Börsen-Chaos** (Spielart, nie mit Turbo): + 8 Börsen-News im Stapel; aufgedeckt → Wirkung sofort, Aufdecker deckt nochmal auf.
+  Kursrallye 2× (+50 %), Kurssturz 2× (−50 %; Kurse stapeln sich, nie unter 0; Tier beim Mischen ausgelost), Dividende (alle +50),
+  Steuerprüfung (jeder gibt seinen höchsten Schein ab, nur eigener sichtbar), Marktpanik (jeder schiebt einen zufälligen Schein verdeckt nach links),
+  Hektik (nächste 3 Versteigerungen 5 s). Wertung mit aktuellen Kursen; Spezialkarte (250) und Esel-Bonus unverändert.
 - Wertung: (Summe der Quartettwerte + 250 je passender Spezialkarte) × Anzahl der Quartette, danach + 250 je Spezialkarte
   ohne zählendes Quartett.
 

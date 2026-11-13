@@ -321,6 +321,22 @@ export function buildDemoState(kind, local) {
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
       return g;
     }
+    case 'news': { // ?demo=news&k=rallye-kuh|crash-pferd|dividende|steuer|panik|hektik – Börsen-Chaos
+      const k = new URLSearchParams(location.search).get('k') || 'rallye-kuh';
+      g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
+      const b = base(); g.players = b.players; g.donkeysDrawn = 1;
+      g.kurse = { pferd: -50, schaf: 50 };
+      g.turn = 1; g.deck = [`news-${k}`, ...b.deck];
+      g = drawForAuction(g, 'u2');
+      local.prev = { logLen: g.log.length - 1, phase: 'turn' };
+      return g;
+    }
+    case 'boerse': { // Börsen-Chaos: Tisch mit Kurszettel und Hektik
+      g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
+      const b = base(); g.players = b.players; g.deck = b.deck; g.donkeysDrawn = 1;
+      g.kurse = { kuh: 50, pferd: -50, schaf: 100 }; g.hektik = 2;
+      return g;
+    }
     case 'moneydrawn': {
       g = base(); g.turn = 1; g.deck[0] = `geld-${new URLSearchParams(location.search).get('v') || 200}`;
       g = drawForAuction(g, 'u2');

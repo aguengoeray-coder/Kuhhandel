@@ -26,6 +26,7 @@ export function debugPanel(d) {
       <button type="button" data-dbg="donkey">Esel als nächste Karte</button>
       <button type="button" data-dbg="rat">Ratte als nächste Karte</button>
       <button type="button" data-dbg="special">Spezialkarte als nächste Karte</button>
+      <button type="button" data-dbg="news">Börsen-News als nächste Karte</button>
       <button type="button" data-dbg="broke">Geld von „${esc(d.viewName)}“ auf 0 + 10 setzen</button>
       <button type="button" data-dbg="rich">„${esc(d.viewName)}“ bekommt viel Geld (13 Scheine)</button>
       <button type="button" data-dbg="zoo">„${esc(d.viewName)}“ bekommt viele Tiere</button>

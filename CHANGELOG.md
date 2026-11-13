@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.60.0 – Börsen-Chaos
+
+- [x] Neue Spielart **📈 Börsen-Chaos** (im Warteraum einschaltbar, nie zusammen mit Turbo): 8 Börsen-News im Stapel (62 Karten).
+- [x] News: Kursrallye 2× (+50 %), Kurssturz 2× (−50 %, stapelbar, nie unter 0), Dividende (+50 für alle), Steuerprüfung (höchster Schein weg), Marktpanik (zufälliger Schein verdeckt nach links), Hektik (3 Versteigerungen nur 5 s).
+- [x] Aufgedeckte News erscheint groß in der Mitte – bei Steuer/Marktpanik mit deinem persönlichen Teil („Du gibst 500 ab“); danach deckt der Aufdecker nochmal auf.
+- [x] Kurszettel neben dem Stapel, Tierkarten zeigen den aktuellen Wert, Wertung rechnet mit Kursen; Test-Spieler bieten nach Kurs.
+- [x] Testspiel/Debug: Schalter „Börsen-Chaos“ und Abkürzung „Börsen-News als nächste Karte“; 6 neue Regeltests + 100 simulierte Komplettspiele.
+
 ## v0.59.1 – Größere Tiere
 
 - [x] Karte und Stapel in der Mitte etwas kleiner, dafür sind deine Tiere im Regal deutlich größer (bis 118 %, vorher 82 %).

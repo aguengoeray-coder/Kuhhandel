@@ -21,8 +21,32 @@ export const TURBO_AUCTION_MS = 6000;
 export function isTurbo(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.turbo); }
 // Tierarten dieser Partie
 export function animalsOf(stateOrSettings) { return isTurbo(stateOrSettings) ? ANIMALS.filter((a) => !TURBO_DROP.includes(a.id)) : ANIMALS; }
-export function auctionStartMs(state) { return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_START_MS; }
-export function auctionBidMs(state) { return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_BID_MS; }
+export function auctionStartMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_START_MS; }
+export function auctionBidMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_BID_MS; }
+
+// ---------- Börsen-Chaos (eigene Spielart, nie zusammen mit Turbo) ----------
+// 8 Börsen-News im Stapel: 2× Kursrallye, 2× Kurssturz (je ein Tier, beim Mischen ausgelost), Dividende, Steuerprüfung, Marktpanik, Hektik.
+// Aufgedeckt → Wirkung sofort, danach deckt der Aufdecker nochmal auf (wie bei der Ratte).
+export const NEWS_PREFIX = 'news-';
+export const HEKTIK_MS = 5000;          // Hektik: Versteigerungen nur 5 s
+export const HEKTIK_COUNT = 3;          // … die nächsten 3
+export const KURS_STEP = 50;            // Kursrallye +50 %, Kurssturz −50 % (stapelbar, nie unter 0)
+export const DIVIDENDE = 50;
+export const isNewsCard = (card) => typeof card === 'string' && card.startsWith(NEWS_PREFIX);
+export function isBoerse(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.boerse && !st.turbo); }
+// 'news-rallye-kuh' → { kind: 'rallye', animal: 'kuh' } · 'news-steuer' → { kind: 'steuer' }
+export function newsOf(card) { const [kind, animal] = card.slice(NEWS_PREFIX.length).split('-'); return animal ? { kind, animal } : { kind }; }
+// aktueller Wert eines Tiers (Börsen-Chaos: Kurs in Prozentpunkten, z. B. +50 → 150 %)
+export function kursValue(animal, kurse) {
+  const base = ANIMAL_BY_ID[animal].value;
+  const k = kurse && kurse[animal] ? kurse[animal] : 0;
+  return Math.max(0, Math.round(base * (100 + k) / 100));
+}
+function newsCards(seed) {
+  const r = rng(seed ^ 0x5eed);
+  const pick = () => ANIMALS[Math.floor(r() * ANIMALS.length)].id;
+  return [`rallye-${pick()}`, `rallye-${pick()}`, `crash-${pick()}`, `crash-${pick()}`, 'dividende', 'steuer', 'panik', 'hektik'].map((x) => NEWS_PREFIX + x);
+}
 
 export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
 export const DONKEY_PAYOUTS = [50, 100, 200, 500]; // 1. bis 4. Esel: jeder Spieler bekommt so viel von der Bank
@@ -74,6 +98,7 @@ export const specialAnimal = (card) => card.slice(SPECIAL_PREFIX.length);
 export function cardName(card) {
   if (card === RAT) return 'Ratte';
   if (isSpecialCard(card)) return `${animalName(specialAnimal(card))}-Spezialkarte`;
+  if (isNewsCard(card)) return 'Börsen-News';
   return animalName(card);
 }
 
@@ -172,6 +197,7 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
     ...kinds.map((a) => SPECIAL_PREFIX + a.id),
     ...Array(RAT_COUNT).fill(RAT),
     ...moneyDeckFrom(settings && settings.money).map((v) => MONEY_PREFIX + v),
+    ...(isBoerse(settings) ? newsCards(seed) : []),
   ];
   const deck = shuffle(cards, seed);
   const state = {
@@ -199,6 +225,7 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
     winner: null,
     settings: settings || null,
     stats: {},
+    ...(isBoerse(settings) ? { kurse: {}, hektik: 0 } : {}),
   };
   for (const p of players) stat(state, p.id);
   log(state, 'Das Spiel beginnt.');
@@ -244,10 +271,10 @@ function allQuartetsComplete(state) {
 // Spezialkarte zum (nicht blockierten) Quartett: zählt vor dem Malnehmen mit.
 // Spezialkarte ohne zählendes Quartett: +250 nach dem Malnehmen.
 // withMoney (Einstellung „Geld zählt am Ende“): übriges Geld wird am Schluss dazugezählt (nicht multipliziert)
-export function scoreFor(p, blockedAnimal = null, withMoney = false) {
+export function scoreFor(p, blockedAnimal = null, withMoney = false, kurse = null) {
   const specials = p.specials || [];
   const quartets = ANIMALS.filter((a) => p.animals[a.id] === 4 && a.id !== blockedAnimal);
-  const base = quartets.reduce((s, a) => s + a.value + (specials.includes(a.id) ? SPECIAL_VALUE : 0), 0);
+  const base = quartets.reduce((s, a) => s + kursValue(a.id, kurse) + (specials.includes(a.id) ? SPECIAL_VALUE : 0), 0);
   const loose = specials.filter((id) => !quartets.some((a) => a.id === id)).length;
   const money = withMoney && Array.isArray(p.money) ? sum(p.money) : 0;
   return { quartets: quartets.map((a) => a.id), score: base * quartets.length + loose * SPECIAL_VALUE + money, money };
@@ -256,7 +283,7 @@ export function scoreFor(p, blockedAnimal = null, withMoney = false) {
 export function scores(state) {
   return state.players.map((p) => {
     const blocked = state.blocked && state.blocked.player === p.id ? state.blocked.animal : null;
-    const r = scoreFor(p, blocked, !!(state.settings && state.settings.moneyCounts));
+    const r = scoreFor(p, blocked, !!(state.settings && state.settings.moneyCounts), state.kurse || null);
     return { id: p.id, name: p.name, quartets: r.quartets, score: r.score, money: r.money, specials: (p.specials || []).slice(), rats: p.animals[RAT] || 0, blocked };
   });
 }
@@ -352,6 +379,50 @@ function afterRat(state) {
   nextTurn(state);
 }
 
+// ---------- Börsen-News ----------
+const NEWS_TEXT = {
+  rallye: (a) => `Kursrallye: ${animalName(a)} +${KURS_STEP} %`,
+  crash: (a) => `Kurssturz: ${animalName(a)} −${KURS_STEP} %`,
+  dividende: () => `Dividende: alle bekommen ${DIVIDENDE}`,
+  steuer: () => 'Steuerprüfung: alle geben ihren höchsten Schein ab',
+  panik: () => 'Marktpanik: alle schieben einen zufälligen Schein nach links',
+  hektik: () => `Hektik: die nächsten ${HEKTIK_COUNT} Versteigerungen nur ${HEKTIK_MS / 1000} s`,
+};
+function applyNews(state, me, card) {
+  const n = newsOf(card);
+  if (!state.kurse) state.kurse = {};
+  const ev = { n: state.log.length, type: 'news', kind: n.kind, player: me.id };
+  if (n.kind === 'rallye' || n.kind === 'crash') {
+    const before = kursValue(n.animal, state.kurse);
+    state.kurse[n.animal] = (state.kurse[n.animal] || 0) + (n.kind === 'rallye' ? KURS_STEP : -KURS_STEP);
+    Object.assign(ev, { animal: n.animal, from: before, to: kursValue(n.animal, state.kurse) });
+  } else if (n.kind === 'dividende') {
+    for (const p of state.players) giveCards(p, bankCards(DIVIDENDE));
+    ev.amount = DIVIDENDE;
+  } else if (n.kind === 'steuer') {
+    // jeder gibt seinen höchsten Schein an die Bank – verdeckt: jeder sieht nur seinen eigenen (viewFor)
+    ev.lost = {};
+    for (const p of state.players) {
+      if (!p.money.length) continue;
+      const i = p.money.indexOf(Math.max(...p.money));
+      ev.lost[p.id] = p.money.splice(i, 1)[0];
+    }
+  } else if (n.kind === 'panik') {
+    // gleichzeitig: jeder schiebt eine zufällige Karte an seinen linken Nachbarn (nächster in Spielrichtung)
+    const r = rng(state.deck.length * 7919 + state.log.length * 104729 + 17);
+    const moves = state.players.map((p) => (p.money.length ? p.money.splice(Math.floor(r() * p.money.length), 1)[0] : null));
+    ev.moved = {};
+    state.players.forEach((p, i) => {
+      const toP = state.players[(i + 1) % state.players.length];
+      if (moves[i] != null) { giveCards(toP, [moves[i]]); ev.moved[p.id] = moves[i]; }
+    });
+  } else if (n.kind === 'hektik') {
+    state.hektik = (state.hektik || 0) + HEKTIK_COUNT;
+  } else fail('Unbekannte Börsen-News.');
+  log(state, `${me.name} deckt Börsen-News auf – ${NEWS_TEXT[n.kind](n.animal)}.`);
+  state.lastEvent = ev;
+}
+
 // ---------- Versteigerung ----------
 
 export function drawForAuction(prev, playerId, now) {
@@ -369,6 +440,11 @@ export function drawForAuction(prev, playerId, now) {
     state.phase = 'rat';
     state.lastEvent = { n: state.log.length, type: 'rat_drawn', player: playerId };
     log(state, `${me.name} deckt eine Ratte auf.`);
+    return state;
+  }
+  if (isNewsCard(animal)) {
+    applyNews(state, me, animal);
+    afterRat(state); // wie nach der Ratte: nochmal aufdecken (Stapel leer → Kuhhandel)
     return state;
   }
   if (isMoneyCard(animal)) {
@@ -402,7 +478,9 @@ export function drawForAuction(prev, playerId, now) {
   } else {
     state.lastEvent = { n: state.log.length, type: 'draw', animal };
   }
-  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + REVEAL_MS : null, endsAt: now != null ? now + REVEAL_MS + auctionStartMs(state) : null };
+  const fast = (state.hektik || 0) > 0; // Börsen-Chaos „Hektik“: diese Versteigerung nur 5 s
+  if (fast) state.hektik -= 1;
+  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + REVEAL_MS : null, endsAt: now != null ? now + REVEAL_MS + (fast ? HEKTIK_MS : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
   state.phase = 'auction';
   return state;
 }
@@ -885,6 +963,16 @@ export function viewFor(state, playerId) {
   if (v.trade && v.trade.challenger !== playerId) v.trade.offer = v.trade.offer.length;
   if (v.rat) v.rat.pot = v.rat.pot.length; // gelegte Karten liegen verdeckt
   if (v.lastEvent && v.lastEvent.type === 'rat_taken' && v.lastEvent.player !== playerId) delete v.lastEvent.cards;
+  // Börsen-News: Steuer/Marktpanik – jeder sieht nur seine eigenen Scheine (gegeben bzw. bekommen)
+  if (v.lastEvent && v.lastEvent.type === 'news') {
+    const e0 = v.lastEvent;
+    if (e0.lost) e0.lost = e0.lost[playerId] != null ? { [playerId]: e0.lost[playerId] } : {};
+    if (e0.moved) {
+      const i = state.players.findIndex((p) => p.id === playerId);
+      const fromId = state.players[(i - 1 + state.players.length) % state.players.length].id;
+      e0.moved = { gave: e0.moved[playerId] ?? null, got: e0.moved[fromId] ?? null, from: fromId };
+    }
+  }
   // Abgeschlossener Kuhhandel: Unbeteiligte sehen nur die Kartenanzahl, nicht die Werte.
   // Wurde angenommen, kennt nur der Herausgeforderte (und der Herausforderer) das Angebot.
   const e = v.lastEvent;
