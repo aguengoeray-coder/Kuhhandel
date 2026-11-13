@@ -2638,3 +2638,4 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .ratrun.r1 { top: 205px; width: 44px; height: 44px; animation-duration: 1.5s; animation-delay: .25s; }
 .ratrun.r2 { top: 290px; width: 38px; height: 38px; animation-duration: 1.35s; animation-delay: .5s; }
 @media (prefers-reduced-motion: reduce) { .moneyrain { display: none; } }
+.mbox { max-height: calc(100dvh - 16px); overflow-y: auto; } /* v0.51: lange Fenster (z. B. Einstellungen) scrollen statt unten abzuschneiden */
