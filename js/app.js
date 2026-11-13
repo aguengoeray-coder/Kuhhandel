@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS } from '../src/engine.js';
 
-export const APP_VERSION = '0.53.0';
+export const APP_VERSION = '0.54.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -623,6 +623,7 @@ function renderPlaying() {
     canTakeover: local ? () => false : (seat) => canTakeover(seat),
     takeover: (seat) => act((s) => withAutoplay(s, seat, true)),
     selfPlay: (seat) => act((s) => withAutoplay(s, seat, false)),
+    rewards: !ui.game?.local, // Dublonen gibt es nur in echten Partien (nicht im Testspiel)
     onExit: () => { if (!ui.game?.local) store.del('kh_game'); gameLocal.menu = false; if (roomChannel && sb) { sb.removeChannel(roomChannel); roomChannel = null; } openStart(); },
   });
   if (DEBUG) injectDebug();
@@ -1786,6 +1787,7 @@ function adminBody() {
 
 function demo(kind) {
   if (params.get('shopav')) shopAvatars.set('u2', params.get('shopav'));
+  if (params.get('allav')) [['u1', 'alp-quasselt'], ['u2', 'nico-schreit'], ['u3', 'bennet-verletzt'], ['u4', 'kuh-kaiser']].forEach(([id, av]) => shopAvatars.set(id, av));
   const demoProfiles = { u1: ['Alp', 'pferd', '#1D5FC2'], u2: ['Nico', 'schwein', '#B8285F'], u3: ['Bennet', 'esel', '#0B7A68'], u4: ['Mo', 'hahn', '#B58A00'] };
   Object.entries(demoProfiles).forEach(([id, [name, animal, color]]) => profiles.set(id, { id, name, animal, color }));
   if (kind === 'testspiel' || kind === 'testspiel3') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(kind === 'testspiel3' ? 3 : 4); }

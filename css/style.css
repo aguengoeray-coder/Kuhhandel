@@ -2671,3 +2671,25 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 /* größer wird die Karte selbst (Stapel, Tierkarte), nicht die ganze Reihe – sonst ragt sie seitlich in die Plätze */
 .stage { --bk: 1.4; }
 .gtable .tcenter .deck-wrap, .gtable .tcenter .aucard, .gtable .tcenter .bigcard { zoom: var(--bk); }
+/* v0.54 Siegertreppchen: wer einen Shop-Avatar hat, steht in ganzer Figur auf dem Podest und hüpft */
+.pod .pfig { display: block; height: 64px; margin-bottom: -2px; }
+.pod.p1 .pfig { height: 74px; }
+.pfig .shop-avatar-full { height: 100%; width: auto; }
+.pod .crown { position: relative; z-index: 1; }
+.pod.p1:has(.pfig) .crown { margin-bottom: -10px; }
+.pfig.hop { animation: podhop .7s cubic-bezier(.3,.7,.4,1.4) both; transform-origin: 50% 100%; }
+.pfig.hop.win { animation: podhop .7s cubic-bezier(.3,.7,.4,1.4) both, podcheer 1.6s ease-in-out .9s infinite; }
+@keyframes podhop { 0% { transform: translateY(30px) scale(.6); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes podcheer { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-7px); } }
+.pdub { position: absolute; right: -6px; top: 30%; background: #2a2420e6; color: #FFD34E; font: 700 13px var(--font-head); border-radius: 999px; padding: 2px 8px; box-shadow: 0 2px 0 #0004; animation: podhop .5s ease-out 1.2s both; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .pfig.hop, .pdub { animation: none; } }
+/* v0.54 Jubel-Moment: die Figur des Gewinners springt kurz über seinem Platz auf */
+.cheerfx { position: absolute; left: 0; top: 0; z-index: 30; pointer-events: none; height: 78px; display: flex; align-items: flex-end; justify-content: center; opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -88%); animation: cheerpop 1.5s cubic-bezier(.3,.7,.4,1.3) both; }
+.cheerfx.full .shop-avatar-full { height: 78px; width: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,.45)); }
+.cheerfx .cheerhead .avatar { width: 44px; height: 44px; }
+.cheerfx.me { height: 92px; } .cheerfx.me.full .shop-avatar-full { height: 92px; }
+.cheerstar { position: absolute; top: -6px; right: -16px; font-style: normal; font-size: 20px; animation: cheerstar 1.5s ease-out both; animation-delay: inherit; }
+@keyframes cheerpop { 0% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -40%) scale(.3); } 18% { opacity: 1; transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -100%) scale(1.1); } 32% { transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -88%) scale(1); } 46% { transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -100%) scale(1); } 60% { transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -88%) scale(1); opacity: 1; } 100% { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)) translate(-50%, -80%) scale(.9); } }
+@keyframes cheerstar { 0%, 15% { opacity: 0; transform: scale(.2) rotate(-30deg); } 30% { opacity: 1; transform: scale(1.2) rotate(10deg); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1) rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .cheerfx { display: none; } }
+.cheerfx:not(.full) { height: 50px; } .cheerfx.me:not(.full) { height: 56px; }
