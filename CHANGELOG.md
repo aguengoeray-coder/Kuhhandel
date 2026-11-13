@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.58.1 – Platz zwischen Karte und Figur
+
+- [x] Deine Figur unten ist etwas kleiner, damit die große Karte bei 3 Spielern bzw. mit Hinweiszeilen nicht an ihren Kopf stößt.
+- [x] Projektstand und Übergabe-Doku auf v0.58 gebracht.
+
 ## v0.58.0 – Neue Charaktere und Sprüche
 
 - [x] 9 neue Avatare (Kopf + ganzer Körper, mit Bewegung): Kult **Mr. Passt Schon** (50), Legendär **Die dumme Kuh** (60), Selten (30): Mama Sports, Dickes Huhn, Bontje Lebkuchen, Die schmatzenden Zwillinge, Nacht-Gohan, Der schielende Mogli, Der dicke Gojo.

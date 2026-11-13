@@ -30,7 +30,7 @@ Stand: 13.11.2026, 16:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | PR / Branch | Owner | Stufe | Status |
 |---|---|---|---|
-| `claude/doku-v058` | Claude | 🟢 | Diese Doku-Aktualisierung. |
+| `claude/doku-v058` (#25) | Claude | 🟢 | v0.58.1: Figur etwas kleiner (Abstand zur Karte) + diese Doku-Aktualisierung. |
 | `ai/auftraege` | Codex/Claude | – | Ersetzt durch Abschnitt 5; löschen nur mit Alps Okay. |
 | alte Feature-Branches | – | 🔴 | Alle in `main`. Aufräumen nur mit Alps Okay. |
 
