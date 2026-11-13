@@ -1583,10 +1583,23 @@ export function renderGame(root, ctx) {
       // (nur der aufgedeckte Kuhhandel – Gebot gegen Gebot – bleibt der große Auftritt in der Mitte)
       const rcP = (id) => { const i = idxOf(id); return i >= 0 ? `<span class="rc-p">${avatar(v.players[i], i)}<b>${nm(id)}</b></span>` : ''; };
       let rc = null;
-      if (e.type === 'auction_won') rc = { from: e.self ? null : e.payee, to: e.buyer, card: miniCard(e.animal), money: e.amount ? { from: e.payer || e.buyer, to: e.payee, txt: `${e.amount}${e.cardCount ? ` · ${karten(e.cardCount)}` : ''}` } : null, note: e.amount ? (e.self ? 'kauft selbst' : '') : 'umsonst – niemand hat geboten' };
-      else if (e.type === 'special_won') rc = { to: e.buyer, card: miniCard(e.animal), sp: true, money: e.count ? { from: e.payer, to: e.payee, txt: karten(e.count) } : null, note: e.count ? '' : 'umsonst – niemand hat gebuzzert' };
-      else if (e.type === 'rat_taken') rc = { to: e.player, card: miniCard(RAT), money: e.count ? { pot: true, to: e.player, txt: Array.isArray(e.cards) && e.player === meId ? `${karten(e.count)} · ${e.cards.reduce((t, m) => t + m, 0)}` : karten(e.count) } : null, note: e.count ? '' : 'Es lag noch nichts in der Mitte' };
-      else if (e.type === 'trade' && e.accepted) rc = { from: e.target, to: e.challenger, card: miniCard(e.animal), cnt: e.count, money: { from: e.challenger, to: e.target, txt: e.offerSum != null ? `${e.offerSum}` : karten(Array.isArray(e.offer) ? e.offer.length : e.offer) }, note: 'angenommen' };
+      // v0.57.1: Preis steht in der Überschrift („… für 140 [Schein]“), unten nur noch wer → wie viele Karten → wem
+      const TALER = '<i class="taler" aria-label="Taler"></i>';
+      if (e.type === 'auction_won') {
+        rc = { to: e.buyer, card: miniCard(e.animal), money: e.amount ? { from: e.payer || e.buyer, to: e.payee, txt: e.cardCount ? karten(e.cardCount) : `${e.amount} ${TALER}` } : null, note: e.amount ? '' : 'umsonst – niemand hat geboten' };
+        if (e.amount) title = `${nm(e.buyer)} ${verb(e.buyer, 'kaufst', 'kauft')} ${theAnimal(e.animal)}${e.self ? ' selbst' : ''} für ${e.amount} ${TALER}`;
+      } else if (e.type === 'special_won') {
+        rc = { to: e.buyer, card: miniCard(e.animal), sp: true, money: e.count ? { from: e.payer, to: e.payee, txt: karten(e.count) } : null, note: e.count ? '' : 'umsonst – niemand hat gebuzzert' };
+        if (e.count) title = `${nm(e.buyer)} ${verb(e.buyer, 'kaufst', 'kauft')} die ${esc(aname(e.animal))}-Spezialkarte für ${karten(e.count)}`;
+      } else if (e.type === 'rat_taken') {
+        const sumOwn = Array.isArray(e.cards) && e.player === meId ? e.cards.reduce((t, m) => t + m, 0) : null;
+        rc = { to: e.player, card: miniCard(RAT), money: e.count ? { pot: true, to: e.player, txt: `${karten(e.count)}${sumOwn != null ? ` = ${sumOwn} ${TALER}` : ''}` } : null, note: e.count ? '' : 'Es lag noch nichts in der Mitte' };
+        if (e.count) title = `${nm(e.player)} ${verb(e.player, 'nimmst', 'nimmt')} die Ratte + ${karten(e.count)}`;
+      } else if (e.type === 'trade' && e.accepted) {
+        const n = Array.isArray(e.offer) ? e.offer.length : e.offer;
+        rc = { to: e.challenger, card: miniCard(e.animal), cnt: e.count, money: { from: e.challenger, to: e.target, txt: karten(n) }, note: `${nm(e.target)} ${verb(e.target, 'nimmst', 'nimmt')} an` };
+        title = `${nm(e.challenger)} ${verb(e.challenger, 'ertauschst', 'ertauscht')} ${e.count}× ${esc(aname(e.animal))} für ${e.offerSum != null ? `${e.offerSum} ${TALER}` : karten(n)}`;
+      }
       if (rc && !reveal) {
         const moneyRow = rc.money ? `<div class="rc-line rc-cash">${rc.money.pot ? '<span class="rc-p pot"><i>🫙</i><b>Topf</b></span>' : rcP(rc.money.from)}<span class="rc-arr">→</span><span class="rc-amt">${rc.money.txt}</span><span class="rc-arr">→</span>${rcP(rc.money.to)}</div>` : '';
         const html = `<div class="evcard receipt ${tone}" data-a="resClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${local.res.dur}ms">

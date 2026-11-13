@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.57.1 – Preis in der Überschrift
+
+- [x] Ergebnis-Fenster: Überschrift mit Preis („Test 2 kauft das Schaf für 140 [Schein]“, „… Spezialkarte für 3 Karten“, „… ertauscht 2× Ziege für 3 Karten“, „Du nimmst die Ratte + 3 Karten“); darunter nur noch „Test 2 → 4 Karten → Test 1“.
+- [x] Neues kleines Geldschein-Zeichen für Taler (die goldene Münze bleibt den Dublonen vorbehalten).
+
 ## v0.57.0 – Wie am echten Tisch (Konzept 3)
 
 - [x] **Dein Platz:** deine Figur sitzt unten in der Mitte – genau gegenüber dem Platz oben. Geld links (linke Hand), Tiere rechts (rechte Hand), alles im goldenen Rahmen.
