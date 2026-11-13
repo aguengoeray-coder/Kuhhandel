@@ -2877,3 +2877,73 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .kasse.side .kslots.many { flex-wrap: nowrap; gap: 0; }
 .kasse.side .kslots.many > * + * { margin-left: calc(-1 * var(--ov, 7px)); }
 .kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 28px; height: 39px; font-size: 11px; }
+/* ===== v0.59 „Dein Platz wie bei den Mitspielern, nur groß“ (Alps Go 13.11.) =====
+   links deine Knöpfe · Mitte: Tier-Regal über dem Geld (Hand von unten, feste Fächer) · rechts deine Figur groß, immer sichtbar */
+.stage { --bk: 1.29; } /* Karte in der Mitte etwa 8 % kleiner, damit Regal + Hand darunter passen */
+/* Hand: 7 feste Fächer (0 … 500), unten leicht aus dem Bild – wie Karten auf der Hand */
+.stage .fan-wrap { left: 184px; right: 122px; bottom: -14px; justify-content: center; gap: 5px; padding: 0; }
+.stage .fan-wrap.slots > * { margin-left: 0; }
+.stage .fan-wrap .fanempty { display: none; }
+.mghost { width: 44px; height: 62px; flex-shrink: 0; border-radius: 8px; border: 2px dashed rgba(255,255,255,.22); background: rgba(255,255,255,.04);
+  display: flex; align-items: flex-start; justify-content: center; transform: rotate(var(--rot, 0deg)) translateY(var(--dy, 0px)); transform-origin: 50% 100%; }
+.mghost i { font: 700 12px var(--font-head); font-style: normal; color: rgba(255,255,255,.3); margin-top: 8px; }
+/* Regal: deine Tiere in einer Reihe direkt über der Hand – volle Breite zwischen Knöpfen und Figur */
+.stage .auslage.shelf { left: 184px; right: 122px; width: auto; bottom: 54px; max-height: none; height: auto; flex-wrap: nowrap; justify-content: center; align-items: flex-end; gap: 6px; }
+.stage .auslage.shelf > * { zoom: var(--sc, .9); }
+/* Figur rechts, groß und immer sichtbar (auch beim Kuhhandel – für 💬) */
+.stage .meplate, .stage .meplate.full { left: auto; right: 8px; width: 108px; height: 104px; bottom: 4px; }
+.stage .meplate.full .mefig .shop-avatar-full, .stage.p3 .meplate.full .mefig .shop-avatar-full { height: 92px; }
+.stage .meplate.round .mefig .avatar { width: 62px; height: 62px; }
+.stage:has(.tpick, .tduel, .batzen) .meplate { visibility: visible; }
+/* du bist dran: deine Figur leuchtet (statt eines großen Rahmens) */
+.stage .myglow { left: auto; right: 2px; bottom: 0; width: 120px; height: 112px; border-radius: 22px; }
+.stage .mebubble, .stage .mebubble.up { left: auto; right: 24px; top: auto; bottom: 118px; }
+.stage .mebubble .rbubble { transform-origin: 85% 100%; }
+.stage .mebubble .rbubble::after { left: auto; right: 22px; margin-left: 0; }
+/* Kuhhandel/Zeig Batzen: Regal tritt zurück, die Hand bleibt unten mittig */
+.stage:has(.tduel) .fan-wrap, .stage:has(.batzen) .fan-wrap { bottom: -14px; }
+/* Regal flacher: Anzahl-Plakette liegt wie bei den Mitspielern unten auf der Karte */
+.stage .auslage.shelf .stack, .stage .auslage.shelf .amini { position: relative; padding-bottom: 6px; }
+.stage .auslage.shelf .slabel { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); margin: 0; z-index: 2; }
+.stage .auslage.shelf { bottom: 50px; }
+.stage .fan-wrap { bottom: -18px; }
+/* Figur füllt ihren Rahmen */
+.stage .meplate, .stage .meplate.full { width: 104px; height: 114px; right: 10px; }
+.stage .meplate.full .mefig .shop-avatar-full, .stage.p3 .meplate.full .mefig .shop-avatar-full { height: 100px; }
+.stage .myglow { right: 4px; width: 116px; height: 118px; }
+/* Spezialkarte ohne eigenes Tier im Regal: Stern reicht, Name darunter weg (flacher) */
+.stage .auslage.shelf .amini.special span { display: none; }
+.stage .auslage.shelf .amini.special { padding-bottom: 6px; }
+/* v0.59: Figur rechts größer, Leuchten statt Rahmen, Sprechblasen aus dem Mund */
+.stage .fan-wrap, .stage .auslage.shelf { right: 142px; }
+.stage .meplate, .stage .meplate.full { width: 128px; height: 148px; right: 8px; bottom: 2px; }
+.stage .meplate.full .mefig .shop-avatar-full, .stage.p3 .meplate.full .mefig .shop-avatar-full { height: 134px; }
+.stage .meplate.round .mefig .avatar { width: 76px; height: 76px; font-size: 30px; }
+/* du bist dran: weiches gelbes Licht hinter deiner Figur (kein Rahmen) */
+.stage .myglow { right: -14px; bottom: -20px; width: 172px; height: 190px; border: 0; border-radius: 50%; box-shadow: none;
+  background: radial-gradient(closest-side, rgba(255,211,78,.62), rgba(255,211,78,.28) 55%, rgba(255,211,78,0)); }
+/* deine Sprechblase: links aus dem Mund deiner Figur, Zipfel zeigt nach rechts zum Mund */
+.stage .mebubble, .stage .mebubble.up { left: auto; right: 112px; top: auto; bottom: 84px; z-index: 8; }
+.stage .mebubble .rbubble { transform-origin: 100% 60%; white-space: normal; width: max-content; max-width: 230px; text-align: center; line-height: 1.15; }
+.stage .mebubble .rbubble::after { left: auto; right: -10px; top: 50%; bottom: auto; margin: 0; transform: translateY(-50%); border-left: 9px solid var(--ink); border-right: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+/* Mitspieler: Blase direkt unter dem Bild, Zipfel nach oben zum Mund (Position misst mouthBubbles) */
+.stage .prow .rbubble.mouth { margin-left: 0; z-index: 9; white-space: normal; width: max-content; max-width: 220px; line-height: 1.15; transform-origin: 18px 0; }
+.stage .prow .rbubble.mouth::after { left: 11px; right: auto; }
+.stage .prow .rbubble.mouth.rt { transform-origin: calc(100% - 18px) 0; }
+.stage .prow .rbubble.mouth.rt::after { left: auto; right: 11px; }
+/* Leuchten genau mittig hinter deiner Figur (Mitte der Figur = 772px) */
+.stage .myglow { left: 666px; right: auto; width: 172px; } /* liegt im Tisch (beginnt bei x = 20) */
+/* Summe deines Geldes direkt rechts neben der Hand (statt im Namensschild) */
+.stage .fan-wrap .fansum { display: inline-flex; align-items: center; gap: 4px; position: static; align-self: flex-start; margin: 12px 0 0 8px;
+  padding: 3px 10px; border-radius: 999px; background: rgba(0,0,0,.42); color: #fff; font: 700 17px var(--font-head); white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.stage:has(.tduel, .batzen) .fan-wrap .fansum { position: static; left: auto; bottom: auto; }
+.stage .meplate .mename { padding: 1px 14px; font-size: 13px; }
+/* Kuhhandel-Auswahl (Schritt 1) etwas schmaler und leicht nach links, damit deine Figur rechts frei bleibt */
+.stage .tpick { left: calc(50% - 30px); scale: .92; transform-origin: 50% 100%; }
+/* Bezahl-Box neben der (kleineren) Karte etwas schmaler – bleibt frei vom Platz oben rechts */
+.stage .kasse.side { width: 176px; }
+.kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 26px; }
+/* Spezialkarte im Regal so hoch wie ein Tierstapel (stieß bei 3 Spielern an die Karte in der Mitte) */
+.stage .auslage.shelf .amini.special .acard { width: 30px; height: 42px; }
+.stage .kasse.side { width: 180px; }
+.kasse.side .kslots.lots .money.xs, .kasse.side .kslots.lots .slot { width: 24px; }

@@ -199,6 +199,7 @@ function figure(p, idx, cls = '') {
 // Nach einem Ergebnis (Zuschlag, Kuhhandel, Spezialkarte, Ratte, Geldschein) kurz Pause, bevor aufgedeckt werden darf
 // Auslage: bei wenigen Tieren etwas größer (mehr Platz ist zwischen Stapel und Geld nicht)
 const AUSLAGE_MAX = 1;
+const SHELF_MAX = 0.82; // v0.59: Regal über dem Geld – eine Reihe, höchstens 90 % (passt unter die Karte in der Mitte)
 const DEMO_JUB = typeof location !== 'undefined' && new URLSearchParams(location.search).has('mejub'); // Screenshot: deine Figur jubelt
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
@@ -309,6 +310,25 @@ function seatPoint(root, pid, sr, sc) {
   const fans = [...root.querySelectorAll('.fan-wrap .money.fan')].map((e) => e.getBoundingClientRect());
   if (fans.length) { const l = Math.min(...fans.map((r) => r.left)); const rr = Math.max(...fans.map((r) => r.right)); const t = Math.min(...fans.map((r) => r.top)); return { x: ((l + rr) / 2 - sr.left) / sc, y: (t + 24 - sr.top) / sc }; }
   return { x: sr.width / sc / 2, y: sr.height / sc - 38 };
+}
+// v0.59: Sprechblasen kommen aus dem Mund – unter dem Bild des Mitspielers, Zipfel nach oben zum Mund.
+// Steht das Bild rechts auf der Bühne, wächst die Blase nach links (sonst ragte sie aus dem Bildschirm).
+function mouthBubbles(root) {
+  const stage = root.querySelector('#stage');
+  if (!stage) return;
+  const sr = stage.getBoundingClientRect();
+  const sc = sr.width / stage.offsetWidth || 1;
+  root.querySelectorAll('.prow > .rbubble').forEach((b) => {
+    const pr = b.parentElement; const av = pr.querySelector('.avatar');
+    if (!av) return;
+    const a = av.getBoundingClientRect(); const r = pr.getBoundingClientRect();
+    const ax = (a.left - r.left) / sc, ay = (a.top - r.top) / sc, aw = a.width / sc;
+    const right = (a.left + a.width / 2 - sr.left) / sc > stage.offsetWidth * 0.62;
+    b.classList.add('mouth'); b.classList.toggle('rt', right);
+    b.style.top = `${Math.round(ay + aw * 0.86)}px`;
+    if (right) { b.style.left = 'auto'; b.style.right = `${Math.round(r.width / sc - ax - aw * 0.5 - 18)}px`; }
+    else { b.style.right = 'auto'; b.style.left = `${Math.round(ax + aw * 0.5 - 18)}px`; }
+  });
 }
 // Effekte mit data-aim-to / data-aim-from: Start und Ziel nach dem Zeichnen messen (kein fest eingebautes Ziel mehr)
 function aimFx(root) {
@@ -797,7 +817,7 @@ export function renderGame(root, ctx) {
       const kN = Math.max(local.sel.length, isSp ? pm.count : 0); // viele Scheine: enger fächern statt zweite Reihe
       aucCenter = payRow(`<div class="kasse side ${entered ? 'pop' : ''}">
           <div class="khead">Zahle ${isSp ? karten(pm.count) : pm.amount} → ${avatar(v.players[idxOf(pm.payee)], idxOf(pm.payee))}<b>${esc(nameOf(pm.payee))}</b></div>
-          <div class="kslots ${kN > 4 ? 'many' : ''} ${kN > 6 ? 'lots' : ''}" style="--ov:${kN > 4 ? Math.max(7, Math.ceil((kN * (kN > 6 ? 28 : 32) - 172) / (kN - 1))) : 0}px">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3, local.justAdded)}</div>
+          <div class="kslots ${kN > 4 ? 'many' : ''} ${kN > 6 ? 'lots' : ''}" style="--ov:${kN > 4 ? Math.max(7, Math.ceil((kN * (kN > 6 ? 24 : 32) - 160) / (kN - 1))) : 0}px">${chosenCards(me.money, local.sel, isSp ? Math.max(pm.count, 1) : 3, local.justAdded)}</div>
           <div class="kline"><span>${isSp ? `${karten(n)} von ${pm.count}` : `${karten(n)} · ${selSum}`}</span><b class="paystatus ${cls}">${status}</b></div>
         </div>`);
       aucLeft = `<div class="lhead">${isSp ? `${esc(aname(pm.special))}-Spezialkarte` : `Für: ${esc(aname(pm.animal))}`}</div>
@@ -1061,21 +1081,20 @@ export function renderGame(root, ctx) {
     else if (tn < hf.gainAt + 1000) { glowVals.push(...hf.gain); wakeLocal(hf.gainAt + 1010); }
     if (tn < hf.loseAt) { handMoney = [...handMoney, ...hf.lose]; wakeLocal(hf.loseAt + 10); }
   }
-  const grouped = handMoney.length > 3; // v0.57: Geld links von dir ist schmal → gleiche Scheine immer als Stapel (×2) // v0.56: Fächer ist schmaler (deine Figur steht rechts) → ab 10 Scheinen gleiche Werte stapeln (×2)
-  const fanCards = grouped ? [...new Set(handMoney)].sort((x, y) => x - y).map((val) => [val, handMoney.filter((m) => m === val).length]) : [...handMoney].sort((x, y) => x - y).map((m) => [m, 1]);
-  const nM = fanCards.length;
-  const mid = (nM - 1) / 2;
-  // beim Antippen etwas weiter auffächern, damit man auch auf kleinen Handys gut trifft
-  const step = nM > 1 ? Math.min(grouped ? 44 : 38, 200 / (nM - 1)) : 34; // v0.57: Geld links von deiner Figur // Abstand zwischen zwei Scheinen (v0.53: Fächer ist schmaler, rechts stehen deine Tiere)
+  // v0.59 „Dein Platz“: Geld als Hand mit festen Fächern – jeder Wert hat immer denselben Platz (0 … 500),
+  // fehlende Werte bleiben als blasser Platzhalter stehen, damit beim Zahlen/Bekommen nichts verrutscht
+  const SLOTS = Object.keys(MONEY_COLORS).map(Number).sort((x, y) => x - y);
+  const fanCards = SLOTS.map((val) => [val, handMoney.filter((m) => m === val).length]);
+  const mid = (SLOTS.length - 1) / 2;
   let lifted = false;
   const fan = fanCards.map(([m, cnt], i) => {
     const off = i - mid;
-    const rot = nM > 1 ? off * Math.min(6, 36 / nM) : 0;
+    const style = `--m:${MONEY_COLORS[m]};--rot:${(off * 2.5).toFixed(1)}deg;--dy:${Math.round(Math.abs(off) * 2.5)}px`;
+    if (!cnt) return `<span class="mghost" style="${style}" aria-hidden="true"><i>${m}</i></span>`;
     const lift = pickMode === 'rat' && local.ratSel === m && !lifted;
     if (lift) lifted = true;
-    const style = `--m:${MONEY_COLORS[m]};margin-left:${i ? Math.round(step - 46) : 0}px;--rot:${rot}deg;--dy:${Math.min(14, Math.abs(off) * 2.5)}px`;
     const inner = `${mIn(m)}${cnt > 1 ? `<span class="mcount">×${cnt}</span>` : ''}`;
-    const gi = glowVals.indexOf(m); const glow = gi >= 0; if (glow) glowVals.splice(gi, grouped ? glowVals.length : 1);
+    const gi = glowVals.indexOf(m); const glow = gi >= 0; if (glow) glowVals.splice(0, glowVals.length);
     if (!pickMode) return `<div class="money fan ${cnt > 1 ? 'multi' : ''} ${glow ? 'newcard' : ''}" style="${style}">${inner}</div>`;
     const label = pickMode === 'rat' ? `${m} zum Legen wählen` : `${m} ins Feld legen`;
     return `<button type="button" class="money fan pick ${cnt > 1 ? 'multi' : ''} ${lift ? 'lift' : ''}" style="${style}" data-a="${pickMode === 'rat' ? 'ratPick' : 'addv'}" data-v="${m}" aria-label="${label}"${lift ? ' aria-pressed="true"' : ''}>${inner}</button>`;
@@ -1104,9 +1123,9 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
     </div>`}</div>
-    <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)};--sc2:${Math.min(myItems.length <= 6 ? 1 : 0.7, 270 / (Math.max(1, myItems.length <= 6 ? myItems.length : Math.ceil(myItems.length / 2)) * 54)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 47)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
-    <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
+    <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum" aria-hidden="true">${sum(handMoney)}<i class="taler"></i></span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
 
   // ----- Menü oben links in der Tischecke -----
@@ -1745,7 +1764,7 @@ export function renderGame(root, ctx) {
       const pr = avatarLookup(meId); const now = Date.now(); const jub = DEMO_JUB || (local.meJubAt && now >= local.meJubAt && now < local.meJubAt + 1700);
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
       return `<div class="meplate ${pr?.shop ? 'full' : 'round'} ${jub ? 'jub' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">
-        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : avatar(me, meIdx)}</span><span class="mename">Du<b class="mesum">${sum(handMoney)}</b></span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
+        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : avatar(me, meIdx)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
@@ -1770,6 +1789,7 @@ export function renderGame(root, ctx) {
   fitAuslage(root);
   aimFly(root);
   aimFx(root);
+  mouthBubbles(root);
   seekFx(root);
   syncLoops();
   if (ctx.playSound) {
