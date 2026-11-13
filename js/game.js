@@ -40,7 +40,7 @@ const aname = (id) => (id === RAT ? 'Ratte' : ANIMAL_BY_ID[id].name);
 const ART_AKK = { hahn: 'den', gans: 'die', katze: 'die', hund: 'den', schaf: 'das', ziege: 'die', esel: 'den', schwein: 'das', kuh: 'die', pferd: 'das', [RAT]: 'die' };
 const theAnimal = (id) => `${ART_AKK[id] || 'die'} ${aname(id)}`;
 // Esel-Wurf: wann der erste Papierball fliegt, Abstand zwischen den Würfen, Flugzeit (ms ab Aufdecken)
-const ESEL_THROW_AT = 2350, ESEL_THROW_GAP = 330, ESEL_FLIGHT = 430;
+const ESEL_THROW_AT = 2450, ESEL_THROW_GAP = 360, ESEL_FLIGHT = 300;
 const PUNCH_MS = 3400; // Admin-Fähigkeit „Verprügeln“: Dauer der Animation
 // Börsen-Chaos: aktuelle Kurse des gerade gezeichneten Spiels (null = Grundwerte)
 let KURSE = null;
@@ -304,6 +304,12 @@ function seatPoint(root, pid, sr, sc) {
     const el = root.querySelector('.meplate .mefig');
     if (el) { const r = el.getBoundingClientRect(); return { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height * 0.3 - sr.top) / sc }; }
   }
+  // „@card“: Mitte der Karte in der Mitte · „@esel“: Wurfhand des Muskel-Esels (über der Karte, rechts)
+  if (pid === '@card' || pid === '@esel') {
+    const el = root.querySelector('.tcenter .aucard') || root.querySelector('.tcenter');
+    if (el) { const r = el.getBoundingClientRect(); const cx = (r.left + r.width / 2 - sr.left) / sc, cy = (r.top + r.height / 2 - sr.top) / sc, top = (r.top - sr.top) / sc;
+      return pid === '@card' ? { x: cx, y: cy } : { x: cx + 40, y: top - 2 }; }
+  }
   // „@offer“: das verdeckte Angebot in der Mitte (Kuhhandel/Rattenhandel)
   if (pid === '@pot' || pid === '@offer') {
     const el = pid === '@offer' ? root.querySelector('.tpanel .kslots') || root.querySelector('.tcenter') : root.querySelector('.potbox .pot') || root.querySelector('.tcenter');
@@ -380,6 +386,32 @@ function seekFx(root) {
     if (el < 40) return;
     w.querySelectorAll('*').forEach((n) => (n.getAnimations ? n.getAnimations() : []).forEach((a) => { try { a.currentTime = el; } catch { /* egal */ } }));
   });
+}
+
+// ---------- v0.61.1 Muskel-Esel (Alps Wunsch): klettert aus der Karte, wirft mit Wucht, klettert zurück ----------
+// eigene Zeichnung: Kopf = unser Esel-Bild, dazu trainierter Körper (Brust, Sixpack, Bizeps), rote Shorts.
+// throwDelay: wann der erste Wurf-Schwung beginnt (ms, relativ), n: Anzahl Würfe (= Spieler)
+function muscleDonkey(throwDelay, n) {
+  const F = '#AEB4BC', D = '#9AA0A8', K = '#2B2B2B', S = `stroke="${K}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+  const swing = `style="animation-delay:${throwDelay}ms;animation-iteration-count:${n}"`;
+  return `<svg class="mdonkey" viewBox="0 0 150 210" aria-hidden="true">
+    <g class="etwist" ${swing}>
+      <path d="M58 150 54 192h17l3-40M92 150l4 42H79l-3-40" fill="${F}" ${S}/>
+      <path d="M50 191h23v9H48zM77 191h23l2 9H77z" fill="#4A4248" ${S}/>
+      <path d="M68 62h16v14H68z" fill="${D}" ${S}/>
+      <path d="M30 80c8-10 24-12 46-12s38 2 46 12l-14 52c-4 8-16 12-32 12s-28-4-32-12z" fill="${F}" ${S}/>
+      <path d="M48 84c8 10 20 10 26 2M104 84c-8 10-20 10-26 2" fill="none" ${S}/>
+      <path d="M66 104h20M64 116h24M66 128h20M76 100v34" fill="none" stroke="${K}" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M50 136h52l4 24H46z" fill="#E5484D" ${S}/><path d="M50 142h52" stroke="#fff" stroke-width="3"/>
+      <g class="earm-l"><path d="M36 82c-14 4-22 16-24 30 0 6 4 8 8 6l10-18" fill="${F}" ${S}/><path d="M14 112c-4-10-2-24 6-32 6-2 12 2 10 8l-6 26" fill="${F}" ${S}/>
+        <ellipse cx="22" cy="96" rx="9" ry="7" fill="${D}" opacity=".55"/><circle cx="24" cy="76" r="9" fill="${F}" ${S}/>
+        <g class="ebills"><rect x="14" y="60" width="22" height="14" rx="2" fill="#A8D5B5" ${S} stroke-width="2"/><rect x="18" y="56" width="22" height="14" rx="2" fill="#F6D98B" ${S} stroke-width="2" transform="rotate(-12 29 63)"/></g></g>
+      ${art('esel').replace('<svg ', '<svg x="41" y="0" width="70" height="70" ')}
+      <path class="eangry" d="M58 30l12 5M94 30l-12 5" stroke="${K}" stroke-width="3.4" stroke-linecap="round"/>
+      <g class="earm-r" ${swing}><path d="M114 82c14 2 24 14 26 28l-12 4-10-14" fill="${F}" ${S}/><path d="M128 114c2 10-2 18-8 22l-8-4 6-20" fill="${F}" ${S}/>
+        <ellipse cx="128" cy="100" rx="9" ry="7" fill="${D}" opacity=".55"/><circle cx="118" cy="138" r="9" fill="${F}" ${S}/>
+        <circle class="ehandball" cx="118" cy="148" r="9" fill="#A8D5B5" ${S} stroke-width="2"/></g>
+    </g></svg>`;
 }
 
 // ---------- Börsen-Chaos: News-Karte, Kurszettel ----------
@@ -1744,11 +1776,11 @@ export function renderGame(root, ctx) {
       // und pfeffert jedem einzeln einen Papierball an den Kopf – BAM, BAM, BAM.
       if (el < 4500) {
         const BAMS = ['BAM!', 'ZACK!', 'PATSCH!', 'BAM!'];
-        effects += `<div class="eselthrow" data-aim-from="@pot" data-aim-to="@pot" style="animation-delay:${1500 - el}ms;--ty:0px;--tx:0px" aria-hidden="true"><i class="eart">${art('esel')}</i><i class="ebundle"><b></b><b></b><b></b></i></div>`;
+        effects += `<div class="eclimb" data-aim-from="@card" data-aim-to="@card" style="--ty:0px;--tx:0px" aria-hidden="true"><div class="efig" style="animation-delay:${1500 - el}ms">${muscleDonkey(ESEL_THROW_AT - 180 - el, v.players.length)}</div></div>`;
         effects += v.players.map((p, pi) => {
           const t = ESEL_THROW_AT + pi * ESEL_THROW_GAP;
           const to = p.id === meId ? '@me' : esc(p.id);
-          return `<div class="eball" data-aim-from="@pot" data-aim-to="${to}" style="animation-delay:${t - el}ms;--ty:0px;--tx:0px" aria-hidden="true"></div>`
+          return `<div class="eball" data-aim-from="@esel" data-aim-to="${to}" style="animation-delay:${t - el}ms;--ty:0px;--tx:0px" aria-hidden="true"></div>`
             + `<div class="ebam" data-aim-from="${to}" data-aim-to="${to}" style="animation-delay:${t + ESEL_FLIGHT - el}ms;--ty:0px;--tx:0px;--rot:${pi % 2 ? 9 : -8}deg" aria-hidden="true">${BAMS[pi % BAMS.length]}</div>`;
         }).join('');
       }

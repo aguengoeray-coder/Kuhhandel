@@ -3068,3 +3068,40 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .pcloud { margin-top: -24px; }
 .pcloud .plabel { top: auto; bottom: -38px; }
 .pcloud.low { margin-top: 18px; } /* Platz oben: Wolke unter das Bild, sonst ragt sie aus dem Bildschirm */
+/* ===== v0.61.1 Muskel-Esel: klettert aus der Karte, wirft jedem mit Wucht einen Papierball, klettert zurück ===== */
+.eselthrow { display: none; }
+.eclimb { position: absolute; z-index: 32; pointer-events: none; width: 160px; height: 230px; margin-top: -105px; overflow: hidden; }
+.eclimb .efig { position: absolute; left: 5px; bottom: 0; width: 150px; height: 210px; transform: translateY(105%); animation: eclimb 2.9s cubic-bezier(.3,.7,.3,1) both; }
+.eclimb .mdonkey { width: 150px; height: 210px; overflow: visible; filter: drop-shadow(0 6px 8px rgba(0,0,0,.45)); }
+@keyframes eclimb {
+  0% { transform: translateY(105%) rotate(0); }
+  /* rausklettern: ruckartig, links-rechts, wie über eine Kante */
+  6% { transform: translateY(70%) rotate(-7deg); } 11% { transform: translateY(46%) rotate(6deg); }
+  16% { transform: translateY(18%) rotate(-5deg); } 20% { transform: translateY(-6%) rotate(2deg); } 23% { transform: translateY(0) rotate(0); }
+  84% { transform: translateY(0) rotate(0); }
+  /* zurück in die Karte: kurz hochspringen, dann reinplumpsen */
+  88% { transform: translateY(-8%) rotate(-4deg); } 100% { transform: translateY(108%) rotate(6deg); }
+}
+.mdonkey .etwist { transform-box: view-box; transform-origin: 76px 200px; animation: etwist .36s ease-in-out both; animation-play-state: running; }
+@keyframes etwist { 0% { transform: rotate(-7deg) translateX(-4px); } 50% { transform: rotate(9deg) translateX(5px) scale(1.04); } 100% { transform: rotate(-7deg) translateX(-4px); } }
+.mdonkey .earm-r { transform-box: view-box; transform-origin: 116px 84px; animation: ethrowarm .36s cubic-bezier(.5,0,.2,1) both; }
+@keyframes ethrowarm { 0% { transform: rotate(-150deg); } 45% { transform: rotate(-170deg); } 62% { transform: rotate(30deg); } 100% { transform: rotate(-150deg); } }
+.mdonkey .ehandball { animation-name: ehandball; animation-duration: .36s; animation-timing-function: steps(1); animation-fill-mode: both; animation-delay: inherit; animation-iteration-count: inherit; }
+@keyframes ehandball { 0% { opacity: 1; } 55% { opacity: 0; } 85% { opacity: 1; } }
+.mdonkey .ebills { transform-box: fill-box; transform-origin: 50% 50%; animation: ebillcrump 2.9s ease-in both; animation-delay: inherit; }
+.eclimb .efig .ebills { animation-delay: inherit; }
+@keyframes ebillcrump { 0%, 24% { transform: none; } 30% { transform: scale(.55) rotate(40deg); } 34%, 100% { transform: scale(0); } }
+/* Bälle fliegen schneller und flacher – mit Wucht */
+@keyframes eball {
+  0% { opacity: 1; transform: translate(0, 0) scale(.8) rotate(0); }
+  50% { transform: translate(calc(var(--tx) * .5), calc(var(--ty) * .5 - 22px)) scale(1.1) rotate(360deg); }
+  94% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1.05) rotate(700deg); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(1.9) rotate(720deg); }
+}
+.eball { animation-duration: .3s; animation-timing-function: cubic-bezier(.4, 0, .9, .6); }
+.ebam { font-size: 22px; }
+@media (prefers-reduced-motion: reduce) { .eclimb { display: none; } }
+/* etwas kleiner, damit der Kopf auch bei 3 Spielern im Bild bleibt */
+.eclimb { width: 124px; height: 180px; margin-top: -80px; }
+.eclimb .efig { left: 3px; width: 117px; height: 164px; }
+.eclimb .mdonkey { width: 117px; height: 164px; }

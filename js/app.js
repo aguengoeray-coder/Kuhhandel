@@ -72,7 +72,7 @@ const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
 // v0.61 Admin-Fähigkeit „Verprügeln“: { from, to, at } – Animation läuft bei allen
 const punches = [];
 let lastPunchAt = 0;
-const PUNCH_COOLDOWN = 20000;
+const PUNCH_COOLDOWN = 5000; // Alp: alle 5 s darf geprügelt werden
 let lastReactAt = 0;
 const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '#B58A00', '#5B6770', '#8C3B2E'];
 // EHRLICH: euer Insider – kommt als großer Spruch mit eigenem Ton
