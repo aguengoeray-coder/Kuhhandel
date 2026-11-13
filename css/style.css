@@ -2663,7 +2663,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .chip.tradechip, .chip.card.tradechip .mcard { animation: none; }
 .chip.tradechip::after { animation: none; opacity: 0; }
 /* 3 Spieler: Stapel 10 px höher, sonst berührt er auf großen Handys deine Tierreihe (e2e turn-3sp @932×430) */
-.stage.p3 .tcenter > .deck-wrap { margin-top: -10px; }
+.stage.p3 .tcenter > .deck-wrap { margin-top: 12px; } /* v0.54.1: 3 Spieler – Überschrift sitzt tiefer, Stapel darunter (Tierreihe ist jetzt rechts) */
 /* v0.53: deine Tierreihe rechts neben dem Geldfächer → die Mitte wird höher und größer */
 .stage .fan-wrap { right: 252px; }
 .stage .auslage { left: auto; right: 54px; bottom: -14px; width: 196px; height: auto; max-height: 112px; flex-wrap: wrap-reverse; justify-content: center; align-content: flex-start; align-items: flex-end; gap: 2px 6px; }
@@ -2734,3 +2734,53 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .rc-card .mcard { width: 30px; height: 40px; }
 .rc-amt { font-size: 14px; }
 .stage:has(.bidgrid) .evcard.receipt { display: none; } /* läuft schon die nächste Versteigerung: Bieten geht vor */
+/* v0.54.1: „Zuletzt passiert“ im 💬-Menü statt als Zeile auf dem Tisch */
+.rp-last { display: flex; flex-direction: column; align-items: center; gap: 3px; margin: 2px 0 8px; }
+.rp-last small { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; opacity: .7; }
+.rp-last .evstrip, .rp-last .tlog { position: static; transform: none; max-width: 100%; white-space: normal; flex-wrap: wrap; justify-content: center; animation: none; margin: 0; }
+.rp-last .tlog { color: var(--ink); font-size: 13px; font-weight: 700; text-align: center; opacity: 1; text-shadow: none; } .rp-last .evstrip { background: #2a3550; }
+/* v0.54.1: eine Kartengröße – auch die Karte beim Umdrehen ist so groß wie Stapel und Tierkarte (vorher kleiner → „springt“) */
+.gtable .tcenter .revealcard { zoom: var(--bk); }
+.gtable .tcenter .revealcard .pcard { width: 82px; height: 112px; }
+/* Umdrehen: startet in Stapelgröße und endet in Stapelgröße (nur kurz größer beim Umdrehen) */
+@keyframes revealflip {
+  0%   { transform: scale(1) rotateY(180deg); filter: brightness(.4); }
+  40%  { transform: scale(1.06) rotateY(90deg); filter: brightness(.7); }
+  65%  { transform: scale(1.08) rotateY(0deg); filter: none; }
+  100% { transform: scale(1); }
+}
+@keyframes revealbig {
+  0%   { transform: scale(1) rotateY(180deg); }
+  12%  { transform: translate(-3px, 0) scale(1.02) rotateY(180deg); }
+  18%  { transform: translate(3px, 0) scale(1.02) rotateY(180deg); }
+  24%  { transform: translate(-3px, 0) scale(1.02) rotateY(180deg); }
+  48%  { transform: scale(1.08) rotateY(90deg); }
+  70%  { transform: scale(1.14) rotateY(0deg); }
+  100% { transform: scale(1); }
+}
+/* v0.54.1: deine Sets größer – volle Größe, solange sie passen; der 💬-Knopf rückt dafür nach oben an den Rand */
+.stage .auslage { right: 6px; width: 250px; }
+.stage .fan-wrap { right: 262px; }
+.stage .chatbtn.chat-br { bottom: 146px; right: 10px; }
+.stage.p3 .tduel, .stage.p3 .tduel.respond { margin-top: 0; } /* v0.54.1: Überschrift frei lassen */
+.stage:has(.endtable) .deck-count { visibility: hidden; } /* Spielende: das Treppchen liegt obenauf */
+.stage.p3 .tduel { translate: 8px 0; } /* nicht an „Abbrechen“ stoßen */
+/* v0.54.1 (nach Alps Rückmeldung): das Ergebnis wieder mittig als Pop-up – aber kompakt und mit Bildern statt Text */
+.evcard.receipt { left: var(--cx); top: 104px; width: 300px; gap: 6px; padding: 10px 14px 14px; border-width: 4px; border-radius: 18px; box-shadow: 0 14px 30px rgba(0,0,0,.4); }
+.evcard.receipt .ec-kind { font-size: 11px; text-align: center; }
+.evcard.receipt .ec-title { font-size: 17px; text-align: center; }
+.evcard.receipt .rc-line { gap: 10px; }
+.evcard.receipt .rc-card .mcard { width: 48px; height: 64px; border-radius: 8px; }
+.evcard.receipt .rc-p .avatar { width: 34px; height: 34px; border-width: 3px; font-size: 14px; }
+.evcard.receipt .rc-p b { font-size: 12px; max-width: 70px; }
+.evcard.receipt .rc-arr { font-size: 18px; }
+.evcard.receipt .rc-amt { font-size: 20px; }
+.evcard.receipt .rc-line.rc-cash { padding: 5px 8px; border-radius: 12px; }
+.evcard.receipt .rc-p.pot i { font-size: 26px; line-height: 34px; }
+.evcard.receipt .rc-note { font-size: 12px; }
+/* v0.54.1: „Du bist dran“ unten – statt eines am Rand abgeschnittenen Lichtkegels ein goldener Rahmen um deinen Platz
+   (Geld + Tiere), im selben Stil wie der Leuchtrahmen an den Plätzen der Mitspieler */
+.myglow { left: 184px; right: 6px; bottom: 4px; height: 86px; border-radius: 20px; background: linear-gradient(to top, rgba(255,211,78,.16), rgba(255,211,78,.03)); border: 2px solid rgba(255,211,78,.7); box-shadow: 0 0 16px 2px rgba(255,211,78,.28), inset 0 0 18px rgba(255,211,78,.15); }
+@keyframes myglowin { 0% { opacity: 0; transform: scale(.97); } 35% { opacity: 1; transform: scale(1.01); } 100% { opacity: .9; transform: scale(1); } }
+@keyframes myglow { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)); } /* im Spiel unten links – rechts unten stehen jetzt deine Sets */

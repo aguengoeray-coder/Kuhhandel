@@ -1,10 +1,14 @@
 # Änderungsprotokoll
 
-## v0.54.1 – Ruhiges Bezahlen + Quittung
+## v0.54.1 – Aufgeräumter Tisch
 
-- [x] **Bezahlen (A):** Die Tierkarte bleibt nach der Versteigerung genau an ihrem Platz (nur der „Verkauft!“-Stempel kommt dazu). Links bleibt „Haben schon“, rechts erscheint die Kasse mit „Zahle … → Name“ – dort, wo vorher das Gebot stand. Nichts springt mehr.
-- [x] **Quittung (C):** Ergebnisse von Versteigerung, Spezialkarte, Ratte und angenommenem Kuhhandel erscheinen als kleine Quittung links neben dem Stapel: Tier → wer es bekommt, darunter Geld: wer → wie viel → an wen. Der Stapel bleibt sichtbar.
-- [x] Der aufgedeckte Kuhhandel (Gebot gegen Gebot) bleibt der große Auftritt in der Mitte.
+- [x] **Bezahlen:** Die Tierkarte bleibt nach der Versteigerung genau an ihrem Platz (nur der „Verkauft!“-Stempel kommt dazu). Links bleibt „Haben schon“, rechts erscheint die Kasse „Zahle … → Name“ – dort, wo vorher das Gebot stand.
+- [x] **Ergebnis-Fenster:** wieder mittig, aber kompakt mit Bildern statt Text: Tier → wer es bekommt, darunter Geld: wer → wie viel → an wen. Der aufgedeckte Kuhhandel bleibt der große Auftritt.
+- [x] **„Zuletzt passiert“** steht nicht mehr auf dem Tisch, sondern oben im 💬-Menü (nur das letzte Ereignis – kein Verlauf).
+- [x] **Eine Kartengröße:** Stapel, Karte beim Umdrehen, Versteigerung, Ratte, Spezialkarte – alle gleich groß (vorher wurde die Karte beim Umdrehen erst kleiner, dann größer).
+- [x] **Deine Sets** in voller Größe, solange sie passen; der 💬-Knopf sitzt jetzt rechts oberhalb davon, die Versionsnummer unten links.
+- [x] **Du bist dran:** statt des abgeschnittenen Lichtkegels ein goldener Rahmen um deinen Platz (Geld + Tiere).
+- [x] 3 Spieler: Stapel und Kuhhandel-Feld ragen nicht mehr in die Überschrift (Fund von Alp). Die Browser-Tests prüfen jetzt auch die Überschrift.
 
 ## v0.54.0 – Avatare leben + Siegerehrung
 

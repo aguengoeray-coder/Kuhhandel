@@ -1089,13 +1089,13 @@ export function renderGame(root, ctx) {
   const table = `<div class="gtable">
     <div class="tbanner ${askMe || banIdx >= 0 ? 'mine' : ''} ${banFlip ? 'flip' : ''} ${local.urgeNow ? 'pulse' : ''}" ${banIdx >= 0 || banFlip ? `style="${banIdx >= 0 ? `--c:${SEAT_COLORS[banIdx]};` : ''}--fl:-${flashEl}ms"` : ''}>${banner}</div>
     ${shownHolder === meId && realHolder === meId && state.phase === 'turn' ? `<div class="myglow ${flashing ? 'in' : ''}" style="--fl:-${Math.min(flashEl, 99999)}ms" aria-hidden="true"></div>` : ''}
-    <div class="tcenter">${aucCenter || `${evStrip ? `<div class="evstrip ${stripNew}" ${stripNew ? `style="--el:${local.stripAt - Date.now()}ms"` : ''} title="${esc(lastLog)}">${evStrip}</div>` : `<div class="tlog ${stripNew}" ${stripNew ? `style="--el:${local.stripAt - Date.now()}ms"` : ''}>${esc(lastLog)}</div>`}
+    <div class="tcenter">${aucCenter || `
     <div class="deck-wrap">
       ${canDraw ? `<button type="button" class="deck go" data-a="auction" aria-label="Karte aufdecken"><span class="deckcow">${art('kuh')}</span><span class="deckgo">Tippen</span></button>`
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}</span>
     </div>`}</div>
-    <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)};--sc2:${Math.min(0.84, 190 / (Math.max(1, Math.ceil(myItems.length / 2)) * 54)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage ${myItems.length > 6 ? 'many' : ''}  ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(AUSLAGE_MAX, 410 / Math.max(1, myItems.length * (myItems.length > 6 ? 46 : 54))).toFixed(3)};--sc2:${Math.min(1, 246 / (Math.max(1, myItems.length <= 4 ? myItems.length : Math.ceil(myItems.length / 2)) * 54)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     <div class="fan-wrap ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum">${sum(handMoney)}</span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
@@ -1694,8 +1694,11 @@ export function renderGame(root, ctx) {
     const emo = list.slice(0, nE).map((r, i) => btn(r, i, 'rp-emo')).join('');
     const std = list.slice(nE, base).map((r, k) => btn(r, nE + k, 'rp-say')).join('');
     const own = list.slice(base).map((r, k) => btn(r, base + k, 'rp-say bought')).join('');
+    // v0.54.1: „Zuletzt passiert“ steht nicht mehr auf dem Tisch, sondern hier – wer es wissen will, schaut nach (nur das letzte Ereignis, kein Verlauf)
+    const last = evStrip ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="evstrip in">${evStrip}</div></div>` : lastLog ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="tlog in">${esc(lastLog)}</div></div>` : '';
     return `<div class="reactpick v2 ${self ? 'self' : ''}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
+      ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}
       <div class="rp-lbl">Sprüche</div><div class="rp-says">${std}</div>
