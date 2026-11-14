@@ -72,8 +72,13 @@ test('Layout aller Ansichten in 4 Bildschirmgrößen', { timeout: 15 * 60 * 1000
         await page.waitForTimeout(400);
         const found = [...await page.evaluate(pageChecks), ...await page.evaluate(tableOverlaps)];
         if (pg.scene) {
-          const theater = await page.evaluate(() => ({ count: document.querySelectorAll('.theater-actor').length, sizes: [...document.querySelectorAll('.theater-figure')].map((e) => [Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)]), title: !!document.querySelector('.theater-title') }));
-          if (!theater.title || theater.count !== pg.players || theater.sizes.some((z) => z[0] !== 72 || z[1] !== 120)) found.push({ art: 'figuren-theater', stufe: 'fehler', ziel: pg.scene, text: JSON.stringify(theater) });
+          const theater = await page.evaluate(() => {
+            const figures = [...document.querySelectorAll('.theater-figure')];
+            const rects = figures.map((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return { width: r.width, height: r.height, cssWidth: cs.width, cssHeight: cs.height }; });
+            const sameRenderedSize = rects.every((r) => Math.abs(r.width - rects[0]?.width) < 1 && Math.abs(r.height - rects[0]?.height) < 1);
+            return { count: document.querySelectorAll('.theater-actor').length, rects: rects.map((r) => [Math.round(r.width), Math.round(r.height)]), cssSizes: rects.map((r) => [r.cssWidth, r.cssHeight]), sameRenderedSize, title: !!document.querySelector('.theater-title') };
+          });
+          if (!theater.title || theater.count !== pg.players || !theater.sameRenderedSize || theater.cssSizes.some((z) => z[0] !== '72px' || z[1] !== '120px')) found.push({ art: 'figuren-theater', stufe: 'fehler', ziel: pg.scene, text: JSON.stringify(theater) });
         }
         for (const e of errs) found.push({ art: 'js-fehler', stufe: 'fehler', ziel: 'Konsole', text: e.slice(0, 160) });
         page.off('pageerror', onErr); page.off('console', onCon);
