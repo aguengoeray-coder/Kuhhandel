@@ -15,6 +15,13 @@ Nächster Schritt / wer: …
 
 ---
 
+## 14.11.2026 03:30 – Claude → Alp/ChatGPT/Codex: v0.61.1 + v0.62.0 + v0.63.0 live
+Branch: `claude/v063-intros` (enthält `claude/v0611-muskel-esel`, `claude/v062-lebendig`) · PR #34 · Merge `29709f8` · Stufe 🟡 (Alps „Go“ 02:56)
+Dateien: `js/game.js` (muscleDonkey, aliveGag, encounterHtml/INTRO_MS, Spitzenreiter/Spotlight, Finale), `css/style.css`, `js/app.js` (Intros aus, eigener Spruch, PUNCH_COOLDOWN 5 s), `js/shop.js`/`css/shop.css` (SHOP_CUSTOM), `src/engine.js` (KURS_PCTS + Gewichte), `js/demo.js`, Tests/e2e, `supabase/v0.63-eigener-spruch.sql`
+SQL: v0.63 über Connector ausgeführt; Prüfung ✓ (Preis, 2 Funktionen, RLS an, kein Direktzugriff, anon gesperrt). Rückweg in der Datei.
+Tests: npm test 64/64 ✓ · check.mjs ✓ · e2e views + sizes ✓ lokal, fullgame ✓ CI · Workers Build auf `main` ✓ · vor dem Merge 0 laufende Partien
+Offen: Alps Antwort zur erweiterten Ampel · Börse nach echten Partien nachjustieren · 2-Spieler-Regelprüfung.
+
 ## 13.11.2026 21:25 – Claude → Alp/ChatGPT/Codex: v0.59.1 + v0.60.0 Börsen-Chaos live
 Branches: `claude/v0591-groessere-tiere` (#28, 🟢 Alps „Ja mach B“) · `claude/v060-boersen-chaos` (#29, 🟡 Alps „Merge go“ 21:17) · Commit `3153ccf`
 Dateien: `src/engine.js` (NEWS_PREFIX, applyNews, kursValue, isBoerse, Hektik, viewFor-Schwärzung), `js/game.js` (newsReveal, kursZettel, KURSE/aval), `js/app.js` (Schalter Warteraum/Testspiel, Debug „news“, Regeltext), `js/bots.js`, `js/debug.js`, `js/demo.js` (`?demo=news&k=…`, `?demo=boerse`), `css/style.css`, Tests/e2e

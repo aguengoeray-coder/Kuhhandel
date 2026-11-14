@@ -9,14 +9,18 @@ Stand: 13.11.2026, 21:25 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.60.0** – Merge-Commit `3153ccf` (#29 Börsen-Chaos); Cloudflare-Build erfolgreich |
+| Live-Version (`main`) | **v0.63.0** – Merge-Commit `29709f8` (#34); Cloudflare-Build erfolgreich |
 | In Arbeit | – |
 | Nächste Versionen | 2-Spieler-Modus (Regelprüfung zuerst) · Börsen-Chaos nach ersten echten Partien nachjustieren |
-| Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.58-neue-charaktere.sql` (Alp im SQL-Editor, Prüfabfrage 13.11. 15:58 ✓) |
+| Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.63-eigener-spruch.sql` (Claude über Connector 14.11., Prüfabfrage + Advisors ✓); davor `v0.60-admin-nur-angemeldet.sql`, `v0.61-emote-pruegel.sql` (Claude) |
 
 ### Zuletzt live gegangen
 | Version | Inhalt | PR |
 |---|---|---|
+| v0.63.0 | Duell-Intros (Kuhhandel/Rattenhandel/SSS/Spielstart), Spitzenreiter-Krone, „Letzte Karte!“, Finale (Ende nicht überspringbar), Shop „Eigener Spruch“, Kursrallye/-sturz zufällig 30–100 % (Sturz meist stärker) | #34 |
+| v0.62.0 | Figuren springen aus dem Profilbild (Jubel, Pleite, Prügeln), Ratte, Quartett-Polonaise, Kuhhandel-Koffer | #34 |
+| v0.61.x | Emote „Verprügeln“ (Shop, Admin immer, 5 s Pause), Muskel-Esel klettert aus der Karte | #33, #34 |
+| v0.60.1 | Esel zerknüllt die Bonus-Scheine und wirft sie jedem zu | #32 |
 | v0.60.0 | Börsen-Chaos: neue Spielart mit 8 Börsen-News (Kursrallye/-sturz, Dividende, Steuerprüfung, Marktpanik, Hektik), Kurszettel | #29 |
 | v0.59.1 | Mitte −22 %, Tiere im Regal bis 118 % | #28 |
 | v0.59.0 | Dein Platz: Tier-Regal über dem Geld, Hand mit festen Fächern + Summe, Figur rechts groß mit Leuchten, Sprechblasen aus dem Mund | #26 |
@@ -34,7 +38,7 @@ Stand: 13.11.2026, 21:25 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | PR / Branch | Owner | Stufe | Status |
 |---|---|---|---|
-| `claude/doku-v060` | Claude | 🟢 | Diese Doku-Aktualisierung. |
+| `claude/doku-v063` | Claude | 🟢 | Diese Doku-Aktualisierung. |
 | `ai/auftraege` | Codex/Claude | – | Ersetzt durch Abschnitt 5; löschen nur mit Alps Okay. |
 | alte Feature-Branches | – | 🔴 | Alle in `main`. Aufräumen nur mit Alps Okay. |
 
@@ -56,8 +60,7 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 ## 4. Offene Fehler / Risiken
 
 - Restrisiko Dublonen: Schummeln innerhalb einer echten Partie (Tagesgrenze 60 begrenzt den Schaden); Stufe 2 = Züge über den Worker (siehe `supabase/v0.55-sicherheit-vorschlag.md`).
-- Supabase-Advisors (angeboten, wartet auf Alps „ja“): `anon`-Ausführrecht der `admin_*`-Funktionen entziehen, Schutz vor geleakten Passwörtern einschalten.
-- Supabase-Connector war am 13.11. nachmittags getrennt → SQL v0.58 hat Alp selbst ausgeführt.
+- Supabase-Advisors: `admin_*` für anon gesperrt (v0.60-SQL ✓). Noch 9 anon-ausführbare Funktionen (join_game, my_pin, save_push … – teils gewollt, Prüfung angeboten). Schutz vor geleakten Passwörtern = Dashboard-Schalter (Alp).
 - Branch-Schutz für `main` noch nicht eingerichtet (🔴, Alp; Anleitung in `AI_HANDOFF_ARCHIV.md`).
 - 8 Demos laufen nicht mit `?p=3` (nur Demo-Grenze).
 
@@ -67,6 +70,7 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 |---|---|---|
 | v0.52–v0.59 | Avatare, größere Karten, Siegerehrung, Dublonen für alle, Platz am Tisch, neue Charaktere | ✅ live |
 | v0.60 | Börsen-Chaos | ✅ live |
+| v0.61–v0.63 | Emote Verprügeln, lebendige Figuren + Gags, Duell-Intros, Finale, eigener Spruch | ✅ live |
 | nächste | 2-Spieler-Modus (Originalregeln prüfen, Vorschlag an Alp) | 🟡 |
 | später | Erfolge + Saison-Rangliste (SQL), Zuschauen, Zug-Zeitlimit mit Bot-Vertretung, Shop: Tischdesigns/Kartenrücken | – |
 
@@ -83,7 +87,8 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 
 ## 7. Freigaben, die noch von Alp gebraucht werden
 
-- Supabase-Advisors: `anon` von `admin_*` entziehen + Passwort-Leak-Schutz – „ja“?
+- Erweiterte Ampel (Vorschlag 14.11.: Animationen/Layout/Balance-Feinschliff → 🟢) – „ja“?
+- Restliche 9 anon-Funktionen prüfen lassen? Passwort-Leak-Schutz im Dashboard einschalten.
 - 2-Spieler-Regeln absegnen (Vorschlag folgt).
 - Branch-Schutz für `main` selbst einrichten.
 - Alte, gemergte Branches löschen lassen? (Liste auf Wunsch.)
