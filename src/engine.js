@@ -30,8 +30,13 @@ export function auctionBidMs(state) { if (state && state.auction && state.auctio
 export const NEWS_PREFIX = 'news-';
 export const HEKTIK_MS = 5000;          // Hektik: Versteigerungen nur 5 s
 export const HEKTIK_COUNT = 3;          // … die nächsten 3
-export const KURS_STEP = 50;            // Kurssturz −50 % (stapelbar, nie unter 0); alte Rallye-Karten ohne Zahl = +50 %
-export const RALLYE_MIN = 30, RALLYE_MAX = 100; // v0.63: Kursrallye zufällig +30 … +100 % (10er-Schritte, beim Mischen ausgelost)
+export const KURS_STEP = 50;            // alte Karten ohne Zahl (laufende Partien): ±50 %
+// v0.63: Kursrallye/Kurssturz zufällig 30 … 100 % (10er-Schritte, beim Mischen ausgelost, stapelbar, nie unter 0).
+// Gewichtet: Rallye meist klein (Ø 52 %), Sturz meist groß (Ø 68 %) – die Börse schadet eher, als dass sie hilft.
+export const KURS_PCTS = [30, 40, 50, 60, 70, 80, 90, 100];
+export const RALLYE_WEIGHTS = [4, 4, 3, 2, 2, 1, 1, 1];
+export const CRASH_WEIGHTS = [1, 1, 1, 2, 2, 3, 4, 4];
+export const RALLYE_MIN = 30, RALLYE_MAX = 100;
 export const DIVIDENDE = 50;
 export const isNewsCard = (card) => typeof card === 'string' && card.startsWith(NEWS_PREFIX);
 export function isBoerse(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.boerse && !st.turbo); }
@@ -51,8 +56,8 @@ export function kursValue(animal, kurse) {
 function newsCards(seed) {
   const r = rng(seed ^ 0x5eed);
   const pick = () => ANIMALS[Math.floor(r() * ANIMALS.length)].id;
-  const up = () => RALLYE_MIN + 10 * Math.floor(r() * ((RALLYE_MAX - RALLYE_MIN) / 10 + 1));
-  return [`rallye-${pick()}-${up()}`, `rallye-${pick()}-${up()}`, `crash-${pick()}`, `crash-${pick()}`, 'dividende', 'steuer', 'panik', 'hektik'].map((x) => NEWS_PREFIX + x);
+  const pct = (w) => { let x = r() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { x -= w[i]; if (x < 0) return KURS_PCTS[i]; } return KURS_PCTS.at(-1); };
+  return [`rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, 'dividende', 'steuer', 'panik', 'hektik'].map((x) => NEWS_PREFIX + x);
 }
 
 export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler

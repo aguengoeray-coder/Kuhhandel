@@ -6,7 +6,7 @@
 - [x] Antippen überspringt; ab dem 3. Duell desselben Paares nur noch kurz; im Menü „Intros aus“. Unter jeder Figur ihr Spruch, Duell-Zähler, Erzrivalen bekommen Flammen. Der Kuhhandel-Timer startet erst nach dem Intro.
 - [x] „Letzte Karte!“ – Spotlight, wenn der Stapel leer wird · „Neuer Spitzenreiter!“ – Krone fliegt zum neuen Führenden.
 - [x] Spielende läuft für alle gemeinsam ab und lässt sich nicht mehr überspringen: Punkte zählen, Trommelwirbel „Und der Sieger ist …“, dann Siegertreppchen.
-- [x] Börsen-Chaos: **Kursrallye** jetzt zufällig +30 … +100 % (Kurssturz bleibt −50 %).
+- [x] Börsen-Chaos: **Kursrallye** zufällig +30 … +100 % (meist klein), **Kurssturz** zufällig −30 … −100 % (meist kräftig) – die Börse schadet eher, als dass sie hilft.
 - [x] Verprügeln: das Profilbild des Prüglers ist leer, solange seine Figur unterwegs ist (bei allen Mitspielern).
 - [x] Shop: **Eigener Spruch** (50 Dublonen) – selbst ausdenken, max. 40 Zeichen, jederzeit änderbar (SQL `supabase/v0.63-eigener-spruch.sql`).
 
