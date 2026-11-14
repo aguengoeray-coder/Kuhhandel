@@ -87,7 +87,6 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 
 ## 7. Freigaben, die noch von Alp gebraucht werden
 
-- Erweiterte Ampel (Vorschlag 14.11.: Animationen/Layout/Balance-Feinschliff → 🟢) – „ja“?
 - Restliche 9 anon-Funktionen prüfen lassen? Passwort-Leak-Schutz im Dashboard einschalten.
 - 2-Spieler-Regeln absegnen (Vorschlag folgt).
 - Branch-Schutz für `main` selbst einrichten.

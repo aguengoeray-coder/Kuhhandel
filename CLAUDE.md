@@ -8,7 +8,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 1. **Nie direkt auf `main` hochladen.** Alles auf `main` geht über Cloudflare sofort live.
    Jede Änderung kommt auf einen eigenen Zweig (z. B. `nico/gebote-anzeige`) bzw. als Pull Request.
 2. **Erst zeigen, dann live:** Screenshots der Änderung schicken. Ob vor oder nach dem Merge, regelt die **Ampel**
-   (siehe unten): 🟢 Feinschliff/Bugfix → KI mergt bei grünen Tests und zeigt danach; 🟡 Neues → erst Alps Go; SQL führt Claude über den Supabase-Connector aus (Regel 7); 🔴 Löschen/Secrets → nur Alp.
+   (siehe unten): 🟢 Feinschliff/Bugfix/Animationen/Layout/Balance → KI mergt bei grünen Tests und zeigt danach; 🟡 neue Regeln/Spielarten/Shop → erst Alps Go; SQL führt Claude über den Supabase-Connector aus (Regel 7); 🔴 Löschen/Secrets → nur Alp.
 3. **Bei Fragen erst prüfen und berichten**, nicht sofort umbauen.
 4. **Kleine, abgeschlossene Schritte.** Vorher absprechen, wer woran arbeitet – nicht gleichzeitig dieselbe Datei umbauen.
 5. **Änderungsprotokoll pflegen:** Jede Version bekommt einen Eintrag in `CHANGELOG.md` (Checkliste, kurz und verständlich).
@@ -109,12 +109,12 @@ Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …)
 4. Nach jeder Arbeitseinheit passende Tests ausführen, `PROJECT_STATUS.md` aktualisieren und einen datierten Handoff-Eintrag mit Branch, Commit, Dateien, Tests und offenen Punkten ergänzen.
 5. Nur auf dem eigenen Branch committen. Merge nach der **Ampel** unten.
 
-## Ampel: wer darf mergen? (von Alp am 13.11.2026 freigegeben)
+## Ampel: wer darf mergen? (von Alp am 13.11.2026 freigegeben, am 14.11.2026 erweitert)
 
 | Stufe | Was | Ablauf |
 |---|---|---|
-| 🟢 Grün | Bugfixes, Layout-/Design-Feinschliff, Tests, Doku, kleine Effekte – **und alles, wofür Alp ausdrücklich „ja“/„Go“ gesagt hat** | KI mergt selbst, sobald `npm test`, `node scripts/check.mjs` und die GitHub-Prüfungen (test, e2e, Workers Build) auf dem PR-Kopf grün sind. Danach Bericht mit Screenshots an Alp. |
-| 🟡 Gelb | Neue Features, Regeländerungen, neue Spielarten, alles rund um Shop/Dublonen | Erst Screenshots + Testergebnisse, dann auf Alps „Merge-Go #PR“ warten. |
+| 🟢 Grün | Bugfixes, Tests, Doku; **neue Animationen, Gags, Effekte, Sounds**; **Bedienung und Layout** (auch größere Umbauten am Tisch); **Balance-Feinschliff an bestehenden Regeln** (Zeiten, Prozentwerte, Gewichtungen) – **und alles, wofür Alp ausdrücklich „ja“/„Go“ gesagt hat** | KI mergt selbst, sobald `npm test`, `node scripts/check.mjs` und die GitHub-Prüfungen (test, e2e, Workers Build) auf dem PR-Kopf grün sind und niemand spielt. Danach Bericht mit Screenshots an Alp. Kleinkram zu einem Update bündeln statt oft am Tag live zu gehen. |
+| 🟡 Gelb | Neue Spielarten, echte Regeländerungen (was man tun darf, wie gewertet wird), alles rund um Shop/Dublonen/Preise | Erst Screenshots + Testergebnisse, dann auf Alps „Merge-Go #PR“ warten. |
 | 🟡 SQL | Schema-/Funktions-Änderungen per SQL-Datei | Claude führt sie über den Supabase-Connector aus (Datei im Repo, lokal getestet, Rückweg-Befehl notiert), nachdem die App-Version gemergt ist; danach Prüfabfrage + Advisors + Bericht. |
 | 🔴 Rot | Daten oder Konten löschen, Secrets, Branch-Schutz-Einstellungen | Immer mit Alp. |
 
