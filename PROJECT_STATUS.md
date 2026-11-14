@@ -10,7 +10,7 @@ Stand: 14.11.2026 · Arbeitsstand ChatGPT · Repository `aguengoeray-coder/Kuhha
 | | |
 |---|---|
 | Live-Version (`main`) | **v0.63.1** – Merge-Commit `a9c2247` (#37); CI-Merge laut GitHub-Commit erfolgt |
-| In Arbeit | **v0.64.0 Figuren-Theater** – Branch `chatgpt/v064-figuren-theater`; CI und visuelle Prüfung noch ausstehend |
+| In Arbeit | **v0.64.0 Figuren-Theater** – Branch `chatgpt/v064-figuren-theater`; Browser-Tests nach erster Runde mit 32 Befunden; Testlogik und kleine Dock-Überlappung korrigiert, erneuter CI-Lauf ausstehend |
 | Nächste Versionen | 2-Spieler-Modus (Regelprüfung zuerst) · Börsen-Chaos nach ersten echten Partien nachjustieren |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.63-eigener-spruch.sql` (Claude über Connector 14.11., Prüfabfrage + Advisors ✓); davor `v0.60-admin-nur-angemeldet.sql`, `v0.61-emote-pruegel.sql` (Claude) |
 
