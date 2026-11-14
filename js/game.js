@@ -40,7 +40,8 @@ const aname = (id) => (id === RAT ? 'Ratte' : ANIMAL_BY_ID[id].name);
 const ART_AKK = { hahn: 'den', gans: 'die', katze: 'die', hund: 'den', schaf: 'das', ziege: 'die', esel: 'den', schwein: 'das', kuh: 'die', pferd: 'das', [RAT]: 'die' };
 const theAnimal = (id) => `${ART_AKK[id] || 'die'} ${aname(id)}`;
 // Esel-Wurf: wann der erste Papierball fliegt, Abstand zwischen den Würfen, Flugzeit (ms ab Aufdecken)
-const ESEL_THROW_AT = 2450, ESEL_THROW_GAP = 360, ESEL_FLIGHT = 300;
+// v0.63.1: Zeiten ab dem Moment, in dem die Karte offen liegt – erst sieht man nur die Karte, dann klettert er raus
+const ESEL_CLIMB_AT = 700, ESEL_THROW_AT = ESEL_CLIMB_AT + 950, ESEL_THROW_GAP = 360, ESEL_FLIGHT = 300, OUCH_MS = 1100;
 const PUNCH_MS = 3400; // Admin-Fähigkeit „Verprügeln“: Dauer der Animation
 // Börsen-Chaos: aktuelle Kurse des gerade gezeichneten Spiels (null = Grundwerte)
 let KURSE = null;
@@ -299,6 +300,10 @@ function aimFly(root) {
 
 // Wo sitzt jemand auf der Bühne? Mitspieler: Mitte ihres Bildes am Platz · du: dein Geld unten (sonst unten Mitte)
 function seatPoint(root, pid, sr, sc) {
+  // Spieler-IDs werden erst beim Zeichnen in „@me“ übersetzt – so stimmt die Richtung auch nach einem Sicht-Wechsel (Debug)
+  const meNow = root.dataset ? root.dataset.me : null;
+  if (meNow && pid === meNow) pid = '@me';
+  if (meNow && pid === `@near:${meNow}`) pid = '@near:@me';
   // „@pot“: der Topf in der Mitte (Rattenrunde) – ist er schon weg, die Tischmitte
   if (pid === '@me') {
     const el = root.querySelector('.meplate .mefig');
@@ -306,7 +311,7 @@ function seatPoint(root, pid, sr, sc) {
   }
   // „@card“: Mitte der Karte in der Mitte · „@esel“: Wurfhand des Muskel-Esels (über der Karte, rechts)
   if (pid === '@card' || pid === '@esel') {
-    const el = root.querySelector('.tcenter .aucard') || root.querySelector('.tcenter .bigcard') || root.querySelector('.tcenter');
+    const el = root.querySelector('.tcenter .aucard') || root.querySelector('.tcenter .revealcard') || root.querySelector('.tcenter .bigcard') || root.querySelector('.tcenter');
     if (el) { const r = el.getBoundingClientRect(); const cx = (r.left + r.width / 2 - sr.left) / sc, cy = (r.top + r.height / 2 - sr.top) / sc, top = (r.top - sr.top) / sc;
       return pid === '@card' ? { x: cx, y: cy } : { x: cx + 60, y: top + 40 }; }
   }
@@ -370,6 +375,11 @@ function aimFx(root) {
       const a = seatPoint(root, f.dataset.aimFrom, sr, sc);
       f.style.left = `${Math.round(a.x - f.offsetWidth / 2 + (Number(f.dataset.aimFdx) || 0))}px`;
       f.style.top = `${Math.round(a.y - f.offsetHeight / 2)}px`;
+      if (f.classList.contains('epay')) { // Betrag nie über den Rand hinaus (Plätze ganz links/oben)
+        const w = f.offsetWidth, h = f.offsetHeight, W = stage.offsetWidth, Hh = stage.offsetHeight;
+        f.style.left = `${Math.round(Math.max(w / 2 + 6, Math.min(W - w / 2 - 6, parseFloat(f.style.left))))}px`;
+        f.style.top = `${Math.round(Math.max(h / 2 + 6, Math.min(Hh - h / 2 - 6, parseFloat(f.style.top))))}px`;
+      }
     }
     const b = seatPoint(root, f.dataset.aimTo, sr, sc);
     // Bezugspunkt: Mitte des Elements (bei „center“ ist es schon per translate(-50%,-50%) mittig gesetzt)
@@ -421,9 +431,17 @@ function seekFx(root) {
 
 // ---------- v0.63 Encounter-Intro („VS“): Farbflächen + Figuren sliden rein, VS-Knall, dann weiter ----------
 // Reine Anzeige (keine Spiellogik). parts: [{ fig, name, color, tag }], 2–n Teilnehmer; Aufteilung in schräge Bänder.
-export const INTRO_MS = 1500, INTRO_SHORT_MS = 750;
+// v0.63.1 (Alp): länger zum Anschauen – Kuhhandel 2 s, Spielstart 3 s; kurze Fassung ab dem 3. Duell desselben Paares
+export const INTRO_MS = 2000, INTRO_START_MS = 3000, INTRO_SHORT_MS = 900;
+// „Test 1 will die Kuh von Test 2“ – Artikel/Plural je Tier (Akkusativ)
+const TIER_AKK = { hahn: ['den', 'deinen', 'Hahn', 'Hähne'], gans: ['die', 'deine', 'Gans', 'Gänse'], katze: ['die', 'deine', 'Katze', 'Katzen'], hund: ['den', 'deinen', 'Hund', 'Hunde'], schaf: ['das', 'dein', 'Schaf', 'Schafe'], ziege: ['die', 'deine', 'Ziege', 'Ziegen'], esel: ['den', 'deinen', 'Esel', 'Esel'], schwein: ['das', 'dein', 'Schwein', 'Schweine'], kuh: ['die', 'deine', 'Kuh', 'Kühe'], pferd: ['das', 'dein', 'Pferd', 'Pferde'], ratte: ['die', 'deine', 'Ratte', 'Ratten'] };
+export function wantText(who, whom, animal, count, meIsWho, meIsWhom) {
+  const a = TIER_AKK[animal] || ['das', 'dein', animal, animal];
+  const obj = count > 1 ? (meIsWhom ? `deine ${count} ${a[3]}` : `${count} ${a[3]}`) : (meIsWhom ? `${a[1]} ${a[2]}` : `${a[0]} ${a[2]}`);
+  return meIsWho ? `Du willst ${obj} von ${whom}` : meIsWhom ? `${who} will ${obj}` : `${who} will ${obj} von ${whom}`;
+}
 const INTRO_DIRS = { 2: ['lt', 'rb'], 3: ['l', 't', 'r'], 4: ['l', 't', 'b', 'r'] };
-function encounterHtml({ parts, title, badge = '', center = '', vs = 'VS', sub = '', short = false, rival = false, dark = false }) {
+function encounterHtml({ parts, title, badge = '', center = '', vs = 'VS', sub = '', short = false, rival = false, dark = false, ms = 0 }) {
   const n = parts.length; const slant = n === 2 ? 11 : 6;
   const b = (k, top) => (k <= 0 ? 0 : k >= n ? 100 : (k / n) * 100 + (top ? slant : -slant));
   const dirs = INTRO_DIRS[n] || parts.map((_, i) => (i % 2 ? 'b' : 't'));
@@ -433,11 +451,13 @@ function encounterHtml({ parts, title, badge = '', center = '', vs = 'VS', sub =
     return `<div class="eiband d-${dirs[i]}" style="--c:${p.color};clip-path:${poly};--k:${i}"><i class="eilines"></i></div>
       <div class="eiwho d-${dirs[i]}" style="left:${cx}%;--k:${i};--c:${p.color}"><div class="eifig">${p.fig}</div><b class="einame">${esc(p.name)}</b>${p.tag ? `<small class="eitag">„${esc(p.tag)}“</small>` : ''}</div>`;
   }).join('');
-  return `<div class="eintro n${n} ${vs.length > 5 ? 'longvs' : ''} ${short ? 'short' : ''} ${dark ? 'dark' : ''} ${rival ? 'rival' : ''}" data-a="introSkip" role="button" aria-label="${esc(title)} – Tippen überspringt" style="--dur:${short ? INTRO_SHORT_MS : INTRO_MS}ms">
+  return `<div class="eintro n${n} ${vs.length > 5 ? 'longvs' : ''} ${short ? 'short' : ''} ${dark ? 'dark' : ''} ${rival ? 'rival' : ''}" data-a="introSkip" role="button" aria-label="${esc(title)} – Tippen überspringt" style="--dur:${introDur({ short, ms })}ms">
     ${bands}<i class="eiflash"></i>
     <div class="eititle"><b>${esc(title)}</b>${badge ? `<span class="eibadge">${esc(badge)}</span>` : ''}</div>
     <div class="eivs">${rival ? '<i class="eiflame"></i>' : ''}<b>${esc(vs)}</b>${center}${sub ? `<small class="eisub">${esc(sub)}</small>` : ''}</div></div>`;
 }
+
+const introDur = (o) => (o.short ? INTRO_SHORT_MS : o.ms || INTRO_MS);
 
 // ---------- v0.62 „Profilbild wird lebendig“ ----------
 // Standard-Körper für alle ohne Shop-Avatar: einfacher Körper in Platzfarbe, das runde Profilbild ist der Kopf
@@ -521,6 +541,10 @@ export function renderGame(root, ctx) {
   const MOTH = '<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M20 12C14 2 4 0 2 6s6 10 16 8C10 18 6 24 12 24s8-6 8-10c0 4 2 10 8 10s2-6-6-10c10 2 18-2 16-8S26 2 20 12z" fill="#B9B1A3" stroke="#3a332c" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 8v10" stroke="#3a332c" stroke-width="2.4" stroke-linecap="round"/></svg>';
   // Profilbild ist „leer“, solange die Figur draußen ist (Platz bekommt Klasse .out)
   const outMark = (pid, from, until) => { local.out = local.out || {}; const o = local.out[pid]; local.out[pid] = { from: o && o.until > Date.now() ? Math.min(o.from, from) : from, until: Math.max(o && o.until > Date.now() ? o.until : 0, until) }; wakeLocal(from); wakeLocal(until + 20); };
+  // v0.63.1 „Aua“: Getroffener hält sich kurz den Kopf (Profilbild bzw. deine Figur bekommt Klasse .ouch)
+  const ouchMark = (pid, from, until) => { local.ouch = local.ouch || {}; const o = local.ouch[pid]; if (o && o.from === from) return; local.ouch[pid] = { from, until }; wakeLocal(from); wakeLocal(until + 20); };
+  const ouchOn = (pid) => { const o = local.ouch && local.ouch[pid]; return !!(o && o.from <= Date.now() && Date.now() < o.until); };
+  const OUCH = '<i class="ouchh l" aria-hidden="true"></i><i class="ouchh r" aria-hidden="true"></i><i class="ouchs" aria-hidden="true">💫</i>';
   // aliveGag: el = schon vergangene Zeit, delay = Start später (ms), raw = ohne eigene Vorspul-Hülle (für keepFx)
   const aliveGag = (pid, kind, el, dur, delay = 0, raw = false) => {
     if (idxOf(pid) < 0) return '';
@@ -537,7 +561,7 @@ export function renderGame(root, ctx) {
   const beast = (id, cls = '', inner = '') => `<div class="beast ${cls}" style="--a:${ANIMAL_COLORS[id] || '#888'}"><i class="blegs"><b></b><b></b></i><i class="bhead">${art(id)}</i>${inner}</div>`;
   // v0.61 Prügel-Animation (Comic, keine echte Gewalt): Laufen → Staubwolke mit POW/BAM → zurück
   const punchFx = (pu) => {
-    const src = pu.from === meId ? '@me' : esc(pu.from); const dst = pu.to === meId ? '@me' : esc(pu.to);
+    const src = esc(pu.from); const dst = esc(pu.to); // '@me' wird erst in seatPoint aufgelöst
     const pr = avatarLookup(pu.from);
     const fig = figOf(pu.from);
     outMark(pu.from, pu.at, pu.at + PUNCH_MS);
@@ -683,10 +707,10 @@ export function renderGame(root, ctx) {
     if (isMe) return said ? `<div class="mebubble ${state.phase === 'payment' || state.phase === 'trade' || state.phase === 'rat' || local.tradeOpen ? 'up' : ''}">${bubble}</div>` : '';
     const laidN = state.phase === 'rat' ? (v.rat.laid[p.id] || 0) : 0;
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
-    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
+    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
-        ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}${avatar(p, i)}
+        ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}${avatar(p, i)}${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}</span>` : status}</span></div>
       </div>
       <div class="chips" data-a="reactTo" data-v="${esc(p.id)}">${chips}</div>
@@ -1613,7 +1637,7 @@ export function renderGame(root, ctx) {
   }
   if (entered && state.phase === 'auction') {
     sounds.push('flip');
-    if (v.lastEvent?.type === 'donkey') { later.push(['crumple', 1850]); v.players.forEach((_, pi) => later.push(['thud', ESEL_THROW_AT + pi * ESEL_THROW_GAP + ESEL_FLIGHT - 20])); later.push(['coins', ESEL_THROW_AT + v.players.length * ESEL_THROW_GAP + ESEL_FLIGHT]); }
+    if (v.lastEvent?.type === 'donkey') { const sh = auction.opensAt != null ? Math.max(0, auction.opensAt - ctx.now()) : 0; later.push(['crumple', sh + ESEL_CLIMB_AT + 350]); v.players.forEach((_, pi) => later.push(['thud', sh + ESEL_THROW_AT + pi * ESEL_THROW_GAP + ESEL_FLIGHT - 20])); later.push(['coins', sh + ESEL_THROW_AT + v.players.length * ESEL_THROW_GAP + ESEL_FLIGHT]); }
     const VOICE = { kuh: 'muh', esel: 'iah', hahn: 'kikeriki' };
     if (aval(auction.animal) >= 650) { sounds.push('drum'); later.push(['glitz', 1050]); } // teure Karte: Trommelwirbel, nach dem Umdrehen Glitzern
     if (VOICE[auction.animal]) later.push([VOICE[auction.animal], 1350]);
@@ -1724,7 +1748,7 @@ export function renderGame(root, ctx) {
     if (local.introKey === key) return 0;
     local.introKey = key;
     if (ctx.introsOff) return 0;
-    const dur = opts.short ? INTRO_SHORT_MS : INTRO_MS;
+    const dur = introDur(opts);
     keepFx(encounterHtml(opts), dur, 'intro');
     if (sfx) { sounds.push('flip'); later.push(['flip', 140]); later.push(['gavel', opts.short ? 320 : 700]); if (!opts.short) feel('heavy'); }
     return dur;
@@ -1742,7 +1766,7 @@ export function renderGame(root, ctx) {
       const dur = playIntro(key, {
         parts: [partOf(t.challenger), partOf(t.target)],
         title: rat ? 'RATTENHANDEL!' : 'KUHHANDEL!', dark: rat,
-        center: `<span class="eicard" style="--a:${ANIMAL_COLORS[t.animal] || '#888'}">${art(t.animal)}</span><span class="eium">um ${t.count}×</span>`,
+        center: `<span class="eicard" style="--a:${ANIMAL_COLORS[t.animal] || '#888'}">${art(t.animal)}</span><span class="eium">${esc(wantText(v.players[idxOf(t.challenger)]?.name || '?', v.players[idxOf(t.target)]?.name || '?', t.animal, t.count, t.challenger === meId, t.target === meId))}</span>`,
         sub: nth > 1 ? `${nth}. Duell heute · ${w[t.challenger] || 0}:${w[t.target] || 0}` : '',
         short: nth >= 3, rival: nth >= 3 && nth === maxPair,
       });
@@ -1754,12 +1778,12 @@ export function renderGame(root, ctx) {
   if (state.phase === 'special' && v.special && specialStage(v, Date.now()) === 'rps') {
     const vals = Object.values(v.special.buzzes || {}); const mx = vals.length ? Math.max(...vals) : 0;
     const who = Object.keys(v.special.buzzes || {}).filter((id) => v.special.buzzes[id] === mx);
-    if (who.length > 1) playIntro(`rps|${v.special.revealer}|${v.special.startsAt}|${who.join(',')}`, { parts: who.map(partOf), title: 'GLEICHSTAND!', vs: 'SCHNICK! SCHNACK! SCHNUCK!', center: `<span class="eium">bei ${mx}</span>` });
+    if (who.length > 1) playIntro(`rps|${v.special.revealer}|${v.special.startsAt}|${who.join(',')}`, { parts: who.map(partOf), title: 'GLEICHSTAND!', vs: 'SCHNICK! SCHNACK! SCHNUCK!', ms: 1500, center: `<span class="eium">bei ${mx}</span>` });
   }
   // Spielstart: alle Spieler, „Die Börse ist eröffnet!“
   if (state.phase === 'turn' && !v.lastEvent && state.log.length <= 2 && v.players.length >= 2) {
     playIntro(`start|${v.players.map((p) => p.id).join(',')}|${state.log[0] || ''}`, {
-      parts: v.players.map((p) => partOf(p.id)), title: 'DIE BÖRSE IST ERÖFFNET!', vs: 'LOS!',
+      parts: v.players.map((p) => partOf(p.id)), title: 'DIE BÖRSE IST ERÖFFNET!', vs: 'LOS!', ms: INTRO_START_MS,
       badge: isTurbo(state) ? '⚡ Turbo' : isBoerse(state) ? '📈 Börsen-Chaos' : '',
     });
   }
@@ -1978,22 +2002,25 @@ export function renderGame(root, ctx) {
   // (läuft über Neuzeichnen hinweg weiter: Startzeit merken, Animation an der richtigen Stelle fortsetzen)
   if (state.phase === 'auction' && v.lastEvent?.type === 'donkey') {
     const dSig = `${v.lastEvent.n}|${v.lastEvent.number}`;
-    if (local.donkeySig !== dSig) { local.donkeySig = dSig; local.donkeyAt = entered ? Date.now() : 0; }
+    // Startpunkt = Karte liegt offen (nach dem Umdrehen), nicht das Aufdecken selbst
+    if (local.donkeySig !== dSig) { local.donkeySig = dSig; local.donkeyAt = entered ? Date.now() + (state.auction?.opensAt != null ? Math.max(0, state.auction.opensAt - ctx.now()) : 0) : 0; }
     const el = Date.now() - (local.donkeyAt || 0);
-    if (local.donkeyAt && el < 4500) {
+    const DONKEY_END = ESEL_THROW_AT + v.players.length * ESEL_THROW_GAP + ESEL_FLIGHT + OUCH_MS + 300;
+    if (local.donkeyAt && el < 0) wakeLocal(local.donkeyAt);
+    if (local.donkeyAt && el >= 0 && el < DONKEY_END) {
       // v0.60.1 Esel-Bonus (Alps Idee): Der Esel schnappt sich die Scheine, knüllt sie zusammen
       // und pfeffert jedem einzeln einen Papierball an den Kopf – BAM, BAM, BAM.
-      if (el < 4500) {
-        const BAMS = ['BAM!', 'ZACK!', 'PATSCH!', 'BAM!'];
-        effects += `<div class="eclimb" data-aim-from="@card" data-aim-to="@card" style="--ty:0px;--tx:0px" aria-hidden="true"><div class="efig" style="animation-delay:${1500 - el}ms">${muscleDonkey(ESEL_THROW_AT - 180 - el, v.players.length)}</div></div>`;
-        effects += v.players.map((p, pi) => {
-          const t = ESEL_THROW_AT + pi * ESEL_THROW_GAP;
-          const to = p.id === meId ? '@me' : esc(p.id);
-          return `<div class="eball" data-aim-from="@esel" data-aim-to="${to}" style="animation-delay:${t - el}ms;--ty:0px;--tx:0px" aria-hidden="true"></div>`
-            + `<div class="ebam" data-aim-from="${to}" data-aim-to="${to}" style="animation-delay:${t + ESEL_FLIGHT - el}ms;--ty:0px;--tx:0px;--rot:${pi % 2 ? 9 : -8}deg" aria-hidden="true">${BAMS[pi % BAMS.length]}</div>`;
-        }).join('');
-      }
-      wakeLocal(Date.now() + 4600 - el); // danach einmal aufräumen
+      // v0.63.1: statt „BAM!“ steht beim Treffer der Betrag (+50/+100/+200/+500), danach hält sich der Getroffene den Kopf
+      const pay = v.lastEvent.payout;
+      if (el < ESEL_CLIMB_AT + 2900) effects += `<div class="eclimb" data-aim-from="@card" data-aim-to="@card" style="--ty:0px;--tx:0px" aria-hidden="true"><div class="efig" style="animation-delay:${ESEL_CLIMB_AT - el}ms">${muscleDonkey(ESEL_THROW_AT - 180 - el, v.players.length)}</div></div>`;
+      effects += v.players.map((p, pi) => {
+        const t = ESEL_THROW_AT + pi * ESEL_THROW_GAP;
+        const to = p.id === meId ? '@me' : esc(p.id);
+        ouchMark(p.id, local.donkeyAt + t + ESEL_FLIGHT, local.donkeyAt + t + ESEL_FLIGHT + OUCH_MS);
+        return `<div class="eball" data-aim-from="@esel" data-aim-to="${to}" style="animation-delay:${t - el}ms;--ty:0px;--tx:0px" aria-hidden="true"></div>`
+          + `<div class="ebam epay" data-aim-from="${to}" data-aim-to="${to}" style="animation-delay:${t + ESEL_FLIGHT - el}ms;--ty:0px;--tx:0px;--rot:${pi % 2 ? 9 : -8}deg" aria-hidden="true">+${pay}</div>`;
+      }).join('');
+      wakeLocal(local.donkeyAt + DONKEY_END + 20); // danach einmal aufräumen
     }
   }
 
@@ -2069,14 +2096,15 @@ export function renderGame(root, ctx) {
       ${playerDetail(v.players[idxOf(to)], self)}
     </div>`;
   }
+  root.dataset.me = meId;
   root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
     ${table}
     ${(() => { // v0.56: dein Platz unten rechts – deine Figur (Shop-Avatar ganz, sonst dein Bild), 💬 als Sprechblase über dem Kopf
       const pr = avatarLookup(meId); const now = Date.now(); const jub = DEMO_JUB || (local.meJubAt && now >= local.meJubAt && now < local.meJubAt + 1700);
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
-      return `<div class="meplate ${pr?.shop ? 'full' : 'round'} ${jub ? 'jub' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">
-        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : avatar(me, meIdx)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
+      return `<div class="meplate ${pr?.shop ? 'full' : 'round'} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">
+        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : avatar(me, meIdx)}${ouchOn(meId) ? OUCH : ''}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}

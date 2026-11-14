@@ -61,8 +61,8 @@ export function buildDemoState(kind, local) {
       g = drawForAuction(g, 'u2', t); g = bid(g, 'u3', 120, t + 3200); g = bid(g, 'u1', 200, t + 3300);
       return g;
     }
-    case 'auction': {
-      const t = Date.now() - 4100;
+    case 'auction': { // &fresh=1: Karte wird gerade erst aufgedeckt (Esel-Bonus von Anfang an)
+      const t = Date.now() - (new URLSearchParams(location.search).get('fresh') ? 0 : 4100);
       g = base(); g.turn = 1; g.deck[0] = 'esel';
       g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u4', 60, t + 3200); g = bid(g, 'u1', 100, t + 3200); g = bid(g, 'u3', 120, t + 3200);

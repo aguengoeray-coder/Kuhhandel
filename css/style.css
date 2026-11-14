@@ -3232,7 +3232,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @keyframes eivs { 0%, 44% { opacity: 0; transform: translate(-50%, -50%) scale(3); } 52% { opacity: 1; transform: translate(-50%, -50%) scale(.9); } 58%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 .eintro .eicard { width: 50px; height: 50px; border-radius: 10px; background: var(--a); border: 3px solid #fff; display: grid; place-items: center; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
 .eintro .eicard svg { width: 44px; height: 44px; }
-.eintro .eium { padding: 1px 10px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 13px var(--font-head); }
+.eintro .eium { max-width: 300px; text-align: center; white-space: normal; padding: 2px 12px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 13px var(--font-head); }
 .eintro .eisub { padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; font: 700 11px var(--font-body); white-space: nowrap; }
 /* Erzrivalen: Flammen hinter dem VS */
 .eintro .eiflame { position: absolute; left: 50%; top: 38%; width: 170px; height: 120px; transform: translate(-50%, -60%); border-radius: 50% 50% 40% 40%;
@@ -3268,3 +3268,18 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .finale .fconf { position: absolute; top: -12px; left: var(--x); width: 8px; height: 13px; border-radius: 2px; background: hsl(var(--h) 85% 60%); opacity: 0; animation: fconf 1.6s linear both; animation-delay: calc(var(--fel) + 1.8s + var(--k) * 45ms); }
 @keyframes fconf { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 1; transform: translateY(420px) rotate(720deg); } }
 @media (prefers-reduced-motion: reduce) { .crownfly, .leadtag, .spotlight { display: none; } }
+/* ===== v0.63.1 „Aua!“ – vom Esel-Papierball getroffen: Hände an den Kopf, Sternchen, kurz wackeln ===== */
+.ouchwrap { position: absolute; left: 0; top: 0; height: 100%; aspect-ratio: 1; pointer-events: none; z-index: 5; }
+.mefig { position: relative; }
+.meplate .mefig .ouchh, .meplate .mefig .ouchs { position: absolute; }
+.ouchh { position: absolute; top: 4%; width: 34%; aspect-ratio: 1; border-radius: 50% 50% 46% 46%; background: #fff; border: 2.5px solid #2B2B2B; box-shadow: inset -3px -3px 0 rgba(0,0,0,.12); animation: ouchrub .28s ease-in-out infinite alternate; }
+.ouchh.l { left: -8%; transform: rotate(-24deg); } .ouchh.r { right: -8%; transform: rotate(24deg); animation-delay: -.14s; }
+.ouchs { position: absolute; left: 50%; top: -22%; font-size: 18px; font-style: normal; animation: ouchstar .9s linear infinite; }
+.meplate .mefig .ouchh { top: 12%; width: 24%; } .meplate .mefig .ouchh.l { left: 18%; } .meplate .mefig .ouchh.r { right: 18%; }
+.meplate .mefig .ouchs { top: -12%; font-size: 24px; }
+@keyframes ouchrub { from { translate: 0 0; } to { translate: 0 -4px; } }
+@keyframes ouchstar { from { transform: translateX(-50%) rotate(0) translateX(14px) rotate(0); } to { transform: translateX(-50%) rotate(360deg) translateX(14px) rotate(-360deg); } }
+.prow.ouch .pid, .meplate.ouch .mefig { animation: ouchwob .5s ease-in-out 2; }
+@keyframes ouchwob { 0%, 100% { rotate: 0deg; } 25% { rotate: -6deg; } 75% { rotate: 6deg; } }
+.ebam.epay { font-size: 24px; background: #FFC93C; color: #3A2600; text-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .ouchh, .ouchs, .prow.ouch .pid, .meplate.ouch .mefig { animation: none; } }
