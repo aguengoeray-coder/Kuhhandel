@@ -2055,6 +2055,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .stage, .stage * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* Das umkämpfte Tier groß in der Mitte zwischen den beiden Seiten */
 .stage .tduel { align-items: center; gap: 6px; margin-left: 10px; }
+.stage:not(.p3) .tduel { translate: 6px 0; } /* v0.64: kleiner Abstand zum linken Aktions-Dock */
 .stage .tpanel { width: 196px; }
 .stage .gtable .tstriprow { bottom: 50px; }
 .tmid { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: none; width: 84px; }
@@ -3283,3 +3284,112 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @keyframes ouchwob { 0%, 100% { rotate: 0deg; } 25% { rotate: -6deg; } 75% { rotate: 6deg; } }
 .ebam.epay { font-size: 24px; background: #FFC93C; color: #3A2600; text-shadow: none; }
 @media (prefers-reduced-motion: reduce) { .ouchh, .ouchs, .prow.ouch .pid, .meplate.ouch .mefig { animation: none; } }
+
+
+/* ===== v0.64 Figuren-Theater: gemeinsame Bühnengröße für alle Charaktere ===== */
+.prow .pid > .avatar.seatfig {
+  width: 44px; height: 44px; flex: 0 0 44px; padding: 0; border: 0;
+  border-radius: 0; background: transparent; box-shadow: none; overflow: visible; position: relative;
+}
+.seatfig > .afull, .seatfig > .agen {
+  position: absolute; left: 50%; bottom: -5px; width: 72px; height: 120px;
+  margin-left: -36px; transform: scale(.6); transform-origin: 50% 100%;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,.35));
+}
+.seatfig > .afull .shop-avatar-full { width: 72px; height: 120px; }
+.seatfig > .agen .gbody { width: 72px; height: 120px; }
+.stage .prow.seat-t, .stage .prow.seat-tr { margin-top: 12px; }
+.stage .prow.seat-l .seatfig > .afull, .stage .prow.seat-l .seatfig > .agen { left: 62%; }
+.stage .prow.seat-l { margin-top: 14px; }
+.prow .pid > .avatar.seatfig .ahead .avatar { border-width: 3px; }
+.prow.turn .seatfig { outline: 0; filter: drop-shadow(0 0 5px var(--gold)); }
+.prow.ouch .seatfig { animation: ouchwob .5s ease-in-out 2; }
+.meplate .mefig .theater-placeholder { display: none; }
+
+/* Szenen-Auswahl im Reaktionsmenü */
+.rp-scenes-label { margin-top: 10px; }
+.rp-scenes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.rp-scene {
+  min-width: 0; min-height: 42px; display: flex; align-items: center; gap: 7px;
+  padding: 6px 9px; border: 2px solid rgba(43,39,33,.16); border-radius: 12px;
+  background: #fff; color: #2B2721; text-align: left; font: inherit; cursor: pointer;
+}
+.rp-scene:active { transform: scale(.97); }
+.rp-scene > span { font-size: 20px; flex: 0 0 auto; }
+.rp-scene b { font-size: 12px; line-height: 1.15; }
+
+/* Die Bühne liegt über dem Tisch, aber blockiert keine Eingaben. */
+.theater-scene {
+  position: absolute; inset: 0; z-index: 64; overflow: hidden; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 52%, rgba(22,20,17,.76), rgba(22,20,17,.25) 48%, rgba(22,20,17,0) 75%);
+}
+.theater-title {
+  position: absolute; z-index: 4; left: 50%; top: 7%; transform: translateX(-50%);
+  max-width: 82%; padding: 5px 14px; border: 2px solid #fff; border-radius: 999px;
+  background: #29231e; color: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.3);
+  font: 900 16px var(--font-head); white-space: nowrap; animation: theater-title-in .35s cubic-bezier(.2,.9,.3,1.3) both;
+}
+@keyframes theater-title-in { from { opacity: 0; transform: translate(-50%,-10px) scale(.8); } to { opacity: 1; transform: translate(-50%,0) scale(1); } }
+.theater-actor {
+  position: absolute; z-index: 3; width: 72px; height: 120px; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end; transform-origin: 50% 100%; pointer-events: none;
+}
+.theater-figure { width: 72px; height: 120px; position: relative; flex: 0 0 120px; }
+.theater-figure > .afull, .theater-figure > .agen {
+  position: absolute; inset: 0; width: 72px; height: 120px; transform: none; margin: 0;
+  filter: drop-shadow(0 4px 3px rgba(0,0,0,.4));
+}
+.theater-figure .shop-avatar-full, .theater-figure .gbody { width: 72px; height: 120px; }
+.theater-figure .agen .ahead { position: absolute; left: 15px; top: 0; width: 42px; height: 42px; }
+.theater-figure .agen .ahead .avatar { width: 42px; height: 42px; border-width: 3px; font-size: 17px; }
+.theater-name {
+  position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%);
+  max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 1px 7px; border-radius: 999px; background: var(--c); color: #fff;
+  border: 1.5px solid #fff; font: 800 10px var(--font-head); box-shadow: 0 2px 3px #0006;
+}
+.theater-huddle {
+  position: absolute; left: 50%; top: 47%; transform: translate(-50%,-50%);
+  padding: 4px 12px; border-radius: 14px; background: #fff; color: #2B2721;
+  font: 900 20px var(--font-head); text-shadow: none; box-shadow: 0 3px 0 #0005;
+  animation: theater-pop .45s .9s cubic-bezier(.2,.9,.3,1.4) both;
+}
+@keyframes theater-pop { from { opacity: 0; scale: .4; } to { opacity: 1; scale: 1; } }
+.theater-props { position: absolute; z-index: 5; left: 50%; top: 52%; transform: translate(-50%,-50%); font-size: 34px; }
+.tree-props { width: 150px; height: 100px; }
+.tree-props > span, .tree-props > i { position: absolute; font-style: normal; opacity: 0; }
+.tree-bowl { left: 10px; top: 30px; animation: tree-prop .3s 1.25s both; }
+.tree-grass { left: 54px; top: 2px; animation: tree-prop .3s 1.65s both; }
+.tree-lighter { right: 12px; top: 30px; animation: tree-prop .3s 2.05s both; }
+.tree-joint { left: 58px; top: 30px; width: 34px; height: 8px; border-radius: 8px; background: linear-gradient(90deg,#C69B61 0 82%,#F28C1B 82%); border: 2px solid #5B3B25; box-shadow: 0 0 8px #F28C1B; animation: tree-joint 4s 2.7s ease-in-out both; } .tree-joint i { position:absolute; right:-5px; top:-4px; width:6px; height:12px; border-radius:50%; background:#F28C1B; } .tree-relaxed { left: 57px; top: -22px; font-size: 28px; animation: tree-relaxed .6s 6.25s both; }
+.tree-smoke { font-size: 22px; filter: grayscale(1); }
+.tree-smoke.s1 { left: 60px; top: 0; animation: tree-smoke 1.5s 3.1s ease-out infinite; }
+.tree-smoke.s2 { left: 84px; top: 10px; animation: tree-smoke 1.5s 3.5s ease-out infinite; }
+.tree-smoke.s3 { left: 42px; top: 4px; animation: tree-smoke 1.5s 3.9s ease-out infinite; }
+@keyframes tree-prop { from { opacity: 0; transform: translateY(12px) scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes tree-joint {
+  0% { opacity: 0; transform: translate(-28px,18px) rotate(-25deg) scale(.5); }
+  10%, 90% { opacity: 1; }
+  25% { transform: translate(22px,-5px) rotate(12deg); }
+  42% { transform: translate(48px,14px) rotate(25deg); }
+  58% { transform: translate(20px,35px) rotate(-12deg); }
+  74% { transform: translate(-25px,22px) rotate(8deg); }
+  100% { opacity: 0; transform: translate(-28px,18px) rotate(-25deg) scale(.6); }
+}
+@keyframes tree-relaxed { from { opacity:0; transform:scale(.4) translateY(8px); } to { opacity:1; transform:scale(1) translateY(-8px); } }\n.scene-baum .theater-figure { animation: tree-sit 4.9s 1.5s ease-in-out both; }\n@keyframes tree-sit { 0%, 10%, 90%, 100% { transform: translateY(0) scaleY(1); } 20%, 80% { transform: translateY(10px) scaleY(.82); } }\n@keyframes tree-smoke { 0% { opacity: 0; transform: translateY(12px) scale(.5); } 25% { opacity: .8; } 100% { opacity: 0; transform: translate(12px,-35px) scale(1.5); } }
+.cake-props { font-size: 66px; animation: cake-bounce .55s 2.1s cubic-bezier(.2,.9,.3,1.5) both; }
+.cake-props span { position: absolute; left: 58px; top: -12px; font-size: 38px; }
+@keyframes cake-bounce { from { opacity: 0; scale: .2; rotate: -18deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
+.scene-auslachen .theater-actor { animation: scene-laugh .5s 1.5s ease-in-out 5 alternate; }
+@keyframes scene-laugh { from { rotate: -7deg; } to { rotate: 7deg; } }
+.scene-schleimen .theater-actor { animation: scene-flatter .65s 1.4s ease-in-out 4 alternate; }
+@keyframes scene-flatter { from { translate: 0 0; } to { translate: 0 -9px; } }
+.scene-schleimen .theater-scene::after { content: '💚  ✨  💚'; position: absolute; left: 50%; top: 35%; transform: translateX(-50%); font-size: 30px; animation: theater-hearts 2.2s 1.3s ease-out both; }
+@keyframes theater-hearts { from { opacity: 0; scale: .4; } 30% { opacity: 1; } to { opacity: 0; scale: 1.5; translate: 0 -35px; } }
+.scene-verschwoerung .theater-actor { animation: scene-whisper .7s 1.2s ease-in-out 3 alternate; }
+@keyframes scene-whisper { from { scale: 1; } to { scale: .9; } }
+@media (prefers-reduced-motion: reduce) {
+  .theater-title, .theater-huddle, .tree-props > span, .tree-props > i, .cake-props,
+  .scene-auslachen .theater-actor, .scene-schleimen .theater-actor,
+  .scene-verschwoerung .theater-actor { animation: none !important; }
+}

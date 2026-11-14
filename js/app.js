@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.63.1';
+export const APP_VERSION = '0.64.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -70,6 +70,9 @@ const customSayings = new Map(); // v0.63: Konto-ID → eigener Spruch (Mitspiel
 const SAYING_TEXTS = SHOP_SAYINGS.map((x) => x.text);
 try { if (!document.getElementById('shop-avatar-runtime-css')) { const st = document.createElement('style'); st.id = 'shop-avatar-runtime-css'; st.textContent = SHOP_AVATAR_CSS + SHOP_AVATAR_FULL_CSS; document.head.append(st); } } catch {}
 const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
+const theaterScenes = []; // v0.64: synchronisierte, kostenlose Figuren-Szenen
+const THEATER_KINDS = ['verschwoerung', 'torte', 'auslachen', 'schleimen', 'baum'];
+let lastTheaterAt = 0;
 // v0.61 Admin-Fähigkeit „Verprügeln“: { from, to, at } – Animation läuft bei allen
 const punches = [];
 let lastPunchAt = 0;
@@ -623,6 +626,8 @@ function renderPlaying() {
     },
     playSound: (kind) => { if (soundOn() && !DEMO) playSound(kind); },
     reactions: activeReactions(),
+    theaterScenes: activeTheaterScenes(),
+    theaterScene: sendTheaterScene,
     reactionList: myReactions(),
     reactionEmoji: 0,
     reactionBase: REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
@@ -1229,6 +1234,30 @@ function sendReaction(text, to = null) {
   if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'react', payload: { seat, text, to } });
 }
 
+// v0.64: Figuren-Theater – kostenlose Szenen werden an alle Mitspieler übertragen.
+function activeTheaterScenes() {
+  const now = Date.now();
+  return theaterScenes.filter((x) => now - x.at < 8100);
+}
+function showTheaterScene(from, kind, at = Date.now()) {
+  const ids = ui.game?.state?.players?.map((p) => p.id) || [];
+  if (!ids.includes(from) || !THEATER_KINDS.includes(kind)) return;
+  theaterScenes.push({ id: `${from}-${at}-${kind}`, from, kind, at });
+  while (theaterScenes.length > 4) theaterScenes.shift();
+  render();
+  setTimeout(render, Math.max(0, at + 8200 - Date.now()));
+}
+function sendTheaterScene(kind) {
+  if (!THEATER_KINDS.includes(kind) || !ui.game?.state) return;
+  const left = 8200 - (Date.now() - lastTheaterAt);
+  if (left > 0) return toast(`Die Bühne braucht noch ${Math.ceil(left / 1000)} s.`);
+  const from = ui.game.local ? (ui.game.state.players.some((p) => p.id === dbg.viewAs) ? dbg.viewAs : ui.game.state.players[0]?.id) : seatIn(ui.game);
+  if (!from) return;
+  lastTheaterAt = Date.now();
+  showTheaterScene(from, kind);
+  if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'theater', payload: { from, kind, at: lastTheaterAt } });
+}
+
 // v0.63: Platz → Konto-ID (Testspiel/Plätze können abweichen)
 function userOfSeat(seat) { const p = (ui.game?.players || []).find((x) => (x.seat || x.id) === seat); return p ? p.id : seat; }
 
@@ -1423,6 +1452,10 @@ function watchRoom(id) {
       if (!payload?.seat || !(REACTIONS.includes(payload.text) || SAYING_TEXTS.includes(payload.text) || REACT_EMOJI.includes(payload.text) || (payload.text && customSayings.get(userOfSeat(payload.seat)) === payload.text))) return;
       const to = typeof payload.to === 'string' && ui.game?.state?.players?.some((p) => p.id === payload.to) ? payload.to : null;
       showReaction(payload.seat, payload.text, to);
+    })
+    .on('broadcast', { event: 'theater' }, ({ payload }) => {
+      if (!payload?.from || !THEATER_KINDS.includes(payload.kind)) return;
+      showTheaterScene(payload.from, payload.kind, Number(payload.at) || Date.now());
     })
     .on('presence', { event: 'sync' }, () => {
       const ps = roomChannel.presenceState();

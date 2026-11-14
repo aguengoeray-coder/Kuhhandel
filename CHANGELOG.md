@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.64.0 – Figuren-Theater & kostenlose Szenen
+
+- [ ] Alle Mitspieler erhalten eine einheitlich skalierte Ganzkörper-Figur am Tisch; Shop-Figuren und Standard-Figuren nutzen dieselbe Bühnengröße.
+- [ ] Neues kostenloses Figuren-Theater: Verschwörung, Torten-Alarm, gemeinsames Auslachen, Schleimen und Baum-Runde.
+- [ ] Szenen werden über Supabase-Realtime an alle Mitspieler übertragen und laufen mit gemeinsamer Startzeit.
+- [ ] Baum-Runde: Figuren laufen aus ihren Plätzen in einen Kreis, setzen sich, Schale/Gras/Feuer erscheinen, ein Comic-Joint wandert herum, Rauchwölkchen steigen auf; zum Schluss entspannen sich alle und kehren zurück.
+- [ ] Browser-Tests prüfen alle fünf Szenen, identische Figurengrößen sowie 3- und 4-Spieler-Darstellung.
+
 ## v0.63.1 – Feinschliff Intros & Esel
 
 - [x] Duell-Intros länger: Kuhhandel/Rattenhandel 2 s, Spielstart 3 s (Schnick-Schnack-Schnuck bleibt kurz).

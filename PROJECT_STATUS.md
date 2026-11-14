@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md – gemeinsamer Projektstand
 
-Stand: 13.11.2026, 21:25 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
+Stand: 14.11.2026 · Arbeitsstand ChatGPT · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
 
 > Maßgeblich sind GitHub (`main`, PRs, Workflow-Ergebnisse). Diese Datei wird nach jeder Arbeitseinheit aktualisiert.
 > Freigaben laufen nach der **Ampel** in `AGENTS.md` (🟢 KI mergt bei grünen Tests · 🟡 Alps Go · 🔴 nur Alp).
@@ -9,14 +9,15 @@ Stand: 13.11.2026, 21:25 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.63.0** – Merge-Commit `29709f8` (#34); Cloudflare-Build erfolgreich |
-| In Arbeit | – |
+| Live-Version (`main`) | **v0.63.1** – Merge-Commit `a9c2247` (#37); CI-Merge laut GitHub-Commit erfolgt |
+| In Arbeit | **v0.64.0 Figuren-Theater** – Branch `chatgpt/v064-figuren-theater`; Browser-Tests nach erster Runde mit 32 Befunden; Testlogik und kleine Dock-Überlappung korrigiert, erneuter CI-Lauf ausstehend |
 | Nächste Versionen | 2-Spieler-Modus (Regelprüfung zuerst) · Börsen-Chaos nach ersten echten Partien nachjustieren |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.63-eigener-spruch.sql` (Claude über Connector 14.11., Prüfabfrage + Advisors ✓); davor `v0.60-admin-nur-angemeldet.sql`, `v0.61-emote-pruegel.sql` (Claude) |
 
 ### Zuletzt live gegangen
 | Version | Inhalt | PR |
 |---|---|---|
+| v0.63.1 | Längere Duell-Intros, konkrete Kuhhandel-Texte, Esel startet erst nach Aufdecken, Bonusbetrag + Aua-Reaktion, geräteabhängige Laufwege | #37 |
 | v0.63.0 | Duell-Intros (Kuhhandel/Rattenhandel/SSS/Spielstart), Spitzenreiter-Krone, „Letzte Karte!“, Finale (Ende nicht überspringbar), Shop „Eigener Spruch“, Kursrallye/-sturz zufällig 30–100 % (Sturz meist stärker) | #34 |
 | v0.62.0 | Figuren springen aus dem Profilbild (Jubel, Pleite, Prügeln), Ratte, Quartett-Polonaise, Kuhhandel-Koffer | #34 |
 | v0.61.x | Emote „Verprügeln“ (Shop, Admin immer, 5 s Pause), Muskel-Esel klettert aus der Karte | #33, #34 |
@@ -38,6 +39,7 @@ Stand: 13.11.2026, 21:25 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | PR / Branch | Owner | Stufe | Status |
 |---|---|---|---|
+| `chatgpt/v064-figuren-theater` (#38) | ChatGPT | 🟡 | v0.64.0: Figuren-Theater; Browser-Tests nach Korrekturen erneut in Prüfung |
 | `claude/doku-v063` | Claude | 🟢 | Diese Doku-Aktualisierung. |
 | `ai/auftraege` | Codex/Claude | – | Ersetzt durch Abschnitt 5; löschen nur mit Alps Okay. |
 | alte Feature-Branches | – | 🔴 | Alle in `main`. Aufräumen nur mit Alps Okay. |
@@ -70,7 +72,8 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 |---|---|---|
 | v0.52–v0.59 | Avatare, größere Karten, Siegerehrung, Dublonen für alle, Platz am Tisch, neue Charaktere | ✅ live |
 | v0.60 | Börsen-Chaos | ✅ live |
-| v0.61–v0.63 | Emote Verprügeln, lebendige Figuren + Gags, Duell-Intros, Finale, eigener Spruch | ✅ live |
+| v0.61–v0.63.1 | Emote Verprügeln, lebendige Figuren + Gags, Duell-Intros, Finale, eigener Spruch, Esel-Feinschliff | ✅ live |
+| v0.64.0 | Ganzkörper-Figuren an den Plätzen + kostenloses Figuren-Theater (5 Szenen) | 🟡 in Arbeit; PR/CI/Screenshots ausstehend |
 | nächste | 2-Spieler-Modus (Originalregeln prüfen, Vorschlag an Alp) | 🟡 |
 | später | Erfolge + Saison-Rangliste (SQL), Zuschauen, Zug-Zeitlimit mit Bot-Vertretung, Shop: Tischdesigns/Kartenrücken | – |
 

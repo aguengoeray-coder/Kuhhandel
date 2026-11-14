@@ -1,5 +1,13 @@
 # AI_HANDOFF.md – offene Übergaben
 
+## 14.11.2026 – ChatGPT → Alp/Claude: v0.64.0 Figuren-Theater (in Arbeit)
+Branch: `chatgpt/v064-figuren-theater` · Basis: aktuelles `main` nach PR #37 · Version: 0.64.0 · Stufe 🟢 (Animationen/Bedienung)
+Dateien: `js/game.js` (Ganzkörper-Figuren, Theater-Szenen, Kreisziele, Szenenmenü), `js/app.js` (Realtime-Broadcast, kostenlose Szenen), `css/style.css` (einheitliche Figurenmaße und Szenenanimationen), `js/whatsnew.js`, `CHANGELOG.md`, `version.json`, `e2e/views.spec.mjs`.
+Erster CI-Lauf: Regel-/Syntaxtests grün; vollständige Partien grün; Browser-Layouttest fand 32 Befunde. Davon waren die Theater-Maße fälschlich gegen unskalierte Pixel geprüft; zusätzlich gab es eine 5×13px-Überlappung des Kuhhandelfelds mit dem Aktions-Dock. Test prüft nun CSS-Ausgangsmaß, gleiche gerenderte Maße und tatsächliche Kreispositionen nach der Laufanimation; Kuhhandelfeld wurde 6px vom Dock abgerückt.
+Offen: erneuter vollständiger CI-Lauf, Screenshots nach Szenenbewegung (852×393 sowie weitere Größen), visuelle Prüfung der Baum-Runde. Noch nicht live.
+Nächster Schritt: CI-Auswertung und weitere Korrekturen; kein Merge ohne Alps Freigabe.
+
+
 Nur **offene** Übergaben stehen hier, die neueste oben. Erledigtes wandert nach `AI_HANDOFF_ARCHIV.md`.
 Vor jeder Arbeit: `AGENTS.md` (Ampel!), `PROJECT_STATUS.md`, dann diesen Eintrag lesen und `git log origin/main` prüfen.
 
