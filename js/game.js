@@ -209,6 +209,13 @@ const AUSLAGE_MAX = 1;
 const SHELF_MAX = 1.18; // v0.59.1: Mitte kleiner → Tiere größer (Alps Wahl B) // v0.59: Regal über dem Geld – eine Reihe, höchstens 90 % (passt unter die Karte in der Mitte)
 const DEMO_JUB = typeof location !== 'undefined' && new URLSearchParams(location.search).has('mejub'); // Screenshot: deine Figur jubelt
 export const CALM_MS = 2500;
+const THEATER_SCENES = {
+  verschwoerung: { title: 'Pssst … Geheime Verschwörung', icon: '🤫', duration: 6200 },
+  torte: { title: 'Torten-Alarm!', icon: '🎂', duration: 6200 },
+  auslachen: { title: 'Alle lachen mit!', icon: '😂', duration: 6200 },
+  schleimen: { title: 'Schleim-Modus!', icon: '💚', duration: 6200 },
+  baum: { title: 'Die Baum-Runde', icon: '🌿', duration: 7800 },
+};
 // Ergebnis-Fenster: so lange bleibt es stehen
 const EV_WAIT = { auction_won: 3000, special_won: 3500, trade: 4800, rat_taken: 3500 }; // Kuhhandel: inkl. ~1 s Aufdecken
 // Stapel leer (nur noch Kuhhandel): Ergebnis kürzer zeigen, damit es flott weitergeht
@@ -314,6 +321,17 @@ function seatPoint(root, pid, sr, sc) {
     const el = root.querySelector('.tcenter .aucard') || root.querySelector('.tcenter .revealcard') || root.querySelector('.tcenter .bigcard') || root.querySelector('.tcenter');
     if (el) { const r = el.getBoundingClientRect(); const cx = (r.left + r.width / 2 - sr.left) / sc, cy = (r.top + r.height / 2 - sr.top) / sc, top = (r.top - sr.top) / sc;
       return pid === '@card' ? { x: cx, y: cy } : { x: cx + 60, y: top + 40 }; }
+  }
+  // v0.64: feste Zielpunkte auf einem gemeinsamen Kreis – alle Figuren treffen sich mittig.
+  if (typeof pid === 'string' && pid.startsWith('@circle:')) {
+    const [, si, pi] = pid.split(':');
+    const scene = root.querySelector(`.theater-scene[data-scene-index="${CSS.escape(si)}"]`);
+    if (scene) {
+      const n = Math.max(2, Number(scene.dataset.count) || 4), k = Number(pi) || 0;
+      const angle = -Math.PI / 2 + k * (Math.PI * 2 / n);
+      const rx = Math.min(126, sr.width / sc * .16), ry = Math.min(76, sr.height / sc * .20);
+      return { x: sr.width / sc / 2 + Math.cos(angle) * rx, y: sr.height / sc * .52 + Math.sin(angle) * ry };
+    }
   }
   // v0.62 „Profilbild wird lebendig“: '@near:<pid>' = Stehplatz neben dem Profilbild Richtung Tischmitte,
   // '@myfan' = Mitte deines Geldes, '@cl'/'@cr' = links/rechts der Tischmitte (Polonaise)
@@ -710,7 +728,7 @@ export function renderGame(root, ctx) {
     return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
-        ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}${avatar(p, i)}${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
+        ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]}" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}</span>` : status}</span></div>
       </div>
       <div class="chips" data-a="reactTo" data-v="${esc(p.id)}">${chips}</div>
@@ -1355,6 +1373,7 @@ export function renderGame(root, ctx) {
   H.reactClose = () => { local.reactTo = null; ctx.rerender(); };
   H.punch = (id) => { local.reactTo = null; if (ctx.punch) ctx.punch(id); ctx.rerender(); };
   H.react = (i) => { const to = local.reactTo; local.reactTo = null; ctx.react(ctx.reactionList[Number(i)], to === meId ? null : to); };
+  H.theater = (kind) => { local.reactTo = null; if (ctx.theaterScene) ctx.theaterScene(kind); };
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
   H.vibe = () => ctx.toggleVibe && ctx.toggleVibe();
@@ -2072,6 +2091,21 @@ export function renderGame(root, ctx) {
   }
   H.seatTipClose = () => { local.seatTipAt = 0; ctx.rerender(); };
 
+  // v0.64 Figuren-Theater: synchronisierte Szenen laufen auf einer gemeinsamen Bühne.
+  const theaterHtml = (ctx.theaterScenes || []).map((scn, si) => {
+    const def = THEATER_SCENES[scn.kind];
+    if (!def || Date.now() - scn.at >= def.duration + 250) return '';
+    const elapsed = Math.max(0, Date.now() - scn.at);
+    const actors = v.players.map((p, i) => {
+      const pr = avatarLookup(p.id);
+      const route = `${p.id};@circle:${si}:${i};@circle:${si}:${i};${p.id}`;
+      return `<div class="theater-actor" data-route="${esc(route)}" data-offs="0,.18,.82,1" data-dur="${def.duration}" style="--seat:${i};--c:${SEAT_COLORS[i]};--delay:${Math.max(0, scn.at - Date.now())}ms"><div class="theater-figure">${aliveFig(p, i, pr?.shop)}</div><b class="theater-name">${esc(p.id === meId ? 'Du' : p.name)}</b></div>`;
+    }).join('');
+    const tree = scn.kind === 'baum' ? `<div class="theater-props tree-props" aria-hidden="true"><span class="tree-bowl">🥣</span><span class="tree-grass">🌿</span><span class="tree-lighter">🔥</span><span class="tree-joint">🚬</span><i class="tree-smoke s1">☁️</i><i class="tree-smoke s2">☁️</i><i class="tree-smoke s3">☁️</i></div>` : '';
+    const prop = scn.kind === 'torte' ? '<div class="theater-props cake-props" aria-hidden="true">🎂<span>💥</span></div>' : '';
+    const title = `<div class="theater-title">${def.icon} ${def.title}</div>`;
+    return `<div class="fxk" data-fxat="${scn.at}"><div class="theater-scene scene-${scn.kind}" data-scene-index="${si}" data-count="${v.players.length}" data-elapsed="${elapsed}" aria-label="${esc(def.title)}">${title}${actors}${tree}${prop}<div class="theater-huddle">${scn.kind === 'verschwoerung' ? 'Pssst …' : scn.kind === 'auslachen' ? 'HAHAHA!' : scn.kind === 'schleimen' ? 'Du bist der Beste!' : ''}</div></div></div>`;
+  }).join('');
   // gemerkte Einmal-Effekte zeichnen; die Animationen werden nach dem Zeichnen auf die richtige Stelle vorgespult
   local.fx.forEach((f) => { effects += `<div class="fxk" data-fxat="${f.at}">${f.html}</div>`; wakeLocal(f.until + 30); });
 
@@ -2088,6 +2122,7 @@ export function renderGame(root, ctx) {
     return `<div class="reactpick v2 ${self ? 'self' : ''}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
       ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">${esc(ctx.punchLabel || '🥊 Verprügeln')}</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
+      ${self && ctx.theaterScene ? `<div class="rp-lbl rp-scenes">🎭 Figuren-Theater · für alle kostenlos</div><div class="rp-scenes">${Object.entries(THEATER_SCENES).map(([kind, x]) => `<button type="button" class="rp-scene" data-a="theater" data-v="${kind}"><span>${x.icon}</span><b>${esc(x.title)}</b></button>`).join('')}</div>` : ''}
       ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}
@@ -2110,6 +2145,7 @@ export function renderGame(root, ctx) {
     ${overlay}
     ${standingsHtml}
     ${effects}
+    ${theaterHtml}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? '<div class="rpback" data-a="reactClose" aria-hidden="true"></div>' : ''}
