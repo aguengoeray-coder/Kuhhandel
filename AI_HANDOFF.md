@@ -1,5 +1,13 @@
 # AI_HANDOFF.md – offene Übergaben
 
+## 14.11.2026 – ChatGPT → Alp/Claude: v0.64.0 Figuren-Theater (in Arbeit)
+Branch: `chatgpt/v064-figuren-theater` · Basis: aktuelles `main` nach PR #37 · Version: 0.64.0 · Stufe 🟢 (Animationen/Bedienung)
+Dateien: `js/game.js` (Ganzkörper-Figuren, Theater-Szenen, Kreisziele, Szenenmenü), `js/app.js` (Realtime-Broadcast, kostenlose Szenen), `css/style.css` (einheitliche Figurenmaße und Szenenanimationen), `js/whatsnew.js`, `CHANGELOG.md`, `version.json`, `e2e/views.spec.mjs`.
+Tests: noch nicht ausgeführt – GitHub-CI nach PR-Erstellung erforderlich. Browser-Tests prüfen fünf Szenen, 3/4 Spieler und einheitliche Figurenmaße.
+Offen: vollständige CI, Screenshots/visuelle Prüfung in 852×393 und weiteren Größen, mögliche Layoutkorrekturen. Noch nicht live.
+Nächster Schritt: PR erstellen, CI abwarten, Browser-Test-Artefakte prüfen und Alp Screenshots vorlegen. Kein Merge ohne Alps Freigabe.
+
+
 Nur **offene** Übergaben stehen hier, die neueste oben. Erledigtes wandert nach `AI_HANDOFF_ARCHIV.md`.
 Vor jeder Arbeit: `AGENTS.md` (Ampel!), `PROJECT_STATUS.md`, dann diesen Eintrag lesen und `git log origin/main` prüfen.
 
