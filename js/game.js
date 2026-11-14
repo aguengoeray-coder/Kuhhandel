@@ -1297,8 +1297,8 @@ export function renderGame(root, ctx) {
     </div>
     ${local.menu ? `<div class="menu">
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">🔊 Ton: ${ctx.soundName || (ctx.sound ? 'an' : 'aus')}</button>
-      <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button>
-      <button type="button" class="pill pill-white pill-small" data-a="intros">⚔️ Intros: ${ctx.introsOff ? 'aus' : 'an'}</button></div>
+      <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button></div>
+      <button type="button" class="pill pill-white pill-small" data-a="intros">⚔️ Duell-Intros: ${ctx.introsOff ? 'aus' : 'an'}</button>
       ${state.settings?.standings && state.phase !== 'ended' ? '<button type="button" class="pill pill-white pill-small" data-a="standings">📊 Zwischenstand</button>' : ''}
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
