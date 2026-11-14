@@ -68,3 +68,11 @@
 @keyframes emotebob { from { transform: rotate(-12deg) translateX(-4px); } to { transform: rotate(14deg) translateX(4px); } }
 .shop-emote-text { margin: 4px 0 8px; font-size: 12.5px; line-height: 1.35; opacity: .85; }
 @media (prefers-reduced-motion: reduce) { .shop-emote-icon { animation: none; } }
+
+/* v0.63 Eigener Spruch */
+.shop-custom-item { grid-column: 1 / -1; text-align: center; border-color: #FFD34E; }
+.shop-custom-head { font-size: 16px; margin-bottom: 6px; }
+.shop-custom-form { display: flex; gap: 8px; margin-top: 8px; width: 100%; }
+.shop-custom-form input { flex: 1; min-width: 0; padding: 9px 12px; border-radius: 12px; border: 2px solid rgba(255,255,255,.35); background: rgba(0,0,0,.25); color: #fff; font: 600 15px var(--font-body, system-ui); }
+.shop-custom-form input:focus { outline: 2px solid #FFD34E; outline-offset: 1px; }
+.shop-custom-form button { flex: 0 0 auto; width: auto; min-width: 120px; margin: 0; }

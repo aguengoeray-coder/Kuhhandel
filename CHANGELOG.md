@@ -1,5 +1,15 @@
 # Änderungsprotokoll
 
+## v0.63.0 – Duell-Intros & eigener Spruch
+
+- [x] **Duell-Intro** (eigenes Design, Bewegungsprinzip wie bei klassischen Handheld-Duellen): schräge Farbflächen in Platzfarbe, Figuren sliden aus verschiedenen Richtungen rein, „VS“ mit Blitz – bei Kuhhandel, Rattenhandel, Schnick-Schnack-Schnuck und Spielstart (3 und 4 Spieler).
+- [x] Antippen überspringt; ab dem 3. Duell desselben Paares nur noch kurz; im Menü „Intros aus“. Unter jeder Figur ihr Spruch, Duell-Zähler, Erzrivalen bekommen Flammen. Der Kuhhandel-Timer startet erst nach dem Intro.
+- [x] „Letzte Karte!“ – Spotlight, wenn der Stapel leer wird · „Neuer Spitzenreiter!“ – Krone fliegt zum neuen Führenden.
+- [x] Spielende läuft für alle gemeinsam ab und lässt sich nicht mehr überspringen: Punkte zählen, Trommelwirbel „Und der Sieger ist …“, dann Siegertreppchen.
+- [x] Börsen-Chaos: **Kursrallye** jetzt zufällig +30 … +100 % (Kurssturz bleibt −50 %).
+- [x] Verprügeln: das Profilbild des Prüglers ist leer, solange seine Figur unterwegs ist (bei allen Mitspielern).
+- [x] Shop: **Eigener Spruch** (50 Dublonen) – selbst ausdenken, max. 40 Zeichen, jederzeit änderbar (SQL `supabase/v0.63-eigener-spruch.sql`).
+
 ## v0.62.0 – Alles wird lebendig
 
 - [x] **Profilbild wird lebendig:** Figuren springen aus ihrem runden Profilbild (Kopf = Profilbildgröße) und stehen neben ihrem Platz; das Profilbild ist so lange leer. Shop-Avatare mit eigenem Körper, alle anderen bekommen einen Standard-Körper in ihrer Platzfarbe.

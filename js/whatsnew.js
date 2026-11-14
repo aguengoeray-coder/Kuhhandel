@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.63.0', date: '14.11.', items: ['⚔️ Duell-Intros bei Kuhhandel, Rattenhandel, Schnick-Schnack-Schnuck und Spielstart', '👑 Neuer Spitzenreiter, 🔦 Letzte Karte, 🥁 „Und der Sieger ist …“ – das Ende schaut ihr gemeinsam', '✍️ Im Shop: dein ganz eigener Spruch', '📈 Kursrallye: jetzt +30 bis +100 %'] },
   { v: '0.62.0', date: '14.11.', items: ['🧍 Die Figuren springen jetzt aus ihren Profilbildern – Jubel, Pleite, Prügel', '🐀 Die Ratte flitzt über den Tisch, 🐔 Quartette tanzen Polonaise, 🧳 gehandelte Tiere ziehen mit Koffer um'] },
   { v: '0.61.1', date: '14.11.', items: ['💪 Der Esel klettert jetzt als Muskelprotz aus der Karte und wirft mit Wucht', '🦋 Wer nicht zahlen kann, ist jetzt sichtbar pleite'] },
   { v: '0.61.0', date: '13.11.', items: ['🥊 Neues Emote im Shop: Verprügeln – deine Figur läuft hin und haut drauf'] },

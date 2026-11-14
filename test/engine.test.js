@@ -798,3 +798,21 @@ test('Börsen-Chaos: 100 zufällige Komplettspiele enden sauber, Kurse nie negat
     assert.ok(g.winner.length >= 1);
   }
 });
+
+test('v0.63 Kursrallye: zufällig +30 … +100 % (10er-Schritte); alte Karten ohne Zahl = +50 %', async () => {
+  const { newsOf, kursValue, RALLYE_MIN, RALLYE_MAX } = await import('../src/engine.js');
+  assert.deepEqual(newsOf('news-rallye-kuh'), { kind: 'rallye', animal: 'kuh', pct: 50 });
+  assert.deepEqual(newsOf('news-rallye-kuh-70'), { kind: 'rallye', animal: 'kuh', pct: 70 });
+  const seen = new Set();
+  for (let seed = 1; seed <= 300; seed++) {
+    const g = createGame({ players: P, seed, settings: { boerse: true } });
+    for (const c of g.deck.filter((x) => x.startsWith('news-rallye-'))) {
+      const n = newsOf(c); seen.add(n.pct);
+      assert.ok(n.pct >= RALLYE_MIN && n.pct <= RALLYE_MAX && n.pct % 10 === 0, c);
+    }
+  }
+  assert.deepEqual([...seen].sort((x, y) => x - y), [30, 40, 50, 60, 70, 80, 90, 100]);
+  const g = drawForAuction(boerseWithTop('news-rallye-kuh-30'), 'a', 0);
+  assert.equal(kursValue('kuh', g.kurse), 1040); assert.equal(g.lastEvent.pct, 30);
+  assert.ok(JSON.stringify(g.log).includes('+30 %'));
+});

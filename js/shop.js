@@ -17,6 +17,8 @@ export const SHOP_SAYINGS = [
   { id:'spruch-schmatz', text:'Schmatz nicht!!', price:10 },
   { id:'spruch-how-old', text:'Can I ask you by any chance how old you are? 📱', price:10 }
 ];
+// v0.63 Eigener Spruch: Text selbst wählen (1–40 Zeichen), jederzeit kostenlos änderbar
+export const SHOP_CUSTOM = { id:'spruch-eigener', name:'Eigener Spruch', price:50, max:40 };
 // v0.61 Emotes: Fähigkeiten für deine Figur (Admins haben sie immer)
 export const SHOP_EMOTES = [
   { id:'emote-pruegel', name:'Verprügeln', icon:'🥊', price:100, text:'Deine Figur läuft zu einem Mitspieler und verprügelt ihn – Comic-Staubwolke mit POW! BAM! KLATSCH!' }
@@ -53,6 +55,7 @@ export function renderShop(root, ctx) {
   const owned = new Set(ctx.owned || []);
   let activeAvatar = ctx.activeAvatar || null;
   let freeLeft = Math.max(0, Number(ctx.freeLeft) || 0); // v0.58: zwei Sprüche gratis
+  let customText = ctx.customText || ''; // v0.63
   let busy = false;
   let notice = '';
   let noticeKind = 'info';
@@ -84,6 +87,18 @@ export function renderShop(root, ctx) {
       '</article>';
   };
 
+  const customCard = () => {
+    const has = owned.has(SHOP_CUSTOM.id);
+    return '<article class="shop-item shop-custom-item' + (has ? ' is-owned' : '') + '"><div class="shop-custom-head">✍️ <strong>Eigener Spruch</strong></div>' +
+      (has
+        ? '<div class="shop-bubble">' + (customText ? esc(customText) : '<i>noch leer – schreib was!</i>') + '</div>' +
+          '<form class="shop-custom-form" data-customform><input type="text" maxlength="' + SHOP_CUSTOM.max + '" placeholder="Dein Spruch (max. ' + SHOP_CUSTOM.max + ' Zeichen)" value="' + esc(customText) + '" aria-label="Eigener Spruch" ' + (busy?'disabled':'') + '>' +
+          '<button class="shop-action shop-select" type="submit" ' + (busy?'disabled':'') + '>Speichern</button></form>'
+        : '<p class="shop-emote-text">Schreib deinen ganz eigenen Spruch – nur du hast ihn, jederzeit änderbar.</p>' +
+          '<button class="shop-action shop-buy" data-buy="' + SHOP_CUSTOM.id + '" ' + (balance<SHOP_CUSTOM.price||busy?'disabled':'') + '>Kaufen · ' + SHOP_CUSTOM.price + ' ' + DUB + '</button>') +
+      '</article>';
+  };
+
   const emoteCard = (item) => {
     const has = owned.has(item.id);
     return '<article class="shop-item shop-emote-item' + (has ? ' is-owned' : '') + '"><div class="shop-emote-icon">' + item.icon + '</div>' +
@@ -94,13 +109,13 @@ export function renderShop(root, ctx) {
   };
 
   function render() {
-    const nAv = AVATARS.filter((x) => owned.has(x.id)).length, nSp = SHOP_SAYINGS.filter((x) => owned.has(x.id)).length;
+    const nAv = AVATARS.filter((x) => owned.has(x.id)).length, nSp = SHOP_SAYINGS.filter((x) => owned.has(x.id)).length + (owned.has(SHOP_CUSTOM.id) ? 1 : 0);
     root.innerHTML =
       '<section class="shop-shell" aria-label="Shop">' +
         '<header class="shop-header"><h1>🛒 Shop</h1>' +
         '<nav class="shop-tabs" role="tablist">' +
           '<button role="tab" data-tab="avatare" class="' + (tab === 'avatare' ? 'on' : '') + '">Avatare <small>' + nAv + '/' + AVATARS.length + '</small></button>' +
-          '<button role="tab" data-tab="sprueche" class="' + (tab === 'sprueche' ? 'on' : '') + '">Sprüche <small>' + nSp + '/' + SHOP_SAYINGS.length + '</small></button>' +
+          '<button role="tab" data-tab="sprueche" class="' + (tab === 'sprueche' ? 'on' : '') + '">Sprüche <small>' + nSp + '/' + (SHOP_SAYINGS.length + 1) + '</small></button>' +
           '<button role="tab" data-tab="emotes" class="' + (tab === 'emotes' ? 'on' : '') + '">Emotes <small>' + SHOP_EMOTES.filter((x) => owned.has(x.id)).length + '/' + SHOP_EMOTES.length + '</small></button>' +
         '</nav>' +
         '<div class="shop-balance" title="Dein Guthaben">' + DUB + '<strong>' + new Intl.NumberFormat('de-DE').format(balance) + '</strong></div>' +
@@ -114,7 +129,7 @@ export function renderShop(root, ctx) {
             ? '<div class="shop-grid shop-avatar-grid">' + TIERS.flatMap((t) => t.items).map(avatarCard).join('') + '</div>' +
               '<p class="shop-hint">Dein aktiver Avatar ersetzt dein Profilbild – für alle am Tisch sichtbar.</p>'
             : (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
-              '<div class="shop-grid shop-saying-grid">' + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
+              '<div class="shop-grid shop-saying-grid">' + customCard() + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
               '<p class="shop-hint">Gekaufte Sprüche findest du im Spiel unter 💬.</p>') +
         '</div><footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer></section>';
 
@@ -123,11 +138,12 @@ export function renderShop(root, ctx) {
     root.querySelectorAll('[data-buy]').forEach(b => b.addEventListener('click', () => buy(b.dataset.buy)));
     root.querySelectorAll('[data-free]').forEach(b => b.addEventListener('click', () => claim(b.dataset.free)));
     root.querySelectorAll('[data-select]').forEach(b => b.addEventListener('click', () => select(b.dataset.select)));
+    root.querySelector('[data-customform]')?.addEventListener('submit', (e) => { e.preventDefault(); saveCustom(e.target.querySelector('input').value); });
   }
 
   async function buy(id) {
     if (busy || owned.has(id)) return;
-    const item = [...AVATARS,...SHOP_SAYINGS,...SHOP_EMOTES].find(x => x.id === id);
+    const item = [...AVATARS,...SHOP_SAYINGS,...SHOP_EMOTES,SHOP_CUSTOM].find(x => x.id === id);
     if (!item) return;
     if (balance < item.price) { notice='Dafür reichen deine Dublonen noch nicht.'; noticeKind='error'; render(); return; }
     busy=true; notice=''; render();
@@ -149,6 +165,17 @@ export function renderShop(root, ctx) {
       notice = 'Geschenkt! 🎁'; noticeKind='success';
     } catch (e) { notice=e?.message || 'Das hat nicht geklappt.'; noticeKind='error'; }
     finally { busy=false; render(); }
+  }
+
+  async function saveCustom(text) {
+    if (busy || typeof ctx.saveCustom !== 'function') return;
+    const t = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!t) { notice = 'Bitte einen Spruch eingeben.'; noticeKind = 'error'; render(); return; }
+    if (t.length > SHOP_CUSTOM.max) { notice = 'Höchstens ' + SHOP_CUSTOM.max + ' Zeichen.'; noticeKind = 'error'; render(); return; }
+    busy = true; notice = ''; render();
+    try { customText = (await ctx.saveCustom(t)) || t; notice = 'Gespeichert – im Spiel unter 💬.'; noticeKind = 'success'; }
+    catch (e) { notice = e?.message || 'Das hat nicht geklappt.'; noticeKind = 'error'; }
+    finally { busy = false; render(); }
   }
 
   async function select(id) {

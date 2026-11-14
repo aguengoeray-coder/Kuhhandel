@@ -8,13 +8,13 @@ import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
 import { haptic } from './haptics.js';
-import { renderShop, SHOP_SAYINGS } from './shop.js';
+import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.62.0';
+export const APP_VERSION = '0.63.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -65,7 +65,8 @@ let auth = { mode: 'login', error: '', busy: false }; // Anmelde-Bildschirm
 const profiles = new Map(); // Anmelde-ID → { name, animal, color }
 // v0.48 Shop: eigener Kontostand/Käufe + gekaufte Avatare aller Mitspieler (Anmelde-ID → Avatar-ID)
 const shopAvatars = new Map();
-const shopMe = { state: 'idle', balance: 0, owned: new Set(), active: null, freeLeft: 0 }; // state: idle | loading | ok | off (SQL noch nicht eingerichtet)
+const shopMe = { state: 'idle', balance: 0, owned: new Set(), active: null, freeLeft: 0, custom: '' };
+const customSayings = new Map(); // v0.63: Konto-ID → eigener Spruch (Mitspieler) // state: idle | loading | ok | off (SQL noch nicht eingerichtet)
 const SAYING_TEXTS = SHOP_SAYINGS.map((x) => x.text);
 try { if (!document.getElementById('shop-avatar-runtime-css')) { const st = document.createElement('style'); st.id = 'shop-avatar-runtime-css'; st.textContent = SHOP_AVATAR_CSS + SHOP_AVATAR_FULL_CSS; document.head.append(st); } } catch {}
 const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
@@ -601,6 +602,8 @@ function renderPlaying() {
     soundName: SOUND_NAMES[soundLevel()],
     toggleSound: () => { const order = ['off', 'low', 'on', 'high']; const next = order[(order.indexOf(soundLevel()) + 1) % order.length]; store.set('kh_sound', next); setVolume(SOUND_LEVELS[next]); if (next !== 'off') playSound('bid'); render(); },
     vibe: vibeOn(),
+    introsOff: !!store.get('kh_intros_off') || matchMedia('(prefers-reduced-motion: reduce)').matches, // v0.63 Schalter „Intros aus“
+    toggleIntros: () => { if (store.get('kh_intros_off')) store.del('kh_intros_off'); else store.set('kh_intros_off', '1'); render(); },
     toggleVibe: () => { store.set('kh_vibe', vibeOn() ? 'off' : 'on'); render(); },
     push: PUSH_PUBLIC_KEY ? pushOn() : null,
     togglePush,
@@ -624,9 +627,11 @@ function renderPlaying() {
     reactionEmoji: 0,
     reactionBase: REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
+    demoPodium: DEMO && params.get('podium') === '1', // Screenshots/Tests: gleich das Siegertreppchen (im echten Spiel nicht überspringbar)
     seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
     canPunch: canPunch(), // Emote „Verprügeln“: gekauft oder Admin
+    taglineOf: (seat) => customSayings.get(userOfSeat(seat)) || (ui.game?.local && seat === dbg.viewAs ? shopMe.custom : '') || '', // v0.63 VS-Intro: eigener Spruch
     punchLabel: ui.isAdmin && !shopMe.owned.has('emote-pruegel') ? '🥊 Admin-Fähigkeit: Verprügeln' : '🥊 Emote: Verprügeln',
     punch: sendPunch,
     punches: punches.filter((x) => Date.now() - x.at < 4000),
@@ -1091,14 +1096,16 @@ async function loadProfiles(ids) {
   // gekaufte Shop-Avatare der Mitspieler (öffentlich lesbar über eine eigene Funktion; fehlt sie noch, bleibt es beim Profilbild)
   const sa = await sb.rpc('shop_public_avatars', { p_ids: missing }).then((r) => r, () => ({ data: null }));
   (sa?.data || []).forEach((r) => { if (r.active_avatar) shopAvatars.set(r.user_id, r.active_avatar); });
-  if (data?.length || sa?.data?.length) render();
+  const cs = await sb.rpc('shop_public_sayings', { p_ids: missing }).then((r) => r, () => ({ data: null })); // v0.63
+  (cs?.data || []).forEach((r) => { if (r.text) customSayings.set(r.user_id, r.text); });
+  if (data?.length || sa?.data?.length || cs?.data?.length) render();
 }
 
 // ---------- Shop (v0.48): Dublonen, Avatare, Sprüche ----------
 
 function myReactions() {
   if (DEMO && shopMe.state === 'idle') loadShop();
-  return [...REACTIONS, ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)]; // v0.58: nur Sprüche (Emojis entfernt, Wunsch Alp)
+  return [...REACTIONS, ...(shopMe.owned.has(SHOP_CUSTOM.id) && shopMe.custom ? [shopMe.custom] : []), ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)]; // v0.58: nur Sprüche; v0.63: eigener Spruch zuerst
 }
 
 async function loadShop(force = false) {
@@ -1106,7 +1113,8 @@ async function loadShop(force = false) {
   shopMe.state = 'loading';
   if (DEMO) {
     const av = params.get('myav') || 'noergler';
-    Object.assign(shopMe, { state: 'ok', balance: 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen']), freeLeft: params.get('free') === '0' ? 0 : 2 });
+    Object.assign(shopMe, { state: 'ok', balance: 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen', ...(params.get('eigen') ? ['spruch-eigener'] : [])]), freeLeft: params.get('free') === '0' ? 0 : 2, custom: params.get('eigen') || '' });
+    if (params.get('eigen')) { customSayings.set(me.id, params.get('eigen')); customSayings.set('u2', 'Nico, schrei nicht!'); }
     shopAvatars.set(me.id, av);
     return;
   }
@@ -1119,6 +1127,8 @@ async function loadShop(force = false) {
     const freeUsed = (p.data || []).filter((x) => Number(x.price) === 0).length;
     Object.assign(shopMe, { state: 'ok', balance: w.data?.balance || 0, active: w.data?.active_avatar || null, owned: new Set((p.data || []).map((x) => x.item_id)), freeLeft: Math.max(0, 2 - freeUsed) });
     if (shopMe.active) shopAvatars.set(me.id, shopMe.active); else shopAvatars.delete(me.id);
+    const cs = await sb.rpc('shop_public_sayings', { p_ids: [me.id] }).then((r) => r, () => ({ data: null })); // v0.63
+    shopMe.custom = cs?.data?.[0]?.text || ''; if (shopMe.custom) customSayings.set(me.id, shopMe.custom);
   } catch { shopMe.state = 'off'; }
   render();
 }
@@ -1132,14 +1142,19 @@ async function openShop() {
   const err = (e, fb) => new Error(String(e?.message || fb).replace(/^.*?:\s*/, '') || fb);
   renderShop(root, {
     me: { id: me.id, name: me.name },
-    balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active, freeLeft: shopMe.freeLeft,
+    balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active, freeLeft: shopMe.freeLeft, customText: shopMe.custom,
+    async saveCustom(text) {
+      let v = text;
+      if (!DEMO) { const { data, error } = await sb.rpc('shop_set_custom_saying', { p_text: text }); if (error) throw err(error, 'Der Spruch konnte nicht gespeichert werden.'); v = data || text; }
+      shopMe.custom = v; customSayings.set(me.id, v); return v;
+    },
     async claimFree(id) {
       if (!DEMO) { const { error } = await sb.rpc('shop_claim_free', { p_item_id: id }); if (error) throw err(error, 'Der Gratis-Spruch hat nicht geklappt.'); }
       shopMe.owned.add(id); shopMe.freeLeft = Math.max(0, shopMe.freeLeft - 1);
       return { freeLeft: shopMe.freeLeft };
     },
     async buy(id) {
-      if (DEMO) { const it = [...SHOP_SAYINGS].find((x) => x.id === id); shopMe.balance -= it ? it.price : 30; shopMe.owned.add(id); return { balance: shopMe.balance }; }
+      if (DEMO) { const it = [...SHOP_SAYINGS, SHOP_CUSTOM].find((x) => x.id === id); shopMe.balance -= it ? it.price : 30; shopMe.owned.add(id); return { balance: shopMe.balance }; }
       const { data, error } = await sb.rpc('shop_buy', { p_item_id: id });
       if (error) throw err(error, 'Der Kauf hat nicht geklappt.');
       const row = Array.isArray(data) ? data[0] : data;
@@ -1213,6 +1228,9 @@ function sendReaction(text, to = null) {
   showReaction(seat, text, to);
   if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'react', payload: { seat, text, to } });
 }
+
+// v0.63: Platz → Konto-ID (Testspiel/Plätze können abweichen)
+function userOfSeat(seat) { const p = (ui.game?.players || []).find((x) => (x.seat || x.id) === seat); return p ? p.id : seat; }
 
 // v0.61: nur Admins (Alp, Nico) – eigene Figur antippen → „Verprügeln“ → Mitspieler wählen
 function showPunch(from, to) {
@@ -1402,7 +1420,7 @@ function watchRoom(id) {
       showPunch(payload.from, payload.to);
     })
     .on('broadcast', { event: 'react' }, ({ payload }) => {
-      if (!payload?.seat || !(REACTIONS.includes(payload.text) || SAYING_TEXTS.includes(payload.text) || REACT_EMOJI.includes(payload.text))) return;
+      if (!payload?.seat || !(REACTIONS.includes(payload.text) || SAYING_TEXTS.includes(payload.text) || REACT_EMOJI.includes(payload.text) || (payload.text && customSayings.get(userOfSeat(payload.seat)) === payload.text))) return;
       const to = typeof payload.to === 'string' && ui.game?.state?.players?.some((p) => p.id === payload.to) ? payload.to : null;
       showReaction(payload.seat, payload.text, to);
     })
@@ -1614,7 +1632,7 @@ const RULES = `
   <h3>Ratte</h3><p>Wird eine Ratte aufgedeckt, geht es reihum (links vom Aufdecker, er selbst macht mit): Jeder legt eine Karte verdeckt in die Mitte (auch ein 0er) – oder nimmt die Ratte und bekommt alle gelegten Karten. Wer keine Karten mehr hat, muss sie nehmen. Danach deckt der Aufdecker noch eine Karte auf (ist der Stapel leer: Kuhhandel).<br>
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
   Am Ende hat einer alle 4 Ratten – er wählt eines seiner Quartette, das nicht zählt.</p>
-  <h3>📈 Börsen-Chaos (eigene Spielart)</h3><p>Wie Klassisch, dazu 8 Börsen-News im Stapel. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf. <b>Kursrallye</b> (2×): ein Tier +50 % bis Spielende · <b>Kurssturz</b> (2×): ein Tier −50 % (stapelbar, nie unter 0) · <b>Dividende</b>: alle +50 · <b>Steuerprüfung</b>: jeder gibt seinen höchsten Schein ab · <b>Marktpanik</b>: jeder schiebt einen zufälligen Schein verdeckt nach links · <b>Hektik</b>: die nächsten 3 Versteigerungen nur 5 s. Die Wertung rechnet mit den aktuellen Kursen (Kurszettel neben dem Stapel). Nicht zusammen mit Turbo.</p>
+  <h3>📈 Börsen-Chaos (eigene Spielart)</h3><p>Wie Klassisch, dazu 8 Börsen-News im Stapel. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf. <b>Kursrallye</b> (2×): ein Tier +30 bis +100 % (zufällig) bis Spielende · <b>Kurssturz</b> (2×): ein Tier −50 % (stapelbar, nie unter 0) · <b>Dividende</b>: alle +50 · <b>Steuerprüfung</b>: jeder gibt seinen höchsten Schein ab · <b>Marktpanik</b>: jeder schiebt einen zufälligen Schein verdeckt nach links · <b>Hektik</b>: die nächsten 3 Versteigerungen nur 5 s. Die Wertung rechnet mit den aktuellen Kursen (Kurszettel neben dem Stapel). Nicht zusammen mit Turbo.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Alle außer dem Aufdecker sehen einen Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
   <h3>Geldscheine im Stapel</h3><p>Kann der Gastgeber im Warteraum einschalten (bis zu 20 Scheine, Werte frei wählbar). Wird ein Geldschein aufgedeckt, bekommt ihn der Aufdecker – alle sehen den Betrag – und sein Zug ist vorbei.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;

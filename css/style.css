@@ -3200,3 +3200,71 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .beast .bkoffer::before { content: ''; position: absolute; left: 5px; top: -6px; width: 6px; height: 5px; border: 2px solid #2B2B2B; border-bottom: 0; border-radius: 3px 3px 0 0; }
 .beast .bcount { position: absolute; left: -8px; top: -6px; z-index: 3; padding: 0 5px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 11px var(--font-head); border: 2px solid #2B2B2B; }
 @media (prefers-reduced-motion: reduce) { .alive, .ratrun, .polo, .tripwalk { display: none; } }
+/* ===== v0.63 Encounter-Intro („VS“): schräge Farbflächen in Platzfarben, Figuren sliden rein, VS-Knall ===== */
+.eintro { position: absolute; inset: 0; z-index: 60; overflow: hidden; cursor: pointer; animation: eiout var(--dur) linear both; }
+@keyframes eiout { 0%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; transform: scale(1.04); } }
+.eintro .eiband { position: absolute; inset: 0; background: var(--c); animation: eiband var(--dur) cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--k) * 40ms); }
+.eintro .eiband::after { content: ''; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255,255,255,.18), rgba(0,0,0,.28)); }
+.eintro.dark .eiband::after { background: linear-gradient(160deg, rgba(0,0,0,.25), rgba(0,0,0,.6)); }
+.eintro .eilines { position: absolute; inset: -20%; opacity: .22; background: repeating-linear-gradient(var(--la, 0deg), transparent 0 18px, rgba(255,255,255,.9) 18px 21px, transparent 21px 46px); animation: eilines .35s linear infinite; }
+@keyframes eilines { to { transform: translate(var(--lx, 0px), var(--ly, 46px)); } }
+.eintro .d-l, .eintro .d-r { --la: 90deg; --lx: 46px; --ly: 0px; } .eintro .d-lt, .eintro .d-rb { --la: 135deg; --lx: 32px; --ly: 32px; }
+.eintro .d-l { --fx: -110%; --fy: 0%; } .eintro .d-r { --fx: 110%; --fy: 0%; } .eintro .d-t { --fx: 0%; --fy: -110%; } .eintro .d-b { --fx: 0%; --fy: 110%; }
+.eintro .d-lt { --fx: -90%; --fy: -60%; } .eintro .d-rb { --fx: 90%; --fy: 60%; }
+@keyframes eiband { 0% { transform: translate(var(--fx), var(--fy)); } 14%, 100% { transform: none; } }
+.eintro .eiwho { position: absolute; bottom: 9%; width: 140px; margin-left: -70px; display: flex; flex-direction: column; align-items: center; gap: 2px; animation: eiwho var(--dur) cubic-bezier(.15,.9,.25,1.25) both; animation-delay: calc(80ms + var(--k) * 80ms); }
+@keyframes eiwho { 0% { transform: translate(calc(var(--fx) * 4), calc(var(--fy) * 4)); } 38% { transform: translate(calc(var(--fx) * -.04), calc(var(--fy) * -.04)); } 44%, 100% { transform: none; } }
+.eintro .eifig { width: 96px; height: 160px; filter: drop-shadow(0 6px 0 rgba(0,0,0,.28)); }
+.eintro .eifig .afull, .eintro .eifig .agen { width: 96px; height: 160px; }
+.eintro .eifig .shop-avatar-full, .eintro .eifig .gbody { width: 96px; height: 160px; }
+.eintro .eifig .agen .ahead { left: 15px; top: 0; width: 66px; height: 66px; } .eintro .eifig .agen .ahead .avatar { width: 66px; height: 66px; font-size: 28px; }
+.eintro .einame { margin-top: 2px; padding: 3px 14px; background: #fff; color: var(--c); border-radius: 6px; font: 900 18px var(--font-head); text-transform: uppercase; letter-spacing: .5px; box-shadow: 0 3px 0 rgba(0,0,0,.3); transform: skewX(-10deg); white-space: nowrap; }
+.eintro .eitag { max-width: 150px; padding: 1px 8px; border-radius: 6px; background: rgba(0,0,0,.4); color: #fff; font: 600 11px var(--font-body); text-align: center; line-height: 1.25; }
+.eintro .eiflash { position: absolute; inset: 0; background: #fff; opacity: 0; animation: eiflash var(--dur) linear both; }
+@keyframes eiflash { 0%, 45% { opacity: 0; } 47% { opacity: .85; } 56%, 100% { opacity: 0; } }
+.eintro .eititle { position: absolute; left: 50%; top: 6%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; animation: eititle var(--dur) cubic-bezier(.2,.9,.3,1.4) both; }
+.eintro .eititle b { padding: 4px 18px; background: #1a1a1a; color: #FFD34E; border: 3px solid #fff; border-radius: 8px; font: 900 22px var(--font-head); letter-spacing: 1px; white-space: nowrap; transform: skewX(-10deg); box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.eintro .eibadge { padding: 3px 10px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 12px var(--font-head); }
+@keyframes eititle { 0%, 10% { opacity: 0; transform: translate(-50%, -40px); } 24%, 100% { opacity: 1; transform: translate(-50%, 0); } }
+.eintro .eivs { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; animation: eivs var(--dur) cubic-bezier(.2,.9,.3,1.5) both; }
+.eintro .eivs b { font: 900 64px/1 var(--font-head); color: #FFD34E; -webkit-text-stroke: 3px #1a1a1a; text-shadow: 0 5px 0 #1a1a1a; letter-spacing: 2px; white-space: nowrap; transform: skewX(-8deg); }
+.eintro.n3 .eivs b, .eintro.n4 .eivs b { font-size: 34px; }
+@keyframes eivs { 0%, 44% { opacity: 0; transform: translate(-50%, -50%) scale(3); } 52% { opacity: 1; transform: translate(-50%, -50%) scale(.9); } 58%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.eintro .eicard { width: 50px; height: 50px; border-radius: 10px; background: var(--a); border: 3px solid #fff; display: grid; place-items: center; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+.eintro .eicard svg { width: 44px; height: 44px; }
+.eintro .eium { padding: 1px 10px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 13px var(--font-head); }
+.eintro .eisub { padding: 2px 10px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; font: 700 11px var(--font-body); white-space: nowrap; }
+/* Erzrivalen: Flammen hinter dem VS */
+.eintro .eiflame { position: absolute; left: 50%; top: 38%; width: 170px; height: 120px; transform: translate(-50%, -60%); border-radius: 50% 50% 40% 40%;
+  background: radial-gradient(ellipse at 50% 90%, #FFD34E 0 18%, #F28C1B 35%, #E5484D 55%, transparent 72%); filter: blur(1px); animation: eiflame .16s ease-in-out infinite alternate; z-index: -1; }
+@keyframes eiflame { from { transform: translate(-50%, -60%) scale(1, 1); } to { transform: translate(-50%, -64%) scale(1.06, 1.14); } }
+/* Kurzfassung (ab dem 3. Duell desselben Paares): nur Flächen + VS */
+.eintro.short .eititle { display: none; } .eintro.short .eiflash { display: none; }
+@media (prefers-reduced-motion: reduce) { .eintro { display: none; } }
+.eintro.longvs .eivs b { font-size: 30px; -webkit-text-stroke: 2px #1a1a1a; text-shadow: 0 3px 0 #1a1a1a; }
+/* v0.63: VS-Schriftzug bei 3–4 Spielern / langem Text höher (über den Köpfen) */
+.eintro.n3 .eivs, .eintro.n4 .eivs, .eintro.longvs .eivs { top: 27%; }
+/* „Letzte Karte!“: Scheinwerfer auf die Mitte */
+.spotlight { position: absolute; inset: 0; z-index: 31; pointer-events: none; background: radial-gradient(ellipse 150px 135px at 50% 46%, transparent 0 62%, rgba(0,0,0,.72) 100%); animation: spot 2.6s ease both; }
+.spotlight b { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); padding: 4px 16px; border-radius: 8px; background: #1a1a1a; color: #FFD34E; border: 3px solid #fff; font: 900 20px var(--font-head); letter-spacing: 1px; white-space: nowrap; }
+@keyframes spot { 0% { opacity: 0; } 12%, 80% { opacity: 1; } 100% { opacity: 0; } }
+/* „Neuer Spitzenreiter!“ */
+.crownfly { position: absolute; z-index: 38; pointer-events: none; width: 36px; height: 36px; font-size: 30px; line-height: 36px; text-align: center; filter: drop-shadow(0 3px 2px rgba(0,0,0,.4)); }
+.leadtag { position: absolute; z-index: 38; pointer-events: none; transform: translate(-50%, -130%); padding: 2px 10px; border-radius: 999px; background: #FFD34E; color: #1a1a1a; font: 800 12px var(--font-head); white-space: nowrap; opacity: 0; animation: leadtag 1.8s ease both; box-shadow: 0 2px 0 rgba(0,0,0,.3); }
+@keyframes leadtag { 0% { opacity: 0; transform: translate(-50%, -100%) scale(.5); } 15%, 80% { opacity: 1; transform: translate(-50%, -130%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -150%); } }
+/* Finale „Und der Sieger ist …“ */
+.overlay.finale { background: #07090f; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+.finale .fspot { position: absolute; inset: 0; background: radial-gradient(ellipse 210px 260px at 50% 62%, rgba(255,240,190,.35), transparent 70%); opacity: 0; animation: fspot 3.2s ease both; animation-delay: var(--fel); }
+@keyframes fspot { 0%, 48% { opacity: 0; } 56%, 100% { opacity: 1; } }
+.finale .ftitle { position: relative; margin: 0 0 6px; color: #fff; font: 800 26px var(--font-head); animation: ftitle 3.2s ease both; animation-delay: var(--fel); }
+@keyframes ftitle { 0% { opacity: 0; transform: translateY(10px); } 10%, 100% { opacity: 1; transform: none; } }
+.finale .fwin { position: relative; display: flex; gap: 30px; }
+.finale .fone { display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: 0; animation: fone 3.2s cubic-bezier(.2,.9,.3,1.3) both; animation-delay: var(--fel); }
+@keyframes fone { 0%, 50% { opacity: 0; transform: scale(.4) translateY(40px); } 60% { opacity: 1; transform: scale(1.1); } 66%, 100% { opacity: 1; transform: none; } }
+.finale .ffig { width: 96px; height: 160px; } .finale .ffig .afull, .finale .ffig .agen, .finale .ffig .shop-avatar-full, .finale .ffig .gbody { width: 96px; height: 160px; }
+.finale .ffig .agen .ahead { left: 15px; width: 66px; height: 66px; } .finale .ffig .agen .ahead .avatar { width: 66px; height: 66px; font-size: 28px; }
+.finale .fone b { padding: 3px 14px; border-radius: 8px; background: var(--c); color: #fff; font: 900 20px var(--font-head); border: 3px solid #fff; }
+.finale .fone small { color: #FFD34E; font: 800 14px var(--font-head); }
+.finale .fconf { position: absolute; top: -12px; left: var(--x); width: 8px; height: 13px; border-radius: 2px; background: hsl(var(--h) 85% 60%); opacity: 0; animation: fconf 1.6s linear both; animation-delay: calc(var(--fel) + 1.8s + var(--k) * 45ms); }
+@keyframes fconf { 0% { opacity: 1; transform: translateY(0) rotate(0); } 100% { opacity: 1; transform: translateY(420px) rotate(720deg); } }
+@media (prefers-reduced-motion: reduce) { .crownfly, .leadtag, .spotlight { display: none; } }

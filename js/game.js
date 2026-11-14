@@ -419,6 +419,26 @@ function seekFx(root) {
   });
 }
 
+// ---------- v0.63 Encounter-Intro („VS“): Farbflächen + Figuren sliden rein, VS-Knall, dann weiter ----------
+// Reine Anzeige (keine Spiellogik). parts: [{ fig, name, color, tag }], 2–n Teilnehmer; Aufteilung in schräge Bänder.
+export const INTRO_MS = 1500, INTRO_SHORT_MS = 750;
+const INTRO_DIRS = { 2: ['lt', 'rb'], 3: ['l', 't', 'r'], 4: ['l', 't', 'b', 'r'] };
+function encounterHtml({ parts, title, badge = '', center = '', vs = 'VS', sub = '', short = false, rival = false, dark = false }) {
+  const n = parts.length; const slant = n === 2 ? 11 : 6;
+  const b = (k, top) => (k <= 0 ? 0 : k >= n ? 100 : (k / n) * 100 + (top ? slant : -slant));
+  const dirs = INTRO_DIRS[n] || parts.map((_, i) => (i % 2 ? 'b' : 't'));
+  const bands = parts.map((p, i) => {
+    const poly = `polygon(${b(i, true)}% 0, ${b(i + 1, true)}% 0, ${b(i + 1, false)}% 100%, ${b(i, false)}% 100%)`;
+    const cx = (b(i, true) + b(i + 1, true) + b(i, false) + b(i + 1, false)) / 4;
+    return `<div class="eiband d-${dirs[i]}" style="--c:${p.color};clip-path:${poly};--k:${i}"><i class="eilines"></i></div>
+      <div class="eiwho d-${dirs[i]}" style="left:${cx}%;--k:${i};--c:${p.color}"><div class="eifig">${p.fig}</div><b class="einame">${esc(p.name)}</b>${p.tag ? `<small class="eitag">„${esc(p.tag)}“</small>` : ''}</div>`;
+  }).join('');
+  return `<div class="eintro n${n} ${vs.length > 5 ? 'longvs' : ''} ${short ? 'short' : ''} ${dark ? 'dark' : ''} ${rival ? 'rival' : ''}" data-a="introSkip" role="button" aria-label="${esc(title)} – Tippen überspringt" style="--dur:${short ? INTRO_SHORT_MS : INTRO_MS}ms">
+    ${bands}<i class="eiflash"></i>
+    <div class="eititle"><b>${esc(title)}</b>${badge ? `<span class="eibadge">${esc(badge)}</span>` : ''}</div>
+    <div class="eivs">${rival ? '<i class="eiflame"></i>' : ''}<b>${esc(vs)}</b>${center}${sub ? `<small class="eisub">${esc(sub)}</small>` : ''}</div></div>`;
+}
+
 // ---------- v0.62 „Profilbild wird lebendig“ ----------
 // Standard-Körper für alle ohne Shop-Avatar: einfacher Körper in Platzfarbe, das runde Profilbild ist der Kopf
 function genericBody(color) {
@@ -471,7 +491,7 @@ function newsTitle(e) {
 function newsReveal(e, meId, nameOf) {
   let body = '';
   let mine = '';
-  if (e.kind === 'rallye' || e.kind === 'crash') body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${e.kind === 'rallye' ? 'up' : 'down'}">${e.to} ${e.kind === 'rallye' ? '▲' : '▼'}</b></div><small>${e.kind === 'rallye' ? '+' : '−'}${KURS_STEP} % bis Spielende</small>`;
+  if (e.kind === 'rallye' || e.kind === 'crash') body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${e.kind === 'rallye' ? 'up' : 'down'}">${e.to} ${e.kind === 'rallye' ? '▲' : '▼'}</b></div><small>${e.kind === 'rallye' ? '+' : '−'}${e.pct || KURS_STEP} % bis Spielende</small>`;
   else if (e.kind === 'dividende') body = `<p>Alle bekommen <b>${e.amount ?? DIVIDENDE}</b> aus der Bank.</p>`;
   else if (e.kind === 'steuer') { body = '<p>Alle geben ihren <b>höchsten Schein</b> ab.</p>'; const l = e.lost && e.lost[meId]; mine = l != null ? `Du gibst <b>${l}</b> ab` : 'Du hattest keinen Schein'; }
   else if (e.kind === 'panik') { body = '<p>Jeder schiebt einen <b>zufälligen Schein</b> nach links.</p>'; const m = e.moved || {}; mine = `${m.gave != null ? `Du gibst <b>${m.gave}</b>` : 'Du gibst nichts'} · ${m.got != null ? `bekommst <b>${m.got}</b> von ${esc(nameOf(m.from))}` : 'bekommst nichts'}`; }
@@ -520,7 +540,7 @@ export function renderGame(root, ctx) {
     const src = pu.from === meId ? '@me' : esc(pu.from); const dst = pu.to === meId ? '@me' : esc(pu.to);
     const pr = avatarLookup(pu.from);
     const fig = figOf(pu.from);
-    local.outUntil = local.outUntil || {}; local.outUntil[pu.from] = Math.max(local.outUntil[pu.from] || 0, pu.at + PUNCH_MS);
+    outMark(pu.from, pu.at, pu.at + PUNCH_MS);
     const who = `${esc(pu.from === meId ? 'Du' : nameOf(pu.from))} ${pu.from === meId ? 'verprügelst' : 'verprügelt'} ${esc(pu.to === meId ? 'dich' : nameOf(pu.to))}!`;
     return `<div class="pwalk ${pu.from === meId ? 'mine' : ''} ${pr?.shop ? 'full' : 'gen'}" data-aim-from="${src}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" aria-hidden="true">${fig}</div>
       <div class="pcloud ${pu.to !== meId && /^t/.test(seatOf(pu.to)) ? 'low' : ''}" data-aim-from="${dst}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" role="status"><i class="pc c1"></i><i class="pc c2"></i><i class="pc c3"></i><i class="pc c4"></i>
@@ -1076,7 +1096,7 @@ export function renderGame(root, ctx) {
     let ttHtml = '';
     if (TT) {
       const tkey = `${state.log.length}|${t.challenger}|${t.animal}`;
-      if (local.ttKey !== tkey) { local.ttKey = tkey; local.ttAt = Date.now(); local.ttBuzzed = false; }
+      if (local.ttKey !== tkey) { local.ttKey = tkey; local.ttAt = Date.now() + (local.ttDelay || 0); local.ttDelay = 0; local.ttBuzzed = false; }
       const left = Math.max(0, Math.ceil((local.ttAt + TT * 1000 - Date.now()) / 1000));
       ttHtml = `<span class="ttimer ${left <= 5 ? 'low' : ''} ${left === 0 ? 'out' : ''}">${left ? `⏱ ${left} s` : '⏰ Zeit um!'}</span>`;
       if (left > 0) wakeLocal(Date.now() + 1000 - ((Date.now() - local.ttAt) % 1000) + 20);
@@ -1277,7 +1297,8 @@ export function renderGame(root, ctx) {
     </div>
     ${local.menu ? `<div class="menu">
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">🔊 Ton: ${ctx.soundName || (ctx.sound ? 'an' : 'aus')}</button>
-      <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button></div>
+      <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button>
+      <button type="button" class="pill pill-white pill-small" data-a="intros">⚔️ Intros: ${ctx.introsOff ? 'aus' : 'an'}</button></div>
       ${state.settings?.standings && state.phase !== 'ended' ? '<button type="button" class="pill pill-white pill-small" data-a="standings">📊 Zwischenstand</button>' : ''}
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
@@ -1313,6 +1334,7 @@ export function renderGame(root, ctx) {
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
   H.vibe = () => ctx.toggleVibe && ctx.toggleVibe();
+  H.intros = () => ctx.toggleIntros && ctx.toggleIntros();
   H.push = () => ctx.togglePush && ctx.togglePush();
   H.modal = (kind) => ctx.openModal(kind);
   H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
@@ -1352,12 +1374,24 @@ export function renderGame(root, ctx) {
   };
   // Spielende: erst die Abrechnung (Tippen überspringt), danach das Siegertreppchen mit Konfetti
   const TALLY_START = 500; const TALLY_STEP = 1500;
-  if (entered && state.phase === 'ended') { local.tallyAt = Date.now(); local.tallySkip = false; local.podiumShown = false; }
+  // v0.63 (Alp): Spielende gemeinsam anschauen – nichts überspringen. Die Abrechnung startet erst,
+  // wenn der letzte Zug (Ergebnis-Fenster, Flüge, Gags) fertig gezeigt ist.
+  if (entered && state.phase === 'ended') {
+    const lastWait = v.lastEvent && EV_WAIT[v.lastEvent.type] ? evWait(v.lastEvent.type, v.deck) + 2600 : 900;
+    local.tallyAt = ctx.demoPodium ? Date.now() - 600000 : Date.now() + (fresh ? lastWait : 0); local.tallySkip = false; local.podiumShown = false;
+  }
   const tallyTotal = TALLY_START + v.players.length * TALLY_STEP + 900;
   const tallyEl = local.tallyAt ? Date.now() - local.tallyAt : Infinity;
-  const tallyOn = state.phase === 'ended' && !local.recap && !local.tallySkip && tallyEl < tallyTotal;
+  const endWait = state.phase === 'ended' && tallyEl < 0; // letzter Zug läuft noch
+  if (endWait) wakeLocal(local.tallyAt + 10);
+  const tallyOn = state.phase === 'ended' && !endWait && !local.recap && tallyEl < tallyTotal;
   if (tallyOn) wakeLocal(local.tallyAt + tallyTotal + 20);
-  const podiumIn = state.phase === 'ended' && !tallyOn && !local.recap && !local.podiumShown;
+  // v0.63 Finale „Und der Sieger ist …“ (Trommelwirbel, dann Rampenlicht) – zwischen Abrechnung und Treppchen
+  const FINALE_MS = 3200;
+  const finaleOn = state.phase === 'ended' && !endWait && !local.recap && !tallyOn && tallyEl < tallyTotal + FINALE_MS && !ctx.demoPodium;
+  if (finaleOn) wakeLocal(local.tallyAt + tallyTotal + FINALE_MS + 20);
+  if (finaleOn && !local.finaleSound) { local.finaleSound = true; sounds.push('drum'); later.push(['fanfare', 1700]); }
+  const podiumIn = state.phase === 'ended' && !endWait && !tallyOn && !finaleOn && !local.recap && !local.podiumShown;
   if (podiumIn) local.podiumShown = true;
   if (state.phase === 'ended' && local.recap) {
     const list = reportList();
@@ -1374,15 +1408,22 @@ export function renderGame(root, ctx) {
     const ranked = s.map((r) => ({ ...r, place: s.findIndex((x) => x.score === r.score) + 1 }));
     const n = ranked.length;
     const cnt = typeof CSS !== 'undefined' && CSS.registerProperty ? 'cnt' : '';
-    overlay = `<div class="overlay endtable" data-a="tallySkip" role="button"><div class="ending tally ${cnt}">
+    overlay = `<div class="overlay endtable"><div class="ending tally ${cnt}">
       <h2>Abrechnung</h2>
       <div class="tallyrows">${ranked.map((r, idx) => {
         const i = idxOf(r.id); const d = TALLY_START + (n - 1 - idx) * TALLY_STEP - tallyEl;
         return `<div class="trow ${r.place === 1 ? 'win' : ''}" style="--d:${d}ms;--to:${r.score};--c:${SEAT_COLORS[i]}"><i>${r.place === 1 ? '👑' : `${r.place}.`}</i>${avatar(v.players[i], i)}<span class="tname">${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b class="tnum"><span>${r.score}</span></b></div>`;
       }).join('')}</div>
-      <small class="sthint">Tippen zum Überspringen</small>
     </div></div>`;
-  } else if (state.phase === 'ended') {
+  } else if (state.phase === 'ended' && finaleOn) {
+    const sc0 = scores(state).sort((a, b) => b.score - a.score);
+    const wins = sc0.filter((r) => r.score === sc0[0].score);
+    const fEl = tallyEl - tallyTotal;
+    overlay = `<div class="overlay endtable finale" style="--fel:-${fEl}ms"><div class="fspot"></div>
+      <h2 class="ftitle">Und ${wins.length > 1 ? 'die Sieger sind' : 'der Sieger ist'} …</h2>
+      <div class="fwin">${wins.map((r) => { const i = idxOf(r.id); return `<div class="fone" style="--c:${SEAT_COLORS[i]}"><div class="ffig">${figOf(r.id)}</div><b>${esc(r.id === meId ? 'Du!' : r.name)}</b><small>${r.score} Punkte</small></div>`; }).join('')}</div>
+      ${Array.from({ length: 24 }, (_, k) => `<i class="fconf" style="--k:${k};--x:${(k * 37) % 100}%;--h:${(k * 47) % 360}"></i>`).join('')}</div>`;
+  } else if (state.phase === 'ended' && !endWait) {
     const s = scores(state).sort((a, b) => b.score - a.score);
     // Platz nach Punkten (gleiche Punkte = gleicher Platz)
     const ranked = s.map((r) => ({ ...r, place: s.findIndex((x) => x.score === r.score) + 1 }));
@@ -1657,6 +1698,72 @@ export function renderGame(root, ctx) {
     let seen = 0; try { seen = Number(localStorage.getItem('kh_evseen')) || 0; localStorage.setItem('kh_evseen', String(seen + 1)); } catch { /* egal */ }
     local.res.hint = seen < 8;
   }
+  // ---------- v0.63 „Neuer Spitzenreiter!“: Krönchen fliegt zum neuen Führenden (nur wenn sich die Führung ändert) ----------
+  if (state.phase !== 'ended') {
+    const pts = v.players.map((p) => ({ id: p.id, sc: scoreFor(p, null, false, KURSE).score }));
+    const top = Math.max(...pts.map((x) => x.sc));
+    const leaders = pts.filter((x) => x.sc === top);
+    const lead = top > 0 && leaders.length === 1 ? leaders[0].id : null;
+    if (local.leadInit && lead && lead !== local.leader) {
+      const from = local.leader && idxOf(local.leader) >= 0 ? (local.leader === meId ? '@me' : local.leader) : '@cl';
+      const to = lead === meId ? '@me' : lead;
+      const d = evFresh && EV_WAIT[le?.type] ? evWait(le.type, v.deck) + 900 : 400;
+      keepFx(`<div class="crownfly" data-route="${esc(from)};${esc(to)}" data-offs="0,1" data-dur="1100" data-delay="${d}">👑</div>
+        <div class="leadtag" data-aim-from="${esc(to)}" data-aim-to="${esc(to)}" style="--tx:0px;--ty:0px;animation-delay:${d + 1000}ms">${lead === meId ? 'Du führst!' : `${esc(nameOf(lead))} führt!`}</div>`, d + 3000);
+      later.push(['glitz', d + 1050]);
+    }
+    if (lead) local.leader = lead;
+    local.leadInit = true;
+  }
+
+  // ---------- v0.63 Encounter-Intros ----------
+  local.duels = local.duels || {}; local.duelWins = local.duelWins || {};
+  const pairKey = (a, b2) => [a, b2].sort().join('|');
+  const partOf = (pid) => { const i = idxOf(pid); return { fig: figOf(pid), name: pid === meId ? 'Du' : (v.players[i]?.name || '?'), color: SEAT_COLORS[i] || '#1D5FC2', tag: ctx.taglineOf ? ctx.taglineOf(pid) : '' }; };
+  const playIntro = (key, opts, sfx = true) => {
+    if (local.introKey === key) return 0;
+    local.introKey = key;
+    if (ctx.introsOff) return 0;
+    const dur = opts.short ? INTRO_SHORT_MS : INTRO_MS;
+    keepFx(encounterHtml(opts), dur, 'intro');
+    if (sfx) { sounds.push('flip'); later.push(['flip', 140]); later.push(['gavel', opts.short ? 320 : 700]); if (!opts.short) feel('heavy'); }
+    return dur;
+  };
+  H.introSkip = () => { local.fx = local.fx.filter((f) => f.tag !== 'intro'); ctx.rerender(); };
+  // Kuhhandel/Rattenhandel startet
+  if (state.phase === 'trade' && v.trade && entered) {
+    const t = v.trade; const pk = pairKey(t.challenger, t.target);
+    const key = `trade|${state.log.length}|${t.challenger}|${t.target}`;
+    if (local.introKey !== key) {
+      local.duels[pk] = (local.duels[pk] || 0) + 1;
+      const nth = local.duels[pk]; const w = local.duelWins[pk] || {};
+      const maxPair = Math.max(...Object.values(local.duels));
+      const rat = t.animal === RAT;
+      const dur = playIntro(key, {
+        parts: [partOf(t.challenger), partOf(t.target)],
+        title: rat ? 'RATTENHANDEL!' : 'KUHHANDEL!', dark: rat,
+        center: `<span class="eicard" style="--a:${ANIMAL_COLORS[t.animal] || '#888'}">${art(t.animal)}</span><span class="eium">um ${t.count}×</span>`,
+        sub: nth > 1 ? `${nth}. Duell heute · ${w[t.challenger] || 0}:${w[t.target] || 0}` : '',
+        short: nth >= 3, rival: nth >= 3 && nth === maxPair,
+      });
+      if (dur) local.ttDelay = dur; // Kuhhandel-Zeit startet erst nach dem Intro
+    }
+  }
+  if (evFresh && le?.type === 'trade' && le.winner) { const pk = pairKey(le.challenger, le.target); local.duelWins[pk] = local.duelWins[pk] || {}; local.duelWins[pk][le.winner] = (local.duelWins[pk][le.winner] || 0) + 1; }
+  // Schnick-Schnack-Schnuck beginnt (2–4 mit gleicher Zahl)
+  if (state.phase === 'special' && v.special && specialStage(v, Date.now()) === 'rps') {
+    const vals = Object.values(v.special.buzzes || {}); const mx = vals.length ? Math.max(...vals) : 0;
+    const who = Object.keys(v.special.buzzes || {}).filter((id) => v.special.buzzes[id] === mx);
+    if (who.length > 1) playIntro(`rps|${v.special.revealer}|${v.special.startsAt}|${who.join(',')}`, { parts: who.map(partOf), title: 'GLEICHSTAND!', vs: 'SCHNICK! SCHNACK! SCHNUCK!', center: `<span class="eium">bei ${mx}</span>` });
+  }
+  // Spielstart: alle Spieler, „Die Börse ist eröffnet!“
+  if (state.phase === 'turn' && !v.lastEvent && state.log.length <= 2 && v.players.length >= 2) {
+    playIntro(`start|${v.players.map((p) => p.id).join(',')}|${state.log[0] || ''}`, {
+      parts: v.players.map((p) => partOf(p.id)), title: 'DIE BÖRSE IST ERÖFFNET!', vs: 'LOS!',
+      badge: isTurbo(state) ? '⚡ Turbo' : isBoerse(state) ? '📈 Börsen-Chaos' : '',
+    });
+  }
+
   // ---------- v0.62 Gags ----------
   if (evNew && le) {
     // Versteigerung gewonnen: Gewinner springt aus dem Profilbild und jubelt (nach dem Ergebnis-Fenster)
@@ -1894,6 +2001,11 @@ export function renderGame(root, ctx) {
   if (local.prevDeck != null && v.deck !== local.prevDeck && v.deck <= 1 && state.phase !== 'ended') {
     keepFx(`<div class="lastcard" role="status">${v.deck === 1 ? '⚡ Letzte Karte im Stapel!' : '🐮 Stapel leer – ab jetzt nur noch Kuhhandel!'}</div>`, 4300);
     later.push(['last', 1400]);
+  }
+  // v0.63 „Letzte Karte!“: die letzte Stapelkarte wird aufgedeckt → Scheinwerfer auf die Mitte, Trommelwirbel
+  if (local.prevDeck === 1 && v.deck === 0 && ['auction', 'special', 'rat'].includes(state.phase)) {
+    keepFx(`<div class="spotlight" aria-hidden="true"><b>LETZTE KARTE!</b></div>`, 2600);
+    sounds.push('drum');
   }
   local.prevDeck = v.deck;
   // Großes Gebot (+100 oder mehr auf einmal): Wow-Effekt am Gebots-Schild
