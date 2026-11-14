@@ -2055,6 +2055,7 @@ html.bigtext .stage .prow .tag-s { font-size: 13px; }
 .stage, .stage * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* Das umkämpfte Tier groß in der Mitte zwischen den beiden Seiten */
 .stage .tduel { align-items: center; gap: 6px; margin-left: 10px; }
+.stage:not(.p3) .tduel { translate: 6px 0; } /* v0.64: kleiner Abstand zum linken Aktions-Dock */
 .stage .tpanel { width: 196px; }
 .stage .gtable .tstriprow { bottom: 50px; }
 .tmid { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: none; width: 84px; }
