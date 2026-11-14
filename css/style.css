@@ -3359,7 +3359,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .tree-bowl { left: 10px; top: 30px; animation: tree-prop .3s 1.25s both; }
 .tree-grass { left: 54px; top: 2px; animation: tree-prop .3s 1.65s both; }
 .tree-lighter { right: 12px; top: 30px; animation: tree-prop .3s 2.05s both; }
-.tree-joint { left: 58px; top: 30px; font-size: 30px; animation: tree-joint 4s 2.7s ease-in-out both; }
+.tree-joint { left: 58px; top: 30px; width: 34px; height: 8px; border-radius: 8px; background: linear-gradient(90deg,#C69B61 0 82%,#F28C1B 82%); border: 2px solid #5B3B25; box-shadow: 0 0 8px #F28C1B; animation: tree-joint 4s 2.7s ease-in-out both; } .tree-joint i { position:absolute; right:-5px; top:-4px; width:6px; height:12px; border-radius:50%; background:#F28C1B; } .tree-relaxed { left: 57px; top: -22px; font-size: 28px; animation: tree-relaxed .6s 6.25s both; }
 .tree-smoke { font-size: 22px; filter: grayscale(1); }
 .tree-smoke.s1 { left: 60px; top: 0; animation: tree-smoke 1.5s 3.1s ease-out infinite; }
 .tree-smoke.s2 { left: 84px; top: 10px; animation: tree-smoke 1.5s 3.5s ease-out infinite; }
@@ -3374,7 +3374,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
   74% { transform: translate(-25px,22px) rotate(8deg); }
   100% { opacity: 0; transform: translate(-28px,18px) rotate(-25deg) scale(.6); }
 }
-@keyframes tree-smoke { 0% { opacity: 0; transform: translateY(12px) scale(.5); } 25% { opacity: .8; } 100% { opacity: 0; transform: translate(12px,-35px) scale(1.5); } }
+@keyframes tree-relaxed { from { opacity:0; transform:scale(.4) translateY(8px); } to { opacity:1; transform:scale(1) translateY(-8px); } }\n.scene-baum .theater-figure { animation: tree-sit 4.9s 1.5s ease-in-out both; }\n@keyframes tree-sit { 0%, 10%, 90%, 100% { transform: translateY(0) scaleY(1); } 20%, 80% { transform: translateY(10px) scaleY(.82); } }\n@keyframes tree-smoke { 0% { opacity: 0; transform: translateY(12px) scale(.5); } 25% { opacity: .8; } 100% { opacity: 0; transform: translate(12px,-35px) scale(1.5); } }
 .cake-props { font-size: 66px; animation: cake-bounce .55s 2.1s cubic-bezier(.2,.9,.3,1.5) both; }
 .cake-props span { position: absolute; left: 58px; top: -12px; font-size: 38px; }
 @keyframes cake-bounce { from { opacity: 0; scale: .2; rotate: -18deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
