@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.64.0', date: '14.11.', items: ['🧍 Alle Mitspieler haben jetzt Ganzkörper-Figuren am Tisch', '🎭 Fünf kostenlose Szenen: Verschwörung, Torten-Alarm, Auslachen, Schleimen und Baum-Runde'] },
   { v: '0.63.1', date: '14.11.', items: ['⚔️ Duell-Intros länger – und man sieht sofort, wer welches Tier will', '🫏 Der Esel klettert erst aus der Karte, wenn sie offen liegt; beim Treffer siehst du deinen Bonus – aua!'] },
   { v: '0.63.0', date: '14.11.', items: ['⚔️ Duell-Intros bei Kuhhandel, Rattenhandel, Schnick-Schnack-Schnuck und Spielstart', '👑 Neuer Spitzenreiter, 🔦 Letzte Karte, 🥁 „Und der Sieger ist …“ – das Ende schaut ihr gemeinsam', '✍️ Im Shop: dein ganz eigener Spruch', '📉 Börse: Rallye +30 bis +100 %, Sturz −30 bis −100 % – Stürze fallen meist heftiger aus'] },
   { v: '0.62.0', date: '14.11.', items: ['🧍 Die Figuren springen jetzt aus ihren Profilbildern – Jubel, Pleite, Prügel', '🐀 Die Ratte flitzt über den Tisch, 🐔 Quartette tanzen Polonaise, 🧳 gehandelte Tiere ziehen mit Koffer um'] },
