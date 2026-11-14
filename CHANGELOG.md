@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.63.1 – Feinschliff Intros & Esel
+
+- [x] Duell-Intros länger: Kuhhandel/Rattenhandel 2 s, Spielstart 3 s (Schnick-Schnack-Schnuck bleibt kurz).
+- [x] Im Kuhhandel-Intro steht direkt, worum es geht: „Nico will deinen Hund“ / „Test 1 will die Kuh von Test 2“ / „Du willst 2 Kühe von Mo“.
+- [x] Esel-Bonus: Erst liegt nur die Karte da, dann klettert der Esel raus (Start erst, wenn die Karte offen ist – vorher konnte er schon während des Umdrehens draußen sein).
+- [x] Beim Treffer steht statt „BAM!“ der Betrag (+50/+100/+200/+500); der Getroffene hält sich kurz den Kopf (Hände, Sternchen, Wackeln). Betrag bleibt immer im Bild.
+
 ## v0.63.0 – Duell-Intros & eigener Spruch
 
 - [x] **Duell-Intro** (eigenes Design, Bewegungsprinzip wie bei klassischen Handheld-Duellen): schräge Farbflächen in Platzfarbe, Figuren sliden aus verschiedenen Richtungen rein, „VS“ mit Blitz – bei Kuhhandel, Rattenhandel, Schnick-Schnack-Schnuck und Spielstart (3 und 4 Spieler).
