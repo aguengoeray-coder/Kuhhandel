@@ -37,10 +37,9 @@ Stand: 14.11.2026 · Arbeitsstand ChatGPT · Repository `aguengoeray-coder/Kuhha
 
 ## 2. Offene PRs und Branches
 
-| `chatgpt/v064-figuren-theater` | ChatGPT | 🟢 | v0.64.0: Figuren-Theater, Realtime-Szenen, 3-/4-Spieler-Browserprüfungen; noch nicht gemergt |
-
 | PR / Branch | Owner | Stufe | Status |
 |---|---|---|---|
+| `chatgpt/v064-figuren-theater` (#38) | ChatGPT | 🟡 | v0.64.0: Figuren-Theater; Browser-Tests nach Korrekturen erneut in Prüfung |
 | `claude/doku-v063` | Claude | 🟢 | Diese Doku-Aktualisierung. |
 | `ai/auftraege` | Codex/Claude | – | Ersetzt durch Abschnitt 5; löschen nur mit Alps Okay. |
 | alte Feature-Branches | – | 🔴 | Alle in `main`. Aufräumen nur mit Alps Okay. |
