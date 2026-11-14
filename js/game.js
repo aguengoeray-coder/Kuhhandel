@@ -2104,7 +2104,7 @@ export function renderGame(root, ctx) {
     const tree = scn.kind === 'baum' ? `<div class="theater-props tree-props" aria-hidden="true"><span class="tree-bowl">🥣</span><span class="tree-grass">🌿</span><span class="tree-lighter">🔥</span><span class="tree-joint"><i></i></span><span class="tree-relaxed">😌</span><i class="tree-smoke s1">☁️</i><i class="tree-smoke s2">☁️</i><i class="tree-smoke s3">☁️</i></div>` : '';
     const prop = scn.kind === 'torte' ? '<div class="theater-props cake-props" aria-hidden="true">🎂<span>💥</span></div>' : '';
     const title = `<div class="theater-title">${def.icon} ${def.title}</div>`;
-    return `<div class="fxk" data-fxat="${scn.at}"><div class="theater-scene scene-${scn.kind}" data-scene-index="${si}" data-count="${v.players.length}" data-elapsed="${elapsed}" aria-label="${esc(def.title)}">${title}${actors}${tree}${prop}<div class="theater-huddle">${scn.kind === 'verschwoerung' ? 'Pssst …' : scn.kind === 'auslachen' ? 'HAHAHA!' : scn.kind === 'schleimen' ? 'Du bist der Beste!' : ''}</div></div></div>`;
+    return `<div class="fxk" data-fxat="${scn.at}"><div class="theater-scene scene-${scn.kind}" data-scene-index="${si}" data-count="${v.players.length}" data-elapsed="${elapsed}" aria-label="${esc(def.title)}">${title}${actors}${tree}${prop}${['verschwoerung', 'auslachen', 'schleimen'].includes(scn.kind) ? `<div class="theater-huddle">${scn.kind === 'verschwoerung' ? 'Pssst …' : scn.kind === 'auslachen' ? 'HAHAHA!' : 'Du bist der Beste!'}</div>` : ''}</div></div>`;
   }).join('');
   // gemerkte Einmal-Effekte zeichnen; die Animationen werden nach dem Zeichnen auf die richtige Stelle vorgespult
   local.fx.forEach((f) => { effects += `<div class="fxk" data-fxat="${f.at}">${f.html}</div>`; wakeLocal(f.until + 30); });
@@ -2122,7 +2122,7 @@ export function renderGame(root, ctx) {
     return `<div class="reactpick v2 ${self ? 'self' : ''}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
       ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">${esc(ctx.punchLabel || '🥊 Verprügeln')}</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
-      ${self && ctx.theaterScene ? `<div class="rp-lbl rp-scenes">🎭 Figuren-Theater · für alle kostenlos</div><div class="rp-scenes">${Object.entries(THEATER_SCENES).map(([kind, x]) => `<button type="button" class="rp-scene" data-a="theater" data-v="${kind}"><span>${x.icon}</span><b>${esc(x.title)}</b></button>`).join('')}</div>` : ''}
+      ${self && ctx.theaterScene ? `<div class="rp-lbl rp-scenes-label">🎭 Figuren-Theater · für alle kostenlos</div><div class="rp-scenes">${Object.entries(THEATER_SCENES).map(([kind, x]) => `<button type="button" class="rp-scene" data-a="theater" data-v="${kind}"><span>${x.icon}</span><b>${esc(x.title)}</b></button>`).join('')}</div>` : ''}
       ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}
