@@ -33,6 +33,9 @@ const PAGES = [
   { seite: 'pruegel-rechts', q: '?demo=turn&allav=1&punch=u4&pfrom=u2' },
   { seite: 'turn-figur', q: '?demo=turn&allav=1' },
   { seite: 'turn-figur-3sp', q: '?p=3&demo=turn&allav=1' },
+  // v0.64 Figuren-Theater: jede kostenlose Szene wird im 4er- und Baum-Szene zusätzlich im 3er-Tisch geprüft.
+  ...['verschwoerung', 'torte', 'auslachen', 'schleimen', 'baum'].map((scene) => ({ seite: `theater-${scene}`, q: '?demo=turn&allav=1', klick: '.meplate .mefig', klick2: `.rp-scene[data-v="${scene}"]`, scene, players: 4 })),
+  { seite: 'theater-baum-3sp', q: '?p=3&demo=turn&allav=1', klick: '.meplate .mefig', klick2: '.rp-scene[data-v="baum"]', scene: 'baum', players: 3 },
   { seite: 'start-avatar', q: '?demo=start&klick=1&myav=kuh-kaiser' },
   // Siegertreppchen mit Ganzkörper-Avataren (v0.54)
   { seite: 'podest-avatare', q: '?demo=ended&allav=1&podium=1' },
@@ -64,9 +67,14 @@ test('Layout aller Ansichten in 4 Bildschirmgrößen', { timeout: 15 * 60 * 1000
         page.on('pageerror', onErr); page.on('console', onCon);
         await page.goto(srv.url + '/' + pg.q, { waitUntil: 'load' });
         await page.waitForTimeout(1200);
-        if (pg.klick) { await page.click(pg.klick).catch((e) => errs.push('Klick ging nicht: ' + pg.klick)); await page.waitForTimeout(600); }
+        if (pg.klick) { await page.click(pg.klick).catch((e) => errs.push('Klick ging nicht: ' + pg.klick)); await page.waitForTimeout(350); }
+        if (pg.klick2) { await page.click(pg.klick2).catch((e) => errs.push('Szenen-Klick ging nicht: ' + pg.klick2)); await page.waitForTimeout(450); }
         await page.waitForTimeout(400);
         const found = [...await page.evaluate(pageChecks), ...await page.evaluate(tableOverlaps)];
+        if (pg.scene) {
+          const theater = await page.evaluate(() => ({ count: document.querySelectorAll('.theater-actor').length, sizes: [...document.querySelectorAll('.theater-figure')].map((e) => [Math.round(e.getBoundingClientRect().width), Math.round(e.getBoundingClientRect().height)]), title: !!document.querySelector('.theater-title') }));
+          if (!theater.title || theater.count !== pg.players || theater.sizes.some((z) => z[0] !== 72 || z[1] !== 120)) found.push({ art: 'figuren-theater', stufe: 'fehler', ziel: pg.scene, text: JSON.stringify(theater) });
+        }
         for (const e of errs) found.push({ art: 'js-fehler', stufe: 'fehler', ziel: 'Konsole', text: e.slice(0, 160) });
         page.off('pageerror', onErr); page.off('console', onCon);
         const uniq = new Map(); for (const m of found) if (!uniq.has(key(m))) uniq.set(key(m), m);
