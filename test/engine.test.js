@@ -798,3 +798,27 @@ test('Börsen-Chaos: 100 zufällige Komplettspiele enden sauber, Kurse nie negat
     assert.ok(g.winner.length >= 1);
   }
 });
+
+test('v0.63 Kursrallye/Kurssturz: zufällig 30 … 100 % (10er), Sturz im Schnitt stärker; alte Karten ohne Zahl = 50 %', async () => {
+  const { newsOf, kursValue } = await import('../src/engine.js');
+  assert.deepEqual(newsOf('news-rallye-kuh'), { kind: 'rallye', animal: 'kuh', pct: 50 });
+  assert.deepEqual(newsOf('news-crash-kuh-90'), { kind: 'crash', animal: 'kuh', pct: 90 });
+  const seen = { rallye: new Set(), crash: new Set() }, sum = { rallye: 0, crash: 0 }, cnt = { rallye: 0, crash: 0 };
+  for (let seed = 1; seed <= 500; seed++) {
+    const g = createGame({ players: P, seed, settings: { boerse: true } });
+    for (const c of g.deck.filter((x) => /^news-(rallye|crash)-/.test(x))) {
+      const n = newsOf(c); seen[n.kind].add(n.pct); sum[n.kind] += n.pct; cnt[n.kind]++;
+      assert.ok(n.pct >= 30 && n.pct <= 100 && n.pct % 10 === 0, c);
+    }
+    assert.equal(g.deck.filter((x) => x.startsWith('news-rallye-')).length, 2);
+    assert.equal(g.deck.filter((x) => x.startsWith('news-crash-')).length, 2);
+  }
+  for (const k of ['rallye', 'crash']) assert.equal(seen[k].size, 8, k);
+  const avgR = sum.rallye / cnt.rallye, avgC = sum.crash / cnt.crash;
+  assert.ok(avgR < 58 && avgC > 62 && avgC - avgR > 10, `Ø Rallye ${avgR}, Ø Sturz ${avgC}`);
+  const g = drawForAuction(boerseWithTop('news-rallye-kuh-30'), 'a', 0);
+  assert.equal(kursValue('kuh', g.kurse), 1040); assert.equal(g.lastEvent.pct, 30);
+  assert.ok(JSON.stringify(g.log).includes('+30 %'));
+  const h = drawForAuction(boerseWithTop('news-crash-kuh-80'), 'a', 0);
+  assert.equal(kursValue('kuh', h.kurse), 160); assert.ok(JSON.stringify(h.log).includes('−80 %'));
+});

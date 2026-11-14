@@ -1,5 +1,27 @@
 # Änderungsprotokoll
 
+## v0.63.0 – Duell-Intros & eigener Spruch
+
+- [x] **Duell-Intro** (eigenes Design, Bewegungsprinzip wie bei klassischen Handheld-Duellen): schräge Farbflächen in Platzfarbe, Figuren sliden aus verschiedenen Richtungen rein, „VS“ mit Blitz – bei Kuhhandel, Rattenhandel, Schnick-Schnack-Schnuck und Spielstart (3 und 4 Spieler).
+- [x] Antippen überspringt; ab dem 3. Duell desselben Paares nur noch kurz; im Menü „Intros aus“. Unter jeder Figur ihr Spruch, Duell-Zähler, Erzrivalen bekommen Flammen. Der Kuhhandel-Timer startet erst nach dem Intro.
+- [x] „Letzte Karte!“ – Spotlight, wenn der Stapel leer wird · „Neuer Spitzenreiter!“ – Krone fliegt zum neuen Führenden.
+- [x] Spielende läuft für alle gemeinsam ab und lässt sich nicht mehr überspringen: Punkte zählen, Trommelwirbel „Und der Sieger ist …“, dann Siegertreppchen.
+- [x] Börsen-Chaos: **Kursrallye** zufällig +30 … +100 % (meist klein), **Kurssturz** zufällig −30 … −100 % (meist kräftig) – die Börse schadet eher, als dass sie hilft.
+- [x] Verprügeln: das Profilbild des Prüglers ist leer, solange seine Figur unterwegs ist (bei allen Mitspielern).
+- [x] Shop: **Eigener Spruch** (50 Dublonen) – selbst ausdenken, max. 40 Zeichen, jederzeit änderbar (SQL `supabase/v0.63-eigener-spruch.sql`).
+
+## v0.62.0 – Alles wird lebendig
+
+- [x] **Profilbild wird lebendig:** Figuren springen aus ihrem runden Profilbild (Kopf = Profilbildgröße) und stehen neben ihrem Platz; das Profilbild ist so lange leer. Shop-Avatare mit eigenem Körper, alle anderen bekommen einen Standard-Körper in ihrer Platzfarbe.
+- [x] Avatar-Gags: **Versteigerung gewonnen** → Gewinner jubelt („Meins!“, Konfetti) · **Pleite!** → Taschen raus, Motten · **Verprügeln** → die Figur selbst läuft hin. Bei „Überboten“ bewusst keine Animation.
+- [x] Tierkarten-Gags: **Ratte** klettert aus ihrer Karte und schnüffelt an jedem Geldstapel · **Quartett** → die 4 Tiere tanzen Polonaise · **Kuhhandel** → das Tier läuft beleidigt mit Koffer zum neuen Besitzer.
+
+## v0.61.1 – Muskel-Esel & Pleite
+
+- [x] Esel-Bonus: Ein muskulöser Esel (Sixpack, Bizeps, rote Shorts) klettert aus der Karte – sein Kopf startet genau im Kartenbild –, knüllt die Scheine und wirft jedem mit Wucht einen Papierball an den Kopf, dann plumpst er zurück in die Karte.
+- [x] Neuer Gag „Pleite!“: Wer nicht zahlen kann, stülpt die leeren Hosentaschen nach außen, Motten flattern heraus.
+- [x] Emote „Verprügeln“: nur noch 5 s Pause zwischen zwei Prügeleien.
+
 ## v0.61.0 – Emote „Verprügeln“
 
 - [x] Neuer Shop-Reiter **Emotes**: „🥊 Verprügeln“ für 100 Dublonen – Admins haben es immer (SQL `supabase/v0.61-emote-pruegel.sql`).

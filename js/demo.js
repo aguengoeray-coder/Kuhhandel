@@ -1,5 +1,5 @@
 // Beispiel-Spielstände für Screenshots (?demo=turn, auction, …). Im echten Spiel nicht benutzt.
-import {
+import { pay,
   createGame, drawForAuction, bid, closeAuction, startTrade, counterTrade, acceptTrade, ANIMALS,
   RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS, showBatzen,
 } from '../src/engine.js';
@@ -335,6 +335,24 @@ export function buildDemoState(kind, local) {
       g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
       const b = base(); g.players = b.players; g.deck = b.deck; g.donkeysDrawn = 1;
       g.kurse = { kuh: 50, pferd: -50, schaf: 100 }; g.hektik = 2;
+      return g;
+    }
+    case 'ratrun': { // v0.62: Ratte gerade aufgedeckt → Ratte flitzt zu jedem Geldstapel
+      g = base(); g.turn = 1; g.deck[0] = RAT;
+      g = drawForAuction(g, 'u2');
+      local.prev = { logLen: g.log.length - 1, phase: 'turn' };
+      return g;
+    }
+    case 'won': { // v0.62: Versteigerung gerade gewonnen (mit ?pop=1) → Gewinner jubelt
+      const wb = new URLSearchParams(location.search).get('who') || 'u4';
+      g = base(); g.turn = 1; g.deck[0] = 'schwein';
+      g = drawForAuction(g, 'u2');
+      g = bid(g, wb, 50);
+      g = closeAuction(g, 'u2', 'sell');
+      const pl = g.players.find((x) => x.id === wb); const idx = []; let sum = 0;
+      [...pl.money.keys()].sort((a, b) => pl.money[b] - pl.money[a]).forEach((i) => { if (sum < 50) { idx.push(i); sum += pl.money[i]; } });
+      g = pay(g, wb, idx);
+      local.prev = { logLen: g.log.length - 1, phase: 'auction' };
       return g;
     }
     case 'moneydrawn': {

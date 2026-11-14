@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { SHOP_AVATARS, shopAvatar, shopAvatarFull, SHOP_AVATAR_FULL_CSS } from '../js/shopavatars.js';
-import { SHOP_SAYINGS, SHOP_EMOTES, renderShop } from '../js/shop.js';
+import { SHOP_SAYINGS, SHOP_EMOTES, SHOP_CUSTOM, renderShop } from '../js/shop.js';
 
 test('Shop enthält 23 eindeutige Avatare mit den vereinbarten Preisen', () => {
   assert.equal(SHOP_AVATARS.length, 23);
@@ -122,4 +122,16 @@ test('v0.61: Emote „Verprügeln“ – im Shop, SQL-Preis aktuell, App erlaubt
   for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), item.id);
   const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
   assert.match(app, /function canPunch\(\) \{ return !!ui\.isAdmin \|\| shopMe\.owned\.has\('emote-pruegel'\); \}/);
+});
+
+test('v0.63: Eigener Spruch – Preis in shop_buy, nur mit Kauf speicherbar, max. 40 Zeichen, Mitspieler sehen nur den hinterlegten Text', () => {
+  assert.deepEqual([SHOP_CUSTOM.id, SHOP_CUSTOM.price, SHOP_CUSTOM.max], ['spruch-eigener', 50, 40]);
+  const sql = readFileSync(new URL('../supabase/v0.63-eigener-spruch.sql', import.meta.url), 'utf8');
+  for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES, SHOP_CUSTOM]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), item.id);
+  assert.match(sql, /item_id = 'spruch-eigener'/);
+  assert.match(sql, /char_length\(v\) > 40/);
+  assert.match(sql, /revoke all on public\.shop_custom_sayings from public, anon, authenticated/);
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(app, /sb\.rpc\('shop_set_custom_saying'/);
+  assert.match(app, /customSayings\.get\(userOfSeat\(payload\.seat\)\) === payload\.text/);
 });

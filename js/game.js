@@ -40,7 +40,7 @@ const aname = (id) => (id === RAT ? 'Ratte' : ANIMAL_BY_ID[id].name);
 const ART_AKK = { hahn: 'den', gans: 'die', katze: 'die', hund: 'den', schaf: 'das', ziege: 'die', esel: 'den', schwein: 'das', kuh: 'die', pferd: 'das', [RAT]: 'die' };
 const theAnimal = (id) => `${ART_AKK[id] || 'die'} ${aname(id)}`;
 // Esel-Wurf: wann der erste Papierball fliegt, Abstand zwischen den Würfen, Flugzeit (ms ab Aufdecken)
-const ESEL_THROW_AT = 2350, ESEL_THROW_GAP = 330, ESEL_FLIGHT = 430;
+const ESEL_THROW_AT = 2450, ESEL_THROW_GAP = 360, ESEL_FLIGHT = 300;
 const PUNCH_MS = 3400; // Admin-Fähigkeit „Verprügeln“: Dauer der Animation
 // Börsen-Chaos: aktuelle Kurse des gerade gezeichneten Spiels (null = Grundwerte)
 let KURSE = null;
@@ -304,6 +304,28 @@ function seatPoint(root, pid, sr, sc) {
     const el = root.querySelector('.meplate .mefig');
     if (el) { const r = el.getBoundingClientRect(); return { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height * 0.3 - sr.top) / sc }; }
   }
+  // „@card“: Mitte der Karte in der Mitte · „@esel“: Wurfhand des Muskel-Esels (über der Karte, rechts)
+  if (pid === '@card' || pid === '@esel') {
+    const el = root.querySelector('.tcenter .aucard') || root.querySelector('.tcenter .bigcard') || root.querySelector('.tcenter');
+    if (el) { const r = el.getBoundingClientRect(); const cx = (r.left + r.width / 2 - sr.left) / sc, cy = (r.top + r.height / 2 - sr.top) / sc, top = (r.top - sr.top) / sc;
+      return pid === '@card' ? { x: cx, y: cy } : { x: cx + 60, y: top + 40 }; }
+  }
+  // v0.62 „Profilbild wird lebendig“: '@near:<pid>' = Stehplatz neben dem Profilbild Richtung Tischmitte,
+  // '@myfan' = Mitte deines Geldes, '@cl'/'@cr' = links/rechts der Tischmitte (Polonaise)
+  if (pid === '@cl' || pid === '@cr') return { x: sr.width / sc / 2 + (pid === '@cl' ? -150 : 150), y: sr.height / sc * 0.5 };
+  if (pid === '@myfan') {
+    const fans = [...root.querySelectorAll('.fan-wrap .money.fan')].map((e) => e.getBoundingClientRect());
+    if (fans.length) { const l = Math.min(...fans.map((r) => r.left)); const rr = Math.max(...fans.map((r) => r.right)); const t = Math.min(...fans.map((r) => r.top)); return { x: ((l + rr) / 2 - sr.left) / sc, y: (t + 10 - sr.top) / sc }; }
+    return { x: sr.width / sc / 2, y: sr.height / sc - 50 };
+  }
+  if (typeof pid === 'string' && pid.startsWith('@near:')) {
+    const who = pid.slice(6);
+    const a = seatPoint(root, who, sr, sc);
+    if (who === '@me') return { x: a.x - 6, y: a.y + 8 };
+    const cx = sr.width / sc / 2, cy = sr.height / sc / 2;
+    const dx = cx - a.x, dy = cy - a.y, d = Math.hypot(dx, dy) || 1;
+    return { x: a.x + (dx / d) * 64, y: a.y + (dy / d) * 64 + 26 };
+  }
   // „@offer“: das verdeckte Angebot in der Mitte (Kuhhandel/Rattenhandel)
   if (pid === '@pot' || pid === '@offer') {
     const el = pid === '@offer' ? root.querySelector('.tpanel .kslots') || root.querySelector('.tcenter') : root.querySelector('.potbox .pot') || root.querySelector('.tcenter');
@@ -373,6 +395,21 @@ function syncLoops() {
   });
 }
 
+// v0.62 Laufwege mit mehreren Stationen: data-route="a;b;c", data-offs="0,.3,1" (optional), data-dur, data-delay (ms)
+function routeFx(root) {
+  const stage = root.querySelector('#stage');
+  if (!stage) return;
+  const sr = stage.getBoundingClientRect(); const sc = sr.width / stage.offsetWidth || 1;
+  root.querySelectorAll('[data-route]').forEach((f) => {
+    const pts = f.dataset.route.split(';').map((pid) => seatPoint(root, pid, sr, sc));
+    if (!pts.length || !f.animate) return;
+    f.style.left = `${Math.round(pts[0].x - f.offsetWidth / 2)}px`; f.style.top = `${Math.round(pts[0].y - f.offsetHeight / 2)}px`;
+    const offs = f.dataset.offs ? f.dataset.offs.split(',').map(Number) : pts.map((_, i) => i / Math.max(1, pts.length - 1));
+    const kf = pts.map((pt, i) => ({ transform: `translate(${Math.round(pt.x - pts[0].x)}px, ${Math.round(pt.y - pts[0].y)}px)`, offset: Math.min(1, Math.max(0, offs[i] ?? i / (pts.length - 1))) }));
+    try { f.animate(kf, { duration: Number(f.dataset.dur) || 2000, delay: Number(f.dataset.delay) || 0, fill: 'both', easing: 'ease-in-out' }); } catch { /* egal */ }
+  });
+}
+
 // Einmal-Effekte, die schon laufen: Animationen auf die vergangene Zeit vorspulen (statt von vorn zu beginnen)
 function seekFx(root) {
   root.querySelectorAll('[data-fxat]').forEach((w) => {
@@ -380,6 +417,68 @@ function seekFx(root) {
     if (el < 40) return;
     w.querySelectorAll('*').forEach((n) => (n.getAnimations ? n.getAnimations() : []).forEach((a) => { try { a.currentTime = el; } catch { /* egal */ } }));
   });
+}
+
+// ---------- v0.63 Encounter-Intro („VS“): Farbflächen + Figuren sliden rein, VS-Knall, dann weiter ----------
+// Reine Anzeige (keine Spiellogik). parts: [{ fig, name, color, tag }], 2–n Teilnehmer; Aufteilung in schräge Bänder.
+export const INTRO_MS = 1500, INTRO_SHORT_MS = 750;
+const INTRO_DIRS = { 2: ['lt', 'rb'], 3: ['l', 't', 'r'], 4: ['l', 't', 'b', 'r'] };
+function encounterHtml({ parts, title, badge = '', center = '', vs = 'VS', sub = '', short = false, rival = false, dark = false }) {
+  const n = parts.length; const slant = n === 2 ? 11 : 6;
+  const b = (k, top) => (k <= 0 ? 0 : k >= n ? 100 : (k / n) * 100 + (top ? slant : -slant));
+  const dirs = INTRO_DIRS[n] || parts.map((_, i) => (i % 2 ? 'b' : 't'));
+  const bands = parts.map((p, i) => {
+    const poly = `polygon(${b(i, true)}% 0, ${b(i + 1, true)}% 0, ${b(i + 1, false)}% 100%, ${b(i, false)}% 100%)`;
+    const cx = (b(i, true) + b(i + 1, true) + b(i, false) + b(i + 1, false)) / 4;
+    return `<div class="eiband d-${dirs[i]}" style="--c:${p.color};clip-path:${poly};--k:${i}"><i class="eilines"></i></div>
+      <div class="eiwho d-${dirs[i]}" style="left:${cx}%;--k:${i};--c:${p.color}"><div class="eifig">${p.fig}</div><b class="einame">${esc(p.name)}</b>${p.tag ? `<small class="eitag">„${esc(p.tag)}“</small>` : ''}</div>`;
+  }).join('');
+  return `<div class="eintro n${n} ${vs.length > 5 ? 'longvs' : ''} ${short ? 'short' : ''} ${dark ? 'dark' : ''} ${rival ? 'rival' : ''}" data-a="introSkip" role="button" aria-label="${esc(title)} – Tippen überspringt" style="--dur:${short ? INTRO_SHORT_MS : INTRO_MS}ms">
+    ${bands}<i class="eiflash"></i>
+    <div class="eititle"><b>${esc(title)}</b>${badge ? `<span class="eibadge">${esc(badge)}</span>` : ''}</div>
+    <div class="eivs">${rival ? '<i class="eiflame"></i>' : ''}<b>${esc(vs)}</b>${center}${sub ? `<small class="eisub">${esc(sub)}</small>` : ''}</div></div>`;
+}
+
+// ---------- v0.62 „Profilbild wird lebendig“ ----------
+// Standard-Körper für alle ohne Shop-Avatar: einfacher Körper in Platzfarbe, das runde Profilbild ist der Kopf
+function genericBody(color) {
+  const K = '#2B2B2B', S = `stroke="${K}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+  return `<svg class="gbody" viewBox="0 0 120 200" aria-hidden="true">
+    <path d="M48 150 44 190h15l3-38M72 150l4 40H61l-3-38" fill="#3B3F4A" ${S}/><path d="M40 188h21v8H38zM61 188h21l2 8H61z" fill="#2B2B2B" ${S}/>
+    <path class="garm l" d="M36 86c-12 6-18 22-18 38l10 2 8-24" fill="${color}" ${S}/><circle cx="23" cy="128" r="7" fill="#F2C9A0" ${S}/>
+    <path class="garm r" d="M84 86c12 6 18 22 18 38l-10 2-8-24" fill="${color}" ${S}/><circle cx="97" cy="128" r="7" fill="#F2C9A0" ${S}/>
+    <path d="M34 84c6-8 16-12 26-12s20 4 26 12l-4 70H38z" fill="${color}" ${S}/><path d="M60 76v74" stroke="rgba(0,0,0,.25)" stroke-width="3"/></svg>`;
+}
+// Ganzkörper-Figur eines Spielers: Shop-Avatar (eigener Körper) oder Standard-Körper + Profilbild als Kopf
+function aliveFig(p, i, shop) {
+  if (shop) return `<div class="afull">${shopAvatarFull(shop)}</div>`;
+  return `<div class="agen">${genericBody(SEAT_COLORS[i] || '#1D5FC2')}<div class="ahead">${avatar(p, i)}</div></div>`;
+}
+
+// ---------- v0.61.1 Muskel-Esel (Alps Wunsch): klettert aus der Karte, wirft mit Wucht, klettert zurück ----------
+// eigene Zeichnung: Kopf = unser Esel-Bild, dazu trainierter Körper (Brust, Sixpack, Bizeps), rote Shorts.
+// throwDelay: wann der erste Wurf-Schwung beginnt (ms, relativ), n: Anzahl Würfe (= Spieler)
+function muscleDonkey(throwDelay, n) {
+  const F = '#AEB4BC', D = '#9AA0A8', K = '#2B2B2B', S = `stroke="${K}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+  const swing = `style="animation-delay:${throwDelay}ms;animation-iteration-count:${n}"`;
+  return `<svg class="mdonkey" viewBox="0 0 150 210" aria-hidden="true">
+    <g class="etwist" ${swing}>
+      <path d="M58 150 54 192h17l3-40M92 150l4 42H79l-3-40" fill="${F}" ${S}/>
+      <path d="M50 191h23v9H48zM77 191h23l2 9H77z" fill="#4A4248" ${S}/>
+      <path d="M68 62h16v14H68z" fill="${D}" ${S}/>
+      <path d="M30 80c8-10 24-12 46-12s38 2 46 12l-14 52c-4 8-16 12-32 12s-28-4-32-12z" fill="${F}" ${S}/>
+      <path d="M48 84c8 10 20 10 26 2M104 84c-8 10-20 10-26 2" fill="none" ${S}/>
+      <path d="M66 104h20M64 116h24M66 128h20M76 100v34" fill="none" stroke="${K}" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M50 136h52l4 24H46z" fill="#E5484D" ${S}/><path d="M50 142h52" stroke="#fff" stroke-width="3"/>
+      <g class="earm-l"><path d="M36 82c-14 4-22 16-24 30 0 6 4 8 8 6l10-18" fill="${F}" ${S}/><path d="M14 112c-4-10-2-24 6-32 6-2 12 2 10 8l-6 26" fill="${F}" ${S}/>
+        <ellipse cx="22" cy="96" rx="9" ry="7" fill="${D}" opacity=".55"/><circle cx="24" cy="76" r="9" fill="${F}" ${S}/>
+        <g class="ebills"><rect x="14" y="60" width="22" height="14" rx="2" fill="#A8D5B5" ${S} stroke-width="2"/><rect x="18" y="56" width="22" height="14" rx="2" fill="#F6D98B" ${S} stroke-width="2" transform="rotate(-12 29 63)"/></g></g>
+      ${art('esel').replace('<svg ', '<svg x="41" y="0" width="70" height="70" ')}
+      <path class="eangry" d="M58 30l12 5M94 30l-12 5" stroke="${K}" stroke-width="3.4" stroke-linecap="round"/>
+      <g class="earm-r" ${swing}><path d="M114 82c14 2 24 14 26 28l-12 4-10-14" fill="${F}" ${S}/><path d="M128 114c2 10-2 18-8 22l-8-4 6-20" fill="${F}" ${S}/>
+        <ellipse cx="128" cy="100" rx="9" ry="7" fill="${D}" opacity=".55"/><circle cx="118" cy="138" r="9" fill="${F}" ${S}/>
+        <circle class="ehandball" cx="118" cy="148" r="9" fill="#A8D5B5" ${S} stroke-width="2"/></g>
+    </g></svg>`;
 }
 
 // ---------- Börsen-Chaos: News-Karte, Kurszettel ----------
@@ -392,7 +491,7 @@ function newsTitle(e) {
 function newsReveal(e, meId, nameOf) {
   let body = '';
   let mine = '';
-  if (e.kind === 'rallye' || e.kind === 'crash') body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${e.kind === 'rallye' ? 'up' : 'down'}">${e.to} ${e.kind === 'rallye' ? '▲' : '▼'}</b></div><small>${e.kind === 'rallye' ? '+' : '−'}${KURS_STEP} % bis Spielende</small>`;
+  if (e.kind === 'rallye' || e.kind === 'crash') body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${e.kind === 'rallye' ? 'up' : 'down'}">${e.to} ${e.kind === 'rallye' ? '▲' : '▼'}</b></div><small>${e.kind === 'rallye' ? '+' : '−'}${e.pct || KURS_STEP} % bis Spielende</small>`;
   else if (e.kind === 'dividende') body = `<p>Alle bekommen <b>${e.amount ?? DIVIDENDE}</b> aus der Bank.</p>`;
   else if (e.kind === 'steuer') { body = '<p>Alle geben ihren <b>höchsten Schein</b> ab.</p>'; const l = e.lost && e.lost[meId]; mine = l != null ? `Du gibst <b>${l}</b> ab` : 'Du hattest keinen Schein'; }
   else if (e.kind === 'panik') { body = '<p>Jeder schiebt einen <b>zufälligen Schein</b> nach links.</p>'; const m = e.moved || {}; mine = `${m.gave != null ? `Du gibst <b>${m.gave}</b>` : 'Du gibst nichts'} · ${m.got != null ? `bekommst <b>${m.got}</b> von ${esc(nameOf(m.from))}` : 'bekommst nichts'}`; }
@@ -417,13 +516,33 @@ export function renderGame(root, ctx) {
   const me = v.players[meIdx];
   const idxOf = (id) => v.players.findIndex((p) => p.id === id);
   const nameOf = (id) => (id === meId ? 'Du' : v.players[idxOf(id)]?.name || '?');
+  // v0.62 „Profilbild wird lebendig“: Figur springt aus dem Profilbild (Kopf = Profilbildgröße) und steht daneben
+  const figOf = (pid) => { const i = idxOf(pid); const pr = avatarLookup(pid); return aliveFig(v.players[i], i, pr?.shop); };
+  const MOTH = '<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M20 12C14 2 4 0 2 6s6 10 16 8C10 18 6 24 12 24s8-6 8-10c0 4 2 10 8 10s2-6-6-10c10 2 18-2 16-8S26 2 20 12z" fill="#B9B1A3" stroke="#3a332c" stroke-width="1.6" stroke-linejoin="round"/><path d="M20 8v10" stroke="#3a332c" stroke-width="2.4" stroke-linecap="round"/></svg>';
+  // Profilbild ist „leer“, solange die Figur draußen ist (Platz bekommt Klasse .out)
+  const outMark = (pid, from, until) => { local.out = local.out || {}; const o = local.out[pid]; local.out[pid] = { from: o && o.until > Date.now() ? Math.min(o.from, from) : from, until: Math.max(o && o.until > Date.now() ? o.until : 0, until) }; wakeLocal(from); wakeLocal(until + 20); };
+  // aliveGag: el = schon vergangene Zeit, delay = Start später (ms), raw = ohne eigene Vorspul-Hülle (für keepFx)
+  const aliveGag = (pid, kind, el, dur, delay = 0, raw = false) => {
+    if (idxOf(pid) < 0) return '';
+    const at = pid === meId ? '@me' : esc(pid);
+    const t0 = Date.now() - el;
+    outMark(pid, t0 + delay, t0 + delay + dur);
+    let extra = '';
+    if (kind === 'pleite') extra = `<i class="ptasche l"></i><i class="ptasche r"></i><i class="pstaub"></i>${[0, 1, 2].map((k) => `<i class="pmotte m${k}" style="animation-delay:${delay + 700 + k * 260}ms">${MOTH}</i>`).join('')}<b class="pstempel" style="animation-delay:${delay + 500}ms">PLEITE!</b>`;
+    if (kind === 'cheer') extra = `<b class="ameins" style="animation-delay:${delay + 350}ms">Meins!</b>${[0, 1, 2, 3, 4, 5].map((k) => `<i class="aconf c${k}" style="animation-delay:${delay + 300 + k * 40}ms"></i>`).join('')}`;
+    const html = `<div class="alive k-${kind} ${pid === meId ? 'mine' : ''}" data-aim-from="${at}" data-aim-to="@near:${at}" style="--tx:0px;--ty:0px;--dur:${dur}ms;animation-delay:${delay}ms" aria-hidden="true"><div class="afig" style="animation-delay:${delay}ms">${figOf(pid)}</div>${extra}</div>`;
+    return raw ? html : `<div class="fxk" data-fxat="${t0}">${html}</div>`;
+  };
+  // Tier-Figur (Kopf = Kartenbild) für Ratte, Polonaise, Kuhhandel-Koffer
+  const beast = (id, cls = '', inner = '') => `<div class="beast ${cls}" style="--a:${ANIMAL_COLORS[id] || '#888'}"><i class="blegs"><b></b><b></b></i><i class="bhead">${art(id)}</i>${inner}</div>`;
   // v0.61 Prügel-Animation (Comic, keine echte Gewalt): Laufen → Staubwolke mit POW/BAM → zurück
   const punchFx = (pu) => {
     const src = pu.from === meId ? '@me' : esc(pu.from); const dst = pu.to === meId ? '@me' : esc(pu.to);
-    const pr = avatarLookup(pu.from); const fp = v.players[idxOf(pu.from)];
-    const fig = pr?.shop ? shopAvatarFull(pr.shop) : avatar(fp, idxOf(pu.from));
+    const pr = avatarLookup(pu.from);
+    const fig = figOf(pu.from);
+    outMark(pu.from, pu.at, pu.at + PUNCH_MS);
     const who = `${esc(pu.from === meId ? 'Du' : nameOf(pu.from))} ${pu.from === meId ? 'verprügelst' : 'verprügelt'} ${esc(pu.to === meId ? 'dich' : nameOf(pu.to))}!`;
-    return `<div class="pwalk ${pu.from === meId ? 'mine' : ''} ${pr?.shop ? 'full' : 'round'}" data-aim-from="${src}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" aria-hidden="true">${fig}</div>
+    return `<div class="pwalk ${pu.from === meId ? 'mine' : ''} ${pr?.shop ? 'full' : 'gen'}" data-aim-from="${src}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" aria-hidden="true">${fig}</div>
       <div class="pcloud ${pu.to !== meId && /^t/.test(seatOf(pu.to)) ? 'low' : ''}" data-aim-from="${dst}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" role="status"><i class="pc c1"></i><i class="pc c2"></i><i class="pc c3"></i><i class="pc c4"></i>
         <b class="pw w1">POW!</b><b class="pw w2">BAM!</b><b class="pw w3">KLATSCH!</b><em class="ps s1">⭐</em><em class="ps s2">✨</em><em class="ps s3">⭐</em><span class="pf f1">👊</span><span class="pf f2">🦶</span><span class="plabel">${who}</span></div>`;
   };
@@ -564,7 +683,7 @@ export function renderGame(root, ctx) {
     if (isMe) return said ? `<div class="mebubble ${state.phase === 'payment' || state.phase === 'trade' || state.phase === 'rat' || local.tradeOpen ? 'up' : ''}">${bubble}</div>` : '';
     const laidN = state.phase === 'rat' ? (v.rat.laid[p.id] || 0) : 0;
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
-    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
+    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}${avatar(p, i)}
@@ -977,7 +1096,7 @@ export function renderGame(root, ctx) {
     let ttHtml = '';
     if (TT) {
       const tkey = `${state.log.length}|${t.challenger}|${t.animal}`;
-      if (local.ttKey !== tkey) { local.ttKey = tkey; local.ttAt = Date.now(); local.ttBuzzed = false; }
+      if (local.ttKey !== tkey) { local.ttKey = tkey; local.ttAt = Date.now() + (local.ttDelay || 0); local.ttDelay = 0; local.ttBuzzed = false; }
       const left = Math.max(0, Math.ceil((local.ttAt + TT * 1000 - Date.now()) / 1000));
       ttHtml = `<span class="ttimer ${left <= 5 ? 'low' : ''} ${left === 0 ? 'out' : ''}">${left ? `⏱ ${left} s` : '⏰ Zeit um!'}</span>`;
       if (left > 0) wakeLocal(Date.now() + 1000 - ((Date.now() - local.ttAt) % 1000) + 20);
@@ -1179,6 +1298,7 @@ export function renderGame(root, ctx) {
     ${local.menu ? `<div class="menu">
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">🔊 Ton: ${ctx.soundName || (ctx.sound ? 'an' : 'aus')}</button>
       <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button></div>
+      <button type="button" class="pill pill-white pill-small" data-a="intros">⚔️ Duell-Intros: ${ctx.introsOff ? 'aus' : 'an'}</button>
       ${state.settings?.standings && state.phase !== 'ended' ? '<button type="button" class="pill pill-white pill-small" data-a="standings">📊 Zwischenstand</button>' : ''}
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
@@ -1214,6 +1334,7 @@ export function renderGame(root, ctx) {
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
   H.vibe = () => ctx.toggleVibe && ctx.toggleVibe();
+  H.intros = () => ctx.toggleIntros && ctx.toggleIntros();
   H.push = () => ctx.togglePush && ctx.togglePush();
   H.modal = (kind) => ctx.openModal(kind);
   H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
@@ -1253,12 +1374,24 @@ export function renderGame(root, ctx) {
   };
   // Spielende: erst die Abrechnung (Tippen überspringt), danach das Siegertreppchen mit Konfetti
   const TALLY_START = 500; const TALLY_STEP = 1500;
-  if (entered && state.phase === 'ended') { local.tallyAt = Date.now(); local.tallySkip = false; local.podiumShown = false; }
+  // v0.63 (Alp): Spielende gemeinsam anschauen – nichts überspringen. Die Abrechnung startet erst,
+  // wenn der letzte Zug (Ergebnis-Fenster, Flüge, Gags) fertig gezeigt ist.
+  if (entered && state.phase === 'ended') {
+    const lastWait = v.lastEvent && EV_WAIT[v.lastEvent.type] ? evWait(v.lastEvent.type, v.deck) + 2600 : 900;
+    local.tallyAt = ctx.demoPodium ? Date.now() - 600000 : Date.now() + (fresh ? lastWait : 0); local.tallySkip = false; local.podiumShown = false;
+  }
   const tallyTotal = TALLY_START + v.players.length * TALLY_STEP + 900;
   const tallyEl = local.tallyAt ? Date.now() - local.tallyAt : Infinity;
-  const tallyOn = state.phase === 'ended' && !local.recap && !local.tallySkip && tallyEl < tallyTotal;
+  const endWait = state.phase === 'ended' && tallyEl < 0; // letzter Zug läuft noch
+  if (endWait) wakeLocal(local.tallyAt + 10);
+  const tallyOn = state.phase === 'ended' && !endWait && !local.recap && tallyEl < tallyTotal;
   if (tallyOn) wakeLocal(local.tallyAt + tallyTotal + 20);
-  const podiumIn = state.phase === 'ended' && !tallyOn && !local.recap && !local.podiumShown;
+  // v0.63 Finale „Und der Sieger ist …“ (Trommelwirbel, dann Rampenlicht) – zwischen Abrechnung und Treppchen
+  const FINALE_MS = 3200;
+  const finaleOn = state.phase === 'ended' && !endWait && !local.recap && !tallyOn && tallyEl < tallyTotal + FINALE_MS && !ctx.demoPodium;
+  if (finaleOn) wakeLocal(local.tallyAt + tallyTotal + FINALE_MS + 20);
+  if (finaleOn && !local.finaleSound) { local.finaleSound = true; sounds.push('drum'); later.push(['fanfare', 1700]); }
+  const podiumIn = state.phase === 'ended' && !endWait && !tallyOn && !finaleOn && !local.recap && !local.podiumShown;
   if (podiumIn) local.podiumShown = true;
   if (state.phase === 'ended' && local.recap) {
     const list = reportList();
@@ -1275,15 +1408,22 @@ export function renderGame(root, ctx) {
     const ranked = s.map((r) => ({ ...r, place: s.findIndex((x) => x.score === r.score) + 1 }));
     const n = ranked.length;
     const cnt = typeof CSS !== 'undefined' && CSS.registerProperty ? 'cnt' : '';
-    overlay = `<div class="overlay endtable" data-a="tallySkip" role="button"><div class="ending tally ${cnt}">
+    overlay = `<div class="overlay endtable"><div class="ending tally ${cnt}">
       <h2>Abrechnung</h2>
       <div class="tallyrows">${ranked.map((r, idx) => {
         const i = idxOf(r.id); const d = TALLY_START + (n - 1 - idx) * TALLY_STEP - tallyEl;
         return `<div class="trow ${r.place === 1 ? 'win' : ''}" style="--d:${d}ms;--to:${r.score};--c:${SEAT_COLORS[i]}"><i>${r.place === 1 ? '👑' : `${r.place}.`}</i>${avatar(v.players[i], i)}<span class="tname">${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b class="tnum"><span>${r.score}</span></b></div>`;
       }).join('')}</div>
-      <small class="sthint">Tippen zum Überspringen</small>
     </div></div>`;
-  } else if (state.phase === 'ended') {
+  } else if (state.phase === 'ended' && finaleOn) {
+    const sc0 = scores(state).sort((a, b) => b.score - a.score);
+    const wins = sc0.filter((r) => r.score === sc0[0].score);
+    const fEl = tallyEl - tallyTotal;
+    overlay = `<div class="overlay endtable finale" style="--fel:-${fEl}ms"><div class="fspot"></div>
+      <h2 class="ftitle">Und ${wins.length > 1 ? 'die Sieger sind' : 'der Sieger ist'} …</h2>
+      <div class="fwin">${wins.map((r) => { const i = idxOf(r.id); return `<div class="fone" style="--c:${SEAT_COLORS[i]}"><div class="ffig">${figOf(r.id)}</div><b>${esc(r.id === meId ? 'Du!' : r.name)}</b><small>${r.score} Punkte</small></div>`; }).join('')}</div>
+      ${Array.from({ length: 24 }, (_, k) => `<i class="fconf" style="--k:${k};--x:${(k * 37) % 100}%;--h:${(k * 47) % 360}"></i>`).join('')}</div>`;
+  } else if (state.phase === 'ended' && !endWait) {
     const s = scores(state).sort((a, b) => b.score - a.score);
     // Platz nach Punkten (gleiche Punkte = gleicher Platz)
     const ranked = s.map((r) => ({ ...r, place: s.findIndex((x) => x.score === r.score) + 1 }));
@@ -1350,6 +1490,7 @@ export function renderGame(root, ctx) {
     const [qp, qa] = added.length ? added[0].split('|') : [];
     if (added.length) { local.qSound = true; if (qp === meId) local.qMine = true; }
     if (added.length && evNew && receiverOf(le) === qp && le.animal === qa) local.qBadge = `${evSig}`; // Quartett steht als Abzeichen im Ergebnis-Fenster
+    if (added.length) local.poloNext = { pid: qp, animal: qa, delay: evNew ? evDelay + 600 : 500 };
     else if (added.length) {
       const [pid, animal] = added[0].split('|');
       const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
@@ -1557,6 +1698,104 @@ export function renderGame(root, ctx) {
     let seen = 0; try { seen = Number(localStorage.getItem('kh_evseen')) || 0; localStorage.setItem('kh_evseen', String(seen + 1)); } catch { /* egal */ }
     local.res.hint = seen < 8;
   }
+  // ---------- v0.63 „Neuer Spitzenreiter!“: Krönchen fliegt zum neuen Führenden (nur wenn sich die Führung ändert) ----------
+  if (state.phase !== 'ended') {
+    const pts = v.players.map((p) => ({ id: p.id, sc: scoreFor(p, null, false, KURSE).score }));
+    const top = Math.max(...pts.map((x) => x.sc));
+    const leaders = pts.filter((x) => x.sc === top);
+    const lead = top > 0 && leaders.length === 1 ? leaders[0].id : null;
+    if (local.leadInit && lead && lead !== local.leader) {
+      const from = local.leader && idxOf(local.leader) >= 0 ? (local.leader === meId ? '@me' : local.leader) : '@cl';
+      const to = lead === meId ? '@me' : lead;
+      const d = evFresh && EV_WAIT[le?.type] ? evWait(le.type, v.deck) + 900 : 400;
+      keepFx(`<div class="crownfly" data-route="${esc(from)};${esc(to)}" data-offs="0,1" data-dur="1100" data-delay="${d}">👑</div>
+        <div class="leadtag" data-aim-from="${esc(to)}" data-aim-to="${esc(to)}" style="--tx:0px;--ty:0px;animation-delay:${d + 1000}ms">${lead === meId ? 'Du führst!' : `${esc(nameOf(lead))} führt!`}</div>`, d + 3000);
+      later.push(['glitz', d + 1050]);
+    }
+    if (lead) local.leader = lead;
+    local.leadInit = true;
+  }
+
+  // ---------- v0.63 Encounter-Intros ----------
+  local.duels = local.duels || {}; local.duelWins = local.duelWins || {};
+  const pairKey = (a, b2) => [a, b2].sort().join('|');
+  const partOf = (pid) => { const i = idxOf(pid); return { fig: figOf(pid), name: pid === meId ? 'Du' : (v.players[i]?.name || '?'), color: SEAT_COLORS[i] || '#1D5FC2', tag: ctx.taglineOf ? ctx.taglineOf(pid) : '' }; };
+  const playIntro = (key, opts, sfx = true) => {
+    if (local.introKey === key) return 0;
+    local.introKey = key;
+    if (ctx.introsOff) return 0;
+    const dur = opts.short ? INTRO_SHORT_MS : INTRO_MS;
+    keepFx(encounterHtml(opts), dur, 'intro');
+    if (sfx) { sounds.push('flip'); later.push(['flip', 140]); later.push(['gavel', opts.short ? 320 : 700]); if (!opts.short) feel('heavy'); }
+    return dur;
+  };
+  H.introSkip = () => { local.fx = local.fx.filter((f) => f.tag !== 'intro'); ctx.rerender(); };
+  // Kuhhandel/Rattenhandel startet
+  if (state.phase === 'trade' && v.trade && entered) {
+    const t = v.trade; const pk = pairKey(t.challenger, t.target);
+    const key = `trade|${state.log.length}|${t.challenger}|${t.target}`;
+    if (local.introKey !== key) {
+      local.duels[pk] = (local.duels[pk] || 0) + 1;
+      const nth = local.duels[pk]; const w = local.duelWins[pk] || {};
+      const maxPair = Math.max(...Object.values(local.duels));
+      const rat = t.animal === RAT;
+      const dur = playIntro(key, {
+        parts: [partOf(t.challenger), partOf(t.target)],
+        title: rat ? 'RATTENHANDEL!' : 'KUHHANDEL!', dark: rat,
+        center: `<span class="eicard" style="--a:${ANIMAL_COLORS[t.animal] || '#888'}">${art(t.animal)}</span><span class="eium">um ${t.count}×</span>`,
+        sub: nth > 1 ? `${nth}. Duell heute · ${w[t.challenger] || 0}:${w[t.target] || 0}` : '',
+        short: nth >= 3, rival: nth >= 3 && nth === maxPair,
+      });
+      if (dur) local.ttDelay = dur; // Kuhhandel-Zeit startet erst nach dem Intro
+    }
+  }
+  if (evFresh && le?.type === 'trade' && le.winner) { const pk = pairKey(le.challenger, le.target); local.duelWins[pk] = local.duelWins[pk] || {}; local.duelWins[pk][le.winner] = (local.duelWins[pk][le.winner] || 0) + 1; }
+  // Schnick-Schnack-Schnuck beginnt (2–4 mit gleicher Zahl)
+  if (state.phase === 'special' && v.special && specialStage(v, Date.now()) === 'rps') {
+    const vals = Object.values(v.special.buzzes || {}); const mx = vals.length ? Math.max(...vals) : 0;
+    const who = Object.keys(v.special.buzzes || {}).filter((id) => v.special.buzzes[id] === mx);
+    if (who.length > 1) playIntro(`rps|${v.special.revealer}|${v.special.startsAt}|${who.join(',')}`, { parts: who.map(partOf), title: 'GLEICHSTAND!', vs: 'SCHNICK! SCHNACK! SCHNUCK!', center: `<span class="eium">bei ${mx}</span>` });
+  }
+  // Spielstart: alle Spieler, „Die Börse ist eröffnet!“
+  if (state.phase === 'turn' && !v.lastEvent && state.log.length <= 2 && v.players.length >= 2) {
+    playIntro(`start|${v.players.map((p) => p.id).join(',')}|${state.log[0] || ''}`, {
+      parts: v.players.map((p) => partOf(p.id)), title: 'DIE BÖRSE IST ERÖFFNET!', vs: 'LOS!',
+      badge: isTurbo(state) ? '⚡ Turbo' : isBoerse(state) ? '📈 Börsen-Chaos' : '',
+    });
+  }
+
+  // ---------- v0.62 Gags ----------
+  if (evNew && le) {
+    // Versteigerung gewonnen: Gewinner springt aus dem Profilbild und jubelt (nach dem Ergebnis-Fenster)
+    if (le.type === 'auction_won' && idxOf(le.buyer) >= 0) keepFx(aliveGag(le.buyer, 'cheer', 0, 2300, evDelay + 700, true), evDelay + 3100);
+    // Kuhhandel entschieden: das Tier läuft beleidigt mit Koffer vom Abgeber zum Empfänger
+    if (le.type === 'trade') {
+      const to = receiverOf(le); const from = to === le.challenger ? le.target : le.challenger;
+      if (idxOf(to) >= 0 && idxOf(from) >= 0) {
+        const pt = (pid) => (pid === meId ? '@me' : pid);
+        keepFx(`<div class="tripwalk" data-route="${esc(pt(from))};${esc(pt(to))}" data-dur="1900" data-delay="${evDelay + 250}">${beast(le.animal, 'walk', `<i class="bkoffer"></i>${le.count > 1 ? `<b class="bcount">${le.count}×</b>` : ''}`)}</div>`, evDelay + 2300);
+        later.push(['trade', evDelay + 300]);
+      }
+    }
+  }
+  // Ratte aufgedeckt: die Ratte klettert aus der Karte, flitzt zu jedem Geldstapel, schnüffelt, und zurück
+  if (le?.type === 'rat_drawn' && evFresh && local.ratRunSig !== le.n) {
+    local.ratRunSig = le.n;
+    const stops = v.players.map((p) => (p.id === meId ? '@myfan' : p.id));
+    const SEG = 480, HOLD = 520, START = 900;
+    const route = ['@card']; const offs = [0]; let t = 0;
+    stops.forEach((st) => { t += SEG; route.push(st); offs.push(t); t += HOLD; route.push(st); offs.push(t); });
+    t += SEG; route.push('@card'); offs.push(t);
+    keepFx(`<div class="ratrun" data-route="${route.map(esc).join(';')}" data-offs="${offs.map((o) => (o / t).toFixed(3)).join(',')}" data-dur="${t}" data-delay="${START}">${beast(RAT, 'rat')}</div>`, START + t + 100);
+    stops.forEach((_, k) => later.push(['tick', START + SEG * (k + 1) + HOLD * k + 120]));
+  }
+  // Quartett komplett: die 4 Tiere tanzen eine Polonaise über den Tisch und zurück
+  if (local.poloNext) {
+    const { pid, animal, delay } = local.poloNext; local.poloNext = null;
+    const pt = pid === meId ? '@me' : pid;
+    keepFx([0, 1, 2, 3].map((k) => `<div class="polo" data-route="${esc(pt)};@cl;@cr;${esc(pt)}" data-offs="0,.3,.7,1" data-dur="3000" data-delay="${delay + k * 190}">${beast(animal, 'dance')}</div>`).join(''), delay + 3800);
+  }
+
   const closeRes = () => {
     if (!local.res) return;
     const left = local.res.at + local.res.dur - Date.now();
@@ -1721,6 +1960,8 @@ export function renderGame(root, ctx) {
       const need = e.special ? `${e.count} Karte${e.count === 1 ? '' : 'n'}` : `${e.amount} Taler`;
       const after = e.special ? `→ darf erst ab ${bills.length} buzzern` : `→ darf jetzt höchstens ${e.amount - BID_STEP} bieten`;
       const w = Math.max(30, Math.min(58, Math.floor(400 / Math.max(1, bills.length)) - 6));
+      // v0.62 „Pleite!“: die Figur springt aus ihrem Profilbild, stülpt die leeren Hosentaschen raus, Motten flattern
+      if (el < 3400) effects += aliveGag(e.player, 'pleite', el, 3400);
       effects += `<div class="cantpop" data-a="cpClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${CANTPAY_MS}ms;--bw:${w}px">
         <small>Kann nicht zahlen</small>
         <b>${esc(mine ? 'Du' : nameOf(e.player))} ${mine ? 'kannst' : 'kann'} ${need} nicht zahlen</b>
@@ -1744,11 +1985,11 @@ export function renderGame(root, ctx) {
       // und pfeffert jedem einzeln einen Papierball an den Kopf – BAM, BAM, BAM.
       if (el < 4500) {
         const BAMS = ['BAM!', 'ZACK!', 'PATSCH!', 'BAM!'];
-        effects += `<div class="eselthrow" data-aim-from="@pot" data-aim-to="@pot" style="animation-delay:${1500 - el}ms;--ty:0px;--tx:0px" aria-hidden="true"><i class="eart">${art('esel')}</i><i class="ebundle"><b></b><b></b><b></b></i></div>`;
+        effects += `<div class="eclimb" data-aim-from="@card" data-aim-to="@card" style="--ty:0px;--tx:0px" aria-hidden="true"><div class="efig" style="animation-delay:${1500 - el}ms">${muscleDonkey(ESEL_THROW_AT - 180 - el, v.players.length)}</div></div>`;
         effects += v.players.map((p, pi) => {
           const t = ESEL_THROW_AT + pi * ESEL_THROW_GAP;
           const to = p.id === meId ? '@me' : esc(p.id);
-          return `<div class="eball" data-aim-from="@pot" data-aim-to="${to}" style="animation-delay:${t - el}ms;--ty:0px;--tx:0px" aria-hidden="true"></div>`
+          return `<div class="eball" data-aim-from="@esel" data-aim-to="${to}" style="animation-delay:${t - el}ms;--ty:0px;--tx:0px" aria-hidden="true"></div>`
             + `<div class="ebam" data-aim-from="${to}" data-aim-to="${to}" style="animation-delay:${t + ESEL_FLIGHT - el}ms;--ty:0px;--tx:0px;--rot:${pi % 2 ? 9 : -8}deg" aria-hidden="true">${BAMS[pi % BAMS.length]}</div>`;
         }).join('');
       }
@@ -1760,6 +2001,11 @@ export function renderGame(root, ctx) {
   if (local.prevDeck != null && v.deck !== local.prevDeck && v.deck <= 1 && state.phase !== 'ended') {
     keepFx(`<div class="lastcard" role="status">${v.deck === 1 ? '⚡ Letzte Karte im Stapel!' : '🐮 Stapel leer – ab jetzt nur noch Kuhhandel!'}</div>`, 4300);
     later.push(['last', 1400]);
+  }
+  // v0.63 „Letzte Karte!“: die letzte Stapelkarte wird aufgedeckt → Scheinwerfer auf die Mitte, Trommelwirbel
+  if (local.prevDeck === 1 && v.deck === 0 && ['auction', 'special', 'rat'].includes(state.phase)) {
+    keepFx(`<div class="spotlight" aria-hidden="true"><b>LETZTE KARTE!</b></div>`, 2600);
+    sounds.push('drum');
   }
   local.prevDeck = v.deck;
   // Großes Gebot (+100 oder mehr auf einmal): Wow-Effekt am Gebots-Schild
@@ -1855,6 +2101,7 @@ export function renderGame(root, ctx) {
   fitAuslage(root);
   aimFly(root);
   aimFx(root);
+  routeFx(root);
   mouthBubbles(root);
   seekFx(root);
   syncLoops();

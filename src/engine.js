@@ -30,12 +30,23 @@ export function auctionBidMs(state) { if (state && state.auction && state.auctio
 export const NEWS_PREFIX = 'news-';
 export const HEKTIK_MS = 5000;          // Hektik: Versteigerungen nur 5 s
 export const HEKTIK_COUNT = 3;          // … die nächsten 3
-export const KURS_STEP = 50;            // Kursrallye +50 %, Kurssturz −50 % (stapelbar, nie unter 0)
+export const KURS_STEP = 50;            // alte Karten ohne Zahl (laufende Partien): ±50 %
+// v0.63: Kursrallye/Kurssturz zufällig 30 … 100 % (10er-Schritte, beim Mischen ausgelost, stapelbar, nie unter 0).
+// Gewichtet: Rallye meist klein (Ø 52 %), Sturz meist groß (Ø 68 %) – die Börse schadet eher, als dass sie hilft.
+export const KURS_PCTS = [30, 40, 50, 60, 70, 80, 90, 100];
+export const RALLYE_WEIGHTS = [4, 4, 3, 2, 2, 1, 1, 1];
+export const CRASH_WEIGHTS = [1, 1, 1, 2, 2, 3, 4, 4];
+export const RALLYE_MIN = 30, RALLYE_MAX = 100;
 export const DIVIDENDE = 50;
 export const isNewsCard = (card) => typeof card === 'string' && card.startsWith(NEWS_PREFIX);
 export function isBoerse(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.boerse && !st.turbo); }
-// 'news-rallye-kuh' → { kind: 'rallye', animal: 'kuh' } · 'news-steuer' → { kind: 'steuer' }
-export function newsOf(card) { const [kind, animal] = card.slice(NEWS_PREFIX.length).split('-'); return animal ? { kind, animal } : { kind }; }
+// 'news-rallye-kuh-70' → { kind: 'rallye', animal: 'kuh', pct: 70 } · 'news-steuer' → { kind: 'steuer' }
+export function newsOf(card) {
+  const [kind, animal, num] = card.slice(NEWS_PREFIX.length).split('-');
+  if (!animal) return { kind };
+  const pct = kind === 'rallye' || kind === 'crash' ? (Number(num) > 0 ? Number(num) : KURS_STEP) : undefined;
+  return pct ? { kind, animal, pct } : { kind, animal };
+}
 // aktueller Wert eines Tiers (Börsen-Chaos: Kurs in Prozentpunkten, z. B. +50 → 150 %)
 export function kursValue(animal, kurse) {
   const base = ANIMAL_BY_ID[animal].value;
@@ -45,7 +56,8 @@ export function kursValue(animal, kurse) {
 function newsCards(seed) {
   const r = rng(seed ^ 0x5eed);
   const pick = () => ANIMALS[Math.floor(r() * ANIMALS.length)].id;
-  return [`rallye-${pick()}`, `rallye-${pick()}`, `crash-${pick()}`, `crash-${pick()}`, 'dividende', 'steuer', 'panik', 'hektik'].map((x) => NEWS_PREFIX + x);
+  const pct = (w) => { let x = r() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { x -= w[i]; if (x < 0) return KURS_PCTS[i]; } return KURS_PCTS.at(-1); };
+  return [`rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, 'dividende', 'steuer', 'panik', 'hektik'].map((x) => NEWS_PREFIX + x);
 }
 
 export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
@@ -381,8 +393,8 @@ function afterRat(state) {
 
 // ---------- Börsen-News ----------
 const NEWS_TEXT = {
-  rallye: (a) => `Kursrallye: ${animalName(a)} +${KURS_STEP} %`,
-  crash: (a) => `Kurssturz: ${animalName(a)} −${KURS_STEP} %`,
+  rallye: (a, p) => `Kursrallye: ${animalName(a)} +${p || KURS_STEP} %`,
+  crash: (a, p) => `Kurssturz: ${animalName(a)} −${p || KURS_STEP} %`,
   dividende: () => `Dividende: alle bekommen ${DIVIDENDE}`,
   steuer: () => 'Steuerprüfung: alle geben ihren höchsten Schein ab',
   panik: () => 'Marktpanik: alle schieben einen zufälligen Schein nach links',
@@ -394,8 +406,8 @@ function applyNews(state, me, card) {
   const ev = { n: state.log.length, type: 'news', kind: n.kind, player: me.id };
   if (n.kind === 'rallye' || n.kind === 'crash') {
     const before = kursValue(n.animal, state.kurse);
-    state.kurse[n.animal] = (state.kurse[n.animal] || 0) + (n.kind === 'rallye' ? KURS_STEP : -KURS_STEP);
-    Object.assign(ev, { animal: n.animal, from: before, to: kursValue(n.animal, state.kurse) });
+    state.kurse[n.animal] = (state.kurse[n.animal] || 0) + (n.kind === 'rallye' ? n.pct : -n.pct);
+    Object.assign(ev, { pct: n.pct, animal: n.animal, from: before, to: kursValue(n.animal, state.kurse) });
   } else if (n.kind === 'dividende') {
     for (const p of state.players) giveCards(p, bankCards(DIVIDENDE));
     ev.amount = DIVIDENDE;
@@ -419,7 +431,7 @@ function applyNews(state, me, card) {
   } else if (n.kind === 'hektik') {
     state.hektik = (state.hektik || 0) + HEKTIK_COUNT;
   } else fail('Unbekannte Börsen-News.');
-  log(state, `${me.name} deckt Börsen-News auf – ${NEWS_TEXT[n.kind](n.animal)}.`);
+  log(state, `${me.name} deckt Börsen-News auf – ${NEWS_TEXT[n.kind](n.animal, n.pct)}.`);
   state.lastEvent = ev;
 }
 
