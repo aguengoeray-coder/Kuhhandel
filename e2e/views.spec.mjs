@@ -69,16 +69,27 @@ test('Layout aller Ansichten in 4 Bildschirmgrößen', { timeout: 15 * 60 * 1000
         await page.waitForTimeout(1200);
         if (pg.klick) { await page.click(pg.klick).catch((e) => errs.push('Klick ging nicht: ' + pg.klick)); await page.waitForTimeout(350); }
         if (pg.klick2) { await page.click(pg.klick2).catch((e) => errs.push('Szenen-Klick ging nicht: ' + pg.klick2)); await page.waitForTimeout(450); }
-        await page.waitForTimeout(400);
+        if (pg.scene) await page.waitForTimeout(pg.scene === 'baum' ? 3300 : 1900);
+        else await page.waitForTimeout(400);
         const found = [...await page.evaluate(pageChecks), ...await page.evaluate(tableOverlaps)];
         if (pg.scene) {
           const theater = await page.evaluate(() => {
             const figures = [...document.querySelectorAll('.theater-figure')];
             const rects = figures.map((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return { width: r.width, height: r.height, cssWidth: cs.width, cssHeight: cs.height }; });
             const sameRenderedSize = rects.every((r) => Math.abs(r.width - rects[0]?.width) < 1 && Math.abs(r.height - rects[0]?.height) < 1);
-            return { count: document.querySelectorAll('.theater-actor').length, rects: rects.map((r) => [Math.round(r.width), Math.round(r.height)]), cssSizes: rects.map((r) => [r.cssWidth, r.cssHeight]), sameRenderedSize, title: !!document.querySelector('.theater-title') };
+            const stage = document.querySelector('#stage')?.getBoundingClientRect();
+            const targets = rects.map((r, i) => {
+              if (!stage) return Infinity;
+              const n = rects.length, angle = -Math.PI / 2 + i * Math.PI * 2 / n;
+              const rx = Math.min(126, stage.width * .16), ry = Math.min(76, stage.height * .20);
+              const x = stage.left + stage.width / 2 + Math.cos(angle) * rx;
+              const y = stage.top + stage.height * .52 + Math.sin(angle) * ry;
+              const actor = document.querySelectorAll('.theater-actor')[i].getBoundingClientRect();
+              return Math.round(Math.hypot(actor.left + actor.width / 2 - x, actor.top + actor.height / 2 - y));
+            });
+            return { count: document.querySelectorAll('.theater-actor').length, rects: rects.map((r) => [Math.round(r.width), Math.round(r.height)]), cssSizes: rects.map((r) => [r.cssWidth, r.cssHeight]), sameRenderedSize, targetErrors: targets, title: !!document.querySelector('.theater-title') };
           });
-          if (!theater.title || theater.count !== pg.players || !theater.sameRenderedSize || theater.cssSizes.some((z) => z[0] !== '72px' || z[1] !== '120px')) found.push({ art: 'figuren-theater', stufe: 'fehler', ziel: pg.scene, text: JSON.stringify(theater) });
+          if (!theater.title || theater.count !== pg.players || !theater.sameRenderedSize || theater.cssSizes.some((z) => z[0] !== '72px' || z[1] !== '120px') || theater.targetErrors.some((d) => d > 28)) found.push({ art: 'figuren-theater', stufe: 'fehler', ziel: pg.scene, text: JSON.stringify(theater) });
         }
         for (const e of errs) found.push({ art: 'js-fehler', stufe: 'fehler', ziel: 'Konsole', text: e.slice(0, 160) });
         page.off('pageerror', onErr); page.off('console', onCon);
