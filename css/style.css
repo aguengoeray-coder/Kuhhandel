@@ -3283,3 +3283,11 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @keyframes ouchwob { 0%, 100% { rotate: 0deg; } 25% { rotate: -6deg; } 75% { rotate: 6deg; } }
 .ebam.epay { font-size: 24px; background: #FFC93C; color: #3A2600; text-shadow: none; }
 @media (prefers-reduced-motion: reduce) { .ouchh, .ouchs, .prow.ouch .pid, .meplate.ouch .mefig { animation: none; } }
+/* ===== v0.64 Ganze Figuren an jedem Platz: die Figur steht auf dem Namensschild (Füße unten), Kopf ragt darüber ===== */
+.prow .pid > .avatar.seatfig { width: 44px; height: 44px; border: 0; background: transparent; box-shadow: none; padding: 0; overflow: visible; position: relative; flex: 0 0 44px; }
+.seatfig > .afull, .seatfig > .agen { position: absolute; left: 50%; bottom: -4px; width: 72px; height: 120px; margin-left: -36px; transform: scale(.6); transform-origin: 50% 100%; filter: drop-shadow(0 3px 3px rgba(0,0,0,.35)); }
+.seatfig > .afull .shop-avatar-full { width: 72px; height: 120px; }
+.stage .prow.seat-t, .stage .prow.seat-tr { margin-top: 12px; }
+.stage .prow.seat-l .seatfig > .afull, .stage .prow.seat-l .seatfig > .agen { left: 62%; }
+.prow .pid > .avatar.seatfig .ahead .avatar { border-width: 3px; }
+.stage .prow.seat-l { margin-top: 14px; }

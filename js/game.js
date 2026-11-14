@@ -710,7 +710,7 @@ export function renderGame(root, ctx) {
     return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
-        ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}${avatar(p, i)}${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
+        ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]}" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}</span>` : status}</span></div>
       </div>
       <div class="chips" data-a="reactTo" data-v="${esc(p.id)}">${chips}</div>
