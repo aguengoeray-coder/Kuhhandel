@@ -1251,7 +1251,7 @@ function sendTheaterScene(kind) {
   if (!THEATER_KINDS.includes(kind) || !ui.game?.state) return;
   const left = 8200 - (Date.now() - lastTheaterAt);
   if (left > 0) return toast(`Die Bühne braucht noch ${Math.ceil(left / 1000)} s.`);
-  const from = ui.game.local ? (dbg.viewAs || 'me') : seatIn(ui.game);
+  const from = ui.game.local ? (ui.game.state.players.some((p) => p.id === dbg.viewAs) ? dbg.viewAs : ui.game.state.players[0]?.id) : seatIn(ui.game);
   if (!from) return;
   lastTheaterAt = Date.now();
   showTheaterScene(from, kind);
