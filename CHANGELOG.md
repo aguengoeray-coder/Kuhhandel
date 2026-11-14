@@ -6,6 +6,7 @@
 - [x] Im Kuhhandel-Intro steht direkt, worum es geht: „Nico will deinen Hund“ / „Test 1 will die Kuh von Test 2“ / „Du willst 2 Kühe von Mo“.
 - [x] Esel-Bonus: Erst liegt nur die Karte da, dann klettert der Esel raus (Start erst, wenn die Karte offen ist – vorher konnte er schon während des Umdrehens draußen sein).
 - [x] Beim Treffer steht statt „BAM!“ der Betrag (+50/+100/+200/+500); der Getroffene hält sich kurz den Kopf (Hände, Sternchen, Wackeln). Betrag bleibt immer im Bild.
+- [x] Laufwege (Verprügeln, Gags) werden erst beim Zeichnen aus Sicht des Geräts bestimmt – stimmt jetzt auch nach „Sicht“-Wechsel im Debug-Modus.
 
 ## v0.63.0 – Duell-Intros & eigener Spruch
 

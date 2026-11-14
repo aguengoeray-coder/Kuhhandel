@@ -300,6 +300,10 @@ function aimFly(root) {
 
 // Wo sitzt jemand auf der Bühne? Mitspieler: Mitte ihres Bildes am Platz · du: dein Geld unten (sonst unten Mitte)
 function seatPoint(root, pid, sr, sc) {
+  // Spieler-IDs werden erst beim Zeichnen in „@me“ übersetzt – so stimmt die Richtung auch nach einem Sicht-Wechsel (Debug)
+  const meNow = root.dataset ? root.dataset.me : null;
+  if (meNow && pid === meNow) pid = '@me';
+  if (meNow && pid === `@near:${meNow}`) pid = '@near:@me';
   // „@pot“: der Topf in der Mitte (Rattenrunde) – ist er schon weg, die Tischmitte
   if (pid === '@me') {
     const el = root.querySelector('.meplate .mefig');
@@ -557,7 +561,7 @@ export function renderGame(root, ctx) {
   const beast = (id, cls = '', inner = '') => `<div class="beast ${cls}" style="--a:${ANIMAL_COLORS[id] || '#888'}"><i class="blegs"><b></b><b></b></i><i class="bhead">${art(id)}</i>${inner}</div>`;
   // v0.61 Prügel-Animation (Comic, keine echte Gewalt): Laufen → Staubwolke mit POW/BAM → zurück
   const punchFx = (pu) => {
-    const src = pu.from === meId ? '@me' : esc(pu.from); const dst = pu.to === meId ? '@me' : esc(pu.to);
+    const src = esc(pu.from); const dst = esc(pu.to); // '@me' wird erst in seatPoint aufgelöst
     const pr = avatarLookup(pu.from);
     const fig = figOf(pu.from);
     outMark(pu.from, pu.at, pu.at + PUNCH_MS);
@@ -2092,6 +2096,7 @@ export function renderGame(root, ctx) {
       ${playerDetail(v.players[idxOf(to)], self)}
     </div>`;
   }
+  root.dataset.me = meId;
   root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
     ${table}
