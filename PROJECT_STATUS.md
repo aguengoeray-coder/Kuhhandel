@@ -10,7 +10,7 @@ Stand: 14.11.2026 · Arbeitsstand ChatGPT · Repository `aguengoeray-coder/Kuhha
 | | |
 |---|---|
 | Live-Version (`main`) | **v0.63.1** – Merge-Commit `a9c2247` (#37); CI-Merge laut GitHub-Commit erfolgt |
-| In Arbeit | **v0.64.0 Figuren-Theater** – Branch `chatgpt/v064-figuren-theater`; Browser-Tests nach erster Runde mit 32 Befunden; Testlogik und kleine Dock-Überlappung korrigiert, erneuter CI-Lauf ausstehend |
+| In Arbeit | **v0.64.0 Figuren-Theater** – PR #38, Branch `chatgpt/v064-figuren-theater`; Run #93: npm/Syntax/Partien grün, Layouttest scheitert bei „Auslachen“ (Laufweg-/Körperanimation kollidiert); Korrektur vorbereitet, CI danach ausstehend |
 | Nächste Versionen | 2-Spieler-Modus (Regelprüfung zuerst) · Börsen-Chaos nach ersten echten Partien nachjustieren |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.63-eigener-spruch.sql` (Claude über Connector 14.11., Prüfabfrage + Advisors ✓); davor `v0.60-admin-nur-angemeldet.sql`, `v0.61-emote-pruegel.sql` (Claude) |
 
@@ -64,6 +64,7 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 - Restrisiko Dublonen: Schummeln innerhalb einer echten Partie (Tagesgrenze 60 begrenzt den Schaden); Stufe 2 = Züge über den Worker (siehe `supabase/v0.55-sicherheit-vorschlag.md`).
 - Supabase-Advisors: `admin_*` für anon gesperrt (v0.60-SQL ✓). Noch 9 anon-ausführbare Funktionen (join_game, my_pin, save_push … – teils gewollt, Prüfung angeboten). Schutz vor geleakten Passwörtern = Dashboard-Schalter (Alp).
 - Branch-Schutz für `main` noch nicht eingerichtet (🔴, Alp; Anleitung in `AI_HANDOFF_ARCHIV.md`).
+- v0.64.0: vor dem neuen CI-Lauf war die Kreisposition bei „Auslachen“ durch konkurrierende Actor-Transforms falsch; Baum-Sitz-/Rauch-Keyframes hatten fehlerhafte CSS-Zeilentrenner. Korrektur auf PR #38, noch nicht bestätigt.
 - 8 Demos laufen nicht mit `?p=3` (nur Demo-Grenze).
 
 ## 5. Roadmap

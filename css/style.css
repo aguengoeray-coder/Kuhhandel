@@ -3334,7 +3334,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
   position: absolute; z-index: 3; width: 72px; height: 120px; display: flex; flex-direction: column;
   align-items: center; justify-content: flex-end; transform-origin: 50% 100%; pointer-events: none;
 }
-.theater-figure { width: 72px; height: 120px; position: relative; flex: 0 0 120px; }
+.theater-figure { width: 72px; height: 120px; position: relative; flex: 0 0 120px; transform-origin: 50% 100%; }
 .theater-figure > .afull, .theater-figure > .agen {
   position: absolute; inset: 0; width: 72px; height: 120px; transform: none; margin: 0;
   filter: drop-shadow(0 4px 3px rgba(0,0,0,.4));
@@ -3376,20 +3376,23 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
   74% { transform: translate(-25px,22px) rotate(8deg); }
   100% { opacity: 0; transform: translate(-28px,18px) rotate(-25deg) scale(.6); }
 }
-@keyframes tree-relaxed { from { opacity:0; transform:scale(.4) translateY(8px); } to { opacity:1; transform:scale(1) translateY(-8px); } }\n.scene-baum .theater-figure { animation: tree-sit 4.9s 1.5s ease-in-out both; }\n@keyframes tree-sit { 0%, 10%, 90%, 100% { transform: translateY(0) scaleY(1); } 20%, 80% { transform: translateY(10px) scaleY(.82); } }\n@keyframes tree-smoke { 0% { opacity: 0; transform: translateY(12px) scale(.5); } 25% { opacity: .8; } 100% { opacity: 0; transform: translate(12px,-35px) scale(1.5); } }
+@keyframes tree-relaxed { from { opacity:0; transform:scale(.4) translateY(8px); } to { opacity:1; transform:scale(1) translateY(-8px); } }
+.scene-baum .theater-figure { animation: tree-sit 4.9s 1.5s ease-in-out both; }
+@keyframes tree-sit { 0%, 10%, 90%, 100% { transform: translateY(0) scaleY(1); } 20%, 80% { transform: translateY(10px) scaleY(.82); } }
+@keyframes tree-smoke { 0% { opacity: 0; transform: translateY(12px) scale(.5); } 25% { opacity: .8; } 100% { opacity: 0; transform: translate(12px,-35px) scale(1.5); } }
 .cake-props { font-size: 66px; animation: cake-bounce .55s 2.1s cubic-bezier(.2,.9,.3,1.5) both; }
 .cake-props span { position: absolute; left: 58px; top: -12px; font-size: 38px; }
 @keyframes cake-bounce { from { opacity: 0; scale: .2; rotate: -18deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
-.scene-auslachen .theater-actor { animation: scene-laugh .5s 1.5s ease-in-out 5 alternate; }
+.scene-auslachen .theater-figure { animation: scene-laugh .5s 1.5s ease-in-out 5 alternate; }
 @keyframes scene-laugh { from { rotate: -7deg; } to { rotate: 7deg; } }
-.scene-schleimen .theater-actor { animation: scene-flatter .65s 1.4s ease-in-out 4 alternate; }
+.scene-schleimen .theater-figure { animation: scene-flatter .65s 1.4s ease-in-out 4 alternate; }
 @keyframes scene-flatter { from { translate: 0 0; } to { translate: 0 -9px; } }
 .scene-schleimen .theater-scene::after { content: '💚  ✨  💚'; position: absolute; left: 50%; top: 35%; transform: translateX(-50%); font-size: 30px; animation: theater-hearts 2.2s 1.3s ease-out both; }
 @keyframes theater-hearts { from { opacity: 0; scale: .4; } 30% { opacity: 1; } to { opacity: 0; scale: 1.5; translate: 0 -35px; } }
-.scene-verschwoerung .theater-actor { animation: scene-whisper .7s 1.2s ease-in-out 3 alternate; }
+.scene-verschwoerung .theater-figure { animation: scene-whisper .7s 1.2s ease-in-out 3 alternate; }
 @keyframes scene-whisper { from { scale: 1; } to { scale: .9; } }
 @media (prefers-reduced-motion: reduce) {
   .theater-title, .theater-huddle, .tree-props > span, .tree-props > i, .cake-props,
-  .scene-auslachen .theater-actor, .scene-schleimen .theater-actor,
-  .scene-verschwoerung .theater-actor { animation: none !important; }
+  .scene-auslachen .theater-figure, .scene-schleimen .theater-figure,
+  .scene-verschwoerung .theater-figure { animation: none !important; }
 }

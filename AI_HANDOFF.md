@@ -1,11 +1,13 @@
 # AI_HANDOFF.md – offene Übergaben
 
-## 14.11.2026 – ChatGPT → Alp/Claude: v0.64.0 Figuren-Theater (in Arbeit)
-Branch: `chatgpt/v064-figuren-theater` · Basis: aktuelles `main` nach PR #37 · Version: 0.64.0 · Stufe 🟢 (Animationen/Bedienung)
-Dateien: `js/game.js` (Ganzkörper-Figuren, Theater-Szenen, Kreisziele, Szenenmenü), `js/app.js` (Realtime-Broadcast, kostenlose Szenen), `css/style.css` (einheitliche Figurenmaße und Szenenanimationen), `js/whatsnew.js`, `CHANGELOG.md`, `version.json`, `e2e/views.spec.mjs`.
-Erster CI-Lauf: Regel-/Syntaxtests grün; vollständige Partien grün; Browser-Layouttest fand 32 Befunde. Davon waren die Theater-Maße fälschlich gegen unskalierte Pixel geprüft; zusätzlich gab es eine 5×13px-Überlappung des Kuhhandelfelds mit dem Aktions-Dock. Test prüft nun CSS-Ausgangsmaß, gleiche gerenderte Maße und tatsächliche Kreispositionen nach der Laufanimation; Kuhhandelfeld wurde 6px vom Dock abgerückt.
-Offen: erneuter vollständiger CI-Lauf, Screenshots nach Szenenbewegung (852×393 sowie weitere Größen), visuelle Prüfung der Baum-Runde. Noch nicht live.
-Nächster Schritt: CI-Auswertung und weitere Korrekturen; kein Merge ohne Alps Freigabe.
+## 14.11.2026 – ChatGPT → Alp/Claude: v0.64.0 Figuren-Theater (aktualisiert 17.11., in Arbeit)
+Branch: `chatgpt/v064-figuren-theater` · Basis: `main` nach PR #37 · Version: 0.64.0 · PR #38 · Stufe 🟡 (Browser-/Szenenprüfung offen)
+Dateien: `js/game.js` (Ganzkörper-Figuren, Theater-Szenen, Kreisziele, Szenenmenü), `js/app.js` (Realtime-Broadcast, kostenlose Szenen), `css/style.css` (Figurenmaße und Szenenanimationen), `js/whatsnew.js`, `CHANGELOG.md`, `version.json`, `e2e/views.spec.mjs`.
+CI-Stand auf PR-Kopf `066dd40` / Run #93 (14.11.): `npm test` und Syntax/Version grün; vollständige Browser-Partien grün; Browser-Layouttest rot ausschließlich bei `theater-auslachen` in allen vier Größen (Abweichung zur Kreisposition 14–51 px). Screenshots liegen im Artefakt `e2e-report` des Runs.
+Ursache: Lach-/Schleim-/Flüsterbewegungen animierten den `.theater-actor`, dessen `transform` gleichzeitig den WAAPI-Laufweg steuert. Körper-Gags müssen auf `.theater-figure` laufen. Zusätzlich enthielt das Baum-CSS drei wörtliche `\\n`-Sequenzen; Sitz- und Rauch-Keyframes wurden dadurch nicht korrekt getrennt geparst.
+Korrektur in aktuellem Commit: Gag-Animationen auf `.theater-figure` verschoben, Transform-Ursprung am Figurenkörper gesetzt und CSS-Zeilenumbrüche der Baum-Runde repariert.
+Offen: CI nach dieser Korrektur vollständig abwarten; alle fünf Szenen in 3/4 Spielern und 4 Bildschirmgrößen visuell prüfen; Baum-Runde insbesondere bei 852×393 auf Kreisbildung, Props, Rauch, Weitergabe und Rückkehr prüfen. Noch nicht live.
+Nächster Schritt: Browser-Tests und Screenshots auswerten, weitere echte Fehler beheben; kein Merge ohne Alps ausdrückliches Go.
 
 
 Nur **offene** Übergaben stehen hier, die neueste oben. Erledigtes wandert nach `AI_HANDOFF_ARCHIV.md`.

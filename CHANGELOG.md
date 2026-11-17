@@ -7,6 +7,7 @@
 - [ ] Szenen werden über Supabase-Realtime an alle Mitspieler übertragen und laufen mit gemeinsamer Startzeit.
 - [ ] Baum-Runde: Figuren laufen aus ihren Plätzen in einen Kreis, setzen sich, Schale/Gras/Feuer erscheinen, ein Comic-Joint wandert herum, Rauchwölkchen steigen auf; zum Schluss entspannen sich alle und kehren zurück.
 - [ ] Browser-Tests prüfen alle fünf Szenen, identische Figurengrößen sowie 3- und 4-Spieler-Darstellung.
+- [ ] Korrektur: Laufweg-Animation getrennt von Lach-/Schleim-/Flüsterbewegungen; Baum-Sitz- und Rauch-Keyframes korrekt geladen.
 
 ## v0.63.1 – Feinschliff Intros & Esel
 
