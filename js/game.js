@@ -6,7 +6,7 @@ import {
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
-  isBoerse, kursValue, KURS_STEP, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets,
+  isBoerse, kursValue, KURS_STEP, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
@@ -208,6 +208,7 @@ function figure(p, idx, cls = '') {
 // Auslage: bei wenigen Tieren etwas größer (mehr Platz ist zwischen Stapel und Geld nicht)
 const AUSLAGE_MAX = 1;
 const SHELF_MAX = 1.18; // v0.59.1: Mitte kleiner → Tiere größer (Alps Wahl B) // v0.59: Regal über dem Geld – eine Reihe, höchstens 90 % (passt unter die Karte in der Mitte)
+const DEMO_HANDTIP = typeof location !== 'undefined' && new URLSearchParams(location.search).has('handtip'); // Screenshot: Hinweis zur Handkarte
 const DEMO_JUB = typeof location !== 'undefined' && new URLSearchParams(location.search).has('mejub'); // Screenshot: deine Figur jubelt
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
@@ -713,7 +714,7 @@ export function renderGame(root, ctx) {
     if (isMe) return said ? `<div class="mebubble ${state.phase === 'payment' || state.phase === 'trade' || state.phase === 'rat' || local.tradeOpen ? 'up' : ''}">${bubble}</div>` : '';
     const laidN = state.phase === 'rat' ? (v.rat.laid[p.id] || 0) : 0;
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
-    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
+    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}${(state.pfaendDone || []).includes(p.id) ? '<span class="pfdone" title="Schon gepfändet – für den Rest der Partie geschützt" aria-label="schon gepfändet, geschützt">⚖</span>' : ''}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]}" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
@@ -760,10 +761,12 @@ export function renderGame(root, ctx) {
     const secs = running ? Math.ceil((a.endsAt - now) / 1000) : 0;
     const total = a.high ? auctionBidMs(state) : auctionStartMs(state);
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
+    // v0.65 Zwangsversteigerung: Karte wird nicht umgedreht, sondern bekommt das Siegel „GEPFÄNDET“ (bleibt während der Versteigerung drauf)
+    const seal = a.forced ? `<span class="aucseal" style="animation-delay:${revealing ? Math.max(0, 1150 - (PFAEND_SHOW_MS - (a.opensAt - nowR))) : -999}ms" aria-label="gepfändet"><b>⚖</b><small>GEPFÄNDET</small></span>` : '';
     const card = revealing
-      ? `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`
+      ? (a.forced ? `<div class="revealcard forced">${playCard(a.animal)}${seal}</div>` : `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`)
       : `<div class="aucard center ringwrap ${infoFresh ? 'settle' : ''} ${running ? (secs <= 3 ? 'low' : '') : 'over'}" ${a.endsAt != null ? `data-ends="${a.endsAt}" data-total="${total}" data-fmt="n"` : ''}>
-          ${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(7, 'calm') : ''}
+          ${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(7, 'calm') : ''}${seal}
           <svg class="ring" viewBox="0 0 112 152" aria-hidden="true"><rect class="ringbg" x="4" y="4" width="104" height="144" rx="16" pathLength="100"></rect><rect class="ringp" x="4" y="4" width="104" height="144" rx="16" pathLength="100" style="stroke-dashoffset:${100 - pct}"></rect></svg>
           <span class="ringsec">${running ? secs : '✓'}</span></div>`;
     // Auktionator lässt sich Zeit: nach 8 s freundlicher Hinweis, die Knöpfe pulsieren
@@ -1643,6 +1646,13 @@ export function renderGame(root, ctx) {
     torte: [['step', 150], ['thud', 1300], ['haha', 1500], ['step', 2900]],
     baum: [['step', 120], ['flipcard', 1500], ['crumple', 2450], ['flipcard', 3500], ['lighter', 4500], ['puff', 5200], ['puff', 5900], ['puff', 6600], ['step', 7000]],
   };
+  // v0.65 Neue Handkarte: beim ersten Mal (pro Gerät und Kartenart) kurz erklären
+  { const leh = v.lastEvent;
+    if (evFresh && leh && leh.type === 'hand' && leh.player === meId && leh.kind) {
+      let seen = false; try { seen = localStorage.getItem(`kh_handtip_${leh.kind}`) === '1'; localStorage.setItem(`kh_handtip_${leh.kind}`, '1'); } catch { /* egal */ }
+      if (!seen || DEMO_HANDTIP) keepFx(`<div class="handtip" role="status"><b>${leh.kind === 'pfaendung' ? '⚖️ Zwangsversteigerung' : '🛡️ Einspruch'}</b> ist jetzt auf deiner Hand (nur du siehst, welche Karte).<br>${leh.kind === 'pfaendung' ? 'Spiel sie später <u>statt</u> deines Zuges: Knopf „⚖️ Pfänden“ – ein Tier eines Mitspielers wird versteigert, er muss verkaufen.' : 'Will dich jemand pfänden, wehrt sie das automatisch ab.'}</div>`, 6500);
+    }
+  }
   // v0.65 Zwangsversteigerung / Einspruch: Auftritt des Gerichtsvollziehers (bei allen)
   { const lep = v.lastEvent;
     if (lep && (lep.type === 'pfaendung' || lep.type === 'einspruch') && local.pfSig !== `${lep.n}|${lep.type}`) {

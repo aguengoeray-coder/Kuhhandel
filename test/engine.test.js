@@ -715,12 +715,12 @@ test('Debug: Spiel sofort beenden – nur wenn alle Quartette verteilt, dann reg
 });
 
 // ---------- Börsen-Chaos ----------
-test('Börsen-Chaos: 64 Karten (54 + 10 News inkl. Zwangsversteigerung + Einspruch), nie zusammen mit Turbo', async () => {
+test('Börsen-Chaos: 65 Karten (54 + 11 News inkl. 2× Zwangsversteigerung + Einspruch), nie zusammen mit Turbo', async () => {
   const { isNewsCard, newsOf, isBoerse } = await import('../src/engine.js');
   const g = createGame({ players: P, seed: 9, settings: { boerse: true } });
-  assert.equal(g.deck.length, 64);
+  assert.equal(g.deck.length, 65);
   const news = g.deck.filter(isNewsCard).map((c) => newsOf(c).kind).sort();
-  assert.deepEqual(news, ['crash', 'crash', 'dividende', 'einspruch', 'hektik', 'panik', 'pfaendung', 'rallye', 'rallye', 'steuer']);
+  assert.deepEqual(news, ['crash', 'crash', 'dividende', 'einspruch', 'hektik', 'panik', 'pfaendung', 'pfaendung', 'rallye', 'rallye', 'steuer']);
   assert.deepEqual(g.kurse, {});
   const t = createGame({ players: P.slice(0, 3), seed: 9, settings: { boerse: true, turbo: true } });
   assert.equal(t.deck.filter(isNewsCard).length, 0);
@@ -854,6 +854,10 @@ test('v0.65 Zwangsversteigerung: auf die Hand + nochmal aufdecken; ausspielen st
   assert.ok(total(g.players[1].money) >= bBefore + 100);
   assert.equal(g.players[0].animals.kuh, 1); assert.equal(g.lastEvent.forced, true);
   assert.equal(currentPlayer(g).id, 'b'); // Pfändung war der Zug von a
+  // jeder nur einmal pro Partie: b ist geschützt, auch wenn a nochmal eine Karte hat
+  g.turn = 0; g.phase = 'turn'; g.hands.a = ['pfaendung']; g.players[1].animals.schaf = 2;
+  assert.equal(canPfaend(g, 'a', 'b', 'schaf'), false);
+  assert.ok(canPfaend(g, 'a', 'c', 'kuh') || g.players[2].animals.kuh === 0);
 });
 
 test('v0.65 Einspruch wehrt Pfändung ab; ohne Gebot behält der Besitzer sein Tier', async () => {

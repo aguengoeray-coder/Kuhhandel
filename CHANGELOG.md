@@ -2,9 +2,10 @@
 
 ## v0.65.0 – Zwangsversteigerung
 
-- [x] Börsen-Chaos: zwei neue **Handkarten** im Stapel (jetzt 10 News). Aufgedeckt → verdeckt auf die Hand, du deckst gleich nochmal auf. Mitspieler sehen nur, *dass* du eine Karte hast (Bluff).
-- [x] **⚖️ Zwangsversteigerung:** statt deines Zuges ausspielen („Pfänden“), Tier eines Mitspielers wählen → es wird versteigert, der Besitzer **muss verkaufen** und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld.
+- [x] Börsen-Chaos: neue **Handkarten** im Stapel – 2× Zwangsversteigerung, 1× Einspruch (jetzt 11 News). Aufgedeckt → verdeckt auf die Hand, du deckst gleich nochmal auf. Mitspieler sehen nur, *dass* du eine Karte hast (Bluff).
+- [x] **⚖️ Zwangsversteigerung:** statt deines Zuges ausspielen („Pfänden“), Tier eines Mitspielers wählen → es wird versteigert, der Besitzer **muss verkaufen** und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld; **jeder nur einmal pro Partie** (Pfand-Siegel am Platz). Kein Mindestgebot – wer klug wartet, schießt Schnäppchen.
 - [x] **🛡️ Einspruch:** wehrt eine Pfändung gegen dich automatisch ab (beide Karten sind dann weg).
+- [x] Das Siegel „GEPFÄNDET“ klebt während der Versteigerung auf der Tierkarte; beim ersten Mal erklärt ein Hinweis die Handkarte.
 - [x] Auftritt im Figuren-Theater: Gerichtsvollzieher mit Hut, Kuckuck-Siegel „GEPFÄNDET“, KLONK – bzw. Schild „EINSPRUCH!“.
 
 ## v0.64.0 – Figuren-Theater
