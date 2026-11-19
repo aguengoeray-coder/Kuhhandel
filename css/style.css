@@ -3380,3 +3380,4 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @keyframes tdim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
 .tprop { scale: 1.35; }
 .tprop.tbub { scale: 1; }
+.stage:not(.p3) .tduel { translate: 6px 0; } /* v0.64: kleiner Abstand zum linken Aktions-Dock (ganze Figuren) */
