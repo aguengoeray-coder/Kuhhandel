@@ -638,7 +638,6 @@ function renderPlaying() {
     react: sendReaction,
     canPunch: canPunch(), // Emote „Verprügeln“: gekauft oder Admin
     taglineOf: (seat) => customSayings.get(userOfSeat(seat)) || (ui.game?.local && seat === dbg.viewAs ? shopMe.custom : '') || '', // v0.63 VS-Intro: eigener Spruch
-    punchLabel: ui.isAdmin && !shopMe.owned.has('emote-pruegel') ? '🥊 Admin-Fähigkeit: Verprügeln' : '🥊 Emote: Verprügeln',
     punch: sendPunch,
     punches: punches.filter((x) => Date.now() - x.at < 4000),
     scenes: scenes.filter((x) => Date.now() - x.at < 4000),
