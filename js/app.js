@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.64.0';
+export const APP_VERSION = '0.65.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -425,7 +425,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (8 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['standings', '📊 Zwischenstand'], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (11 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['standings', '📊 Zwischenstand'], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
     </div>
     </div>
@@ -1672,7 +1672,7 @@ const RULES = `
   <h3>Ratte</h3><p>Wird eine Ratte aufgedeckt, geht es reihum (links vom Aufdecker, er selbst macht mit): Jeder legt eine Karte verdeckt in die Mitte (auch ein 0er) – oder nimmt die Ratte und bekommt alle gelegten Karten. Wer keine Karten mehr hat, muss sie nehmen. Danach deckt der Aufdecker noch eine Karte auf (ist der Stapel leer: Kuhhandel).<br>
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
   Am Ende hat einer alle 4 Ratten – er wählt eines seiner Quartette, das nicht zählt.</p>
-  <h3>📈 Börsen-Chaos (eigene Spielart)</h3><p>Wie Klassisch, dazu 8 Börsen-News im Stapel. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf. <b>Kursrallye</b> (2×): ein Tier +30 bis +100 % (zufällig) bis Spielende · <b>Kurssturz</b> (2×): ein Tier −30 bis −100 % (zufällig, meist kräftig; stapelbar, nie unter 0) · <b>Dividende</b>: alle +50 · <b>Steuerprüfung</b>: jeder gibt seinen höchsten Schein ab · <b>Marktpanik</b>: jeder schiebt einen zufälligen Schein verdeckt nach links · <b>Hektik</b>: die nächsten 3 Versteigerungen nur 5 s. Die Wertung rechnet mit den aktuellen Kursen (Kurszettel neben dem Stapel). Nicht zusammen mit Turbo.</p>
+  <h3>📈 Börsen-Chaos (eigene Spielart)</h3><p>Wie Klassisch, dazu 11 Börsen-News im Stapel. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf. <b>Kursrallye</b> (2×): ein Tier +30 bis +100 % (zufällig) bis Spielende · <b>Kurssturz</b> (2×): ein Tier −30 bis −100 % (zufällig, meist kräftig; stapelbar, nie unter 0) · <b>Dividende</b>: alle +50 · <b>Steuerprüfung</b>: jeder gibt seinen höchsten Schein ab · <b>Marktpanik</b>: jeder schiebt einen zufälligen Schein verdeckt nach links · <b>Hektik</b>: die nächsten 3 Versteigerungen nur 5 s · <b>⚖️ Zwangsversteigerung</b> (2×, Handkarte): kommt verdeckt auf die Hand, du deckst gleich nochmal auf. Später spielst du sie <i>statt</i> deines Zuges: Ein Tier eines Mitspielers wird versteigert – er muss verkaufen und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld · <b>🛡️ Einspruch</b> (Handkarte): wehrt eine Pfändung gegen dich automatisch ab. Die Wertung rechnet mit den aktuellen Kursen (Kurszettel neben dem Stapel). Nicht zusammen mit Turbo.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Alle außer dem Aufdecker sehen einen Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
   <h3>Geldscheine im Stapel</h3><p>Kann der Gastgeber im Warteraum einschalten (bis zu 20 Scheine, Werte frei wählbar). Wird ein Geldschein aufgedeckt, bekommt ihn der Aufdecker – alle sehen den Betrag – und sein Zug ist vorbei.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;

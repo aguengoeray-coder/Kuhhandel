@@ -715,12 +715,12 @@ test('Debug: Spiel sofort beenden – nur wenn alle Quartette verteilt, dann reg
 });
 
 // ---------- Börsen-Chaos ----------
-test('Börsen-Chaos: 62 Karten (54 + 8 News), nie zusammen mit Turbo', async () => {
+test('Börsen-Chaos: 65 Karten (54 + 11 News inkl. 2× Zwangsversteigerung + Einspruch), nie zusammen mit Turbo', async () => {
   const { isNewsCard, newsOf, isBoerse } = await import('../src/engine.js');
   const g = createGame({ players: P, seed: 9, settings: { boerse: true } });
-  assert.equal(g.deck.length, 62);
+  assert.equal(g.deck.length, 65);
   const news = g.deck.filter(isNewsCard).map((c) => newsOf(c).kind).sort();
-  assert.deepEqual(news, ['crash', 'crash', 'dividende', 'hektik', 'panik', 'rallye', 'rallye', 'steuer']);
+  assert.deepEqual(news, ['crash', 'crash', 'dividende', 'einspruch', 'hektik', 'panik', 'pfaendung', 'pfaendung', 'rallye', 'rallye', 'steuer']);
   assert.deepEqual(g.kurse, {});
   const t = createGame({ players: P.slice(0, 3), seed: 9, settings: { boerse: true, turbo: true } });
   assert.equal(t.deck.filter(isNewsCard).length, 0);
@@ -821,4 +821,54 @@ test('v0.63 Kursrallye/Kurssturz: zufällig 30 … 100 % (10er), Sturz im Schnit
   assert.ok(JSON.stringify(g.log).includes('+30 %'));
   const h = drawForAuction(boerseWithTop('news-crash-kuh-80'), 'a', 0);
   assert.equal(kursValue('kuh', h.kurse), 160); assert.ok(JSON.stringify(h.log).includes('−80 %'));
+});
+
+test('v0.65 Zwangsversteigerung: auf die Hand + nochmal aufdecken; ausspielen statt Zug; Besitzer muss verkaufen und bekommt das Geld', async () => {
+  const { playPfaendung, canPfaend, viewFor: vf } = await import('../src/engine.js');
+  let g = drawForAuction(boerseWithTop('news-pfaendung'), 'a', 0);
+  assert.deepEqual(g.hands.a, ['pfaendung']);
+  assert.equal(g.phase, 'turn'); assert.equal(g.mustDraw, true); assert.equal(currentPlayer(g).id, 'a');
+  assert.equal(g.lastEvent.type, 'hand');
+  assert.equal(vf(g, 'b').hands.a, 1); assert.equal(vf(g, 'b').lastEvent.kind, undefined); // Bluff: nur Anzahl
+  assert.throws(() => playPfaendung(g, 'a', 'b', 'kuh', 0), /aufdecken/); // erst nochmal aufdecken
+  g = drawForAuction(g, 'a', 0); // Kuh-Versteigerung
+  g.phase = 'turn'; g.auction = null; g.mustDraw = false; g.turn = 0;
+  g.players[1].animals.kuh = 2; g.players[1].animals.pferd = 4; g.players[1].animals.ratte = 1;
+  assert.equal(canPfaend(g, 'a', 'b', 'pferd'), false); // fertiges Quartett geschützt
+  assert.equal(canPfaend(g, 'a', 'b', 'ratte'), false); // Ratten nicht
+  assert.equal(canPfaend(g, 'a', 'a', 'kuh'), false); // nicht bei sich selbst
+  const broke = JSON.parse(JSON.stringify(g)); broke.players[1].money = [0, 0];
+  assert.equal(canPfaend(broke, 'a', 'b', 'kuh'), false); // ohne Geld geschützt
+  g = playPfaendung(g, 'a', 'b', 'kuh', 1000);
+  assert.equal(g.phase, 'auction'); assert.equal(g.auction.auctioneer, 'b'); assert.equal(g.auction.forced.by, 'a');
+  assert.equal(g.players[1].animals.kuh, 1); assert.deepEqual(g.hands.a, []);
+  assert.equal(g.lastEvent.type, 'pfaendung');
+  assert.throws(() => bid(g, 'b', 10, 1000 + 4000), /Auktionator/);
+  g = bid(g, 'a', 100, 1000 + 4000);
+  const end = g.auction.endsAt + 1;
+  assert.throws(() => closeAuction(g, 'b', 'buy', end), /verkaufen/); // kein Vorkaufsrecht
+  g = closeAuction(g, 'b', 'sell', end);
+  assert.equal(g.payment.payer, 'a'); assert.equal(g.payment.payee, 'b');
+  const bBefore = total(g.players[1].money);
+  g = pay(g, 'a', bestPay(g.players[0].money, 100));
+  assert.ok(total(g.players[1].money) >= bBefore + 100);
+  assert.equal(g.players[0].animals.kuh, 1); assert.equal(g.lastEvent.forced, true);
+  assert.equal(currentPlayer(g).id, 'b'); // Pfändung war der Zug von a
+  // wer schon gepfändet wurde, kann nochmal gepfändet werden
+  g.turn = 0; g.phase = 'turn'; g.hands.a = ['pfaendung']; g.players[1].animals.schaf = 2;
+  assert.equal(canPfaend(g, 'a', 'b', 'schaf'), true);
+});
+
+test('v0.65 Einspruch wehrt Pfändung ab; ohne Gebot behält der Besitzer sein Tier', async () => {
+  const { playPfaendung } = await import('../src/engine.js');
+  const g0 = createGame({ players: P, seed: 3, settings: { boerse: true } });
+  g0.hands = { a: ['pfaendung'], b: ['einspruch'] }; g0.players[1].animals.schaf = 2;
+  let g = playPfaendung(g0, 'a', 'b', 'schaf', 0);
+  assert.equal(g.lastEvent.type, 'einspruch'); assert.equal(g.players[1].animals.schaf, 2);
+  assert.deepEqual(g.hands, { a: [], b: [] }); assert.equal(currentPlayer(g).id, 'b');
+  const g1 = createGame({ players: P, seed: 3, settings: { boerse: true } });
+  g1.hands = { a: ['pfaendung'] }; g1.players[2].animals.gans = 1;
+  g = playPfaendung(g1, 'a', 'c', 'gans', 0);
+  g = closeAuction(g, 'c', 'sell', g.auction.endsAt + 1);
+  assert.equal(g.players[2].animals.gans, 1); assert.match(g.log.at(-1), /behält/);
 });

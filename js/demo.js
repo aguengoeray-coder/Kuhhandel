@@ -1,7 +1,7 @@
 // Beispiel-Spielstände für Screenshots (?demo=turn, auction, …). Im echten Spiel nicht benutzt.
 import { pay,
   createGame, drawForAuction, bid, closeAuction, startTrade, counterTrade, acceptTrade, ANIMALS,
-  RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS, showBatzen,
+  RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS, showBatzen, playPfaendung,
 } from '../src/engine.js';
 
 const PLAYERS = [
@@ -338,6 +338,28 @@ export function buildDemoState(kind, local) {
       g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
       const b = base(); g.players = b.players; g.deck = b.deck; g.donkeysDrawn = 1;
       g.kurse = { kuh: 50, pferd: -50, schaf: 100 }; g.hektik = 2;
+      return g;
+    }
+    case 'pfaend': { // v0.65: du hast „Zwangsversteigerung“ + „Einspruch“ auf der Hand, Mitspieler je eine verdeckte Karte
+      g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
+      const b = base(); g.players = b.players; g.deck = b.deck; g.turn = b.turn;
+      g.hands = { [g.players[g.turn].id]: ['pfaendung', 'einspruch'], [g.players[(g.turn + 1) % g.players.length].id]: ['einspruch'], [g.players[(g.turn + 2) % g.players.length].id]: ['pfaendung'] };
+      return g;
+    }
+    case 'pfauction': { // v0.65: Zwangsversteigerung läuft (&ziel=me: dein Tier wird gepfändet)
+      g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
+      const b = base(); g.players = b.players; g.deck = b.deck;
+      const meI = b.turn; const tgtMe = new URLSearchParams(location.search).get('ziel') === 'me';
+      const byI = tgtMe ? (meI + 1) % g.players.length : meI; const tI = tgtMe ? meI : (meI + 1) % g.players.length;
+      g.turn = byI;
+      const tp = g.players[tI]; const an = Object.keys(tp.animals).find((k) => k !== RAT && tp.animals[k] > 0 && tp.animals[k] < 4) || 'kuh';
+      tp.animals[an] = Math.max(tp.animals[an], 1);
+      tp.money = tp.money.length ? tp.money : [10, 50];
+      g.hands = { [g.players[byI].id]: ['pfaendung'] };
+      const show = new URLSearchParams(location.search).has('show'); // &show=1: Auftritt des Gerichtsvollziehers von vorn
+      if (new URLSearchParams(location.search).has('einspruch')) g.hands[tp.id] = ['einspruch'];
+      g = playPfaendung(g, g.players[byI].id, tp.id, an, Date.now() - (show ? 0 : 3500));
+      if (show) local.prev = { logLen: g.log.length - 1, phase: 'turn' };
       return g;
     }
     case 'ratrun': { // v0.62: Ratte gerade aufgedeckt → Ratte flitzt zu jedem Geldstapel

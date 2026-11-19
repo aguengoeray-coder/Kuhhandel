@@ -3381,3 +3381,43 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .tprop { scale: 1.35; }
 .tprop.tbub { scale: 1; }
 .stage:not(.p3) .tduel { translate: 6px 0; } /* v0.64: kleiner Abstand zum linken Aktions-Dock (ganze Figuren) */
+/* ===== v0.65 Zwangsversteigerung / Einspruch (Handkarten im Börsen-Chaos) ===== */
+.pill-gold { background: linear-gradient(#FFD86B, #F2B705); color: #3A2600; border: 0; box-shadow: 0 3px 0 #A97A00; font-weight: 800; }
+.pill-gold:disabled { opacity: .5; }
+.dock .pfbtn { min-height: 36px; padding: 4px 12px; font-size: 14px; }
+.pfpick { position: absolute; left: 50%; top: 50%; translate: -50% -50%; z-index: 35; width: min(560px, 92%); max-height: 86%; overflow: auto; background: #fff; color: #1a1a1a; border-radius: 18px; padding: 10px 12px; box-shadow: 0 10px 30px rgba(0,0,0,.35); display: flex; flex-direction: column; gap: 8px; }
+.pfpick .rphead { display: flex; justify-content: space-between; align-items: center; font: 800 15px var(--font-head); }
+.pfpick .rphead button { border: 0; background: #eee; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; }
+.pfhint { margin: 0; font-size: 12px; color: #555; }
+.pfrow { display: flex; align-items: center; gap: 10px; }
+.pfwho { display: flex; align-items: center; gap: 6px; min-width: 96px; font-size: 13px; }
+.pfwho .avatar { width: 30px; height: 30px; }
+.pfcards { display: flex; flex-wrap: wrap; gap: 6px; }
+.pfcard { position: relative; border: 0; background: none; padding: 0; cursor: pointer; width: 46px; }
+.pfcard .pcard { width: 46px; height: 64px; }
+.pfcard small { position: absolute; right: -4px; bottom: -4px; background: #1a1a1a; color: #fff; border-radius: 999px; padding: 0 5px; font: 800 11px var(--font-head); }
+.pfcard:active { transform: scale(.94); }
+.handchip { position: absolute; right: -6px; top: -8px; z-index: 6; display: flex; align-items: center; gap: 1px; font: 800 11px var(--font-head); color: #fff; }
+.handchip i { display: block; width: 14px; height: 19px; border-radius: 3px; background: linear-gradient(135deg, #FFD86B, #E3A500); border: 1.5px solid #fff; box-shadow: 0 1px 2px rgba(0,0,0,.4); transform: rotate(8deg); }
+.myhand { position: absolute; left: -6px; top: 8px; z-index: 6; display: flex; flex-direction: column; gap: 4px; }
+.myhand .hcard { display: flex; align-items: center; justify-content: center; width: 24px; height: 32px; border-radius: 4px; background: linear-gradient(135deg, #FFF3C4, #F2C230); border: 2px solid #fff; box-shadow: 0 2px 3px rgba(0,0,0,.35); font-style: normal; font-size: 14px; }
+.myhand .hcard.einspruch { background: linear-gradient(135deg, #DCEBFF, #7FB2F0); }
+/* Gerichtsvollzieher-Hut + Kuckuck-Siegel */
+.actor .ahat { left: 50%; top: -6px; translate: -50% 0; z-index: 3; }
+.actor .ahat > i { display: block; width: 44px; height: 18px; position: relative; }
+.actor .ahat > i::before { content: ''; position: absolute; left: 9px; right: 9px; bottom: 5px; height: 15px; border-radius: 4px 4px 2px 2px; background: #2B2B33; border: 2px solid #111; box-shadow: inset 0 -4px 0 #8B1E2D; }
+.actor .ahat > i::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 7px; border-radius: 50%; background: #2B2B33; border: 2px solid #111; }
+.tseal .tin { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 58px; height: 58px; border-radius: 50%; background: radial-gradient(circle, #E5484D 0 58%, #B3262B 60%); border: 3px dashed #FFE1E1; color: #fff; box-shadow: 0 3px 6px rgba(0,0,0,.4); rotate: -12deg; animation: tsplat .3s cubic-bezier(.2,1.6,.4,1) var(--t0) both; }
+.tseal b { font-size: 22px; line-height: 1; } .tseal small { font: 900 7px var(--font-head); letter-spacing: .5px; }
+.tbang .tin { font: 900 16px var(--font-head); color: #FFD34E; text-shadow: 0 2px 0 #7a4a00, 0 0 6px rgba(0,0,0,.5); rotate: -10deg; }
+.tshield .tin { font-size: 34px; animation: tsplat .3s cubic-bezier(.2,1.6,.4,1) var(--t0) both; }
+.tprop.tseal { scale: 1; } .tprop.tshield { scale: 1; }
+/* Siegel auf der Karte in der Mitte + Hinweis zur Handkarte */
+.aucseal { position: absolute; right: -10px; top: 28%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 50%; background: radial-gradient(circle, #E5484D 0 58%, #B3262B 60%); border: 3px dashed #FFE1E1; color: #fff; box-shadow: 0 3px 6px rgba(0,0,0,.4); rotate: -14deg; animation: sealhit .35s cubic-bezier(.2,1.6,.4,1) both; pointer-events: none; }
+.aucseal b { font-size: 20px; line-height: 1; } .aucseal small { font: 900 7px var(--font-head); letter-spacing: .5px; }
+@keyframes sealhit { 0% { scale: 2.4; opacity: 0; } 100% { scale: 1; opacity: 1; } }
+.revealcard.forced { position: relative; }
+.revealcard.forced .pcard { animation: none; }
+.aucard { position: relative; }
+.handtip { position: absolute; right: 150px; bottom: 120px; z-index: 45; max-width: 300px; padding: 8px 12px; border-radius: 14px; background: #FFF8DC; color: #2a2000; font-size: 12.5px; line-height: 1.35; box-shadow: 0 6px 18px rgba(0,0,0,.35); animation: tpshow 6.5s linear both; }
+.handtip b { font-family: var(--font-head); }
