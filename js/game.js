@@ -10,7 +10,8 @@ import {
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
-import { theaterFx, sceneScript, sceneHtml, SCENE_LABEL, FREE_SCENES } from './theater.js';
+import { theaterFx, sceneScript, sceneHtml } from './theater.js';
+import { SHOP_EMOTES } from './shop.js';
 import { haptic } from './haptics.js';
 
 export const SEAT_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0'];
@@ -2140,6 +2141,17 @@ export function renderGame(root, ctx) {
   local.fx.forEach((f) => { effects += `<div class="fxk" data-fxat="${f.at}">${f.html}</div>`; wakeLocal(f.until + 30); });
 
   // 💬-Menü: oben Emojis (schnell), dann eigene gekaufte Sprüche, dann die Standard-Sprüche; Karten/Punkte ganz unten
+  // v0.67 Emote-Bereich: Aktionen als Kacheln – gekaufte bunt, nicht gekaufte gesperrt mit Preis (Shop → Emotes)
+  function emoteTiles(to, self) {
+    if (!ctx.scene) return '';
+    const ok = ctx.sceneOk || [];
+    const tile = (kind, act, val, owned) => { const it = SHOP_EMOTES.find((x) => (kind === 'punch' ? x.id === 'emote-pruegel' : x.scene === kind)); if (!it) return '';
+      return owned ? `<button type="button" class="rp-tile" data-a="${act}" data-v="${esc(val)}"><i>${it.icon}</i><b>${esc(it.name)}</b></button>`
+        : `<button type="button" class="rp-tile locked" disabled title="Im Shop unter „Emotes“"><i>${it.icon}</i><b>${esc(it.name)}</b><small>🔒 ${it.price}</small></button>`; };
+    if (self) return `<div class="rp-lbl">Für alle</div><div class="rp-tiles">${tile('baum', 'scene', 'baum|', ok.includes('baum'))}</div><p class="rp-tip">Tipp: Tippe einen Mitspieler an für Aktionen gegen ihn.</p>`;
+    const kinds = ['punch', 'laugh', 'schleim', 'torte', ...(v.players.length >= 3 ? ['verschwoerung'] : [])];
+    return `<div class="rp-lbl">Aktion mit ${esc(nameOf(to))}</div><div class="rp-tiles">${kinds.map((k) => k === 'punch' ? tile('punch', 'punch', to, !!ctx.canPunch) : tile(k, 'scene', `${k}|${to}`, ok.includes(k))).join('')}</div>${kinds.some((k) => k === 'punch' ? !ctx.canPunch : !ok.includes(k)) ? '<p class="rp-tip">🔒 Gesperrte Aktionen gibt’s im Shop unter „Emotes“.</p>' : ''}`;
+  }
   function reactPicker() {
     const list = ctx.reactionList, nE = ctx.reactionEmoji || 0, base = ctx.reactionBase ?? list.length;
     const to = local.reactTo, self = to === meId;
@@ -2151,10 +2163,7 @@ export function renderGame(root, ctx) {
     const last = evStrip ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="evstrip in">${evStrip}</div></div>` : lastLog ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="tlog in">${esc(lastLog)}</div></div>` : '';
     return `<div class="reactpick v2 ${self ? 'self' : ''}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
-      ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">${esc(ctx.punchLabel || '🥊 Verprügeln')}</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
-      ${ctx.scene ? (self
-        ? `<div class="rp-lbl">Für alle</div><div class="rp-acts"><button type="button" class="rp-act" data-a="scene" data-v="baum|">${esc(SCENE_LABEL.baum)}</button></div>`
-        : `<div class="rp-lbl">Aktion mit ${esc(nameOf(to))}</div><div class="rp-acts">${FREE_SCENES.filter((k) => k !== 'baum' && (k !== 'verschwoerung' || v.players.length >= 3)).map((k) => `<button type="button" class="rp-act" data-a="scene" data-v="${k}|${esc(to)}">${esc(k === 'verschwoerung' ? '🤫 Verschwörung gegen ihn' : SCENE_LABEL[k])}</button>`).join('')}${ctx.canPunch ? `<button type="button" class="rp-act pu" data-a="punch" data-v="${esc(to)}">🥊 Verprügeln</button>` : ''}</div>`) : ''}
+      ${emoteTiles(to, self)}
       ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}

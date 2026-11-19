@@ -8,13 +8,13 @@ import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
 import { haptic } from './haptics.js';
-import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM } from './shop.js';
+import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM, SCENE_ITEM } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.66.0';
+export const APP_VERSION = '0.67.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -638,11 +638,11 @@ function renderPlaying() {
     react: sendReaction,
     canPunch: canPunch(), // Emote „Verprügeln“: gekauft oder Admin
     taglineOf: (seat) => customSayings.get(userOfSeat(seat)) || (ui.game?.local && seat === dbg.viewAs ? shopMe.custom : '') || '', // v0.63 VS-Intro: eigener Spruch
-    punchLabel: ui.isAdmin && !shopMe.owned.has('emote-pruegel') ? '🥊 Admin-Fähigkeit: Verprügeln' : '🥊 Emote: Verprügeln',
     punch: sendPunch,
     punches: punches.filter((x) => Date.now() - x.at < 4000),
     scenes: scenes.filter((x) => Date.now() - x.at < 4000),
     scene: sendScene,
+    sceneOk: Object.keys(SCENE_ITEM).filter((k) => canScene(k)),
     nudgeWho: waitingFor(),
     nudge: sendNudge,
     autoplay: ui.game.state?.autoplay || [],
@@ -1253,7 +1253,7 @@ function showScene(s) {
   render();
 }
 function sendScene(kind, to, partner = null) {
-  if (!SCENE_OK.includes(kind)) return;
+  if (!SCENE_OK.includes(kind) || !canScene(kind)) return;
   const left = SCENE_COOLDOWN - (Date.now() - lastSceneAt);
   if (left > 0) return toast(`Die Figuren brauchen noch ${Math.ceil(left / 1000)} s Pause.`);
   const seat = ui.game.local ? dbg.viewAs : seatIn(ui.game);
@@ -1269,6 +1269,8 @@ function sendScene(kind, to, partner = null) {
   showScene(s);
   if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'scene', payload: s });
 }
+// v0.67: Szenen-Emotes muss man im Shop kaufen (Admins können alle)
+function canScene(kind) { return !!ui.isAdmin || shopMe.owned.has(SCENE_ITEM[kind]); }
 function canPunch() { return !!ui.isAdmin || shopMe.owned.has('emote-pruegel'); }
 function sendPunch(to) {
   if (!canPunch()) return;

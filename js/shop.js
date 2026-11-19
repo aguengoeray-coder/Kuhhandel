@@ -21,8 +21,16 @@ export const SHOP_SAYINGS = [
 export const SHOP_CUSTOM = { id:'spruch-eigener', name:'Eigener Spruch', price:50, max:40 };
 // v0.61 Emotes: Fähigkeiten für deine Figur (Admins haben sie immer)
 export const SHOP_EMOTES = [
-  { id:'emote-pruegel', name:'Verprügeln', icon:'🥊', price:100, text:'Deine Figur läuft zu einem Mitspieler und verprügelt ihn – Comic-Staubwolke mit POW! BAM! KLATSCH!' }
+  { id:'emote-pruegel', name:'Verprügeln', icon:'🥊', price:100, text:'Deine Figur läuft zu einem Mitspieler und verprügelt ihn – Comic-Staubwolke mit POW! BAM! KLATSCH!' },
+  // v0.67 Figuren-Theater als Emotes (Alp: alle im Shop, interaktive teurer als Sprüche)
+  { id:'emote-auslachen', scene:'laugh', name:'Auslachen', icon:'😂', price:60, text:'Deine Figur watschelt hin, zeigt auf ihn und kugelt sich vor Lachen am Boden – HA! HA! HA!' },
+  { id:'emote-schleimen', scene:'schleim', name:'Schleimen', icon:'🍯', price:60, text:'Hinwatscheln, Schulter klopfen, Herzchen – und ein Schein wird zugesteckt (nur Show).' },
+  { id:'emote-torte', scene:'torte', name:'Torte ins Gesicht', icon:'🥧', price:80, text:'Mit einer Sahnetorte hinlaufen, ausholen – mitten ins Gesicht. Die Sahne klebt noch eine Weile.' },
+  { id:'emote-verschwoerung', scene:'verschwoerung', name:'Verschwörung', icon:'🤫', price:100, text:'Du und ein zufälliger Komplize trefft euch in der Mitte, tuschelt, zeigt auf ihn – und pfeift unschuldig.' },
+  { id:'emote-baum', scene:'baum', name:'Baum-Runde', icon:'🌿', price:120, text:'Alle setzen sich um den Stapel: Schale, Gras, drehen – und der Joint geht reihum. Für den ganzen Tisch.' }
 ];
+// Szene → Shop-Artikel (für die Freischaltung im Spiel)
+export const SCENE_ITEM = Object.fromEntries(SHOP_EMOTES.filter((x) => x.scene).map((x) => [x.scene, x.id]));
 const AVATARS = SHOP_AVATARS.map(({id,name,tier,price,animal}) => ({id,name,tier,price,animal}));
 const TIERS = [
   { id:'selten', label:'Selten', items:AVATARS.filter(x=>x.tier==='selten') },

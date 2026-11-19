@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.67.0 – Emotes im Shop
+
+- [x] Figuren-Theater-Emotes gibt es jetzt im Shop (Reiter „Emotes“): 😂 Auslachen 60, 🍯 Schleimen 60, 🥧 Torte ins Gesicht 80, 🤫 Verschwörung 100, 🌿 Baum-Runde 120 – teurer als Sprüche. Admins können alle.
+- [x] Aufgeräumter Emote-Bereich: Mitspieler antippen → „Aktion mit …“ als Kacheln (Verprügeln, Auslachen, Schleimen, Torte, Verschwörung); eigene Figur → „Für alle“ (Baum-Runde). Gekaufte bunt, nicht gekaufte gesperrt mit Preis. Verprügeln jetzt direkt beim Mitspieler statt über die eigene Figur. (SQL `supabase/v0.67-emotes.sql`)
+- [x] Nur Alp ist Admin (kann alle Emotes); alle anderen kaufen regulär.
+- [x] Kein Abdunkeln mehr während einer Szene – die Figuren heben sich mit Lichtkante und Schatten ab.
+
 ## v0.66.0 – Knöpfe, die man versteht
 
 - [x] Feste Farben für alle Knöpfe: **grün = du bekommst** (Zuschlag, Geld nehmen, Ratte nehmen, Spezialkarte verkaufen), **orange = du zahlst** (Bieten, Bezahlen, Selbst kaufen, Angebot/Gegenangebot, Verdeckt legen), **rot = Karte aufdecken**, **lila = Kuhhandel**, **gold = Pfänden**, **weiß = neutral**.

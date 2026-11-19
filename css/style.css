@@ -3306,7 +3306,9 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .actor .abody > .afull, .actor .abody > .agen { position: absolute; inset: 0; width: 72px; height: 120px; }
 .actor .afull .shop-avatar-full { width: 72px; height: 120px; filter: drop-shadow(0 4px 5px rgba(0,0,0,.4)); }
 /* Bodenschatten unter jeder Figur auf der Bühne */
-.actor::before { content: ''; position: absolute; left: 12px; right: 12px; bottom: -5px; height: 10px; border-radius: 50%; background: rgba(0,0,0,.28); filter: blur(1px); }
+.actor::before { content: ''; position: absolute; left: 10px; right: 10px; bottom: -6px; height: 12px; border-radius: 50%; background: rgba(0,0,0,.4); filter: blur(1.5px); }
+.actor .abody { filter: drop-shadow(0 0 2px rgba(255,255,255,.55)) drop-shadow(0 6px 6px rgba(0,0,0,.45)); } /* v0.67: statt Abdunkeln – Figuren heben sich durch Lichtkante + Schatten ab */
+.reactpick .rp-shop { font-size: 12px; color: #555; }
 /* Jubel / Pleite (gleiche Requisiten wie früher, jetzt an der ganzen Figur) */
 .actor .ameins { position: absolute; left: 50%; top: -26px; transform: translateX(-50%); padding: 2px 9px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 13px var(--font-head); white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.25); animation: ppop .4s cubic-bezier(.2,.9,.3,1.5) both; }
 .actor .aconf { position: absolute; left: 34px; top: 10px; width: 7px; height: 11px; border-radius: 2px; opacity: 0; animation: aconf 1.4s ease-out both; }
@@ -3376,7 +3378,6 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .tsweat { font-size: 20px; animation-name: tpshow, tpulse; animation-duration: var(--d), .4s; animation-delay: var(--t0), var(--t0); animation-iteration-count: 1, 6; animation-direction: normal, alternate; animation-fill-mode: both, both; }
 .tnote { font: 900 20px var(--font-head); color: #9fe0ff; text-shadow: 0 2px 0 #1b4a66; animation-name: tpshow, thaup; animation-duration: var(--d), var(--d); animation-delay: var(--t0), var(--t0); animation-fill-mode: both, both; }
 /* v0.64 Bühne: Tisch kurz abdunkeln, Requisiten etwas größer */
-.tdim { position: absolute; inset: 0; z-index: 39; pointer-events: none; background: rgba(10,16,40,.5); opacity: 0; animation: tdim var(--d) linear both; }
 @keyframes tdim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
 .tprop { scale: 1.35; }
 .tprop.tbub { scale: 1; }
@@ -3442,3 +3443,13 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @media (prefers-reduced-motion: reduce) { #stage .hintme { animation: none; } }
 .rlegend .rl { display: inline-block; padding: 1px 8px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 12px; }
 .rl.get { background: var(--get); } .rl.pay { background: var(--pay); } .rl.move { background: var(--red); } .rl.trade { background: var(--trade); } .rl.neutral { background: #fff; color: var(--ink); border: 1px solid #ccc; }
+/* v0.67 Emote-Bereich im 💬-Menü: Aktionen als Kacheln */
+.reactpick .rp-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.reactpick .rp-tile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 7px; border-radius: 14px; border: 0; background: #FFF3D6; color: #3a2a00; cursor: pointer; box-shadow: 0 3px 0 #E2C98E; font: 800 12px var(--font-head); }
+.reactpick .rp-tile i { font-style: normal; font-size: 26px; line-height: 1.1; }
+.reactpick .rp-tile b { font-weight: 800; line-height: 1.15; text-align: center; }
+.reactpick .rp-tile:active { transform: translateY(2px); box-shadow: 0 1px 0 #E2C98E; }
+.reactpick .rp-tile.locked { background: #F1F1F1; color: #999; box-shadow: none; border: 1.5px dashed #ccc; cursor: default; }
+.reactpick .rp-tile.locked i { filter: grayscale(1); opacity: .55; }
+.reactpick .rp-tile small { font-size: 11px; color: #8a6d1d; }
+.reactpick .rp-tip { margin: 2px 0 0; font-size: 12px; color: #666; }

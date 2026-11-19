@@ -25,7 +25,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 - **Hosting:** Cloudflare Worker `kuhhandel` (statische Dateien, `wrangler.jsonc` + `.assetsignore`).
   Live: https://kuhhandel.a-guengoeray.workers.dev – jeder Push auf `main` baut automatisch neu.
-- **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results` (mit `extras` für die eigene Statistik), `seat_pins`, `error_reports` (automatische Fehlerberichte), `admins` (Alp + Nico),
+- **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results` (mit `extras` für die eigene Statistik), `seat_pins`, `error_reports` (automatische Fehlerberichte), `admins` (nur Alp),
   `push_subscriptions` + `push_settings` (Push „Du bist dran“: Trigger `kh_push` auf `games` meldet per pg_net an den Worker `/push`).
   Admin-Bereich: Startseite → „⚙ Admin“ (nur für Admins; jede Admin-Funktion `admin_*` prüft in Supabase, ob der Aufrufer Admin ist).
   Konten: Name + Passwort (intern als `name@kuhhandel.app`, E-Mail-Bestätigung ist aus).
