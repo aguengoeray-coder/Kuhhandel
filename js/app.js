@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.65.0';
+export const APP_VERSION = '0.66.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1674,7 +1674,8 @@ const RULES = `
   Am Ende hat einer alle 4 Ratten – er wählt eines seiner Quartette, das nicht zählt.</p>
   <h3>📈 Börsen-Chaos (eigene Spielart)</h3><p>Wie Klassisch, dazu 11 Börsen-News im Stapel. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf. <b>Kursrallye</b> (2×): ein Tier +30 bis +100 % (zufällig) bis Spielende · <b>Kurssturz</b> (2×): ein Tier −30 bis −100 % (zufällig, meist kräftig; stapelbar, nie unter 0) · <b>Dividende</b>: alle +50 · <b>Steuerprüfung</b>: jeder gibt seinen höchsten Schein ab · <b>Marktpanik</b>: jeder schiebt einen zufälligen Schein verdeckt nach links · <b>Hektik</b>: die nächsten 3 Versteigerungen nur 5 s · <b>⚖️ Zwangsversteigerung</b> (2×, Handkarte): kommt verdeckt auf die Hand, du deckst gleich nochmal auf. Später spielst du sie <i>statt</i> deines Zuges: Ein Tier eines Mitspielers wird versteigert – er muss verkaufen und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld · <b>🛡️ Einspruch</b> (Handkarte): wehrt eine Pfändung gegen dich automatisch ab. Die Wertung rechnet mit den aktuellen Kursen (Kurszettel neben dem Stapel). Nicht zusammen mit Turbo.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Alle außer dem Aufdecker sehen einen Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
-  <h3>Geldscheine im Stapel</h3><p>Kann der Gastgeber im Warteraum einschalten (bis zu 20 Scheine, Werte frei wählbar). Wird ein Geldschein aufgedeckt, bekommt ihn der Aufdecker – alle sehen den Betrag – und sein Zug ist vorbei.</p>
+  <h3>Geldscheine im Stapel</h3><p>Kann der Gastgeber im Warteraum einschalten (bis zu 20 Scheine, Werte frei wählbar). Liegt ein Geldschein oben, ist die Rückseite <b>grün mit Taler</b>. Wird er aufgedeckt, bekommt ihn der Aufdecker – alle sehen den Betrag – und sein Zug ist vorbei.</p>
+  <h3>Knöpfe</h3><p class="rlegend"><span class="rl get">Grün</span> du bekommst etwas (+ ⬇) · <span class="rl pay">Orange</span> du zahlst (− ⬆) · <span class="rl move">Rot</span> Karte aufdecken · <span class="rl trade">Lila</span> Kuhhandel · <span class="rl neutral">Weiß</span> neutral / zurück. Gestrichelt = gerade gesperrt. Der Knopf, der gerade erwartet wird, leuchtet nach ein paar Sekunden sanft.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
 
 function renderModal() {

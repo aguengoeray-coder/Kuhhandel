@@ -3440,3 +3440,5 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 #stage .hintme:not(:disabled) { animation: hintglow 1.8s ease-in-out var(--hd, 3000ms) infinite; }
 @keyframes hintglow { 0%, 100% { filter: none; outline: 0 solid rgba(255,255,255,0); outline-offset: 2px; } 50% { filter: brightness(1.12); outline: 4px solid rgba(255,255,255,.55); outline-offset: 3px; } }
 @media (prefers-reduced-motion: reduce) { #stage .hintme { animation: none; } }
+.rlegend .rl { display: inline-block; padding: 1px 8px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 12px; }
+.rl.get { background: var(--get); } .rl.pay { background: var(--pay); } .rl.move { background: var(--red); } .rl.trade { background: var(--trade); } .rl.neutral { background: #fff; color: var(--ink); border: 1px solid #ccc; }

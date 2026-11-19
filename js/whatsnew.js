@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.66.0', date: '19.11.', items: ['🟢 Grüne Knöpfe = du bekommst, 🟠 orange = du zahlst', '➕➖ Beträge mit Vorzeichen, gesperrte Knöpfe gestrichelt', '✨ Der erwartete Knopf leuchtet sanft auf'] },
   { v: '0.65.0', date: '19.11.', items: ['⚖️ Börsen-Chaos: Zwangsversteigerung – pfände ein Tier eines Mitspielers, er muss verkaufen', '🛡️ Einspruch-Karte wehrt eine Pfändung ab', '🃏 Beide kommen verdeckt auf die Hand – wer hat was?'] },
   { v: '0.64.0', date: '19.11.', items: ['🎭 Figuren-Theater: Mitspieler antippen → Auslachen, Schleimen, Verschwörung oder Torte ins Gesicht', '🌿 Deine Figur antippen → Baum-Runde für alle', '🚶 Alle stehen jetzt als ganze Figur am Platz und watscheln zu ihren Auftritten'] },
   { v: '0.63.2', date: '19.11.', items: ['💵 Geldscheine im Stapel haben jetzt eine grüne Rückseite – du siehst vorher, ob ein Schein oder ein Tier kommt'] },

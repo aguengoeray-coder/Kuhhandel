@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.66.0 – Knöpfe, die man versteht
+
+- [x] Feste Farben für alle Knöpfe: **grün = du bekommst** (Zuschlag, Geld nehmen, Ratte nehmen, Spezialkarte verkaufen), **orange = du zahlst** (Bieten, Bezahlen, Selbst kaufen, Angebot/Gegenangebot, Verdeckt legen), **rot = Karte aufdecken**, **lila = Kuhhandel**, **gold = Pfänden**, **weiß = neutral**.
+- [x] Beträge mit Vorzeichen und Pfeil: „+130 ⬇ bekommst du“ / „−130 ⬆“.
+- [x] Gesperrte Knöpfe blass und gestrichelt – klar anders als aktive.
+- [x] Der erwartete Knopf (Karte aufdecken, Zuschlag, Bezahlen) leuchtet nach 3 s sanft; nach 8 s pulsiert er wie bisher.
+- [x] Legende in den Regeln.
+
 ## v0.65.0 – Zwangsversteigerung
 
 - [x] Börsen-Chaos: neue **Handkarten** im Stapel – 2× Zwangsversteigerung, 1× Einspruch (jetzt 11 News). Aufgedeckt → verdeckt auf die Hand, du deckst gleich nochmal auf. Mitspieler sehen nur, *dass* du eine Karte hast (Bluff).
