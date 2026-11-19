@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.64.0 – Figuren-Theater
+
+- [x] **Ganze Figuren an jedem Platz:** Mitspieler stehen als ganze Figur auf ihrem Namensschild (ohne Shop-Avatar: Körper in Platzfarbe, Bild als Kopf) – du auch.
+- [x] **Figuren-Theater:** Figuren verlassen ihren Platz (der ist dann leer), watscheln wie Pappfiguren hin und her, spielen die Szene und gehen zurück. In der Mitte sind alle gleich groß, beim Gegner hat man dessen Größe. Der Tisch wird dabei kurz abgedunkelt.
+- [x] Neue Szenen für alle (Mitspieler antippen → „Aktion mit …“): 😂 **Auslachen**, 🍯 **Schleimen**, 🤫 **Verschwörung** (mit zufälligem Komplizen gegen den Angetippten), 🥧 **Torte ins Gesicht**. Deine Figur antippen → 🌿 **Baum-Runde** für alle (Schale, Gras, Drehen, Joint geht reihum, ~8 s).
+- [x] Prügeln, Jubel und Pleite laufen jetzt auch mit der ganzen Figur. Pause zwischen zwei Szenen: 9 s.
+- [x] Szenen gehen an alle im Raum; jedes Gerät spielt sie aus der eigenen Sitzposition.
+
 ## v0.63.2 – Geldschein-Rückseite
 
 - [x] Liegt oben auf dem Stapel ein Geldschein, hat die Karte eine **grüne Rückseite mit Taler-Münze** statt der Kuh – man sieht vorher, ob ein Schein oder eine Tierkarte kommt (nur mit „Geldscheine im Stapel“).

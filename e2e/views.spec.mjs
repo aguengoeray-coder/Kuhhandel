@@ -31,6 +31,10 @@ const PAGES = [
   // v0.61 Admin-Fähigkeit: Prügel-Animation (Ziel oben und rechts)
   { seite: 'pruegel-oben', q: '?demo=turn&allav=1&punch=u3' },
   { seite: 'pruegel-rechts', q: '?demo=turn&allav=1&punch=u4&pfrom=u2' },
+  // v0.64 Figuren-Theater: jede Szene einmal mitten im Ablauf (4 und 3 Spieler, auch: jemand kommt zu dir)
+  ...[['baum', 'sfrom=u1'], ['verschwoerung', 'sfrom=u1&sto=u3&spartner=u2'], ['torte', 'sfrom=u1&sto=u2'], ['auslachen', 'sfrom=u3&sto=u1'], ['schleimen', 'sfrom=u4&sto=u1']]
+    .map(([k, a]) => ({ seite: `theater-${k}`, q: `?demo=turn&allav=1&sdelay=0&scene=${{ auslachen: 'laugh', schleimen: 'schleim' }[k] || k}&${a}` })),
+  { seite: 'theater-baum-3sp', q: '?p=3&demo=turn&allav=1&sdelay=0&scene=baum&sfrom=u2' },
   { seite: 'turn-figur', q: '?demo=turn&allav=1' },
   { seite: 'turn-figur-3sp', q: '?p=3&demo=turn&allav=1' },
   { seite: 'start-avatar', q: '?demo=start&klick=1&myav=kuh-kaiser' },

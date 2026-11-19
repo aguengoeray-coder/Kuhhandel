@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.64.0', date: '19.11.', items: ['🎭 Figuren-Theater: Mitspieler antippen → Auslachen, Schleimen, Verschwörung oder Torte ins Gesicht', '🌿 Deine Figur antippen → Baum-Runde für alle', '🚶 Alle stehen jetzt als ganze Figur am Platz und watscheln zu ihren Auftritten'] },
   { v: '0.63.2', date: '19.11.', items: ['💵 Geldscheine im Stapel haben jetzt eine grüne Rückseite – du siehst vorher, ob ein Schein oder ein Tier kommt'] },
   { v: '0.63.1', date: '14.11.', items: ['⚔️ Duell-Intros länger – und man sieht sofort, wer welches Tier will', '🫏 Der Esel klettert erst aus der Karte, wenn sie offen liegt; beim Treffer siehst du deinen Bonus – aua!'] },
   { v: '0.63.0', date: '14.11.', items: ['⚔️ Duell-Intros bei Kuhhandel, Rattenhandel, Schnick-Schnack-Schnuck und Spielstart', '👑 Neuer Spitzenreiter, 🔦 Letzte Karte, 🥁 „Und der Sieger ist …“ – das Ende schaut ihr gemeinsam', '✍️ Im Shop: dein ganz eigener Spruch', '📉 Börse: Rallye +30 bis +100 %, Sturz −30 bis −100 % – Stürze fallen meist heftiger aus'] },
