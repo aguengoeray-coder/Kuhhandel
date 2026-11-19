@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.70.0';
+export const APP_VERSION = '0.71.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -432,7 +432,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (11 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['standings', '📊 Zwischenstand'], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (13 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
     </div>
     </div>

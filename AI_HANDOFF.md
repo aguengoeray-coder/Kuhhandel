@@ -15,6 +15,12 @@ Nächster Schritt / wer: …
 
 ---
 
+## 20.11.2026 00:10 – Claude → Alp/ChatGPT/Codex: v0.68–v0.71
+Branch: `claude/v071-feinschliff` (baut auf `claude/v070-choreo` auf)  ·  PR: #44 ✓, #45 ✓ live, #46 (v0.70) in Prüfung  ·  Stufe: 🟢 (Alps Go 19.11.)
+Dateien: `js/game.js` (Choreografie: `homeWalk`, Ziele `@cash:`/`@stall:`/`@tpot` in `seatPoint`), `src/engine.js` (Hype/Blase, `applyKurs`), `css/style.css`, `js/demo.js` (`traderesult&pop=1`, `traderespond&pop=1`, `boerse&top=news|money`)
+Tests: npm test 68 ✓ · check.mjs ✓ · e2e über GitHub
+Offen: echte Partien spielen; danach Balance Börsen-Chaos; Shop-Ideen (Accessoires, Haustiere, Abzeichen) brauchen Preise von Alp.
+
 ## 14.11.2026 03:30 – Claude → Alp/ChatGPT/Codex: v0.61.1 + v0.62.0 + v0.63.0 live
 Branch: `claude/v063-intros` (enthält `claude/v0611-muskel-esel`, `claude/v062-lebendig`) · PR #34 · Merge `29709f8` · Stufe 🟡 (Alps „Go“ 02:56)
 Dateien: `js/game.js` (muscleDonkey, aliveGag, encounterHtml/INTRO_MS, Spitzenreiter/Spotlight, Finale), `css/style.css`, `js/app.js` (Intros aus, eigener Spruch, PUNCH_COOLDOWN 5 s), `js/shop.js`/`css/shop.css` (SHOP_CUSTOM), `src/engine.js` (KURS_PCTS + Gewichte), `js/demo.js`, Tests/e2e, `supabase/v0.63-eigener-spruch.sql`

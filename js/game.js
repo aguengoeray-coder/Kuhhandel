@@ -1425,7 +1425,6 @@ export function renderGame(root, ctx) {
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">🔊 Ton: ${ctx.soundName || (ctx.sound ? 'an' : 'aus')}</button>
       <button type="button" class="pill pill-white pill-small" data-a="vibe">Vibration: ${ctx.vibe !== false ? 'an' : 'aus'}</button></div>
       <button type="button" class="pill pill-white pill-small" data-a="intros">⚔️ Duell-Intros: ${ctx.introsOff ? 'aus' : 'an'}</button>
-      ${state.settings?.standings && state.phase !== 'ended' ? '<button type="button" class="pill pill-white pill-small" data-a="standings">📊 Zwischenstand</button>' : ''}
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
       ${ctx.push != null ? `<button type="button" class="pill pill-white pill-small" data-a="push">🔔 Benachrichtigung: ${ctx.push ? 'an' : 'aus'}</button>` : ''}
@@ -1437,7 +1436,8 @@ export function renderGame(root, ctx) {
   H.menu = () => { local.menu = !local.menu; local.reactOpen = false; ctx.rerender(); };
   // Zwischenstand (nur wenn im Warteraum erlaubt): rechnet nur mit dem, was offen liegt – Geld bleibt verdeckt
   H.standings = () => { local.standings = !local.standings; local.menu = false; ctx.rerender(); };
-  const standingsHtml = local.standings && state.settings?.standings && state.phase !== 'ended' ? (() => {
+  const standingsHtml = false && local.standings && state.settings?.standings && state.phase !== 'ended' ? // v0.71 (Alp): kein Zwischenstand mehr – wer führt, muss man sich merken
+    (() => {
     const rows = v.players.map((p, i) => ({ p, i, sc: scoreFor(p, null, false, KURSE) })).sort((a, b) => b.sc.score - a.sc.score);
     return `<div class="standings" data-a="standings" role="button" aria-label="Zwischenstand schließen">
       <h3>📊 Zwischenstand <small>${state.settings?.moneyCounts ? 'nur offene Quartette – Geld kommt am Ende dazu' : 'nur offene Quartette – Geld zählt nicht'}</small></h3>
@@ -1558,10 +1558,13 @@ export function renderGame(root, ctx) {
     const order = top.length === 3 ? [top[1], top[0], top[2]] : top.length === 2 ? [top[1], top[0]] : top;
     const rest = ranked.slice(3);
     const winIdx = idxOf(s[0].id);
+    // v0.71: Verlierer-Pose – wer allein ganz hinten liegt, lässt den Kopf hängen, über ihm regnet es
+    const worst = Math.max(...ranked.map((x) => x.place));
+    const lastPlace = (r) => worst > 1 && r.place === worst && ranked.filter((x) => x.place === worst).length === 1;
     const step = (r) => {
       const i = idxOf(r.id);
       return `<button type="button" class="pod p${Math.min(r.place, 3)} ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}" style="--c:${SEAT_COLORS[i]}">
-        ${r.place === 1 ? '<span class="crown">👑</span>' : ''}${figure(v.players[i], i, `hop${r.place === 1 ? ' win' : ''}`)}
+        ${r.place === 1 ? '<span class="crown">👑</span>' : ''}${lastPlace(r) ? '<span class="raincloud" aria-hidden="true">🌧️</span>' : ''}${figure(v.players[i], i, `hop${r.place === 1 ? ' win' : lastPlace(r) ? ' lose' : ''}`)}
         <span class="pname2">${esc(r.id === meId ? 'Du' : r.name)}</span>
         <span class="pblock"><b>${r.score}</b><span class="picons">${iconsOf(r)}</span><i>${r.place}.</i></span>
         ${r.place === 1 && ctx.rewards && !ctx.myRewards ? '<span class="pdub">+10 <i class="dub" aria-label="Dublonen"></i></span>' : ''}</button>`;
@@ -1574,7 +1577,7 @@ export function renderGame(root, ctx) {
     overlay = `<div class="overlay endtable ${podiumIn ? 'enter' : ''}">${confetti}<div class="ending podium">
       <h2 style="--c:${SEAT_COLORS[winIdx]}">${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
       <div class="pods">${order.map(step).join('')}</div>
-      ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
+      ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}${lastPlace(r) ? ' 🌧️' : ''}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
       ${ctx.rewards && ctx.myRewards ? (() => {
         // v0.55: was du in dieser Partie verdient hast (vom Server berechnet)
         const lbl = { partie: 'Mitgespielt', quartett: 'Quartette', sieg: 'Sieg' };

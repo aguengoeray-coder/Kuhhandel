@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.71.0 – Merken statt anzeigen
+
+- [x] **Kein Zwischenstand mehr:** Der Schalter „📊 Zwischenstand“ im Warteraum und der Knopf im Menü sind weg – wer vorne liegt, muss man sich merken (wie bei Krone und 💸).
+- [x] **Verlierer-Pose:** Wer am Ende allein ganz hinten liegt, lässt auf dem Podest den Kopf hängen, über ihm hängt eine Regenwolke 🌧️ (bei 4 Spielern in seiner Zeile).
+- [x] Warteraum zeigt „Börsen-Chaos (13 News)“; Projektstand und Übergabe aktualisiert.
+
 ## v0.70.0 – Alles läuft dorthin, wo es liegt
 
 - [x] **Tiere laufen zu dir:** Wer ein Tier bekommt (Versteigerung, Spezialkarte, Ratte, Kuhhandel), zu dem läuft das ganze Tier aus der Tischmitte bis auf seinen Stapel und wird dort zur Karte. Die runde Tierkarte, die vorher zusätzlich flog, ist weg.
