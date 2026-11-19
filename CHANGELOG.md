@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.68.0 – Figuren mit Leben
+
+- [x] **Ganze Tiere:** Beim Kuhhandel läuft das gewonnene Tier als ganzes Tier zum neuen Besitzer (Kuh als Kuh, Huhn als Huhn …) – mit Beinen, Schwanz, Flügeln und Koffer; auch Ratte und Quartett-Polonaise. Das Tier schaut in Laufrichtung.
+- [x] **„Ka-ching!“:** Wer Geld bekommt (Verkauf in der Versteigerung, Geldschein aus dem Stapel, Rattentopf, Spezialkarte verkauft, Kuhhandel-Geld), dem regnen Münzen in den Kopf – Goldglanz, Betrag und Kassen-Klingeln.
+- [x] **Starter-Figuren:** Wer keinen Shop-Avatar hat, steht jetzt als sein Profil-Tier da – großer Kopf, Pulli in Platzfarbe – statt Kopf im Kreis.
+- [x] **Figuren leben:** leichtes Atmen und Kopfneigen am Platz; Mimik über dem Kopf: 💦 wer lange am Zug ist, 💢 wenn dir jemand dein Sammeltier wegschnappt oder du einen Kuhhandel verlierst, 😍 beim eigenen Quartett, 💸 ohne einen einzigen Schein.
+- [x] **Debug-Modus aufgeräumt:** Das Infofenster springt beim Scrollen nicht mehr nach oben, Abschnitte lassen sich auf- und zuklappen. Auch andere Fenster (Menü, 💬, Einstellungen) behalten beim Neuzeichnen ihren Scroll-Stand.
+
 ## v0.67.0 – Emotes im Shop
 
 - [x] Figuren-Theater-Emotes gibt es jetzt im Shop (Reiter „Emotes“): 😂 Auslachen 60, 🍯 Schleimen 60, 🥧 Torte ins Gesicht 80, 🤫 Verschwörung 100, 🌿 Baum-Runde 120 – teurer als Sprüche. Admins können alle.

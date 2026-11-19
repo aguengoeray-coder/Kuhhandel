@@ -12,7 +12,7 @@ export const MID_SCALE = 0.82;
 export const FIG_W = 72, FIG_H = 120;
 // Szenen, die jeder auslösen darf (Auswahl beim Antippen) – Prügeln läuft über das gekaufte Emote
 export const FREE_SCENES = ['laugh', 'schleim', 'verschwoerung', 'torte', 'baum'];
-export const SCENE_KINDS = ['punch', 'laugh', 'schleim', 'verschwoerung', 'torte', 'baum', 'cheer', 'pleite'];
+export const SCENE_KINDS = ['kaching', 'punch', 'laugh', 'schleim', 'verschwoerung', 'torte', 'baum', 'cheer', 'pleite'];
 export const SCENE_LABEL = { laugh: '😂 Auslachen', schleim: '🍯 Schleimen', verschwoerung: '🤫 Verschwörung', torte: '🥧 Torte ins Gesicht', baum: '🌿 Baum-Runde' };
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -153,6 +153,18 @@ export function sceneScript(s) {
     return {
       ms: D + 2400, cls: 'k-cheer',
       actors: [{ pid: from, track: [[0, 'seat', 'stand'], [D, 'seat', 'hop'], [D + 2300, 'seat', 'stand']], inner: `<b class="ameins" style="animation-delay:${D + 150}ms">Meins!</b>${[0, 1, 2, 3, 4, 5].map((k) => `<i class="aconf c${k}" style="animation-delay:${D + 100 + k * 40}ms"></i>`).join('')}` }],
+      props: '',
+    };
+  }
+  if (s.kind === 'kaching') {
+    // v0.68 „Ka-ching!“ (Alp): wer Geld bekommt, dem regnen Münzen in den Kopf, Dollar-Glanz, Betrag + Kassen-Klingeln
+    const amt = s.amount != null ? String(s.amount) : '';
+    return {
+      ms: D + 2600, cls: 'k-kaching',
+      actors: [{ pid: from, track: [[0, 'seat', 'stand'], [D, 'seat', 'stand'], [D + 650, 'seat', 'hop'], [D + 1500, 'seat', 'stand'], [D + 2500, 'seat', 'stand']],
+        inner: [0, 1, 2, 3, 4, 5].map((k) => `<i class="kcoin c${k}" style="animation-delay:${D + k * 110}ms"></i>`).join('')
+          + `<b class="kching" style="animation-delay:${D + 620}ms">KA-CHING!</b>${amt ? `<b class="kamt" style="animation-delay:${D + 760}ms">${esc(amt)}</b>` : ''}`
+          + [0, 1, 2, 3].map((k) => `<i class="kspark s${k}" style="animation-delay:${D + 640 + k * 90}ms">✦</i>`).join('') }],
       props: '',
     };
   }

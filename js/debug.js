@@ -13,14 +13,14 @@ export function debugPanel(d) {
   const onoff = (on) => (on ? 'an' : 'aus');
   const players = d.players.map((p) => `<button type="button" class="dview ${p.id === d.viewAs ? 'on' : ''}" data-dbg="view" data-v="${esc(p.id)}">${esc(p.name)}</button>`).join('');
   const testTools = d.local ? `
-    <h3>Testspiel</h3>
+    <details data-sec="tools"><summary>Testspiel</summary>
     <div class="dviews">Sicht: ${players}</div>
     <div class="dbtns">
       <button type="button" data-dbg="autoView" class="${d.autoView ? 'on' : ''}">Sicht folgt dem, der dran ist: ${onoff(d.autoView)}</button>
       <button type="button" data-dbg="bots" class="${d.bots ? 'on' : ''}">Test-Spieler spielen selbst: ${onoff(d.bots)}</button>
       <button type="button" data-dbg="fast" class="${d.fast ? 'on' : ''}">Countdown 5 s: ${onoff(d.fast)}</button>
-    </div>
-    <h3>Abkürzungen</h3>
+    </div></details>
+    <details data-sec="short"><summary>Abkürzungen</summary>
     <div class="dbtns">
       <button type="button" data-dbg="forward">Vorspulen (bis auf 2 Karten verteilen)</button>
       <button type="button" data-dbg="donkey">Esel als nächste Karte</button>
@@ -33,12 +33,12 @@ export function debugPanel(d) {
       <button type="button" data-dbg="trade22">Kuhhandel 2 gegen 2 vorbereiten</button>
       <button type="button" data-dbg="quartets">Alle Quartette verteilen (du zuerst)</button>
       <button type="button" data-dbg="end" class="red">Spiel sofort beenden (Abrechnung + Siegertreppchen)</button>
-    </div>` : '';
+    </div></details>` : '';
   return `<div class="dpanel" role="dialog" aria-label="Debug">
     <div class="dhead"><strong>Debug</strong><button type="button" data-dbg="panel" aria-label="Schließen">✕</button></div>
     <div class="dbody">
       ${testTools}
-      <h3>Verbindung</h3>
+      <details data-sec="conn"><summary>Verbindung & Fehler${d.errors.length ? ` <span class="derr">${d.errors.length}</span>` : ''}</summary>
       ${row('Version', esc(d.version))}
       ${row('Spiel', d.local ? 'Testspiel (nur dieses Gerät)' : esc(d.gameId || '–'))}
       ${row('Live-Verbindung', esc(d.channel))}
@@ -53,6 +53,7 @@ export function debugPanel(d) {
         <button type="button" data-dbg="report" class="on">Fehlerbericht kopieren</button>
       </div>
       ${d.reportText ? `<textarea class="dreport" readonly>${esc(d.reportText)}</textarea><small>Kopieren hat nicht geklappt – Text oben markieren und kopieren.</small>` : ''}
+      </details>
     </div>
   </div>`;
 }

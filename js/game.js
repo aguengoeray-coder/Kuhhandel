@@ -12,6 +12,7 @@ import {
 import { art, STAR } from './animals.js';
 import { theaterFx, sceneScript, sceneHtml } from './theater.js';
 import { SHOP_EMOTES } from './shop.js';
+import { animalBody } from './beasts.js';
 import { haptic } from './haptics.js';
 
 export const SEAT_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0'];
@@ -417,6 +418,7 @@ function routeFx(root) {
     const pts = f.dataset.route.split(';').map((pid) => seatPoint(root, pid, sr, sc));
     if (!pts.length || !f.animate) return;
     f.style.left = `${Math.round(pts[0].x - f.offsetWidth / 2)}px`; f.style.top = `${Math.round(pts[0].y - f.offsetHeight / 2)}px`;
+    if (pts.length > 1) f.classList.toggle('face-l', pts[1].x < pts[0].x - 4); // Tier schaut in Laufrichtung
     const offs = f.dataset.offs ? f.dataset.offs.split(',').map(Number) : pts.map((_, i) => i / Math.max(1, pts.length - 1));
     const kf = pts.map((pt, i) => ({ transform: `translate(${Math.round(pt.x - pts[0].x)}px, ${Math.round(pt.y - pts[0].y)}px)`, offset: Math.min(1, Math.max(0, offs[i] ?? i / (pts.length - 1))) }));
     try { f.animate(kf, { duration: Number(f.dataset.dur) || 2000, delay: Number(f.dataset.delay) || 0, fill: 'both', easing: 'ease-in-out' }); } catch { /* egal */ }
@@ -472,9 +474,27 @@ function genericBody(color) {
     <path class="garm r" d="M84 86c12 6 18 22 18 38l-10 2-8-24" fill="${color}" ${S}/><circle cx="97" cy="128" r="7" fill="#F2C9A0" ${S}/>
     <path d="M34 84c6-8 16-12 26-12s20 4 26 12l-4 70H38z" fill="${color}" ${S}/><path d="M60 76v74" stroke="rgba(0,0,0,.25)" stroke-width="3"/></svg>`;
 }
-// Ganzkörper-Figur eines Spielers: Shop-Avatar (eigener Körper) oder Standard-Körper + Profilbild als Kopf
+// v0.68 Starter-Figur (ohne Shop-Avatar): dein Profil-Tier als ganzer Charakter – großer Kopf, Pulli in Platzfarbe,
+// Bauch in Tierfarbe. Ersetzt den „Kopf im Kreis auf Einheitskörper“.
+function starterBody(animal, color, seat) {
+  const K = '#2B2B2B', S = `stroke="${K}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
+  const headSvg = art(animal).replace('<svg class="art" ', '<svg class="shd" x="6" y="0" width="108" height="108" ');
+  return `<svg class="gbody starter" viewBox="0 0 120 200" aria-hidden="true">
+    <path d="M47 160l-3 30h15l2-28M73 160l3 30H61l-2-28" fill="#3B3F4A" ${S}/><path d="M38 188h22v8H36zM61 188h22l2 8H61z" fill="${K}" ${S}/>
+    <path class="garm l" d="M36 112c-10 6-16 18-16 30l9 3 8-18" fill="${seat}" ${S}/><circle cx="24" cy="146" r="7.5" fill="${color}" ${S}/>
+    <path class="garm r" d="M84 112c10 6 16 18 16 30l-9 3-8-18" fill="${seat}" ${S}/><circle cx="96" cy="146" r="7.5" fill="${color}" ${S}/>
+    <path d="M34 112c4-10 14-14 26-14s22 4 26 14l-3 52H37z" fill="${seat}" ${S}/>
+    <ellipse cx="60" cy="140" rx="15" ry="17" fill="${color}" ${S}/>
+    <path d="M46 104l14 10 14-10" fill="#fff" ${S}/>
+    ${headSvg}
+  </svg>`;
+}
+// Ganzkörper-Figur eines Spielers: Shop-Avatar (eigener Körper), sonst Starter-Figur aus dem Profil-Tier
+// (wer gar kein Profilbild hat: Standard-Körper + Buchstabe als Kopf)
 function aliveFig(p, i, shop) {
   if (shop) return `<div class="afull">${shopAvatarFull(shop)}</div>`;
+  const pr = avatarLookup(p.id);
+  if (pr?.animal) return `<div class="agen starter">${starterBody(pr.animal, pr.color || '#F2C9A0', SEAT_COLORS[i] || '#1D5FC2')}</div>`;
   return `<div class="agen">${genericBody(SEAT_COLORS[i] || '#1D5FC2')}<div class="ahead">${avatar(p, i)}</div></div>`;
 }
 
@@ -546,14 +566,27 @@ export function renderGame(root, ctx) {
   const outMark = (pid, from, until) => { local.out = local.out || {}; const o = local.out[pid]; local.out[pid] = { from: o && o.until > Date.now() ? Math.min(o.from, from) : from, until: Math.max(o && o.until > Date.now() ? o.until : 0, until) }; wakeLocal(from); wakeLocal(until + 20); };
   // v0.63.1 „Aua“: Getroffener hält sich kurz den Kopf (Profilbild bzw. deine Figur bekommt Klasse .ouch)
   const ouchMark = (pid, from, until) => { local.ouch = local.ouch || {}; const o = local.ouch[pid]; if (o && o.from === from) return; local.ouch[pid] = { from, until }; wakeLocal(from); wakeLocal(until + 20); };
+  { const hk = `${state.phase}|${state.log.length}|${state.turn}`; if (local.hintKey !== hk) { local.hintKey = hk; local.hintAt = Date.now(); } } // seit wann wartet der Zug
+  // v0.68 Mimik über dem Kopf: kurz (💢 Wunschtier weg, 😍 Quartett) oder dauerhaft (💸 kein Geld, 💦 lange am Zug)
+  const moodMark = (pid, kind, from, ms) => { local.mood = local.mood || {}; const m = local.mood[pid]; if (m && m.from === from && m.kind === kind) return; local.mood[pid] = { kind, from, until: from + ms }; wakeLocal(from); wakeLocal(from + ms + 20); }; // erst nach der Sitzplatz-Zeichnung aufrufen
+  const MOOD = { sweat: '💦', angry: '💢', love: '😍', broke: '💸' };
+  const moodOf = (pid) => {
+    const now = Date.now(); const m = local.mood && local.mood[pid];
+    if (m && m.from <= now && now < m.until) return m.kind;
+    const pl = v.players[idxOf(pid)];
+    if (pl && (Array.isArray(pl.money) ? pl.money.length : pl.money) === 0) return 'broke';
+    if (state.phase === 'turn' && v.players[state.turn]?.id === pid && local.hintAt && now - local.hintAt > 12000) return 'sweat';
+    return null;
+  };
+  const moodHtml = (pid) => { const k = moodOf(pid); return k ? `<i class="mood m-${k}" aria-hidden="true">${MOOD[k]}</i>` : ''; };
   const ouchOn = (pid) => { const o = local.ouch && local.ouch[pid]; return !!(o && o.from <= Date.now() && Date.now() < o.until); };
   const OUCH = '<i class="ouchh l" aria-hidden="true"></i><i class="ouchh r" aria-hidden="true"></i><i class="ouchs" aria-hidden="true">💫</i>';
   // aliveGag: el = schon vergangene Zeit, delay = Start später (ms), raw = ohne eigene Vorspul-Hülle (für keepFx)
   // v0.64: Gags laufen über das Figuren-Theater – die ganze Figur am Platz spielt die Szene (Platz ist so lange leer)
-  const aliveGag = (pid, kind, el, dur, delay = 0, raw = false) => {
+  const aliveGag = (pid, kind, el, dur, delay = 0, raw = false, amount = null) => {
     if (idxOf(pid) < 0) return '';
     const t0 = Date.now() - el;
-    const sc = sceneScript({ kind, from: pid, delay, moth: MOTH });
+    const sc = sceneScript({ kind, from: pid, delay, moth: MOTH, amount });
     if (!sc) return '';
     outMark(pid, t0, t0 + sc.ms);
     const html = sceneHtml({ kind, from: pid }, sc, figOf, meId);
@@ -568,7 +601,8 @@ export function renderGame(root, ctx) {
     return { html: sceneHtml(s, sc, figOf, meId), ms: sc.ms };
   };
   // Tier-Figur (Kopf = Kartenbild) für Ratte, Polonaise, Kuhhandel-Koffer
-  const beast = (id, cls = '', inner = '') => `<div class="beast ${cls}" style="--a:${ANIMAL_COLORS[id] || '#888'}"><i class="blegs"><b></b><b></b></i><i class="bhead">${art(id)}</i>${inner}</div>`;
+  // v0.68: ganzes Tier (Körper + Kartenkopf) statt Kopf im Kreis
+  const beast = (id, cls = '', inner = '') => `<div class="beast whole ${cls}" style="--a:${ANIMAL_COLORS[id] || '#888'}">${animalBody(id)}${inner}</div>`;
   // v0.61 Prügel-Animation (Comic, keine echte Gewalt): Laufen → Staubwolke mit POW/BAM → zurück
   const punchFx = (pu) => {
     const src = esc(pu.from); const dst = esc(pu.to); // '@me' wird erst in seatPoint aufgelöst
@@ -718,7 +752,7 @@ export function renderGame(root, ctx) {
     return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
-        ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]}" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
+        ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}</span>` : status}</span></div>
       </div>
       <div class="chips" data-a="reactTo" data-v="${esc(p.id)}">${chips}</div>
@@ -728,6 +762,7 @@ export function renderGame(root, ctx) {
   // ----- Versteigerung: findet direkt auf dem Tisch statt -----
   let wake = null; // wann neu zeichnen (Aufdecken, Buzzer-Countdown) – in Serverzeit
   const wakeLocal = (t) => { const w = t + (ctx.now() - Date.now()); if (!wake || wake > w) wake = w; }; // Gerätezeit → Serverzeit
+  if (state.phase === 'turn' && local.hintAt && Date.now() - local.hintAt < 12000) wakeLocal(local.hintAt + 12010); // 💦 nach 12 s am Zug
   if (flashing) wakeLocal(local.turnFlashAt + 1650); // Aufleuchten „wer ist dran“ danach einmal beenden
   if (calmLeft) wakeLocal(Date.now() + calmLeft + 30);
   let pickMode = null; // 'sel': Scheine im Fächer antippen → ins Feld · 'rat': einen Schein zum Legen anheben
@@ -1542,7 +1577,7 @@ export function renderGame(root, ctx) {
     const [qp, qa] = added.length ? added[0].split('|') : [];
     if (added.length) { local.qSound = true; if (qp === meId) local.qMine = true; }
     if (added.length && evNew && receiverOf(le) === qp && le.animal === qa) local.qBadge = `${evSig}`; // Quartett steht als Abzeichen im Ergebnis-Fenster
-    if (added.length) local.poloNext = { pid: qp, animal: qa, delay: evNew ? evDelay + 600 : 500 };
+    if (added.length) { local.poloNext = { pid: qp, animal: qa, delay: evNew ? evDelay + 600 : 500 }; if (qp) moodMark(qp, 'love', Date.now() + (evNew ? evDelay + 600 : 500), 3400); }
     else if (added.length) {
       const [pid, animal] = added[0].split('|');
       const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
@@ -1857,7 +1892,16 @@ export function renderGame(root, ctx) {
   if (evNew && le) {
     // Versteigerung gewonnen: Gewinner springt aus dem Profilbild und jubelt (nach dem Ergebnis-Fenster)
     if (le.type === 'auction_won' && idxOf(le.buyer) >= 0) keepFx(aliveGag(le.buyer, 'cheer', 0, 2300, evDelay + 700, true), evDelay + 3100);
-    // Kuhhandel entschieden: das Tier läuft beleidigt mit Koffer vom Abgeber zum Empfänger
+    // v0.68 „Ka-ching!“: wer Geld bekommt (Verkäufer der Versteigerung, Geldschein, Rattentopf, Spezialkarte, Kuhhandel-Verlierer)
+    if (le.type === 'auction_won' && le.animal) v.players.forEach((p) => { if (p.id !== le.buyer && (p.animals?.[le.animal] || 0) > 0) moodMark(p.id, 'angry', Date.now() + evDelay + 600, 2600); });
+    if (le.type === 'trade') { const win = receiverOf(le); moodMark(win === le.challenger ? le.target : le.challenger, 'angry', Date.now() + evDelay + 2200, 2400); }
+    const kach = (pid, amount, extra = 0) => { if (idxOf(pid) >= 0) { keepFx(aliveGag(pid, 'kaching', 0, 2600, evDelay + 700 + extra, true, amount), evDelay + 3400 + extra); later.push(['kaching', evDelay + 1300 + extra]); } };
+    if (le.type === 'auction_won' && le.payee && le.amount > 0 && le.payee !== le.buyer) kach(le.payee, `+${le.amount}`);
+    if (le.type === 'special_won' && le.payee && le.count > 0 && le.payee !== le.buyer) kach(le.payee, `+${le.count} Karte${le.count === 1 ? '' : 'n'}`);
+    if (le.type === 'money_drawn' && le.value > 0) kach(le.player, `+${le.value}`, -500);
+    if (le.type === 'rat_taken' && le.count > 0) kach(le.player, `+${le.count} Karte${le.count === 1 ? '' : 'n'}`, -300);
+    if (le.type === 'trade') { const win = receiverOf(le); const lose = win === le.challenger ? le.target : le.challenger; kach(lose, '💰', 600); }
+    // Kuhhandel entschieden: das ganze Tier läuft mit Koffer vom Abgeber zum Empfänger
     if (le.type === 'trade') {
       const to = receiverOf(le); const from = to === le.challenger ? le.target : le.challenger;
       if (idxOf(to) >= 0 && idxOf(from) >= 0) {
@@ -2172,6 +2216,9 @@ export function renderGame(root, ctx) {
       ${playerDetail(v.players[idxOf(to)], self)}
     </div>`;
   }
+  // v0.68: Scroll-Stand offener Fenster (💬-Menü, Menü, Pfänden-Auswahl, Abrechnung) beim Neuzeichnen behalten
+  const KEEP_SCROLL = ['.reactpick', '.menu', '.pfpick', '.ending.recap ul'];
+  const keptScroll = KEEP_SCROLL.map((sel) => { const el = root.querySelector(sel); return el ? el.scrollTop : 0; });
   root.dataset.me = meId;
   root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
@@ -2181,7 +2228,7 @@ export function renderGame(root, ctx) {
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
       const meOut = local.out && local.out[meId] && local.out[meId].from <= now && now < local.out[meId].until;
       return `<div class="meplate full ${pr?.shop ? '' : 'gen'} ${meOut ? 'out' : ''} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">${myHand.length ? `<span class="myhand" aria-label="Deine Handkarten">${myHand.map((k) => `<i class="hcard ${k}" title="${k === 'pfaendung' ? 'Zwangsversteigerung: statt eines Zuges ein Tier pfänden' : 'Einspruch: wehrt eine Pfändung gegen dich ab'}">${k === 'pfaendung' ? '⚖️' : '🛡️'}</i>`).join('')}</span>` : ''}
-        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : aliveFig(me, meIdx, null)}${ouchOn(meId) ? OUCH : ''}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
+        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : aliveFig(me, meIdx, null)}${ouchOn(meId) ? OUCH : ''}${moodHtml(meId)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
@@ -2212,11 +2259,10 @@ export function renderGame(root, ctx) {
   aimFly(root);
   aimFx(root);
   routeFx(root);
+  KEEP_SCROLL.forEach((sel, i) => { const el = root.querySelector(sel); if (el && keptScroll[i]) el.scrollTop = keptScroll[i]; });
   theaterFx(root);
   // v0.66 Knöpfe: der eine „erwartete“ Knopf leuchtet nach 3 s sanft (Zeit läuft ab Phasenwechsel, nicht ab jedem Neuzeichnen)
-  { const hk = `${state.phase}|${state.log.length}|${state.turn}`;
-    if (local.hintKey !== hk) { local.hintKey = hk; local.hintAt = Date.now(); }
-    root.querySelectorAll('.hintme').forEach((b) => b.style.setProperty('--hd', `${3000 - (Date.now() - local.hintAt)}ms`)); }
+  { root.querySelectorAll('.hintme').forEach((b) => b.style.setProperty('--hd', `${3000 - (Date.now() - local.hintAt)}ms`)); }
   mouthBubbles(root);
   seekFx(root);
   syncLoops();

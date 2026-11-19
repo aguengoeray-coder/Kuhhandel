@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.67.0';
+export const APP_VERSION = '0.68.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -147,6 +147,13 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 // ---------- Darstellung ----------
 
 function render() {
+  // v0.68: Fenster und Listen behalten beim Neuzeichnen ihren Scroll-Stand (sprang vorher immer nach oben)
+  const KEEP = ['.mbox', '.games-list', '.news'];
+  const kept = KEEP.map((sel) => { const el = document.querySelector(sel); return el ? el.scrollTop : 0; });
+  renderInner();
+  KEEP.forEach((sel, i) => { const el = document.querySelector(sel); if (el && kept[i]) el.scrollTop = kept[i]; });
+}
+function renderInner() {
   renderModal();
   let ver = document.getElementById('appver');
   if (!ver) { ver = document.createElement('div'); ver.id = 'appver'; document.body.appendChild(ver); }
@@ -902,6 +909,18 @@ function injectDebug() {
   if (!stage) return;
   const d = debugInfo();
   stage.insertAdjacentHTML('beforeend', debugChips(d) + (dbg.panel ? debugPanel(d) : ''));
+  // v0.68: Das Spiel zeichnet sich ständig neu – Scroll-Stand und offene Abschnitte des Infofensters merken,
+  // sonst springt es beim Scrollen immer wieder nach oben (Alp)
+  const body = stage.querySelector('.dpanel .dbody');
+  if (body) {
+    body.scrollTop = dbg.scroll || 0;
+    body.addEventListener('scroll', () => { dbg.scroll = body.scrollTop; }, { passive: true });
+    body.querySelectorAll('details[data-sec]').forEach((el) => {
+      el.open = (dbg.open || { tools: true, short: true })[el.dataset.sec] ?? false;
+      el.addEventListener('toggle', () => { dbg.open = { ...(dbg.open || { tools: true, short: true }), [el.dataset.sec]: el.open }; });
+    });
+    body.scrollTop = dbg.scroll || 0;
+  }
 }
 
 function buildReport() {
