@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.65.0 – Zwangsversteigerung
+
+- [x] Börsen-Chaos: zwei neue **Handkarten** im Stapel (jetzt 10 News). Aufgedeckt → verdeckt auf die Hand, du deckst gleich nochmal auf. Mitspieler sehen nur, *dass* du eine Karte hast (Bluff).
+- [x] **⚖️ Zwangsversteigerung:** statt deines Zuges ausspielen („Pfänden“), Tier eines Mitspielers wählen → es wird versteigert, der Besitzer **muss verkaufen** und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld.
+- [x] **🛡️ Einspruch:** wehrt eine Pfändung gegen dich automatisch ab (beide Karten sind dann weg).
+- [x] Auftritt im Figuren-Theater: Gerichtsvollzieher mit Hut, Kuckuck-Siegel „GEPFÄNDET“, KLONK – bzw. Schild „EINSPRUCH!“.
+
 ## v0.64.0 – Figuren-Theater
 
 - [x] **Ganze Figuren an jedem Platz:** Mitspieler stehen als ganze Figur auf ihrem Namensschild (ohne Shop-Avatar: Körper in Platzfarbe, Bild als Kopf) – du auch.

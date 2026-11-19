@@ -6,7 +6,7 @@ import {
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
-  isBoerse, kursValue, KURS_STEP, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard,
+  isBoerse, kursValue, KURS_STEP, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
@@ -674,7 +674,7 @@ export function renderGame(root, ctx) {
     const count = Array.isArray(p.money) ? p.money.length : p.money;
     let status = karten(count);
     if (state.phase === 'auction') {
-      if (p.id === auction.auctioneer) status = 'versteigert';
+      if (p.id === auction.auctioneer) status = auction.forced ? 'gepfändet' : 'versteigert';
       else if (auction.passed.includes(p.id)) status = 'gepasst';
       else if (auction.caps[p.id] != null) status = `max. ${auction.caps[p.id]}`;
     }
@@ -713,7 +713,7 @@ export function renderGame(root, ctx) {
     if (isMe) return said ? `<div class="mebubble ${state.phase === 'payment' || state.phase === 'trade' || state.phase === 'rat' || local.tradeOpen ? 'up' : ''}">${bubble}</div>` : '';
     const laidN = state.phase === 'rat' ? (v.rat.laid[p.id] || 0) : 0;
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
-    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}
+    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]}" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
@@ -792,7 +792,7 @@ export function renderGame(root, ctx) {
           ${avatar(v.players[bi], bi)}<span class="bwho">${a.high.player === meId ? '🔨 Du<small>führst</small>' : `${esc(nameOf(a.high.player))}<small>bietet</small>`}</span><b>${high}</b>${outbidTag()}</div>`;
       })();
 
-    aucBanner = urge ? 'Alle warten auf dich!' : `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
+    aucBanner = urge ? 'Alle warten auf dich!' : a.forced ? `⚖️ Zwangsversteigerung · ${iAmAuctioneer ? 'dein Tier' : `${esc(nameOf(a.auctioneer))}s Tier`}` : `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
     // Nach Ablauf entscheidet der Auktionator: „Zuschlag“ sitzt beim Gebot des Höchstbietenden, „Selbst kaufen“ unten links – weit auseinander
     const decideHere = iAmAuctioneer && !revealing && !running && a.high;
     const sellBtn = decideHere ? `<button type="button" class="tbtn accept sidebtn ${urge ? 'urge' : ''}" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))} · ${high}</button>` : '';
@@ -801,16 +801,17 @@ export function renderGame(root, ctx) {
     if (iAmAuctioneer) {
       const myTotal = sum(me.money);
       if (revealing) {
-        aucLeft = `<div class="ldecide">Du deckst auf …</div>`;
+        aucLeft = `<div class="ldecide">${a.forced ? '⚖️ Dein Tier wird gepfändet …' : 'Du deckst auf …'}</div>`;
       } else if (running) {
         aucLeft = ''; // „Du versteigerst“ steht schon oben im Schild
       } else if (a.high) {
-        aucLeft = `<button type="button" class="pill pill-white ${urge ? 'urge' : ''}" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>${myTotal >= high ? 'SELBST KAUFEN' : 'ZU WENIG GELD'}</small>${high}</button>`;
+        aucLeft = a.forced ? `<div class="ldecide">⚖️ Gepfändet – du musst verkaufen</div>` // Zwangsversteigerung: kein Vorkaufsrecht
+          : `<button type="button" class="pill pill-white ${urge ? 'urge' : ''}" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>${myTotal >= high ? 'SELBST KAUFEN' : 'ZU WENIG GELD'}</small>${high}</button>`;
       } else {
-        aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>Tier nehmen</button>`;
+        aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>${a.forced ? 'Tier behalten' : 'Tier nehmen'}</button>`;
       }
     } else if (revealing) {
-      aucLeft = `<div class="ldecide">Karte wird aufgedeckt …</div>`;
+      aucLeft = `<div class="ldecide">${a.forced ? '⚖️ Der Gerichtsvollzieher kommt …' : 'Karte wird aufgedeckt …'}</div>`;
     } else if (running) {
       const passed = a.passed.includes(meId);
       // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
@@ -1235,6 +1236,10 @@ export function renderGame(root, ctx) {
       const loser = le0.winner === le0.challenger ? le0.target : le0.challenger;
       evStrip = `${who2(le0.winner)}${ea(hat(le0.winner))}${ea(`<b>${le0.count}×</b> ${aname(le0.animal)}`)}${miniCard(le0.animal)}${ea('von')}${who2(loser, 'dir')}${ea('ertauscht')}`;
     } else if (le0.type === 'money_drawn') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} einen Geldschein gezogen`)}${moneyCard(le0.value)}`;
+
+    else if (le0.type === 'hand') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} eine Börsen-Karte auf die Hand genommen${le0.kind ? `: <b>${le0.kind === 'pfaendung' ? '⚖️ Zwangsversteigerung' : '🛡️ Einspruch'}</b>` : ''}`)}`;
+    else if (le0.type === 'pfaendung') evStrip = `${who2(le0.by)}${ea(`${hat(le0.by)}`)}${who2(le0.target, 'dir')}${ea(aname(le0.animal))}${miniCard(le0.animal)}${ea('gepfändet ⚖️')}`;
+    else if (le0.type === 'einspruch') evStrip = `${who2(le0.target)}${ea(`${hat(le0.target)} Einspruch eingelegt 🛡️ – keine Pfändung von`)}${ea(aname(le0.animal))}${miniCard(le0.animal)}`;
     else if (le0.type === 'news') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} Börsen-News aufgedeckt:`)}${ea(`<b>${esc(newsTitle(le0))}</b>`)}`;
     else if (le0.type === 'rat_taken') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} die Ratte genommen`)}${miniCard(RAT)}${ea(`und ${karten(le0.count)} bekommen`)}`;
   }
@@ -1294,12 +1299,21 @@ export function renderGame(root, ctx) {
   }).join('');
 
   const trades = possibleTrades(state, meId);
+  // v0.65 Handkarten (Börsen-Chaos): Zwangsversteigerung ausspielen statt aufzudecken
+  const myHand = (state.hands && state.hands[meId]) || [];
+  const pfTargets = state.phase === 'turn' && myTurn && myHand.includes('pfaendung') ? pfaendTargets(state, meId) : [];
+  const pfaendBtn = myHand.includes('pfaendung') && state.phase === 'turn' && myTurn
+    ? `<button type="button" class="pill pill-gold pfbtn" data-a="pfOpen" ${pfTargets.length && !v.mustDraw && !calmLeft ? '' : 'disabled'} title="${v.mustDraw ? 'Erst noch eine Karte aufdecken' : pfTargets.length ? '' : 'Gerade kann nichts gepfändet werden'}">⚖️ Pfänden</button>` : '';
+  if (local.pfOpen && !pfTargets.length) local.pfOpen = false;
+  H.pfOpen = () => { local.pfOpen = true; ctx.rerender(); };
+  H.pfClose = () => { local.pfOpen = false; ctx.rerender(); };
+  H.pfGo = (val) => { const [tid, an] = String(val).split('|'); local.pfOpen = false; ctx.act((s) => playPfaendung(s, meId, tid, an, ctx.now())); };
   let leftActionsHtml = aucLeft;
   // Nicht dran: unten links bleibt frei (wer dran ist, steht oben im Schild und an der Sanduhr)
   if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
     leftActionsHtml = `
       <button type="button" class="pill pill-red ${calmLeft ? 'calm' : ''}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>KARTE<br>AUFDECKEN</button>
-      <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>`;
+      <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>${pfaendBtn}`;
   }
   const askMe = local.urgeNow || (state.phase === 'turn' && myTurn && !local.tradeOpen) || (state.phase === 'payment' && v.payment.payer === meId)
     || (state.phase === 'trade' && v.trade.target === meId) || (state.phase === 'rat' && ratCurrent(v) === meId) || (state.phase === 'block' && v.block.player === meId);
@@ -1629,6 +1643,17 @@ export function renderGame(root, ctx) {
     torte: [['step', 150], ['thud', 1300], ['haha', 1500], ['step', 2900]],
     baum: [['step', 120], ['flipcard', 1500], ['crumple', 2450], ['flipcard', 3500], ['lighter', 4500], ['puff', 5200], ['puff', 5900], ['puff', 6600], ['step', 7000]],
   };
+  // v0.65 Zwangsversteigerung / Einspruch: Auftritt des Gerichtsvollziehers (bei allen)
+  { const lep = v.lastEvent;
+    if (lep && (lep.type === 'pfaendung' || lep.type === 'einspruch') && local.pfSig !== `${lep.n}|${lep.type}`) {
+      local.pfSig = `${lep.n}|${lep.type}`;
+      if (evFresh && idxOf(lep.by) >= 0 && idxOf(lep.target) >= 0) {
+        const r = sceneFx({ kind: lep.type === 'pfaendung' ? 'pfaend' : 'einspruch', from: lep.by, to: lep.target, at: Date.now(), seed: lep.n });
+        if (r) keepFx(r.html, r.ms, 'scene');
+        (lep.type === 'pfaendung' ? [['step', 100], ['gavel', 1120], ['thud', 1150], ['step', 2150]] : [['step', 100], ['buzz', 1050], ['boo', 1700], ['step', 2400]]).forEach((x) => later.push(x));
+      }
+    }
+  }
   for (const s of ctx.scenes || []) {
     const sig = `${s.kind}|${s.from}|${s.to || ''}|${s.at}`;
     local.sceneSeen = local.sceneSeen || [];
@@ -2136,7 +2161,7 @@ export function renderGame(root, ctx) {
       const pr = avatarLookup(meId); const now = Date.now(); const jub = DEMO_JUB || (local.meJubAt && now >= local.meJubAt && now < local.meJubAt + 1700);
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
       const meOut = local.out && local.out[meId] && local.out[meId].from <= now && now < local.out[meId].until;
-      return `<div class="meplate full ${pr?.shop ? '' : 'gen'} ${meOut ? 'out' : ''} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">
+      return `<div class="meplate full ${pr?.shop ? '' : 'gen'} ${meOut ? 'out' : ''} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">${myHand.length ? `<span class="myhand" aria-label="Deine Handkarten">${myHand.map((k) => `<i class="hcard ${k}" title="${k === 'pfaendung' ? 'Zwangsversteigerung: statt eines Zuges ein Tier pfänden' : 'Einspruch: wehrt eine Pfändung gegen dich ab'}">${k === 'pfaendung' ? '⚖️' : '🛡️'}</i>`).join('')}</span>` : ''}
         <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : aliveFig(me, meIdx, null)}${ouchOn(meId) ? OUCH : ''}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
@@ -2147,6 +2172,11 @@ export function renderGame(root, ctx) {
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? '<div class="rpback" data-a="reactClose" aria-hidden="true"></div>' : ''}
     ${local.reactTo && ctx.reactionList && idxOf(local.reactTo) >= 0 ? reactPicker() : ''}
+    ${local.pfOpen ? `<div class="rpback" data-a="pfClose" aria-hidden="true"></div><div class="pfpick" role="dialog" aria-label="Zwangsversteigerung">
+      <div class="rphead"><span>⚖️ Zwangsversteigerung – welches Tier wird gepfändet?</span><button type="button" data-a="pfClose" aria-label="Schließen">✕</button></div>
+      <p class="pfhint">Der Besitzer muss verkaufen und bekommt das Geld. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld.</p>
+      ${v.players.filter((p) => pfTargets.some((x) => x.target === p.id)).map((p) => `<div class="pfrow"><span class="pfwho">${avatar(p, idxOf(p.id))}<b>${esc(p.name)}</b></span><div class="pfcards">${pfTargets.filter((x) => x.target === p.id).map((x) => `<button type="button" class="pfcard" data-a="pfGo" data-v="${esc(p.id)}|${x.animal}" aria-label="${esc(p.name)}: ${esc(ANIMAL_BY_ID[x.animal].name)} pfänden">${playCard(x.animal)}<small>${p.animals[x.animal]}×</small></button>`).join('')}</div></div>`).join('')}
+    </div>` : ''}
     ${ctx.toastMsg ? `<div class="toast" role="alert">${esc(ctx.toastMsg)}</div>` : ''}
   </div></div>`;
 

@@ -1,6 +1,6 @@
 // Test-Spieler für den Debug-Modus: spielen zufällig, aber halbwegs sinnvoll
 import {
-  ANIMAL_BY_ID, possibleTrades, drawForAuction, bid, passAuction, closeAuction,
+  ANIMAL_BY_ID, possibleTrades, drawForAuction, bid, passAuction, closeAuction, buyPrice,
   pay, startTrade, acceptTrade, counterTrade, ANIMALS, RAT, scoreFor, kursValue,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, RPS, specialDecide, specialStage, specialNumber, specialResult, chooseBlock,
 } from '../src/engine.js';
@@ -47,7 +47,7 @@ export function botStep(s, bots, now, rand = Math.random) {
     }
     if (!isBot(a.auctioneer)) return null;
     const me = P(a.auctioneer);
-    const canBuy = a.high && sum(me.money) >= a.high.amount;
+    const canBuy = a.high && !a.forced && sum(me.money) >= buyPrice(a);
     return closeAuction(s, a.auctioneer, canBuy && rand() < 0.3 ? 'buy' : 'sell', now);
   }
 

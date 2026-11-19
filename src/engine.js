@@ -38,6 +38,31 @@ export const RALLYE_WEIGHTS = [4, 4, 3, 2, 2, 1, 1, 1];
 export const CRASH_WEIGHTS = [1, 1, 1, 2, 2, 3, 4, 4];
 export const RALLYE_MIN = 30, RALLYE_MAX = 100;
 export const DIVIDENDE = 50;
+// v0.65 Handkarten (Börsen-Chaos): kommen beim Aufdecken auf die Hand (verdeckt), Aufdecker deckt nochmal auf
+//  • Zwangsversteigerung (Pfändung): statt eines Zuges ausspielen – ein Tier eines Mitspielers wird versteigert,
+//    der Besitzer MUSS verkaufen (kein Vorkaufsrecht), das Geld bekommt er. Bietet niemand, behält er das Tier.
+//    Geschützt: fertige Quartette, Ratten, Spieler ohne Geld.
+//  • Einspruch: wehrt eine Pfändung gegen dich automatisch ab (beide Karten sind dann weg).
+export const HAND_KINDS = ['pfaendung', 'einspruch'];
+export const PFAEND_SHOW_MS = 3200; // Auftritt des Gerichtsvollziehers, erst danach wird geboten
+// Preis fürs Vorkaufsrecht (bei Zwangsversteigerung gibt es keins)
+export function buyPrice(auction) { return auction && auction.high && !auction.forced ? auction.high.amount : 0; }
+// Darf pid gerade dieses Tier von target pfänden?
+export function canPfaend(state, pid, targetId, animal) {
+  if (state.phase !== 'turn' || state.mustDraw || currentPlayer(state).id !== pid) return false;
+  if (!((state.hands && state.hands[pid]) || []).includes('pfaendung')) return false;
+  if (targetId === pid) return false;
+  const t = state.players.find((p) => p.id === targetId);
+  if (!t || animal === RAT || !ANIMAL_BY_ID[animal]) return false;
+  const n = t.animals[animal] || 0;
+  if (n < 1 || n >= 4) return false; // fertiges Quartett geschützt
+  return Array.isArray(t.money) ? sum(t.money) > 0 : t.money > 0; // Insolvenz-Schutz
+}
+export function pfaendTargets(state, pid) {
+  const out = [];
+  for (const t of state.players) for (const a of ANIMALS) if (canPfaend(state, pid, t.id, a.id)) out.push({ target: t.id, animal: a.id });
+  return out;
+}
 export const isNewsCard = (card) => typeof card === 'string' && card.startsWith(NEWS_PREFIX);
 export function isBoerse(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.boerse && !st.turbo); }
 // 'news-rallye-kuh-70' → { kind: 'rallye', animal: 'kuh', pct: 70 } · 'news-steuer' → { kind: 'steuer' }
@@ -57,7 +82,7 @@ function newsCards(seed) {
   const r = rng(seed ^ 0x5eed);
   const pick = () => ANIMALS[Math.floor(r() * ANIMALS.length)].id;
   const pct = (w) => { let x = r() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { x -= w[i]; if (x < 0) return KURS_PCTS[i]; } return KURS_PCTS.at(-1); };
-  return [`rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, 'dividende', 'steuer', 'panik', 'hektik'].map((x) => NEWS_PREFIX + x);
+  return [`rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, 'dividende', 'steuer', 'panik', 'hektik', 'pfaendung', 'einspruch'].map((x) => NEWS_PREFIX + x);
 }
 
 export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
@@ -454,6 +479,15 @@ export function drawForAuction(prev, playerId, now) {
     log(state, `${me.name} deckt eine Ratte auf.`);
     return state;
   }
+  if (isNewsCard(animal) && HAND_KINDS.includes(newsOf(animal).kind)) {
+    // Handkarte: verdeckt auf die Hand (die anderen sehen nur, DASS du eine Karte hast), dann nochmal aufdecken
+    if (!state.hands) state.hands = {};
+    (state.hands[playerId] = state.hands[playerId] || []).push(newsOf(animal).kind);
+    state.lastEvent = { n: state.log.length, type: 'hand', player: playerId, kind: newsOf(animal).kind };
+    log(state, `${me.name} nimmt eine Börsen-Karte auf die Hand.`);
+    afterRat(state);
+    return state;
+  }
   if (isNewsCard(animal)) {
     applyNews(state, me, animal);
     afterRat(state); // wie nach der Ratte: nochmal aufdecken (Stapel leer → Kuhhandel)
@@ -493,6 +527,35 @@ export function drawForAuction(prev, playerId, now) {
   const fast = (state.hektik || 0) > 0; // Börsen-Chaos „Hektik“: diese Versteigerung nur 5 s
   if (fast) state.hektik -= 1;
   state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + REVEAL_MS : null, endsAt: now != null ? now + REVEAL_MS + (fast ? HEKTIK_MS : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
+  state.phase = 'auction';
+  return state;
+}
+
+// v0.65 Zwangsversteigerung ausspielen (ersetzt den Zug)
+export function playPfaendung(prev, playerId, targetId, animal, now) {
+  const state = clone(prev);
+  requireTurn(state, playerId);
+  if (state.mustDraw) fail('Du musst erst noch eine Karte aufdecken.');
+  if (!canPfaend(state, playerId, targetId, animal)) fail('Dieses Tier kann gerade nicht gepfändet werden.');
+  const me = player(state, playerId); const t = player(state, targetId);
+  const hand = state.hands[playerId]; hand.splice(hand.indexOf('pfaendung'), 1);
+  const th = (state.hands && state.hands[targetId]) || [];
+  stat(state, playerId).pfaendungen = (stat(state, playerId).pfaendungen || 0) + 1;
+  if (th.includes('einspruch')) {
+    th.splice(th.indexOf('einspruch'), 1);
+    state.lastEvent = { n: state.log.length, type: 'einspruch', by: playerId, target: targetId, animal };
+    log(state, `${me.name} will ${t.name} ${animalName(animal)} pfänden – aber ${t.name} legt Einspruch ein!`);
+    nextTurn(state);
+    return state;
+  }
+  t.animals[animal] -= 1;
+  stat(state, targetId).gepfaendet = (stat(state, targetId).gepfaendet || 0) + 1;
+  state.lastEvent = { n: state.log.length, type: 'pfaendung', by: playerId, target: targetId, animal };
+  log(state, `Zwangsversteigerung! ${me.name} lässt ${t.name}s ${animalName(animal)} versteigern.`);
+  const fast = (state.hektik || 0) > 0;
+  if (fast) state.hektik -= 1;
+  state.auction = { animal, auctioneer: targetId, forced: { by: playerId }, high: null, caps: {}, passed: [],
+    opensAt: now != null ? now + PFAEND_SHOW_MS : null, endsAt: now != null ? now + PFAEND_SHOW_MS + (fast ? HEKTIK_MS : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
   state.phase = 'auction';
   return state;
 }
@@ -543,14 +606,15 @@ export function closeAuction(prev, playerId, mode, now) {
 
   if (!a.high) {
     auctioneer.animals[a.animal] += 1;
-    state.lastEvent = { n: state.log.length, type: 'auction_won', animal: a.animal, buyer: auctioneer.id, amount: 0 };
-    log(state, `Niemand bietet – ${auctioneer.name} bekommt ${animalName(a.animal)} umsonst.`);
+    state.lastEvent = { n: state.log.length, type: 'auction_won', animal: a.animal, buyer: auctioneer.id, amount: 0, ...(a.forced ? { forced: true } : {}) };
+    log(state, a.forced ? `Niemand bietet – ${auctioneer.name} behält ${animalName(a.animal)}.` : `Niemand bietet – ${auctioneer.name} bekommt ${animalName(a.animal)} umsonst.`);
     nextTurn(state);
     return state;
   }
 
   const bidder = player(state, a.high.player);
   if (mode === 'buy') {
+    if (a.forced) fail('Bei einer Zwangsversteigerung musst du verkaufen.');
     if (sum(auctioneer.money) < a.high.amount) fail('Du hast nicht genug Geld für das Vorkaufsrecht.');
     state.payment = { payer: auctioneer.id, payee: bidder.id, amount: a.high.amount, animal: a.animal, buyer: auctioneer.id, self: true }; // Vorkaufsrecht
     log(state, `${auctioneer.name} nutzt das Vorkaufsrecht für ${a.high.amount}.`);
@@ -573,7 +637,7 @@ export function closeAuction(prev, playerId, mode, now) {
     log(state, `${bidder.name} kann ${failed} nicht zahlen und muss alle Karten zeigen: ${bidder.money.join(', ') || 'keine'}. Die Versteigerung beginnt neu.`);
     return state; // Phase bleibt 'auction'
   }
-  state.payment = { payer: bidder.id, payee: auctioneer.id, amount: a.high.amount, animal: a.animal, buyer: bidder.id };
+  state.payment = { payer: bidder.id, payee: auctioneer.id, amount: a.high.amount, animal: a.animal, buyer: bidder.id, ...(a.forced ? { forced: true } : {}) };
   log(state, `Zuschlag: ${bidder.name} für ${a.high.amount}.`);
   state.phase = 'payment';
   return state;
@@ -610,7 +674,7 @@ export function pay(prev, playerId, cardIndices) {
   st.buys += 1;
   if (!st.maxBuy || pm.amount > st.maxBuy.amount) st.maxBuy = { amount: pm.amount, animal: pm.animal };
   log(state, `${payer.name} zahlt mit ${cards.length} Karte(n). ${buyer.name} bekommt ${animalName(pm.animal)}.`);
-  state.lastEvent = { n: state.log.length, type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self };
+  state.lastEvent = { n: state.log.length, type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self, ...(pm.forced ? { forced: true } : {}) };
   nextTurn(state);
   return state;
 }
@@ -974,6 +1038,9 @@ export function viewFor(state, playerId) {
   }
   if (v.trade && v.trade.challenger !== playerId) v.trade.offer = v.trade.offer.length;
   if (v.rat) v.rat.pot = v.rat.pot.length; // gelegte Karten liegen verdeckt
+  // Handkarten: eigene offen, fremde nur als Anzahl (Bluff!)
+  if (v.hands) for (const id of Object.keys(v.hands)) if (id !== playerId) v.hands[id] = v.hands[id].length;
+  if (v.lastEvent && v.lastEvent.type === 'hand' && v.lastEvent.player !== playerId) delete v.lastEvent.kind;
   if (v.lastEvent && v.lastEvent.type === 'rat_taken' && v.lastEvent.player !== playerId) delete v.lastEvent.cards;
   // Börsen-News: Steuer/Marktpanik – jeder sieht nur seine eigenen Scheine (gegeben bzw. bekommen)
   if (v.lastEvent && v.lastEvent.type === 'news') {

@@ -97,6 +97,27 @@ export function sceneScript(s) {
       ouch: [[to, 1300, 2600]],
     };
   }
+  if (s.kind === 'pfaend') {
+    // v0.65 Zwangsversteigerung: mit Gerichtsvollzieher-Hut hin, Kuckuck-Siegel aufs Tier, Hammer, zurück (≈ 3 s, dann wird geboten)
+    return {
+      ms: 3200,
+      actors: [{ pid: from, track: [[0, 'seat', 'stand'], [80, 'seat', 'walk'], [900, `near:${to}`, 'windup'], [1150, `near:${to}`, 'stand'], [2150, `near:${to}`, 'walk'], [3050, 'seat', 'stand']], inner: tp('ahat', 0, 3200, '<i></i>') }],
+      props: free('tseal', `face:seat:${to}`, 1100, 2100, '<b>⚖</b><small>GEPFÄNDET</small>')
+        + free('tbang', `head:near:${to}`, 1120, 600, 'KLONK!')
+        + bubble(`near:${to}`, 1300, 900, pick(['Im Namen des Gesetzes!', 'Das wird versteigert!', 'Pfändung!'], seed)),
+      ouch: [[to, 1150, 2200]],
+    };
+  }
+  if (s.kind === 'einspruch') {
+    // v0.65 Einspruch: Gerichtsvollzieher kommt, Opfer hält das Schild hoch, Vollzieher zieht beleidigt ab
+    return {
+      ms: 3600,
+      actors: [{ pid: from, track: [[0, 'seat', 'stand'], [80, 'seat', 'walk'], [900, `near:${to}`, 'stand'], [1500, `near:${to}`, 'sad'], [2400, `near:${to}`, 'walk'], [3400, 'seat', 'stand']], inner: tp('ahat', 0, 3600, '<i></i>') }],
+      props: free('tshield', `face:seat:${to}`, 1000, 1800, '🛡️')
+        + bubble(`seat:${to}`, 1050, 1300, 'EINSPRUCH!')
+        + bubble(`near:${to}`, 1700, 800, pick(['Na gut…', 'Mist!', 'Formfehler…'], seed), 'small'),
+    };
+  }
   if (s.kind === 'baum') {
     // alle in die Mitte, hinsetzen; Mischschale, Gras, Drehen, Anzünden, reihum weitergeben, zurück
     const ord = s.order && s.order.length ? s.order : [from];
