@@ -6,7 +6,7 @@ import {
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
-  isBoerse, kursValue, KURS_STEP, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS,
+  isBoerse, kursValue, KURS_STEP, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
@@ -1196,6 +1196,9 @@ export function renderGame(root, ctx) {
 
   // ----- Tisch -----
   const canDraw = state.phase === 'turn' && myTurn && !local.tradeOpen && v.deck > 0 && !calmLeft;
+  // v0.63.2 (Alp): Geldscheine im Stapel haben eine grüne Rückseite – man sieht vorher, ob ein Schein oder eine Tierkarte kommt
+  const topMoney = v.deck > 0 && Array.isArray(state.deck) && isMoneyCard(state.deck[0]);
+  const deckFace = topMoney ? '<span class="deckcoin" aria-hidden="true"><b>T</b></span>' : `<span class="deckcow">${art('kuh')}</span>`;
   const lastLog = v.log[v.log.length - 1] || '';
   // Infozeile: leuchtet kurz auf, wenn etwas Neues drinsteht (läuft beim Neuzeichnen weiter)
   if (fresh && state.phase === 'turn') local.stripAt = Date.now() + (evFresh && EV_WAIT[v.lastEvent?.type] ? evWait(v.lastEvent.type, v.deck) : 0);
@@ -1303,8 +1306,8 @@ export function renderGame(root, ctx) {
     ${shownHolder === meId && realHolder === meId && state.phase === 'turn' ? `<div class="myglow ${flashing ? 'in' : ''}" style="--fl:-${Math.min(flashEl, 99999)}ms" aria-hidden="true"></div>` : ''}
     <div class="tcenter">${aucCenter || `
     <div class="deck-wrap">
-      ${canDraw ? `<button type="button" class="deck go" data-a="auction" aria-label="Karte aufdecken"><span class="deckcow">${art('kuh')}</span><span class="deckgo">Tippen</span></button>`
-        : `<div class="deck ${v.deck === 0 ? 'empty' : ''}">${v.deck > 0 ? `<span class="deckcow">${art('kuh')}</span>` : ''}</div>`}
+      ${canDraw ? `<button type="button" class="deck go ${topMoney ? 'moneytop' : ''}" data-a="auction" aria-label="${topMoney ? 'Geldschein aufdecken' : 'Karte aufdecken'}">${deckFace}<span class="deckgo">Tippen</span></button>`
+        : `<div class="deck ${v.deck === 0 ? 'empty' : ''} ${topMoney ? 'moneytop' : ''}">${v.deck > 0 ? deckFace : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
     <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 36)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>

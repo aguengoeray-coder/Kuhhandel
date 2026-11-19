@@ -3283,3 +3283,8 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @keyframes ouchwob { 0%, 100% { rotate: 0deg; } 25% { rotate: -6deg; } 75% { rotate: 6deg; } }
 .ebam.epay { font-size: 24px; background: #FFC93C; color: #3A2600; text-shadow: none; }
 @media (prefers-reduced-motion: reduce) { .ouchh, .ouchs, .prow.ouch .pid, .meplate.ouch .mefig { animation: none; } }
+/* ===== v0.63.2 Geldschein oben auf dem Stapel: grüne Rückseite + Taler-Münze (statt Kuh) ===== */
+.deck.moneytop { --mt: #2E8B57; --mt-2: #1E6A40; background: repeating-linear-gradient(45deg, rgba(255,255,255,.13) 0 6px, transparent 6px 12px), var(--mt); box-shadow: 3px -3px 0 var(--back-2), 6px -6px 0 var(--back); }
+.deckcoin { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 35% 30%, #FFF1A8, #F2C230 55%, #C9931A); border: 3px solid #8A5A0B; box-shadow: inset 0 0 0 3px rgba(255,255,255,.35), 0 2px 0 rgba(0,0,0,.25); }
+.deckcoin b { font: 900 22px/1 var(--font-head); color: #7A4E07; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+.gtable .tcenter .deck .deckcoin { width: 50px; height: 50px; }
