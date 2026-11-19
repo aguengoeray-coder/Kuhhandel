@@ -3296,3 +3296,68 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .stage .prow.seat-l .seatfig > .afull, .stage .prow.seat-l .seatfig > .agen { left: 62%; }
 .prow .pid > .avatar.seatfig .ahead .avatar { border-width: 3px; }
 .stage .prow.seat-l { margin-top: 14px; }
+/* ===== v0.64 Figuren-Theater ===== */
+.meplate.gen .mefig > .agen { transform: scale(1.1); transform-origin: 50% 100%; margin-bottom: 0; }
+.meplate.out .mefig > :not(.ouchh):not(.ouchs), .meplate.out .mename { visibility: hidden; }
+.prow.out .pid > .avatar.seatfig { opacity: 1; filter: none; }
+.prow.out .pid > .avatar.seatfig > div { visibility: hidden; }
+.actor { position: absolute; left: 0; top: 0; width: 72px; height: 120px; z-index: 40; pointer-events: none; transform-origin: 36px 120px; will-change: transform; }
+.actor .abody { position: absolute; inset: 0; transform-origin: 50% 100%; }
+.actor .abody > .afull, .actor .abody > .agen { position: absolute; inset: 0; width: 72px; height: 120px; }
+.actor .afull .shop-avatar-full { width: 72px; height: 120px; filter: drop-shadow(0 4px 5px rgba(0,0,0,.4)); }
+/* Bodenschatten unter jeder Figur auf der Bühne */
+.actor::before { content: ''; position: absolute; left: 12px; right: 12px; bottom: -5px; height: 10px; border-radius: 50%; background: rgba(0,0,0,.28); filter: blur(1px); }
+/* Jubel / Pleite (gleiche Requisiten wie früher, jetzt an der ganzen Figur) */
+.actor .ameins { position: absolute; left: 50%; top: -26px; transform: translateX(-50%); padding: 2px 9px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 13px var(--font-head); white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.25); animation: ppop .4s cubic-bezier(.2,.9,.3,1.5) both; }
+.actor .aconf { position: absolute; left: 34px; top: 10px; width: 7px; height: 11px; border-radius: 2px; opacity: 0; animation: aconf 1.4s ease-out both; }
+.actor .aconf.c0 { background: #FFD34E; --cx: -40px; } .actor .aconf.c1 { background: #E5484D; --cx: 36px; } .actor .aconf.c2 { background: #3CCB7F; --cx: -24px; }
+.actor .aconf.c3 { background: #6D3FC0; --cx: 46px; } .actor .aconf.c4 { background: #1D5FC2; --cx: -50px; } .actor .aconf.c5 { background: #F28C1B; --cx: 20px; }
+.actor.k-cheer .garm.l { transform-box: view-box; transform-origin: 38px 88px; transform: rotate(140deg); }
+.actor.k-cheer .garm.r { transform-box: view-box; transform-origin: 82px 88px; transform: rotate(-140deg); }
+.actor .ptasche { position: absolute; top: 74px; width: 20px; height: 24px; background: #F4EFE4; border: 2.5px solid #3a332c; border-radius: 3px 3px 10px 10px; transform-origin: 50% 0; animation: ptasche 3.4s cubic-bezier(.3,1.6,.5,1) both; }
+.actor .ptasche.l { left: 6px; --r: -18deg; } .actor .ptasche.r { right: 6px; --r: 18deg; }
+.actor .pstaub { position: absolute; left: 6px; top: 92px; width: 60px; height: 22px; border-radius: 50%; background: radial-gradient(closest-side, rgba(214,204,186,.9), rgba(214,204,186,0)); animation: pstaub 3.4s ease-out both; }
+.actor .pmotte { position: absolute; left: 20px; top: 80px; width: 32px; opacity: 0; animation: pmotte 2.2s ease-out both; }
+.actor .pmotte svg { width: 32px; height: 20px; animation: pflatter .14s linear infinite alternate; }
+.actor .pmotte.m0 { --mx: -46px; } .actor .pmotte.m1 { --mx: 8px; } .actor .pmotte.m2 { --mx: 52px; }
+.actor .pstempel { position: absolute; left: 50%; top: -18px; padding: 2px 10px; border: 3px solid #E5484D; border-radius: 6px; color: #E5484D; background: rgba(255,255,255,.92); font: 900 17px var(--font-head); letter-spacing: 1px; white-space: nowrap; opacity: 0; transform: translateX(-50%) rotate(-10deg); animation: pstempel .45s cubic-bezier(.2,.9,.3,1.4) both; }
+/* freie Requisiten: erscheinen ab --t0 für --d */
+.tprop { position: absolute; z-index: 70; pointer-events: none; width: 0; height: 0; opacity: 0; animation: tpshow var(--d) linear var(--t0) both; }
+@keyframes tpshow { 0% { opacity: 0; } 6% { opacity: 1; } 92% { opacity: 1; } 100% { opacity: 0; } }
+.tprop > * { position: absolute; left: 0; top: 0; transform: translate(-50%, -100%); }
+.tbub > span { padding: 4px 10px; border-radius: 14px; background: #fff; color: #1a1a1a; font: 800 13px var(--font-head); white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.25); animation: tbubpop .35s cubic-bezier(.2,.9,.3,1.5) var(--t0) both; }
+.tbub > span::after { content: ''; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
+.tbub.small > span { font-size: 11px; padding: 3px 8px; }
+@keyframes tbubpop { 0% { transform: scale(.3); } 100% { transform: scale(1); } }
+.tha { font: 900 18px var(--font-head); color: #FFD34E; text-shadow: 0 2px 0 #7a4a00; }
+.tha { animation-name: tpshow, thaup; animation-duration: var(--d), var(--d); animation-delay: var(--t0), var(--t0); animation-timing-function: linear, ease-out; animation-fill-mode: both, both; }
+@keyframes thaup { 0% { translate: 0 0; rotate: -10deg; } 100% { translate: var(--hx) -46px; rotate: 14deg; } }
+.tfinger { font-size: 22px; animation-name: tpshow, tfing; animation-duration: var(--d), .35s; animation-delay: var(--t0), var(--t0); animation-iteration-count: 1, 6; animation-direction: normal, alternate; animation-fill-mode: both, both; }
+@keyframes tfing { 0% { translate: 0 -8px; } 100% { translate: 0 0; } }
+.tangry { font-size: 22px; animation-name: tpshow, tpulse; animation-duration: var(--d), .3s; animation-delay: var(--t0), var(--t0); animation-iteration-count: 1, 8; animation-direction: normal, alternate; animation-fill-mode: both, both; }
+@keyframes tpulse { 0% { scale: 1; } 100% { scale: 1.3; } }
+.theart { font-size: 18px; color: #FF5A8A; text-shadow: 0 1px 0 #8a1f40; animation-name: tpshow, thaup; animation-duration: var(--d), var(--d); animation-delay: var(--t0), var(--t0); animation-fill-mode: both, both; }
+.tbill > b { display: block; width: 30px; height: 18px; margin: -9px 0 0 -15px; border-radius: 3px; background: #F2D27A; border: 2px solid #6b4f12; color: #6b4f12; font: 900 11px/14px var(--font-head); text-align: center; transform: rotate(-8deg); }
+/* Baum-Runde */
+.tbowl > i { display: block; width: 46px; height: 18px; margin: -18px 0 0 -23px; border-radius: 4px 4px 24px 24px; background: linear-gradient(#B7834E, #8A5A2B); border: 2.5px solid #4a2f14; box-shadow: inset 0 4px 0 rgba(255,255,255,.18); }
+.tbowl > i::before { content: ''; position: absolute; left: 4px; right: 4px; top: -4px; height: 8px; border-radius: 50%; background: #5b3b1b; border: 2px solid #4a2f14; }
+.tbag { font-size: 22px; }
+.tbag { animation-name: tpshow, tshake; animation-duration: var(--d), .16s; animation-delay: var(--t0), calc(var(--t0) + 400ms); animation-iteration-count: 1, 4; animation-direction: normal, alternate; animation-fill-mode: both, both; }
+@keyframes tshake { 0% { rotate: -14deg; } 100% { rotate: 18deg; } }
+.tcrumb { width: 5px; height: 5px; }
+.tcrumb::before { content: ''; position: absolute; width: 5px; height: 5px; border-radius: 40%; background: #4CAF50; border: 1px solid #1f5e22; animation: tcrumb var(--d) ease-in var(--t0) both; }
+.tcrumb.fly::before { animation: none; }
+@keyframes tcrumb { 0% { transform: translate(0, -20px); } 100% { transform: translate(0, 4px); } }
+.tpaper > i { display: block; width: 30px; height: 16px; margin: -8px 0 0 -15px; background: #FBF7EC; border: 1.5px solid #9c9380; border-radius: 2px; animation: troll .22s ease-in-out calc(var(--t0) + 500ms) 4 alternate both; }
+@keyframes troll { 0% { transform: scaleY(1) rotate(-6deg); } 100% { transform: scaleY(.55) rotate(6deg); } }
+.tjoint > i { display: block; position: relative; width: 26px; height: 6px; margin: -3px 0 0 -6px; border-radius: 1px 4px 4px 1px; background: linear-gradient(90deg, #D9C9A6 0 18%, #FBF7EC 18%); border: 1px solid #8b7d60; transform: rotate(-14deg); }
+.tjoint .jtip::after { content: ''; position: absolute; right: -3px; top: -1px; width: 5px; height: 6px; border-radius: 50%; background: #FF7A2E; box-shadow: 0 0 6px 2px rgba(255,122,46,.7); animation: tglow .5s ease-in-out infinite alternate; }
+@keyframes tglow { 0% { opacity: .6; } 100% { opacity: 1; } }
+.tflame { font-size: 16px; }
+.tsmoke::before, .tsmoke::after { content: ''; position: absolute; left: -8px; top: -8px; width: 16px; height: 16px; border-radius: 50%; background: rgba(235,235,235,.85); animation: tsmoke var(--d) ease-out var(--t0) both; }
+.tsmoke::after { left: 0; width: 12px; height: 12px; animation-delay: calc(var(--t0) + 180ms); }
+@keyframes tsmoke { 0% { transform: translate(0, 0) scale(.4); opacity: .9; } 100% { transform: translate(14px, -54px) scale(2.2); opacity: 0; } }
+.reactpick .rp-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.reactpick .rp-act { flex: 1 1 auto; min-height: 36px; padding: 6px 10px; border-radius: 12px; border: 0; background: #FFF3D6; color: #3a2a00; font: 800 13px var(--font-head); cursor: pointer; }
+.reactpick .rp-act.pu { background: #FFE1E1; color: #7a1010; }
+@media (prefers-reduced-motion: reduce) { .tprop, .tprop * { animation-duration: 1ms !important; } }

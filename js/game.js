@@ -10,6 +10,7 @@ import {
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
+import { theaterFx, sceneScript, sceneHtml, SCENE_LABEL, FREE_SCENES } from './theater.js';
 import { haptic } from './haptics.js';
 
 export const SEAT_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0'];
@@ -546,27 +547,32 @@ export function renderGame(root, ctx) {
   const ouchOn = (pid) => { const o = local.ouch && local.ouch[pid]; return !!(o && o.from <= Date.now() && Date.now() < o.until); };
   const OUCH = '<i class="ouchh l" aria-hidden="true"></i><i class="ouchh r" aria-hidden="true"></i><i class="ouchs" aria-hidden="true">💫</i>';
   // aliveGag: el = schon vergangene Zeit, delay = Start später (ms), raw = ohne eigene Vorspul-Hülle (für keepFx)
+  // v0.64: Gags laufen über das Figuren-Theater – die ganze Figur am Platz spielt die Szene (Platz ist so lange leer)
   const aliveGag = (pid, kind, el, dur, delay = 0, raw = false) => {
     if (idxOf(pid) < 0) return '';
-    const at = pid === meId ? '@me' : esc(pid);
     const t0 = Date.now() - el;
-    outMark(pid, t0 + delay, t0 + delay + dur);
-    let extra = '';
-    if (kind === 'pleite') extra = `<i class="ptasche l"></i><i class="ptasche r"></i><i class="pstaub"></i>${[0, 1, 2].map((k) => `<i class="pmotte m${k}" style="animation-delay:${delay + 700 + k * 260}ms">${MOTH}</i>`).join('')}<b class="pstempel" style="animation-delay:${delay + 500}ms">PLEITE!</b>`;
-    if (kind === 'cheer') extra = `<b class="ameins" style="animation-delay:${delay + 350}ms">Meins!</b>${[0, 1, 2, 3, 4, 5].map((k) => `<i class="aconf c${k}" style="animation-delay:${delay + 300 + k * 40}ms"></i>`).join('')}`;
-    const html = `<div class="alive k-${kind} ${pid === meId ? 'mine' : ''}" data-aim-from="${at}" data-aim-to="@near:${at}" style="--tx:0px;--ty:0px;--dur:${dur}ms;animation-delay:${delay}ms" aria-hidden="true"><div class="afig" style="animation-delay:${delay}ms">${figOf(pid)}</div>${extra}</div>`;
+    const sc = sceneScript({ kind, from: pid, delay, moth: MOTH });
+    if (!sc) return '';
+    outMark(pid, t0, t0 + sc.ms);
+    const html = sceneHtml({ kind, from: pid }, sc, figOf, meId);
     return raw ? html : `<div class="fxk" data-fxat="${t0}">${html}</div>`;
+  };
+  // v0.64 Szene zwischen Figuren (Prügeln, Auslachen, Schleimen, Baum-Runde …) – bei allen gleich, jeder aus seiner Sicht
+  const sceneFx = (s) => {
+    const sc = sceneScript({ ...s, order: v.players.map((p) => p.id), moth: MOTH });
+    if (!sc) return null;
+    sc.actors.forEach((a) => outMark(a.pid, s.at, s.at + sc.ms));
+    (sc.ouch || []).forEach(([pid, a, b2]) => ouchMark(pid, s.at + a, s.at + b2));
+    return { html: sceneHtml(s, sc, figOf, meId), ms: sc.ms };
   };
   // Tier-Figur (Kopf = Kartenbild) für Ratte, Polonaise, Kuhhandel-Koffer
   const beast = (id, cls = '', inner = '') => `<div class="beast ${cls}" style="--a:${ANIMAL_COLORS[id] || '#888'}"><i class="blegs"><b></b><b></b></i><i class="bhead">${art(id)}</i>${inner}</div>`;
   // v0.61 Prügel-Animation (Comic, keine echte Gewalt): Laufen → Staubwolke mit POW/BAM → zurück
   const punchFx = (pu) => {
     const src = esc(pu.from); const dst = esc(pu.to); // '@me' wird erst in seatPoint aufgelöst
-    const pr = avatarLookup(pu.from);
-    const fig = figOf(pu.from);
-    outMark(pu.from, pu.at, pu.at + PUNCH_MS);
     const who = `${esc(pu.from === meId ? 'Du' : nameOf(pu.from))} ${pu.from === meId ? 'verprügelst' : 'verprügelt'} ${esc(pu.to === meId ? 'dich' : nameOf(pu.to))}!`;
-    return `<div class="pwalk ${pu.from === meId ? 'mine' : ''} ${pr?.shop ? 'full' : 'gen'}" data-aim-from="${src}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" aria-hidden="true">${fig}</div>
+    const sc = sceneFx({ kind: 'punch', from: pu.from, to: pu.to, at: pu.at });
+    return `${sc ? sc.html : ''}
       <div class="pcloud ${pu.to !== meId && /^t/.test(seatOf(pu.to)) ? 'low' : ''}" data-aim-from="${dst}" data-aim-to="${dst}" style="--tx:0px;--ty:0px" role="status"><i class="pc c1"></i><i class="pc c2"></i><i class="pc c3"></i><i class="pc c4"></i>
         <b class="pw w1">POW!</b><b class="pw w2">BAM!</b><b class="pw w3">KLATSCH!</b><em class="ps s1">⭐</em><em class="ps s2">✨</em><em class="ps s3">⭐</em><span class="pf f1">👊</span><span class="pf f2">🦶</span><span class="plabel">${who}</span></div>`;
   };
@@ -1357,6 +1363,7 @@ export function renderGame(root, ctx) {
   H.selfPlay = () => ctx.selfPlay && ctx.selfPlay(meId);
   H.reactClose = () => { local.reactTo = null; ctx.rerender(); };
   H.punch = (id) => { local.reactTo = null; if (ctx.punch) ctx.punch(id); ctx.rerender(); };
+  H.scene = (val) => { const [kind, to] = String(val).split('|'); local.reactTo = null; if (ctx.scene) ctx.scene(kind, to || null); ctx.rerender(); };
   H.react = (i) => { const to = local.reactTo; local.reactTo = null; ctx.react(ctx.reactionList[Number(i)], to === meId ? null : to); };
   H.exit = () => ctx.onExit();
   H.sound = () => ctx.toggleSound();
@@ -1613,6 +1620,23 @@ export function renderGame(root, ctx) {
     keepFx(punchFx(pu), PUNCH_MS);
     [1150, 1380, 1560, 1790, 1980, 2200].forEach((t) => later.push(['thud', t]));
     later.push(['wow', 2500]);
+  }
+  // v0.64 Figuren-Theater: Szenen zwischen den Figuren (von irgendwem ausgelöst, bei allen gleich)
+  const SCENE_SFX = {
+    laugh: [['step', 150], ['haha', 1700], ['haha', 2600], ['step', 3800]],
+    schleim: [['step', 150], ['heart', 1200], ['coins', 2700], ['heart', 3100], ['step', 3900]],
+    baum: [['step', 120], ['flipcard', 1500], ['crumple', 2450], ['flipcard', 3500], ['lighter', 4500], ['puff', 5200], ['puff', 5900], ['puff', 6600], ['step', 7000]],
+  };
+  for (const s of ctx.scenes || []) {
+    const sig = `${s.kind}|${s.from}|${s.to || ''}|${s.at}`;
+    local.sceneSeen = local.sceneSeen || [];
+    if (local.sceneSeen.includes(sig)) continue;
+    local.sceneSeen.push(sig); if (local.sceneSeen.length > 20) local.sceneSeen.shift();
+    if (Date.now() - s.at > 3000 || idxOf(s.from) < 0 || (s.to && idxOf(s.to) < 0)) continue;
+    const r = sceneFx(s);
+    if (!r) continue;
+    keepFx(r.html, r.ms, 'scene');
+    (SCENE_SFX[s.kind] || []).forEach((x) => later.push(x));
   }
   if (state.phase === 'special') {
     const sp = v.special;
@@ -2091,6 +2115,9 @@ export function renderGame(root, ctx) {
     return `<div class="reactpick v2 ${self ? 'self' : ''}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
       ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">${esc(ctx.punchLabel || '🥊 Verprügeln')}</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
+      ${ctx.scene ? (self
+        ? `<div class="rp-lbl">Für alle</div><div class="rp-acts"><button type="button" class="rp-act" data-a="scene" data-v="baum|">${esc(SCENE_LABEL.baum)}</button></div>`
+        : `<div class="rp-lbl">Aktion mit ${esc(nameOf(to))}</div><div class="rp-acts">${FREE_SCENES.filter((k) => k !== 'baum').map((k) => `<button type="button" class="rp-act" data-a="scene" data-v="${k}|${esc(to)}">${esc(SCENE_LABEL[k])}</button>`).join('')}${ctx.canPunch ? `<button type="button" class="rp-act pu" data-a="punch" data-v="${esc(to)}">🥊 Verprügeln</button>` : ''}</div>`) : ''}
       ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}
@@ -2106,8 +2133,9 @@ export function renderGame(root, ctx) {
     ${(() => { // v0.56: dein Platz unten rechts – deine Figur (Shop-Avatar ganz, sonst dein Bild), 💬 als Sprechblase über dem Kopf
       const pr = avatarLookup(meId); const now = Date.now(); const jub = DEMO_JUB || (local.meJubAt && now >= local.meJubAt && now < local.meJubAt + 1700);
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
-      return `<div class="meplate ${pr?.shop ? 'full' : 'round'} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">
-        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : avatar(me, meIdx)}${ouchOn(meId) ? OUCH : ''}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
+      const meOut = local.out && local.out[meId] && local.out[meId].from <= now && now < local.out[meId].until;
+      return `<div class="meplate full ${pr?.shop ? '' : 'gen'} ${meOut ? 'out' : ''} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">
+        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : aliveFig(me, meIdx, null)}${ouchOn(meId) ? OUCH : ''}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
@@ -2133,6 +2161,7 @@ export function renderGame(root, ctx) {
   aimFly(root);
   aimFx(root);
   routeFx(root);
+  theaterFx(root);
   mouthBubbles(root);
   seekFx(root);
   syncLoops();
