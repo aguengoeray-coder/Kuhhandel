@@ -85,8 +85,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   (jeder wählt selbst). Aufdecker entscheidet: kaufen (er zahlt dem Buzzer die Karten) oder verkaufen (Buzzer zahlt ihm).
   Der Zahler wählt die Karten selbst. Niemand buzzert → Aufdecker bekommt sie umsonst. Buzzer kann nicht zahlen → Karten offen,
   Countdown neu, er darf erst ab seiner Kartenanzahl drücken. Aufdecker mit zu wenig Karten muss verkaufen.
-- **Börsen-Chaos** (Spielart, nie mit Turbo): + 11 Börsen-News im Stapel; aufgedeckt → Wirkung sofort, Aufdecker deckt nochmal auf.
-  Kursrallye 2× (zufällig +30 … +100 %, meist klein), Kurssturz 2× (zufällig −30 … −100 %, meist groß; Kurse stapeln sich, nie unter 0; Tier beim Mischen ausgelost), Dividende (alle +50),
+- **Börsen-Chaos** (Spielart, nie mit Turbo): + 13 Börsen-News im Stapel; aufgedeckt → Wirkung sofort, Aufdecker deckt nochmal auf.
+  Kursrallye 2× (zufällig +30 … +100 %, meist klein), Kurssturz 2× (zufällig −30 … −100 %, meist groß), **Hype** (Tier ×2), **Blase platzt** (Tier ÷2) – Kurse werden multipliziert (wie an der Börse), höchstens ×4, nie unter 0; Tier beim Mischen ausgelost, Dividende (alle +50),
   Steuerprüfung (jeder gibt seinen höchsten Schein ab, nur eigener sichtbar), Marktpanik (jeder schiebt einen zufälligen Schein verdeckt nach links),
   Hektik (nächste 3 Versteigerungen 5 s), **Zwangsversteigerung** (2×, Handkarte, verdeckt; aufgedeckt → auf die Hand + nochmal aufdecken; später *statt* des Zuges ausspielen: Tier eines Mitspielers wird versteigert, Besitzer muss verkaufen und bekommt das Geld, ohne Gebot behält er es; geschützt: fertige Quartette, Ratten, Spieler ohne Geld; kein Mindestgebot; mehrfach pfändbar), **Einspruch** (Handkarte, wehrt eine Pfändung automatisch ab). Wertung mit aktuellen Kursen; Spezialkarte (250) und Esel-Bonus unverändert.
 - Wertung: (Summe der Quartettwerte + 250 je passender Spezialkarte) × Anzahl der Quartette, danach + 250 je Spezialkarte

@@ -715,12 +715,12 @@ test('Debug: Spiel sofort beenden – nur wenn alle Quartette verteilt, dann reg
 });
 
 // ---------- Börsen-Chaos ----------
-test('Börsen-Chaos: 65 Karten (54 + 11 News inkl. 2× Zwangsversteigerung + Einspruch), nie zusammen mit Turbo', async () => {
+test('Börsen-Chaos: 67 Karten (54 + 13 News inkl. Hype, Blase, 2× Zwangsversteigerung + Einspruch), nie zusammen mit Turbo', async () => {
   const { isNewsCard, newsOf, isBoerse } = await import('../src/engine.js');
   const g = createGame({ players: P, seed: 9, settings: { boerse: true } });
-  assert.equal(g.deck.length, 65);
+  assert.equal(g.deck.length, 67);
   const news = g.deck.filter(isNewsCard).map((c) => newsOf(c).kind).sort();
-  assert.deepEqual(news, ['crash', 'crash', 'dividende', 'einspruch', 'hektik', 'panik', 'pfaendung', 'pfaendung', 'rallye', 'rallye', 'steuer']);
+  assert.deepEqual(news, ['blase', 'crash', 'crash', 'dividende', 'einspruch', 'hektik', 'hype', 'panik', 'pfaendung', 'pfaendung', 'rallye', 'rallye', 'steuer']);
   assert.deepEqual(g.kurse, {});
   const t = createGame({ players: P.slice(0, 3), seed: 9, settings: { boerse: true, turbo: true } });
   assert.equal(t.deck.filter(isNewsCard).length, 0);
@@ -734,7 +734,7 @@ function boerseWithTop(card) {
   return g;
 }
 
-test('Börsen-News: Kursrallye/-sturz ändern den Wert (±50 %, stapelbar, nie unter 0) – Aufdecker deckt nochmal auf', async () => {
+test('Börsen-News: Kursrallye/-sturz ändern den Wert (±50 %, multiplikativ stapelbar, nie unter 0) – Aufdecker deckt nochmal auf', async () => {
   const { kursValue } = await import('../src/engine.js');
   let g = drawForAuction(boerseWithTop('news-rallye-kuh'), 'a', 0);
   assert.equal(g.kurse.kuh, 50);
@@ -742,13 +742,15 @@ test('Börsen-News: Kursrallye/-sturz ändern den Wert (±50 %, stapelbar, nie u
   assert.equal(g.phase, 'turn'); assert.equal(g.mustDraw, true); assert.equal(currentPlayer(g).id, 'a');
   assert.equal(g.lastEvent.type, 'news'); assert.equal(g.lastEvent.from, 800); assert.equal(g.lastEvent.to, 1200);
   g.deck.unshift('news-rallye-kuh'); g = drawForAuction(g, 'a', 0);
-  assert.equal(kursValue('kuh', g.kurse), 1600);
+  assert.equal(kursValue('kuh', g.kurse), 1800); // v0.69 multiplikativ: 800 × 1,5 × 1,5
   g.deck.unshift('news-crash-pferd', 'news-crash-pferd', 'news-crash-pferd');
   g = drawForAuction(drawForAuction(drawForAuction(g, 'a', 0), 'a', 0), 'a', 0);
+  assert.equal(kursValue('pferd', g.kurse), 125); // 1000 × 0,5³
+  g.deck.unshift('news-crash-pferd-100'); g = drawForAuction(g, 'a', 0);
   assert.equal(kursValue('pferd', g.kurse), 0);
   // Wertung rechnet mit dem Kurs
   g.players[1].animals.kuh = 4;
-  assert.equal(scores(g)[1].score, 1600);
+  assert.equal(scores(g)[1].score, 1800);
   assert.equal(scoreFor(g.players[1]).score, 800); // ohne Kurse: Grundwert
 });
 
@@ -871,4 +873,25 @@ test('v0.65 Einspruch wehrt Pfändung ab; ohne Gebot behält der Besitzer sein T
   g = playPfaendung(g1, 'a', 'c', 'gans', 0);
   g = closeAuction(g, 'c', 'sell', g.auction.endsAt + 1);
   assert.equal(g.players[2].animals.gans, 1); assert.match(g.log.at(-1), /behält/);
+});
+
+test('v0.69 Hype ×2 und Blase platzt ÷2: multiplikativ, höchstens ×4, Rallye/Sturz heben sich nicht mehr einfach auf', async () => {
+  const { kursValue, newsOf, KURS_MAX_FACTOR } = await import('../src/engine.js');
+  assert.deepEqual(newsOf('news-hype-kuh'), { kind: 'hype', animal: 'kuh' });
+  let g = drawForAuction(boerseWithTop('news-hype-kuh'), 'a', 0);
+  assert.equal(kursValue('kuh', g.kurse), 1600);
+  assert.equal(g.lastEvent.kind, 'hype'); assert.equal(g.lastEvent.from, 800); assert.equal(g.lastEvent.to, 1600);
+  assert.equal(g.mustDraw, true);
+  g.deck.unshift('news-hype-kuh', 'news-hype-kuh'); g = drawForAuction(drawForAuction(g, 'a', 0), 'a', 0);
+  assert.equal(kursValue('kuh', g.kurse), 800 * KURS_MAX_FACTOR); // gedeckelt bei ×4
+  g.deck.unshift('news-blase-kuh'); g = drawForAuction(g, 'a', 0);
+  assert.equal(kursValue('kuh', g.kurse), 1600);
+  assert.equal(g.lastEvent.kind, 'blase');
+  // Rallye +50 und Sturz −50 ergeben ×0,75 (nicht mehr ±0)
+  let h = drawForAuction(boerseWithTop('news-rallye-hund-50'), 'a', 0);
+  h.deck.unshift('news-crash-hund-50'); h = drawForAuction(h, 'a', 0);
+  assert.equal(kursValue('hund', h.kurse), 120);
+  // laufende Partien: alter additiver Stand wird als Faktor weitergeführt (+50 → ×1,5 → Hype → ×3)
+  const old = boerseWithTop('news-hype-esel'); old.kurse = { esel: 50 };
+  assert.equal(kursValue('esel', drawForAuction(old, 'a', 0).kurse), 1500);
 });

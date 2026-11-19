@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.69.0', date: '19.11.', items: ['🚀 Neue Börsen-News: Hype (Wert ×2) und Blase platzt (Wert ÷2)', '📈 Kurse rechnen wie an der Börse (malnehmen statt addieren, höchstens ×4)', '✨ Kurssprung: alle Karten des Tiers blinken ▲/▼ mit Börsenglocke', '🂠 Rückseite zeigt, ob Tier, 💰 Geld oder Börsen-News kommt', '🧠 Keine Krone mehr – wer führt, musst du dir merken'] },
   { v: '0.68.0', date: '19.11.', items: ['🐄 Beim Kuhhandel läuft das ganze Tier zu dir', '💰 Ka-ching! – Münzen regnen, wenn du Geld bekommst', '🙂 Starter-Figuren, Atmen und Mimik (💦 💢 😍 💸)', '🛠 Debug-Fenster springt nicht mehr nach oben'] },
   { v: '0.67.0', date: '19.11.', items: ['🛒 Neu im Shop: Auslachen, Schleimen, Torte ins Gesicht, Verschwörung und Baum-Runde', '🌗 Kein Abdunkeln mehr bei Szenen'] },
   { v: '0.66.0', date: '19.11.', items: ['🟢 Grüne Knöpfe = du bekommst, 🟠 orange = du zahlst', '➕➖ Beträge mit Vorzeichen, gesperrte Knöpfe gestrichelt', '✨ Der erwartete Knopf leuchtet sanft auf'] },

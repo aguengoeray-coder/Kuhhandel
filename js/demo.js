@@ -324,7 +324,7 @@ export function buildDemoState(kind, local) {
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
       return g;
     }
-    case 'news': { // ?demo=news&k=rallye-kuh|crash-pferd|dividende|steuer|panik|hektik – Börsen-Chaos
+    case 'news': { // ?demo=news&k=rallye-kuh|crash-pferd|hype-kuh|blase-schaf|dividende|steuer|panik|hektik – Börsen-Chaos
       const k = new URLSearchParams(location.search).get('k') || 'rallye-kuh';
       g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
       const b = base(); g.players = b.players; g.donkeysDrawn = 1;
@@ -338,6 +338,7 @@ export function buildDemoState(kind, local) {
       g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
       const b = base(); g.players = b.players; g.deck = b.deck; g.donkeysDrawn = 1;
       g.kurse = { kuh: 50, pferd: -50, schaf: 100 }; g.hektik = 2;
+      { const top = new URLSearchParams(location.search).get('top'); if (top === 'news') g.deck.unshift('news-hype-kuh'); if (top === 'money') g.deck.unshift('geld-100'); }
       return g;
     }
     case 'pfaend': { // v0.65: du hast „Zwangsversteigerung“ + „Einspruch“ auf der Hand, Mitspieler je eine verdeckte Karte

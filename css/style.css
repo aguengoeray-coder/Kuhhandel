@@ -3500,3 +3500,42 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .mood.m-sweat { left: 74%; } .mood.m-angry { left: 72%; } .mood.m-broke { font-size: 18px; }
 @keyframes moodpop { from { scale: .2; opacity: 0; } to { scale: 1; opacity: 1; } }
 @keyframes moodbob { from { translate: -50% 0; } to { translate: -50% -4px; } }
+
+/* v0.69 Kurssprung: alle Karten eines Tiers blinken ▲ grün / ▼ rot (nach der News-Karte) */
+.kursjump { animation: kursjump 2.4s ease-out calc(var(--kw, 0ms) + var(--kd, 0ms)) 1 both; }
+.kursjump.kup { --kj: #3BD16F; }
+.kursjump.kdown { --kj: #FF5A5A; }
+.kursjump.kup::after, .kursjump.kdown::after { content: '▲'; position: absolute; inset: auto; right: -4px; top: -10px; box-shadow: none; border-radius: 0; background: none; z-index: 6; font: 900 14px/1 system-ui, sans-serif; color: var(--kj);
+  text-shadow: 0 1px 0 #0008; pointer-events: none; opacity: 0; animation: kursarrow 2.4s ease-out calc(var(--kw, 0ms) + var(--kd, 0ms)) 1 both; }
+.kursjump.kdown::after { content: '▼'; }
+@keyframes kursjump {
+  0% { filter: none; transform: none; }
+  12%, 40%, 68% { filter: drop-shadow(0 0 6px var(--kj)) drop-shadow(0 0 2px var(--kj)); transform: scale(1.08); }
+  26%, 54% { filter: drop-shadow(0 0 2px var(--kj)); transform: scale(1); }
+  100% { filter: none; transform: none; }
+}
+@keyframes kursarrow {
+  0% { opacity: 0; translate: 0 6px; }
+  15%, 75% { opacity: 1; translate: 0 0; }
+  100% { opacity: 0; translate: 0 -8px; }
+}
+.kursjump.kdown::after { animation-name: kursarrowdn; }
+@keyframes kursarrowdn {
+  0% { opacity: 0; translate: 0 -6px; }
+  15%, 75% { opacity: 1; translate: 0 0; }
+  100% { opacity: 0; translate: 0 8px; }
+}
+.newsreveal.k-hype .nwcard { box-shadow: 0 0 0 3px #3BD16F, 0 12px 40px #3BD16F55; }
+.newsreveal.k-blase .nwcard { box-shadow: 0 0 0 3px #FF5A5A, 0 12px 40px #FF5A5A55; }
+@media (prefers-reduced-motion: reduce) { .kursjump, .kursjump::after { animation-duration: 1ms; } }
+
+/* v0.69 (Alp): Rückseiten verraten die Art der nächsten Karte – Geld grün mit 💰, Börsen-News schwarz-gold mit Kurve */
+.deckbag { font-size: 34px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(0,0,0,.35)); }
+.gtable .tcenter .deck .deckbag { font-size: 42px; }
+.deck.newstop { --nt: #17202E; color: #F2C230; background: repeating-linear-gradient(0deg, rgba(242,194,48,.10) 0 1px, transparent 1px 9px), repeating-linear-gradient(90deg, rgba(242,194,48,.10) 0 1px, transparent 1px 9px), var(--nt);
+  border-color: #F2C230; box-shadow: 3px -3px 0 var(--back-2), 6px -6px 0 var(--back); }
+.decknews { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.decknews svg { width: 40px; height: 24px; color: #3BD16F; filter: drop-shadow(0 0 4px #3BD16F88); }
+.decknews b { font: 900 11px/1 var(--font-head); letter-spacing: .08em; color: #F2C230; }
+.gtable .tcenter .deck .decknews svg { width: 50px; height: 30px; }
+.gtable .tcenter .deck .decknews b { font-size: 13px; }
