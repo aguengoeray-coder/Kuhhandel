@@ -472,7 +472,7 @@ button.money { transition: transform .12s, box-shadow .12s; }
 .mback { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
 .mbox { position: relative; width: min(560px, 92vw); max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 18px; padding: 16px 20px 18px; box-shadow: 0 16px 40px rgba(0,0,0,.35); font-size: 14px; }
 .mbox h2 { margin: 0 0 8px; font-family: var(--font-head); font-size: 22px; }
-.mclose { position: absolute; right: 10px; top: 8px; width: 40px; height: 40px; border: none; background: none; font-size: 18px; cursor: pointer; }
+.mclose { position: absolute; right: 10px; top: 8px; width: 40px; height: 40px; border: none; background: none; font-size: 18px; cursor: pointer; z-index: 3; }
 .rules h3 { margin: 10px 0 2px; font-family: var(--font-head); font-size: 15px; }
 .rules p { margin: 0 0 4px; line-height: 1.4; }
 .mtext { margin: 0 0 10px; color: var(--muted); }
@@ -3421,3 +3421,24 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .aucard { position: relative; }
 .handtip { position: absolute; right: 150px; bottom: 120px; z-index: 45; max-width: 300px; padding: 8px 12px; border-radius: 14px; background: #FFF8DC; color: #2a2000; font-size: 12.5px; line-height: 1.35; box-shadow: 0 6px 18px rgba(0,0,0,.35); animation: tpshow 6.5s linear both; }
 .handtip b { font-family: var(--font-head); }
+/* ===== v0.66 Knöpfe mit festen Rollen (Alp): Farbe sagt, was passiert =====
+   🟢 grün = du bekommst (Geld/Tier/Karten rein) · 🟠 orange = du zahlst (Geld raus)
+   🔴 rot = Zug starten (Karte aufdecken) · 🟣 lila = Kuhhandel · 🟡 gold = Pfänden · ⚪ weiß = neutral/zurück */
+:root { --get: #2FA866; --get-d: #1C7543; --pay: #F28C1B; --pay-d: #A85A06; --trade: #7B4FD0; --trade-d: #50308F; }
+#stage :is(.pill, .tbtn)[data-a="sell"], #stage :is(.pill, .tbtn)[data-a="accept"], #stage :is(.pill, .tbtn)[data-a="ratTake"], #stage :is(.pill, .tbtn)[data-a="spSell"] { background: var(--get); color: #fff; box-shadow: 0 5px 0 var(--get-d); border-color: transparent; }
+#stage :is(.pill, .tbtn)[data-a="buy"], #stage :is(.pill, .tbtn)[data-a="pay"], #stage :is(.pill, .tbtn)[data-a="tradeGo"], #stage :is(.pill, .tbtn)[data-a="counter"], #stage :is(.pill, .tbtn)[data-a="spBuy"], #stage :is(.pill, .tbtn)[data-a="ratGo"] { background: var(--pay); color: #fff; box-shadow: 0 5px 0 var(--pay-d); border-color: transparent; }
+#stage .pill[data-a="tradeOpen"] { background: var(--trade); color: #fff; box-shadow: 0 5px 0 var(--trade-d); }
+#stage .bidbtn { border-color: var(--pay-d); box-shadow: 0 4px 0 var(--pay-d); }
+#stage .bidbtn small { color: var(--pay-d); }
+/* Beträge: + rein (grün umrandet), − raus */
+.amt { font-weight: 900; letter-spacing: .3px; }
+.amt.in::after { content: ' ⬇'; font-size: .8em; }
+.amt.out::after { content: ' ⬆'; font-size: .8em; }
+/* gesperrt = deutlich anders: blass, gestrichelt, kein Schatten */
+#stage :is(.pill, .tbtn):disabled, #stage .tbtn[disabled] { background: rgba(255,255,255,.12) !important; color: rgba(255,255,255,.75) !important; box-shadow: none !important; border: 2px dashed rgba(255,255,255,.45) !important; }
+/* der eine erwartete Knopf leuchtet nach 3 s sanft */
+#stage .hintme:not(:disabled) { animation: hintglow 1.8s ease-in-out var(--hd, 3000ms) infinite; }
+@keyframes hintglow { 0%, 100% { filter: none; outline: 0 solid rgba(255,255,255,0); outline-offset: 2px; } 50% { filter: brightness(1.12); outline: 4px solid rgba(255,255,255,.55); outline-offset: 3px; } }
+@media (prefers-reduced-motion: reduce) { #stage .hintme { animation: none; } }
+.rlegend .rl { display: inline-block; padding: 1px 8px; border-radius: 999px; color: #fff; font-weight: 800; font-size: 12px; }
+.rl.get { background: var(--get); } .rl.pay { background: var(--pay); } .rl.move { background: var(--red); } .rl.trade { background: var(--trade); } .rl.neutral { background: #fff; color: var(--ink); border: 1px solid #ccc; }
