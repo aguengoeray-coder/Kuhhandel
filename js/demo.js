@@ -35,8 +35,11 @@ function base() {
 export function buildDemoState(kind, local) {
   let g;
   switch (kind) {
-    case 'turn':
-      return base();
+    case 'turn': { // &geldtop=1: oberste Stapelkarte ist ein Geldschein (grüne Rückseite)
+      g = base();
+      if (new URLSearchParams(location.search).get('geldtop')) g.deck[0] = 'geld-50';
+      return g;
+    }
     case 'auction3': { // 3 Spieler, volle Plätze (wie im echten Spiel spät in der Partie)
       const t = Date.now() - 4100;
       g = createGame({ players: PLAYERS.slice(0, 3).map((p, i) => (i ? { ...p, name: `Test ${i}` } : p)), seed: 7 });

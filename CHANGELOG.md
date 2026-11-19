@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.63.2 – Geldschein-Rückseite
+
+- [x] Liegt oben auf dem Stapel ein Geldschein, hat die Karte eine **grüne Rückseite mit Taler-Münze** statt der Kuh – man sieht vorher, ob ein Schein oder eine Tierkarte kommt (nur mit „Geldscheine im Stapel“).
+
 ## v0.63.1 – Feinschliff Intros & Esel
 
 - [x] Duell-Intros länger: Kuhhandel/Rattenhandel 2 s, Spielstart 3 s (Schnick-Schnack-Schnuck bleibt kurz).
