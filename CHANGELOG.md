@@ -5,6 +5,8 @@
 - [x] **Neue Börsen-News 🚀 „Hype!“:** Der Wert eines Tiers verdoppelt sich (×2). Das Tier wird beim Mischen ausgelost.
 - [x] **Neue Börsen-News 🫧 „Blase platzt!“:** Der Wert eines Tiers halbiert sich (÷2). Börsen-Chaos hat damit 13 News.
 - [x] **Kurse rechnen wie an der Börse:** Rallye, Sturz, Hype und Blase werden jetzt multipliziert statt addiert (×2 und dann ÷2 = wieder normal; +50 % und −50 % = ×0,75). Höchstens ×4, nie unter 0. Laufende Partien rechnen mit ihrem bisherigen Kurs weiter.
+- [x] **Rückseiten verraten die nächste Karte:** Liegt oben im Stapel eine Börsen-News, ist die Rückseite schwarz-gold mit Kurskurve und „BÖRSE“; ein Geldschein ist grün mit 💰. Tierkarten bleiben wie gewohnt.
+- [x] **Mehr merken, weniger verraten:** Keine Spitzenreiter-Krone und kein „… führt!“ mehr, kein 💸 über pleite Spielern – wer führt oder kein Geld hat, muss man sich selbst merken.
 - [x] **Kurssprung-Animation:** Nach einer Kurs-News blinken alle Karten dieses Tiers (eigene Auslage, Mitspieler, Kurszettel) grün ▲ oder rot ▼, dazu eine Börsenglocke.
 
 ## v0.68.0 – Figuren mit Leben

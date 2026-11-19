@@ -6,7 +6,7 @@ import {
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
-  isBoerse, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
+  isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
@@ -572,12 +572,11 @@ export function renderGame(root, ctx) {
   { const hk = `${state.phase}|${state.log.length}|${state.turn}`; if (local.hintKey !== hk) { local.hintKey = hk; local.hintAt = Date.now(); } } // seit wann wartet der Zug
   // v0.68 Mimik über dem Kopf: kurz (💢 Wunschtier weg, 😍 Quartett) oder dauerhaft (💸 kein Geld, 💦 lange am Zug)
   const moodMark = (pid, kind, from, ms) => { local.mood = local.mood || {}; const m = local.mood[pid]; if (m && m.from === from && m.kind === kind) return; local.mood[pid] = { kind, from, until: from + ms }; wakeLocal(from); wakeLocal(from + ms + 20); }; // erst nach der Sitzplatz-Zeichnung aufrufen
-  const MOOD = { sweat: '💦', angry: '💢', love: '😍', broke: '💸' };
+  const MOOD = { sweat: '💦', angry: '💢', love: '😍' }; // v0.69: kein 💸 – wer kein Geld hat, muss man sich merken
   const moodOf = (pid) => {
     const now = Date.now(); const m = local.mood && local.mood[pid];
     if (m && m.from <= now && now < m.until) return m.kind;
     const pl = v.players[idxOf(pid)];
-    if (pl && (Array.isArray(pl.money) ? pl.money.length : pl.money) === 0) return 'broke';
     if (state.phase === 'turn' && v.players[state.turn]?.id === pid && local.hintAt && now - local.hintAt > 12000) return 'sweat';
     return null;
   };
@@ -1247,7 +1246,12 @@ export function renderGame(root, ctx) {
   const canDraw = state.phase === 'turn' && myTurn && !local.tradeOpen && v.deck > 0 && !calmLeft;
   // v0.63.2 (Alp): Geldscheine im Stapel haben eine grüne Rückseite – man sieht vorher, ob ein Schein oder eine Tierkarte kommt
   const topMoney = v.deck > 0 && Array.isArray(state.deck) && isMoneyCard(state.deck[0]);
-  const deckFace = topMoney ? '<span class="deckcoin" aria-hidden="true"><b>T</b></span>' : `<span class="deckcow">${art('kuh')}</span>`;
+  // v0.69 (Alp): Börsen-News haben eine eigene Rückseite (schwarz-gold mit Kurve), Geld eine grüne mit 💰 – man sieht, was als Nächstes kommt
+  const topNews = !topMoney && v.deck > 0 && Array.isArray(state.deck) && isNewsCard(state.deck[0]);
+  const deckFace = topMoney ? '<span class="deckbag" aria-hidden="true">💰</span>'
+    : topNews ? '<span class="decknews" aria-hidden="true"><svg viewBox="0 0 40 24"><path d="M2 20l9-8 7 5 9-11 11 6" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg><b>BÖRSE</b></span>'
+    : `<span class="deckcow">${art('kuh')}</span>`;
+  const topCls = topMoney ? 'moneytop' : topNews ? 'newstop' : '';
   const lastLog = v.log[v.log.length - 1] || '';
   // Infozeile: leuchtet kurz auf, wenn etwas Neues drinsteht (läuft beim Neuzeichnen weiter)
   if (fresh && state.phase === 'turn') local.stripAt = Date.now() + (evFresh && EV_WAIT[v.lastEvent?.type] ? evWait(v.lastEvent.type, v.deck) : 0);
@@ -1368,8 +1372,8 @@ export function renderGame(root, ctx) {
     ${shownHolder === meId && realHolder === meId && state.phase === 'turn' ? `<div class="myglow ${flashing ? 'in' : ''}" style="--fl:-${Math.min(flashEl, 99999)}ms" aria-hidden="true"></div>` : ''}
     <div class="tcenter">${aucCenter || `
     <div class="deck-wrap">
-      ${canDraw ? `<button type="button" class="deck go ${topMoney ? 'moneytop' : ''}" data-a="auction" aria-label="${topMoney ? 'Geldschein aufdecken' : 'Karte aufdecken'}">${deckFace}<span class="deckgo">Tippen</span></button>`
-        : `<div class="deck ${v.deck === 0 ? 'empty' : ''} ${topMoney ? 'moneytop' : ''}">${v.deck > 0 ? deckFace : ''}</div>`}
+      ${canDraw ? `<button type="button" class="deck go ${topCls}" data-a="auction" aria-label="${topMoney ? 'Geldschein aufdecken' : topNews ? 'Börsen-News aufdecken' : 'Karte aufdecken'}">${deckFace}<span class="deckgo">Tippen</span></button>`
+        : `<div class="deck ${v.deck === 0 ? 'empty' : ''} ${topCls}">${v.deck > 0 ? deckFace : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
     <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 36)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
@@ -1827,23 +1831,7 @@ export function renderGame(root, ctx) {
     let seen = 0; try { seen = Number(localStorage.getItem('kh_evseen')) || 0; localStorage.setItem('kh_evseen', String(seen + 1)); } catch { /* egal */ }
     local.res.hint = seen < 8;
   }
-  // ---------- v0.63 „Neuer Spitzenreiter!“: Krönchen fliegt zum neuen Führenden (nur wenn sich die Führung ändert) ----------
-  if (state.phase !== 'ended') {
-    const pts = v.players.map((p) => ({ id: p.id, sc: scoreFor(p, null, false, KURSE).score }));
-    const top = Math.max(...pts.map((x) => x.sc));
-    const leaders = pts.filter((x) => x.sc === top);
-    const lead = top > 0 && leaders.length === 1 ? leaders[0].id : null;
-    if (local.leadInit && lead && lead !== local.leader) {
-      const from = local.leader && idxOf(local.leader) >= 0 ? (local.leader === meId ? '@me' : local.leader) : '@cl';
-      const to = lead === meId ? '@me' : lead;
-      const d = evFresh && EV_WAIT[le?.type] ? evWait(le.type, v.deck) + 900 : 400;
-      keepFx(`<div class="crownfly" data-route="${esc(from)};${esc(to)}" data-offs="0,1" data-dur="1100" data-delay="${d}">👑</div>
-        <div class="leadtag" data-aim-from="${esc(to)}" data-aim-to="${esc(to)}" style="--tx:0px;--ty:0px;animation-delay:${d + 1000}ms">${lead === meId ? 'Du führst!' : `${esc(nameOf(lead))} führt!`}</div>`, d + 3000);
-      later.push(['glitz', d + 1050]);
-    }
-    if (lead) local.leader = lead;
-    local.leadInit = true;
-  }
+  // v0.69 (Alp): keine Spitzenreiter-Krone mehr – wer führt, muss man sich merken.
 
   // ---------- v0.63 Encounter-Intros ----------
   local.duels = local.duels || {}; local.duelWins = local.duelWins || {};

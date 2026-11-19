@@ -3528,3 +3528,14 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .newsreveal.k-hype .nwcard { box-shadow: 0 0 0 3px #3BD16F, 0 12px 40px #3BD16F55; }
 .newsreveal.k-blase .nwcard { box-shadow: 0 0 0 3px #FF5A5A, 0 12px 40px #FF5A5A55; }
 @media (prefers-reduced-motion: reduce) { .kursjump, .kursjump::after { animation-duration: 1ms; } }
+
+/* v0.69 (Alp): Rückseiten verraten die Art der nächsten Karte – Geld grün mit 💰, Börsen-News schwarz-gold mit Kurve */
+.deckbag { font-size: 34px; line-height: 1; filter: drop-shadow(0 2px 0 rgba(0,0,0,.35)); }
+.gtable .tcenter .deck .deckbag { font-size: 42px; }
+.deck.newstop { --nt: #17202E; color: #F2C230; background: repeating-linear-gradient(0deg, rgba(242,194,48,.10) 0 1px, transparent 1px 9px), repeating-linear-gradient(90deg, rgba(242,194,48,.10) 0 1px, transparent 1px 9px), var(--nt);
+  border-color: #F2C230; box-shadow: 3px -3px 0 var(--back-2), 6px -6px 0 var(--back); }
+.decknews { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.decknews svg { width: 40px; height: 24px; color: #3BD16F; filter: drop-shadow(0 0 4px #3BD16F88); }
+.decknews b { font: 900 11px/1 var(--font-head); letter-spacing: .08em; color: #F2C230; }
+.gtable .tcenter .deck .decknews svg { width: 50px; height: 30px; }
+.gtable .tcenter .deck .decknews b { font-size: 13px; }
