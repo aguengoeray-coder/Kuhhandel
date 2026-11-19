@@ -80,6 +80,12 @@ const SOUNDS = {
   crumple: () => { for (let i = 0; i < 7; i++) noise(i * 0.045, 0.05, { freq: 2400 + (i % 3) * 700, vol: 0.22, q: 0.6 }); },
   thud: () => { tone(120, 0, 0.16, { type: 'square', vol: 0.2, slide: -50 }); noise(0, 0.07, { freq: 700, vol: 0.45 }); },
   rain: () => { for (let i = 0; i < 9; i++) tone(1400 + ((i * 337) % 900), i * 0.06, 0.1, { type: 'sine', vol: 0.09 }); },
+  // v0.64 Figuren-Theater
+  step: () => [0, 0.12, 0.24, 0.36].forEach((d, i) => tone(i % 2 ? 260 : 220, d, 0.05, { type: 'triangle', vol: 0.07 })), // Watschel-Schritte
+  haha: () => [0, 0.13, 0.26, 0.39, 0.52].forEach((d, i) => tone(520 - i * 30, d, 0.09, { type: 'square', vol: 0.06, slide: -120 })),
+  heart: () => [988, 1319, 1568].forEach((f, i) => tone(f, i * 0.09, 0.14, { type: 'sine', vol: 0.07 })),
+  lighter: () => { noise(0, 0.03, { freq: 4000, vol: 0.35 }); noise(0.05, 0.35, { freq: 900, vol: 0.12, q: 0.5 }); },
+  puff: () => noise(0, 0.5, { freq: 500, vol: 0.12, q: 0.4 }),
 };
 
 // Eigene Aufnahmen (z. B. „Muh“ von Nico) haben Vorrang vor den erzeugten Tönen
