@@ -168,6 +168,7 @@ export function buildDemoState(kind, local) {
       g = base(); g.turn = 1;
       g = startTrade(g, 'u2', 'u1', 'hund', [0, 2, 6]);
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
+      if (new URLSearchParams(location.search).get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'turn' }; // v0.70: VS + Tiere laufen in die Mitte
       return g;
     case 'tradewait': {
       g = base(); g.turn = 1;
@@ -184,6 +185,7 @@ export function buildDemoState(kind, local) {
       g = base(); g.turn = 1;
       g = startTrade(g, 'u2', 'u1', 'hund', [0, 2, 6]);
       g = counterTrade(g, 'u1', [5, 6]);
+      if (new URLSearchParams(location.search).get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'trade' }; // v0.70: Tiere laufen aus der Mitte zu dir
       return g;
     }
     case 'tradeseen': { // Kuhhandel zwischen zwei anderen: Zuschauer sehen nur Rückseiten

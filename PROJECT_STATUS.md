@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md – gemeinsamer Projektstand
 
-Stand: 13.11.2026, 21:25 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
+Stand: 20.11.2026, 00:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
 
 > Maßgeblich sind GitHub (`main`, PRs, Workflow-Ergebnisse). Diese Datei wird nach jeder Arbeitseinheit aktualisiert.
 > Freigaben laufen nach der **Ampel** in `AGENTS.md` (🟢 KI mergt bei grünen Tests · 🟡 Alps Go · 🔴 nur Alp).
@@ -9,14 +9,19 @@ Stand: 13.11.2026, 21:25 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.63.0** – Merge-Commit `29709f8` (#34); Cloudflare-Build erfolgreich |
+| Live-Version (`main`) | **v0.69.0** – Merge `8a543ad` (#45); Cloudflare-Build erfolgreich · v0.70.0 (#46) und v0.71.0 folgen |
 | In Arbeit | – |
-| Nächste Versionen | 2-Spieler-Modus (Regelprüfung zuerst) · Börsen-Chaos nach ersten echten Partien nachjustieren |
-| Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.63-eigener-spruch.sql` (Claude über Connector 14.11., Prüfabfrage + Advisors ✓); davor `v0.60-admin-nur-angemeldet.sql`, `v0.61-emote-pruegel.sql` (Claude) |
+| Nächste Versionen | Erste echte Partien spielen (noch kein einziges Spielergebnis in der DB) · Börsen-Chaos danach nachjustieren · 2-Spieler-Modus |
+| Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.67-emotes.sql` (Claude über Connector 14.11., Prüfabfrage + Advisors ✓); davor `v0.60-admin-nur-angemeldet.sql`, `v0.61-emote-pruegel.sql` (Claude) |
 
 ### Zuletzt live gegangen
 | Version | Inhalt | PR |
 |---|---|---|
+| v0.71.0 | Kein Zwischenstand mehr (merken statt anzeigen), Verlierer-Pose 🌧️ auf dem Podest | – |
+| v0.70.0 | Choreografie: Tiere laufen bis auf den Stapel und werden zur Karte, Kuhhandel über die Mitte, Geld/Tiere nie mehr zum Avatar | #46 |
+| v0.69.0 | Börsen-News Hype ×2 / Blase ÷2, Kurse multiplikativ (max ×4), Kurssprung-Animation, Rückseiten für News/Geld, keine Krone/💸 | #45 |
+| v0.68.0 | Ganze Tiere, Ka-ching, Starter-Figuren, Atmen + Mimik, Debug-Scroll | #44 |
+| v0.64–v0.67 | Theater-Emotes (Torte, Baum, Verschwörung …), Zwangsversteigerung + Einspruch, Emote-Shop (nur Alp Admin) | #39–#43 |
 | v0.63.0 | Duell-Intros (Kuhhandel/Rattenhandel/SSS/Spielstart), Spitzenreiter-Krone, „Letzte Karte!“, Finale (Ende nicht überspringbar), Shop „Eigener Spruch“, Kursrallye/-sturz zufällig 30–100 % (Sturz meist stärker) | #34 |
 | v0.62.0 | Figuren springen aus dem Profilbild (Jubel, Pleite, Prügeln), Ratte, Quartett-Polonaise, Kuhhandel-Koffer | #34 |
 | v0.61.x | Emote „Verprügeln“ (Shop, Admin immer, 5 s Pause), Muskel-Esel klettert aus der Karte | #33, #34 |
@@ -46,7 +51,7 @@ Stand: 13.11.2026, 21:25 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | Prüfung | Wo | Was sie findet |
 |---|---|---|
-| `npm test` (61 Tests) | lokal + Workflow `tests.yml` | Spielregeln (inkl. 100 simulierte Turbo- und klassische Komplettspiele), Shop-Katalog/Preise = SQL-Preise, Ganzkörper-Avatare, Automatisierung |
+| `npm test` (68 Tests) | lokal + Workflow `tests.yml` | Spielregeln (inkl. 100 simulierte Turbo- und klassische Komplettspiele), Shop-Katalog/Preise = SQL-Preise, Ganzkörper-Avatare, Automatisierung |
 | `node scripts/check.mjs` | lokal + `tests.yml` | JS-Syntax aller Dateien, `APP_VERSION` = `version.json` = CHANGELOG, „Was ist neu“ kennt die Version, `AGENTS.md` = `CLAUDE.md` |
 | e2e Ansichten | `e2e.yml` → `e2e/views.spec.mjs` | alle Demo-Ansichten × 4 Handygrößen + 3-Spieler-Ansichten + Startseite/Shop: JS-Fehler, Überlappungen, abgeschnittener Text, zu kleine Schrift |
 | e2e Größen | `e2e/sizes.spec.mjs` | große Karte + Überschrift in allen Phasen gleich groß |
@@ -71,8 +76,9 @@ Bekannte Einschränkung: Einige Demos (`auction`, `cantpay`, `rat`, `rps` …) s
 | v0.52–v0.59 | Avatare, größere Karten, Siegerehrung, Dublonen für alle, Platz am Tisch, neue Charaktere | ✅ live |
 | v0.60 | Börsen-Chaos | ✅ live |
 | v0.61–v0.63 | Emote Verprügeln, lebendige Figuren + Gags, Duell-Intros, Finale, eigener Spruch | ✅ live |
+| v0.64–v0.71 | Theater-Emotes, Pfändung, Emote-Shop, ganze Tiere, Börsen-Hype, Choreografie | ✅ live / im Merge |
 | nächste | 2-Spieler-Modus (Originalregeln prüfen, Vorschlag an Alp) | 🟡 |
-| später | Erfolge + Saison-Rangliste (SQL), Zuschauen, Zug-Zeitlimit mit Bot-Vertretung, Shop: Tischdesigns/Kartenrücken | – |
+| später | Erfolge + Saison-Rangliste (SQL), Zuschauen, Zug-Zeitlimit mit Bot-Vertretung, Shop: Tischdesigns/Kartenrücken, Avatar-Accessoires/Haustiere/Abzeichen (Preise = Alp), Einstellung „Animationen kurz“ | – |
 
 ## 6. Datei-Owner (pro Aufgabe genau ein schreibender Owner)
 
