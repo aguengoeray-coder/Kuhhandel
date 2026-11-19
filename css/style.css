@@ -3453,3 +3453,50 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .reactpick .rp-tile.locked i { filter: grayscale(1); opacity: .55; }
 .reactpick .rp-tile small { font-size: 11px; color: #8a6d1d; }
 .reactpick .rp-tip { margin: 2px 0 0; font-size: 12px; color: #666; }
+/* ===== v0.68 Ganze Tiere (Kuhhandel, Ratte, Polonaise) ===== */
+.ratrun, .polo, .tripwalk { width: 78px; height: 60px; }
+.beast.whole { width: 78px; height: 60px; }
+.beast.whole .bbody { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 4px rgba(0,0,0,.4)); }
+.face-l .beast.whole .bbody { transform: scaleX(-1); }
+.beast.whole .lg { animation: lgstep .26s ease-in-out infinite alternate; }
+.beast.whole .lg.b { animation-direction: alternate-reverse; }
+@keyframes lgstep { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+.beast.whole .tail { animation: twag .3s ease-in-out infinite alternate; }
+@keyframes twag { from { transform: rotate(-10deg); } to { transform: rotate(14deg); } }
+.beast.whole .wing { animation: wflap .2s ease-in-out infinite alternate; }
+@keyframes wflap { from { transform: rotate(0); } to { transform: rotate(-18deg); } }
+.beast.whole.rat::after { display: none; }
+.beast.whole .bkoffer { right: 4px; top: 30px; }
+.beast.whole .bcount { left: 6px; top: -10px; }
+.tripwalk .beast.whole { animation: bwob .28s ease-in-out infinite alternate; }
+/* v0.68 Ka-ching: Münzen regnen in den Kopf, Glitzer, Betrag */
+.actor .kcoin { position: absolute; left: 50%; top: -40px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFF1A8, #F2C230 60%, #C9931A); border: 2px solid #8A5A0B; opacity: 0; animation: kcoin .6s cubic-bezier(.5,0,.8,.6) both; }
+.actor .kcoin.c0 { --kx: -18px; } .actor .kcoin.c1 { --kx: 14px; } .actor .kcoin.c2 { --kx: -6px; } .actor .kcoin.c3 { --kx: 20px; } .actor .kcoin.c4 { --kx: -14px; } .actor .kcoin.c5 { --kx: 4px; }
+@keyframes kcoin { 0% { opacity: 1; transform: translate(var(--kx), -20px) scaleX(1); } 50% { transform: translate(var(--kx), 20px) scaleX(.3); } 100% { opacity: 0; transform: translate(calc(var(--kx) * .3), 52px) scaleX(1); } }
+.actor .kching { position: absolute; left: 50%; top: -34px; padding: 2px 9px; border-radius: 8px; background: #FFD34E; color: #6B4300; border: 2.5px solid #8A5A0B; font: 900 14px var(--font-head); white-space: nowrap; opacity: 0; transform: translateX(-50%) rotate(-6deg); animation: kching 1.6s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes kching { 0% { opacity: 0; scale: .3; } 12% { opacity: 1; scale: 1.15; } 22% { scale: 1; } 85% { opacity: 1; } 100% { opacity: 0; translate: 0 -10px; } }
+.actor .kamt { position: absolute; left: 50%; top: -60px; transform: translateX(-50%); color: #7CF29A; font: 900 18px var(--font-head); text-shadow: 0 2px 0 #0d4d22, 0 0 6px rgba(0,0,0,.6); white-space: nowrap; opacity: 0; animation: kamt 1.6s ease-out both; }
+@keyframes kamt { 0% { opacity: 0; translate: 0 10px; } 15% { opacity: 1; translate: 0 0; } 80% { opacity: 1; } 100% { opacity: 0; translate: 0 -14px; } }
+.actor .kspark { position: absolute; color: #FFE27A; font-style: normal; font-size: 16px; opacity: 0; text-shadow: 0 0 6px rgba(255,226,122,.9); animation: kspark .7s ease-out both; }
+.actor .kspark.s0 { left: 0; top: 20px; } .actor .kspark.s1 { right: 0; top: 10px; } .actor .kspark.s2 { left: 8px; top: 60px; } .actor .kspark.s3 { right: 6px; top: 54px; }
+@keyframes kspark { 0% { opacity: 0; scale: .2; } 40% { opacity: 1; scale: 1.3; } 100% { opacity: 0; scale: .6; } }
+.actor.k-kaching .abody { filter: drop-shadow(0 0 8px rgba(255,211,78,.85)) drop-shadow(0 6px 6px rgba(0,0,0,.45)); }
+/* v0.68 Debug-Infofenster: aufklappbare Abschnitte, Scroll-Stand bleibt */
+.dbody { overscroll-behavior: contain; }
+.dbody details { border-bottom: 1px solid #eee; padding: 4px 0 8px; }
+.dbody summary { cursor: pointer; list-style: none; font: 800 14px var(--font-head); padding: 8px 0 6px; display: flex; align-items: center; gap: 6px; }
+.dbody summary::-webkit-details-marker { display: none; }
+.dbody summary::before { content: '▸'; color: #888; transition: transform .15s; }
+.dbody details[open] > summary::before { transform: rotate(90deg); }
+/* v0.68 Figuren leben: leichtes Atmen + Kopfneigen am Platz (versetzt je Platz) */
+.prow .seatfig > .afull, .prow .seatfig > .agen { animation: breathe 3.2s ease-in-out var(--bd, 0s) infinite; }
+.meplate .mefig > .shop-avatar-full, .meplate .mefig > .agen { animation: breathe 3.6s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes breathe { 0%, 100% { scale: 1 1; rotate: 0deg; } 30% { scale: 1.015 1.035; rotate: -1.2deg; } 60% { scale: 1 1.01; rotate: .8deg; } }
+.seatfig > .afull, .seatfig > .agen { transform-origin: 50% 100%; }
+@media (prefers-reduced-motion: reduce) { .prow .seatfig > *, .meplate .mefig > * { animation: none !important; } }
+/* Mimik-Zeichen über dem Kopf */
+.mood { position: absolute; z-index: 7; left: 50%; top: -46px; font-style: normal; font-size: 20px; line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); animation: moodpop .35s cubic-bezier(.2,1.6,.4,1) both, moodbob 1.2s ease-in-out .35s infinite alternate; }
+.meplate .mefig .mood { top: -6px; left: 62%; font-size: 26px; }
+.mood.m-sweat { left: 74%; } .mood.m-angry { left: 72%; } .mood.m-broke { font-size: 18px; }
+@keyframes moodpop { from { scale: .2; opacity: 0; } to { scale: 1; opacity: 1; } }
+@keyframes moodbob { from { translate: -50% 0; } to { translate: -50% -4px; } }

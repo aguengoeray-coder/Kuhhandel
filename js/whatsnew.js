@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.68.0', date: '19.11.', items: ['🐄 Beim Kuhhandel läuft das ganze Tier zu dir', '💰 Ka-ching! – Münzen regnen, wenn du Geld bekommst', '🙂 Starter-Figuren, Atmen und Mimik (💦 💢 😍 💸)', '🛠 Debug-Fenster springt nicht mehr nach oben'] },
   { v: '0.67.0', date: '19.11.', items: ['🛒 Neu im Shop: Auslachen, Schleimen, Torte ins Gesicht, Verschwörung und Baum-Runde', '🌗 Kein Abdunkeln mehr bei Szenen'] },
   { v: '0.66.0', date: '19.11.', items: ['🟢 Grüne Knöpfe = du bekommst, 🟠 orange = du zahlst', '➕➖ Beträge mit Vorzeichen, gesperrte Knöpfe gestrichelt', '✨ Der erwartete Knopf leuchtet sanft auf'] },
   { v: '0.65.0', date: '19.11.', items: ['⚖️ Börsen-Chaos: Zwangsversteigerung – pfände ein Tier eines Mitspielers, er muss verkaufen', '🛡️ Einspruch-Karte wehrt eine Pfändung ab', '🃏 Beide kommen verdeckt auf die Hand – wer hat was?'] },
