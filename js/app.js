@@ -14,7 +14,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.63.2';
+export const APP_VERSION = '0.64.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -72,6 +72,12 @@ try { if (!document.getElementById('shop-avatar-runtime-css')) { const st = docu
 const reactions = new Map(); // angezeigt bei Platz → { text, from, until }
 // v0.61 Admin-Fähigkeit „Verprügeln“: { from, to, at } – Animation läuft bei allen
 const punches = [];
+// v0.64 Figuren-Theater: Szenen zwischen den Figuren (für alle gleich, jeder sieht sie aus seiner Sicht)
+const scenes = [];
+let lastSceneAt = 0;
+const SCENE_COOLDOWN = 9000;
+const SCENE_OK = ['laugh', 'schleim', 'baum', 'verschwoerung', 'torte'];
+const sceneFromSeen = new Map(); // Schutz gegen Dauerfeuer von einem Gerät
 let lastPunchAt = 0;
 const PUNCH_COOLDOWN = 5000; // Alp: alle 5 s darf geprügelt werden
 let lastReactAt = 0;
@@ -635,6 +641,8 @@ function renderPlaying() {
     punchLabel: ui.isAdmin && !shopMe.owned.has('emote-pruegel') ? '🥊 Admin-Fähigkeit: Verprügeln' : '🥊 Emote: Verprügeln',
     punch: sendPunch,
     punches: punches.filter((x) => Date.now() - x.at < 4000),
+    scenes: scenes.filter((x) => Date.now() - x.at < 4000),
+    scene: sendScene,
     nudgeWho: waitingFor(),
     nudge: sendNudge,
     autoplay: ui.game.state?.autoplay || [],
@@ -1239,6 +1247,28 @@ function showPunch(from, to) {
   render();
   setTimeout(render, 3600);
 }
+function showScene(s) {
+  scenes.push({ ...s, at: Date.now() });
+  while (scenes.length > 6) scenes.shift();
+  render();
+}
+function sendScene(kind, to, partner = null) {
+  if (!SCENE_OK.includes(kind)) return;
+  const left = SCENE_COOLDOWN - (Date.now() - lastSceneAt);
+  if (left > 0) return toast(`Die Figuren brauchen noch ${Math.ceil(left / 1000)} s Pause.`);
+  const seat = ui.game.local ? dbg.viewAs : seatIn(ui.game);
+  const ids = ui.game?.state?.players?.map((p) => p.id) || [];
+  if (!seat || (to && (to === seat || !ids.includes(to)))) return;
+  if (kind === 'verschwoerung') { // Komplize: ein zufälliger dritter Mitspieler
+    const others = ids.filter((id) => id !== seat && id !== to);
+    partner = partner && others.includes(partner) ? partner : others[Math.floor(Math.random() * others.length)];
+    if (!partner) return;
+  }
+  lastSceneAt = Date.now();
+  const s = { kind, from: seat, to: to || null, partner: partner || null, seed: Math.floor(Math.random() * 1000) };
+  showScene(s);
+  if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'scene', payload: s });
+}
 function canPunch() { return !!ui.isAdmin || shopMe.owned.has('emote-pruegel'); }
 function sendPunch(to) {
   if (!canPunch()) return;
@@ -1414,6 +1444,16 @@ function watchRoom(id) {
       showGame(payload.new);
     })
     .on('broadcast', { event: 'nudge' }, ({ payload }) => gotNudge(payload))
+    .on('broadcast', { event: 'scene' }, ({ payload }) => {
+      const ids = ui.game?.state?.players?.map((p) => p.id) || [];
+      if (!payload || !SCENE_OK.includes(payload.kind) || !ids.includes(payload.from)) return;
+      if (payload.to != null && (!ids.includes(payload.to) || payload.to === payload.from)) return;
+      if (payload.partner != null && (!ids.includes(payload.partner) || payload.partner === payload.from || payload.partner === payload.to)) return;
+      const last = sceneFromSeen.get(payload.from) || 0;
+      if (Date.now() - last < 4000) return; // höchstens alle 4 s eine Szene pro Spieler
+      sceneFromSeen.set(payload.from, Date.now());
+      showScene({ kind: payload.kind, from: payload.from, to: payload.to || null, partner: payload.partner || null, seed: Number(payload.seed) || 0 });
+    })
     .on('broadcast', { event: 'punch' }, ({ payload }) => {
       const ids = ui.game?.state?.players?.map((p) => p.id) || [];
       if (!payload || !ids.includes(payload.from) || !ids.includes(payload.to) || payload.from === payload.to) return;
@@ -1913,6 +1953,7 @@ function demo(kind) {
   Object.entries(demoProfiles).forEach(([id, [name, animal, color]]) => profiles.set(id, { id, name, animal, color }));
   if (kind === 'testspiel' || kind === 'testspiel3') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(kind === 'testspiel3' ? 3 : 4); }
   me = { id: 'u1', name: 'Alp' };
+  if (params.get('scene')) setTimeout(() => showScene({ kind: params.get('scene'), from: params.get('sfrom') || 'u1', to: params.get('sto') || null, partner: params.get('spartner') || null, seed: Number(params.get('seed')) || 0 }), Number(params.get('sdelay')) || 300); // Screenshots: Figuren-Theater
   if (params.get('punch')) { ui.isAdmin = true; setTimeout(() => showPunch(params.get('pfrom') || 'u1', params.get('punch')), 300); } // Screenshots: Prügel-Animation
   if (kind === 'login' || kind === 'create') { ui.screen = 'login'; auth.mode = kind === 'create' ? 'create' : 'login'; me.name = ''; return render(); }
   if (params.get('react')) reactions.set(params.get('react'), { text: params.get('rtext') === 'ehrlich' ? EHRLICH : params.get('rtext') === 'unehrlich' ? UNEHRLICH : params.get('rtext') === 'mehr' ? REACTIONS[2] : params.get('rtext') === 'lach' ? '😂' : params.get('rtext') === 'nico' ? 'Nico, schrei nicht!' : 'Bluff!', from: params.get('reactfrom') || null, until: Date.now() + 600000 });

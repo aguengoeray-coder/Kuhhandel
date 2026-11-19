@@ -1625,6 +1625,8 @@ export function renderGame(root, ctx) {
   const SCENE_SFX = {
     laugh: [['step', 150], ['haha', 1700], ['haha', 2600], ['step', 3800]],
     schleim: [['step', 150], ['heart', 1200], ['coins', 2700], ['heart', 3100], ['step', 3900]],
+    verschwoerung: [['step', 150], ['puff', 1300], ['puff', 1900], ['nudge', 3050], ['step', 5200]],
+    torte: [['step', 150], ['thud', 1300], ['haha', 1500], ['step', 2900]],
     baum: [['step', 120], ['flipcard', 1500], ['crumple', 2450], ['flipcard', 3500], ['lighter', 4500], ['puff', 5200], ['puff', 5900], ['puff', 6600], ['step', 7000]],
   };
   for (const s of ctx.scenes || []) {
@@ -1632,7 +1634,7 @@ export function renderGame(root, ctx) {
     local.sceneSeen = local.sceneSeen || [];
     if (local.sceneSeen.includes(sig)) continue;
     local.sceneSeen.push(sig); if (local.sceneSeen.length > 20) local.sceneSeen.shift();
-    if (Date.now() - s.at > 3000 || idxOf(s.from) < 0 || (s.to && idxOf(s.to) < 0)) continue;
+    if (Date.now() - s.at > 3000 || idxOf(s.from) < 0 || (s.to && idxOf(s.to) < 0) || (s.partner && idxOf(s.partner) < 0)) continue;
     const r = sceneFx(s);
     if (!r) continue;
     keepFx(r.html, r.ms, 'scene');
@@ -2117,7 +2119,7 @@ export function renderGame(root, ctx) {
       ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">${esc(ctx.punchLabel || '🥊 Verprügeln')}</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
       ${ctx.scene ? (self
         ? `<div class="rp-lbl">Für alle</div><div class="rp-acts"><button type="button" class="rp-act" data-a="scene" data-v="baum|">${esc(SCENE_LABEL.baum)}</button></div>`
-        : `<div class="rp-lbl">Aktion mit ${esc(nameOf(to))}</div><div class="rp-acts">${FREE_SCENES.filter((k) => k !== 'baum').map((k) => `<button type="button" class="rp-act" data-a="scene" data-v="${k}|${esc(to)}">${esc(SCENE_LABEL[k])}</button>`).join('')}${ctx.canPunch ? `<button type="button" class="rp-act pu" data-a="punch" data-v="${esc(to)}">🥊 Verprügeln</button>` : ''}</div>`) : ''}
+        : `<div class="rp-lbl">Aktion mit ${esc(nameOf(to))}</div><div class="rp-acts">${FREE_SCENES.filter((k) => k !== 'baum' && (k !== 'verschwoerung' || v.players.length >= 3)).map((k) => `<button type="button" class="rp-act" data-a="scene" data-v="${k}|${esc(to)}">${esc(k === 'verschwoerung' ? '🤫 Verschwörung gegen ihn' : SCENE_LABEL[k])}</button>`).join('')}${ctx.canPunch ? `<button type="button" class="rp-act pu" data-a="punch" data-v="${esc(to)}">🥊 Verprügeln</button>` : ''}</div>`) : ''}
       ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}

@@ -8,12 +8,12 @@
 //       'seat:<pid>' = Platz von pid · 'head:<Ort>' = Kopfhöhe über dem Ort
 // Alle Geräte spielen dieselbe Szene, jedes aus der eigenen Sitzposition (Orte werden erst beim Zeichnen gemessen).
 
-export const MID_SCALE = 0.86;
+export const MID_SCALE = 0.82;
 export const FIG_W = 72, FIG_H = 120;
 // Szenen, die jeder auslösen darf (Auswahl beim Antippen) – Prügeln läuft über das gekaufte Emote
-export const FREE_SCENES = ['laugh', 'schleim', 'baum'];
-export const SCENE_KINDS = ['punch', 'laugh', 'schleim', 'baum', 'cheer', 'pleite'];
-export const SCENE_LABEL = { laugh: '😂 Auslachen', schleim: '🍯 Schleimen', baum: '🌿 Baum-Runde' };
+export const FREE_SCENES = ['laugh', 'schleim', 'verschwoerung', 'torte', 'baum'];
+export const SCENE_KINDS = ['punch', 'laugh', 'schleim', 'verschwoerung', 'torte', 'baum', 'cheer', 'pleite'];
+export const SCENE_LABEL = { laugh: '😂 Auslachen', schleim: '🍯 Schleimen', verschwoerung: '🤫 Verschwörung', torte: '🥧 Torte ins Gesicht', baum: '🌿 Baum-Runde' };
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pick = (arr, seed, k = 0) => arr[Math.abs((seed | 0) + k * 7) % arr.length];
@@ -25,7 +25,7 @@ const free = (cls, pos, t0, d, inner = '', extra = {}) => {
   const a = [`data-tpos="${esc(pos)}"`];
   if (extra.path) a.push(`data-tpath="${esc(extra.path.join('>'))}" data-tt="${extra.tt.join(',')}"`);
   if (extra.dx || extra.dy) a.push(`data-tdx="${extra.dx || 0}" data-tdy="${extra.dy || 0}"`);
-  return `<div class="tprop ${cls}" ${a.join(' ')} style="--t0:${t0}ms;--d:${d}ms;${extra.style || ''}">${inner}</div>`;
+  return `<div class="tprop ${cls}" ${a.join(' ')} style="--t0:${t0}ms;--d:${d}ms;${extra.style || ''}">${inner ? `<span class="tin">${inner}</span>` : ''}</div>`;
 };
 const bubble = (pos, t0, d, text, cls = '') => free(`tbub ${cls}`, `head:${pos}`, t0, d, `<span>${esc(text)}</span>`);
 
@@ -61,6 +61,40 @@ export function sceneScript(s) {
         + [0, 1, 2, 3, 4, 5].map((k) => free('theart', `head:near:${to}`, 1150 + k * 380, 1300, '❤', { dx: (k % 3 - 1) * 16, style: `--hx:${(k % 2 ? 1 : -1) * (10 + k * 3)}px` })).join('')
         + free('tbill', `near:${to}`, 2600, 900, '<b>10</b>', { path: [`near:${to}`, `seat:${to}`], tt: [2650, 3200], dy: -40 })
         + bubble(`seat:${to}`, 3200, 1300, pick(['Hmm… danke?', 'Was willst du?', 'Aww 🥰', 'Schleimer!'], seed, 1), 'small'),
+    };
+  }
+  if (s.kind === 'verschwoerung') {
+    // Anstifter + Komplize treffen sich in der Mitte, tuscheln, zeigen auf das Opfer, tun unschuldig
+    const p2 = s.partner;
+    if (!p2 || !to) return null;
+    const A = 'midx:-38,0', B = 'midx:38,0';
+    return {
+      ms: 6400,
+      actors: [
+        { pid: from, track: [[0, 'seat', 'stand'], [120, 'seat', 'walk'], [1100, A, 'lean-r'], [3000, A, 'point'], [4300, A, 'whistle'], [5200, A, 'walk'], [6200, 'seat', 'stand']] },
+        { pid: p2, track: [[0, 'seat', 'stand'], [220, 'seat', 'walk'], [1150, B, 'lean-l'], [3000, B, 'point'], [4300, B, 'whistle'], [5250, B, 'walk'], [6280, 'seat', 'stand']] },
+      ],
+      props: bubble(A, 1200, 800, 'Psst…', 'small') + bubble(B, 1750, 800, 'Tuschel tuschel…', 'small') + bubble(A, 2300, 700, pick(['Der hat zu viel Geld.', 'Den nehmen wir uns vor.', 'Hast du den gesehen?'], seed), 'small')
+        + free('tfinger', `head:seat:${to}`, 3000, 1400, '👇')
+        + bubble(A, 3050, 1100, pick(['DER da!', 'Der war’s!', 'Genau der!'], seed, 1))
+        + free('tsweat', `head:seat:${to}`, 3300, 1500, '😰')
+        + bubble(`seat:${to}`, 3800, 1200, pick(['Was guckt ihr so?', 'Hä?!', 'Ich hab euch gehört!'], seed, 2), 'small')
+        + [0, 1, 2].map((k) => free('tnote', `head:${k % 2 ? B : A}`, 4350 + k * 260, 900, '♪', { dx: k % 2 ? 8 : -8, style: `--hx:${k % 2 ? 18 : -18}px` })).join('')
+        + bubble(B, 4400, 800, 'Wir? Nichts!', 'small'),
+    };
+  }
+  if (s.kind === 'torte') {
+    // mit Torte hinlaufen, ins Gesicht werfen, Sahne bleibt kurz kleben, vor Lachen kringeln, zurück
+    return {
+      ms: 4800,
+      actors: [{ pid: from, track: [[0, 'seat', 'stand'], [120, 'seat', 'walk'], [1000, `near:${to}`, 'windup'], [1250, `near:${to}`, 'laugh'], [2900, `near:${to}`, 'walk'], [3800, 'seat', 'stand']],
+        inner: tp('apie', 0, 1080, '<i></i>') }],
+      props: free('tpie', `hand:near:${to}`, 1050, 300, '<i></i>', { path: [`hand:near:${to}`, `face:seat:${to}`], tt: [1050, 1300] })
+        + free('tsplat', `face:seat:${to}`, 1280, 3300, '<i></i>')
+        + [0, 1, 2, 3, 4].map((k) => free('tdrop', `face:seat:${to}`, 1300 + k * 40, 700, '', { style: `--hx:${(k - 2) * 14}px` })).join('')
+        + bubble(`near:${to}`, 1400, 1200, pick(['Volltreffer!', 'Guten Appetit!', 'Lecker, oder?'], seed))
+        + bubble(`seat:${to}`, 2700, 1400, pick(['Bäh!', 'Mmh… Sahne.', 'Das gibt Rache!'], seed, 1), 'small'),
+      ouch: [[to, 1300, 2600]],
     };
   }
   if (s.kind === 'baum') {
@@ -113,7 +147,10 @@ export function sceneScript(s) {
 
 // Wann ist eine Figur nicht auf ihrem Platz? (Platz zeigt dann nichts – die Figur steht auf der Bühne)
 export function sceneHtml(s, sc, figOf, meId) {
-  return sc.actors.map((a) => `<div class="actor ${sc.cls || ''} ${a.pid === meId ? 'mine' : ''}" data-actor="${esc(a.pid)}" data-track="${esc(JSON.stringify(a.track))}" data-ms="${sc.ms}" aria-hidden="true">
+  // Bühne: Tisch wird kurz abgedunkelt, damit die Figuren gut zu sehen sind (nur bei Szenen mit Laufwegen)
+  const walks = sc.actors.some((a) => a.track.some((x) => x[1] !== 'seat'));
+  const dim = walks ? `<div class="tdim" style="--d:${sc.ms}ms" aria-hidden="true"></div>` : '';
+  return dim + sc.actors.map((a) => `<div class="actor ${sc.cls || ''} ${a.pid === meId ? 'mine' : ''}" data-actor="${esc(a.pid)}" data-track="${esc(JSON.stringify(a.track))}" data-ms="${sc.ms}" aria-hidden="true">
     <div class="abody">${figOf(a.pid)}${a.inner || ''}</div></div>`).join('') + sc.props;
 }
 
@@ -125,7 +162,11 @@ function poseFrames(pose, t0, t1) {
     case 'punch': step(85, 'translateX(-7px) rotate(-12deg)', 'translateX(7px) translateY(-6px) rotate(12deg)'); break;
     case 'laugh': step(105, 'rotate(-12deg) translateY(1px) scaleY(.96)', 'rotate(10deg) translateY(-4px) scaleY(1.03)'); break;
     case 'roll': step(140, 'translateY(-6px) rotate(84deg)', 'translateY(-10px) rotate(74deg)'); break; // vor Lachen am Boden
-    case 'point': f.push([t0, 'rotate(-6deg) translateY(-3px)'], [t1, 'none']); break;
+    case 'point': step(260, 'rotate(-6deg) translateY(-4px)', 'rotate(-2deg) translateY(0)'); break;
+    case 'lean-l': step(300, 'rotate(-11deg) translateX(-3px)', 'rotate(-8deg) translateX(-2px) translateY(-2px)'); break; // zum Nachbarn rüberbeugen (tuscheln)
+    case 'lean-r': step(300, 'rotate(11deg) translateX(3px)', 'rotate(8deg) translateX(2px) translateY(-2px)'); break;
+    case 'whistle': step(380, 'rotate(-4deg)', 'rotate(4deg) translateY(-2px)'); break; // unschuldig pfeifen
+    case 'windup': f.push([t0, 'rotate(-14deg) translateX(-4px)'], [t1, 'rotate(10deg) translateX(6px)']); break; // ausholen
     case 'hop': step(230, 'translateY(-16px) scaleY(1.05)', 'translateY(0) scaleY(.94)'); break;
     case 'pat': step(220, 'rotate(7deg) translateY(-4px)', 'rotate(2deg) translateY(0)'); break;
     case 'sit': f.push([t0, 'translateY(10px) scaleY(.84)'], [t1, 'translateY(12px) scaleY(.82)']); break;
@@ -159,6 +200,7 @@ function midCenter(root, S) {
 }
 export function placePoint(root, S, place, actorPid) {
   if (place.startsWith('head:')) { const p = placePoint(root, S, place.slice(5), actorPid); return { ...p, y: p.y - FIG_H * p.s - 6 }; }
+  if (place.startsWith('face:')) { const p = placePoint(root, S, place.slice(5), actorPid); return { ...p, y: p.y - FIG_H * p.s * 0.78 }; }
   if (place.startsWith('hand:')) { const p = placePoint(root, S, place.slice(5), actorPid); return { ...p, y: p.y - FIG_H * p.s * 0.42 }; }
   if (place === 'seat') return seatFeet(root, S, actorPid);
   if (place.startsWith('seat:')) return seatFeet(root, S, place.slice(5));
@@ -172,7 +214,7 @@ export function placePoint(root, S, place, actorPid) {
   }
   if (place.startsWith('mid:')) {
     const [k, n] = place.slice(4).split('/').map(Number); const c = midCenter(root, S);
-    const a = Math.PI + (k / n) * Math.PI * 2; const rx = n === 2 ? 64 : 112, ry = n === 2 ? 0 : 30;
+    const a = Math.PI + (k / n) * Math.PI * 2; const rx = n === 2 ? 70 : 150, ry = n === 2 ? 0 : 40;
     return { x: c.x + Math.cos(a) * rx, y: c.y - Math.sin(a) * ry, s: MID_SCALE };
   }
   if (place.startsWith('midx:')) { const [dx, dy] = place.slice(5).split(',').map(Number); const c = midCenter(root, S); return { x: c.x + dx, y: c.y + dy, s: MID_SCALE }; }
@@ -215,6 +257,15 @@ export function theaterFx(root) {
     const dx = Number(el.dataset.tdx) || 0, dy = Number(el.dataset.tdy) || 0;
     const p = placePoint(root, S, el.dataset.tpos, '');
     el.style.left = `${Math.round(p.x + dx)}px`; el.style.top = `${Math.round(p.y + dy)}px`;
+    // nie über den Rand hinaus (Sprechblasen über Plätzen ganz oben/links/rechts)
+    const tin = el.querySelector('.tin');
+    if (tin && !el.dataset.tpath) {
+      const r = tin.getBoundingClientRect(); const L = (r.left - S.sr.left) / S.sc, T = (r.top - S.sr.top) / S.sc, Rr = (r.right - S.sr.left) / S.sc;
+      let mx = 0, my = 0;
+      if (L < 4) mx = 4 - L; else if (Rr > S.W - 4) mx = S.W - 4 - Rr;
+      if (T < 14) my = 14 - T;
+      if (mx || my) { el.style.left = `${Math.round(p.x + dx + mx)}px`; el.style.top = `${Math.round(p.y + dy + my)}px`; }
+    }
     if (el.dataset.tpath && el.animate) {
       const path = el.dataset.tpath.split('>').map((pl) => placePoint(root, S, pl, ''));
       const tt = el.dataset.tt.split(',').map(Number);
