@@ -41,7 +41,7 @@ export const DIVIDENDE = 50;
 // v0.65 Handkarten (Börsen-Chaos): kommen beim Aufdecken auf die Hand (verdeckt), Aufdecker deckt nochmal auf
 //  • Zwangsversteigerung (Pfändung): statt eines Zuges ausspielen – ein Tier eines Mitspielers wird versteigert,
 //    der Besitzer MUSS verkaufen (kein Vorkaufsrecht), das Geld bekommt er. Bietet niemand, behält er das Tier.
-//    Geschützt: fertige Quartette, Ratten, Spieler ohne Geld – und jeder kann nur EINMAL pro Partie gepfändet werden.
+//    Geschützt: fertige Quartette, Ratten, Spieler ohne Geld. Wer schon gepfändet wurde, kann nochmal gepfändet werden (Alp, 19.11.).
 //  • Einspruch: wehrt eine Pfändung gegen dich automatisch ab (beide Karten sind dann weg).
 export const HAND_KINDS = ['pfaendung', 'einspruch'];
 export const PFAEND_SHOW_MS = 3200; // Auftritt des Gerichtsvollziehers, erst danach wird geboten
@@ -52,7 +52,6 @@ export function canPfaend(state, pid, targetId, animal) {
   if (state.phase !== 'turn' || state.mustDraw || currentPlayer(state).id !== pid) return false;
   if (!((state.hands && state.hands[pid]) || []).includes('pfaendung')) return false;
   if (targetId === pid) return false;
-  if ((state.pfaendDone || []).includes(targetId)) return false; // schon einmal gepfändet (Pfand-Siegel)
   const t = state.players.find((p) => p.id === targetId);
   if (!t || animal === RAT || !ANIMAL_BY_ID[animal]) return false;
   const n = t.animals[animal] || 0;
@@ -550,7 +549,6 @@ export function playPfaendung(prev, playerId, targetId, animal, now) {
     return state;
   }
   t.animals[animal] -= 1;
-  state.pfaendDone = [...(state.pfaendDone || []), targetId];
   stat(state, targetId).gepfaendet = (stat(state, targetId).gepfaendet || 0) + 1;
   state.lastEvent = { n: state.log.length, type: 'pfaendung', by: playerId, target: targetId, animal };
   log(state, `Zwangsversteigerung! ${me.name} lässt ${t.name}s ${animalName(animal)} versteigern.`);

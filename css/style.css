@@ -3412,8 +3412,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .tbang .tin { font: 900 16px var(--font-head); color: #FFD34E; text-shadow: 0 2px 0 #7a4a00, 0 0 6px rgba(0,0,0,.5); rotate: -10deg; }
 .tshield .tin { font-size: 34px; animation: tsplat .3s cubic-bezier(.2,1.6,.4,1) var(--t0) both; }
 .tprop.tseal { scale: 1; } .tprop.tshield { scale: 1; }
-/* Pfand-Siegel am Platz (schon gepfändet → geschützt) + Siegel auf der Karte in der Mitte + Hinweis */
-.pfdone { position: absolute; left: -6px; top: -8px; z-index: 6; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #E5484D; color: #fff; font-size: 11px; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+/* Siegel auf der Karte in der Mitte + Hinweis zur Handkarte */
 .aucseal { position: absolute; right: -10px; top: 28%; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 50%; background: radial-gradient(circle, #E5484D 0 58%, #B3262B 60%); border: 3px dashed #FFE1E1; color: #fff; box-shadow: 0 3px 6px rgba(0,0,0,.4); rotate: -14deg; animation: sealhit .35s cubic-bezier(.2,1.6,.4,1) both; pointer-events: none; }
 .aucseal b { font-size: 20px; line-height: 1; } .aucseal small { font: 900 7px var(--font-head); letter-spacing: .5px; }
 @keyframes sealhit { 0% { scale: 2.4; opacity: 0; } 100% { scale: 1; opacity: 1; } }

@@ -854,10 +854,9 @@ test('v0.65 Zwangsversteigerung: auf die Hand + nochmal aufdecken; ausspielen st
   assert.ok(total(g.players[1].money) >= bBefore + 100);
   assert.equal(g.players[0].animals.kuh, 1); assert.equal(g.lastEvent.forced, true);
   assert.equal(currentPlayer(g).id, 'b'); // Pfändung war der Zug von a
-  // jeder nur einmal pro Partie: b ist geschützt, auch wenn a nochmal eine Karte hat
+  // wer schon gepfändet wurde, kann nochmal gepfändet werden
   g.turn = 0; g.phase = 'turn'; g.hands.a = ['pfaendung']; g.players[1].animals.schaf = 2;
-  assert.equal(canPfaend(g, 'a', 'b', 'schaf'), false);
-  assert.ok(canPfaend(g, 'a', 'c', 'kuh') || g.players[2].animals.kuh === 0);
+  assert.equal(canPfaend(g, 'a', 'b', 'schaf'), true);
 });
 
 test('v0.65 Einspruch wehrt Pfändung ab; ohne Gebot behält der Besitzer sein Tier', async () => {
