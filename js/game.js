@@ -798,7 +798,7 @@ export function renderGame(root, ctx) {
     aucBanner = urge ? 'Alle warten auf dich!' : a.forced ? `⚖️ Zwangsversteigerung · ${iAmAuctioneer ? 'dein Tier' : `${esc(nameOf(a.auctioneer))}s Tier`}` : `${esc(nameOf(a.auctioneer))} ${iAmAuctioneer ? 'versteigerst' : 'versteigert'}`;
     // Nach Ablauf entscheidet der Auktionator: „Zuschlag“ sitzt beim Gebot des Höchstbietenden, „Selbst kaufen“ unten links – weit auseinander
     const decideHere = iAmAuctioneer && !revealing && !running && a.high;
-    const sellBtn = decideHere ? `<button type="button" class="tbtn accept sidebtn ${urge ? 'urge' : ''}" data-a="sell"><small>ZUSCHLAG AN</small>${esc(nameOf(a.high.player))} · ${high}</button>` : '';
+    const sellBtn = decideHere ? `<button type="button" class="tbtn accept sidebtn ${urge ? 'urge' : 'hintme'}" data-a="sell"><small>ZUSCHLAG AN ${esc(nameOf(a.high.player)).toUpperCase()}</small><span class="amt in">+${high}</span><em>bekommst du</em></button>` : '';
     aucCenter = revealing ? `<div class="auc aucreveal">${card}</div>` : `<div class="auc aucmain"><div class="aucrow"><div class="aside l">${ainfo}</div>${card}<div class="aside r">${info}${sellBtn}</div></div>${countdown}</div>`;
 
     if (iAmAuctioneer) {
@@ -809,7 +809,7 @@ export function renderGame(root, ctx) {
         aucLeft = ''; // „Du versteigerst“ steht schon oben im Schild
       } else if (a.high) {
         aucLeft = a.forced ? `<div class="ldecide">⚖️ Gepfändet – du musst verkaufen</div>` // Zwangsversteigerung: kein Vorkaufsrecht
-          : `<button type="button" class="pill pill-white ${urge ? 'urge' : ''}" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>${myTotal >= high ? 'SELBST KAUFEN' : 'ZU WENIG GELD'}</small>${high}</button>`;
+          : `<button type="button" class="pill pill-white ${urge ? 'urge' : ''}" data-a="buy" ${myTotal >= high ? '' : 'disabled'}><small>${myTotal >= high ? 'SELBST KAUFEN' : 'ZU WENIG GELD'}</small><span class="amt out">−${high}</span></button>`;
       } else {
         aucLeft = `<button type="button" class="pill pill-red" data-a="sell"><small>NIEMAND HAT GEBOTEN</small>${a.forced ? 'Tier behalten' : 'Tier nehmen'}</button>`;
       }
@@ -848,7 +848,7 @@ export function renderGame(root, ctx) {
     aucCenter = `<div class="auc aucmain"><div class="aucrow">
       <div class="aside l"><div class="ratnow ${turnId === meId ? 'me' : ''}">${turnId === meId ? 'Du bist dran' : `${esc(nameOf(turnId))} ist dran`}</div></div>
       <div class="bigcard compact ${entered ? 'deal' : ''}">${playCard(RAT, 'rat')}</div>
-      <div class="aside r"><div class="potbox">${pot}<small>Gelegt: <b>${karten(potCount)}</b></small></div>${turnId === meId ? `<button type="button" class="tbtn counter sidebtn" data-a="ratTake"><small>RATTE NEHMEN</small>+ ${karten(potCount)}</button>` : ''}</div>
+      <div class="aside r"><div class="potbox">${pot}<small>Gelegt: <b>${karten(potCount)}</b></small></div>${turnId === meId ? `<button type="button" class="tbtn counter sidebtn" data-a="ratTake"><small>RATTE NEHMEN</small><span class="amt in">+${karten(potCount)}</span></button>` : ''}</div>
     </div></div>`;
     if (turnId === meId) {
       const values = [...new Set(me.money)].sort((a, b) => a - b);
@@ -907,7 +907,7 @@ export function renderGame(root, ctx) {
       info = '<div class="aucinfo">Niemand hat gebuzzert</div>';
     }
     // Aufdecker entscheidet: „Verkaufen“ sitzt neben der Karte (beim Buzzer-Gewinner), „Selbst kaufen“ unten links
-    if (!big && stage !== 'wait' && stage !== 'countdown' && stage !== 'rps' && iRevealed && res) big = `<button type="button" class="tbtn accept sidebtn" data-a="spSell"><small>VERKAUFEN</small>${esc(nameOf(res.player))} zahlt dir ${karten(res.count)}</button>`;
+    if (!big && stage !== 'wait' && stage !== 'countdown' && stage !== 'rps' && iRevealed && res) big = `<button type="button" class="tbtn accept sidebtn" data-a="spSell"><small>VERKAUFEN · ${esc(nameOf(res.player)).toUpperCase()} ZAHLT</small><span class="amt in">+${karten(res.count)}</span></button>`;
     aucBanner = `${esc(nameOf(sp.revealer))} ${iRevealed ? 'hast' : 'hat'} eine Spezialkarte`;
     aucCenter = `<div class="auc aucmain"><div class="aucrow">
       <div class="aside l">${(() => { const hs = v.players.map((p, i) => [p, i]).filter(([p]) => p.animals[sp.animal] > 0); return `<div class="owners">${hs.length ? `<small>${esc(aname(sp.animal))} haben</small><div class="olist">${hs.map(([p, i]) => `<span class="own ${p.id === meId ? 'me' : ''}">${avatar(p, i)}<b>${p.id === meId ? 'Du' : esc(p.name)} ×${p.animals[sp.animal]}</b></span>`).join('')}</div>` : `<span class="onew">Noch keiner hat ${esc(aname(sp.animal))}</span>`}</div>`; })()}</div>
@@ -958,7 +958,7 @@ export function renderGame(root, ctx) {
         aucLeft = `<button type="button" class="pill pill-red" data-a="spSell"><small>NIEMAND HAT GEBUZZERT</small>Karte nehmen</button>`;
       } else {
         const canBuy = me.money.length >= res.count;
-        aucLeft = `<button type="button" class="pill pill-white" data-a="spBuy" ${canBuy ? '' : 'disabled'}><small>${canBuy ? 'SELBST KAUFEN' : 'ZU WENIG KARTEN'}</small>Du zahlst ${res.count}</button>`;
+        aucLeft = `<button type="button" class="pill pill-white" data-a="spBuy" ${canBuy ? '' : 'disabled'}><small>${canBuy ? 'SELBST KAUFEN' : 'ZU WENIG KARTEN'}</small><span class="amt out">−${karten(res.count)}</span></button>`;
       }
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(sp.revealer))} entscheidet …</div>`;
@@ -1015,7 +1015,7 @@ export function renderGame(root, ctx) {
         </div>`);
       aucLeft = `<div class="lhead">${isSp ? `${esc(aname(pm.special))}-Spezialkarte` : `Für: ${esc(aname(pm.animal))}`}</div>
         ${local.autoSel && local.autoSel === local.sel.join() ? '' : `<button type="button" class="pill pill-white pill-small" data-a="${isSp ? 'autocount' : 'autopay'}">${isSp ? 'Kleinste wählen' : 'Passend wählen'}</button>`}
-        <button type="button" class="pill pill-red" data-a="pay" ${ready ? '' : 'disabled'}><small>BEZAHLEN</small>${isSp ? karten(n) : `${karten(n)} · ${selSum}`}</button>`;
+        <button type="button" class="pill pill-red ${ready ? 'hintme' : ''}" data-a="pay" ${ready ? '' : 'disabled'}><small>BEZAHLEN</small>${isSp ? `<span class="amt out">−${karten(n)}</span>` : `${karten(n)} · <span class="amt out">−${selSum}</span>`}</button>`;
       pickMode = 'sel';
       H.pay = () => ctx.act((s) => pay(s, meId, local.sel));
       H.autopay = () => { local.sel = bestPay(me.money, pm.amount); ctx.rerender(); };
@@ -1315,7 +1315,7 @@ export function renderGame(root, ctx) {
   // Nicht dran: unten links bleibt frei (wer dran ist, steht oben im Schild und an der Sanduhr)
   if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
     leftActionsHtml = `
-      <button type="button" class="pill pill-red ${calmLeft ? 'calm' : ''}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>KARTE<br>AUFDECKEN</button>
+      <button type="button" class="pill pill-red ${calmLeft ? 'calm' : 'hintme'}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>KARTE<br>AUFDECKEN</button>
       <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>${pfaendBtn}`;
   }
   const askMe = local.urgeNow || (state.phase === 'turn' && myTurn && !local.tradeOpen) || (state.phase === 'payment' && v.payment.payer === meId)
@@ -2204,6 +2204,10 @@ export function renderGame(root, ctx) {
   aimFx(root);
   routeFx(root);
   theaterFx(root);
+  // v0.66 Knöpfe: der eine „erwartete“ Knopf leuchtet nach 3 s sanft (Zeit läuft ab Phasenwechsel, nicht ab jedem Neuzeichnen)
+  { const hk = `${state.phase}|${state.log.length}|${state.turn}`;
+    if (local.hintKey !== hk) { local.hintKey = hk; local.hintAt = Date.now(); }
+    root.querySelectorAll('.hintme').forEach((b) => b.style.setProperty('--hd', `${3000 - (Date.now() - local.hintAt)}ms`)); }
   mouthBubbles(root);
   seekFx(root);
   syncLoops();
