@@ -3306,7 +3306,9 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .actor .abody > .afull, .actor .abody > .agen { position: absolute; inset: 0; width: 72px; height: 120px; }
 .actor .afull .shop-avatar-full { width: 72px; height: 120px; filter: drop-shadow(0 4px 5px rgba(0,0,0,.4)); }
 /* Bodenschatten unter jeder Figur auf der Bühne */
-.actor::before { content: ''; position: absolute; left: 12px; right: 12px; bottom: -5px; height: 10px; border-radius: 50%; background: rgba(0,0,0,.28); filter: blur(1px); }
+.actor::before { content: ''; position: absolute; left: 10px; right: 10px; bottom: -6px; height: 12px; border-radius: 50%; background: rgba(0,0,0,.4); filter: blur(1.5px); }
+.actor .abody { filter: drop-shadow(0 0 2px rgba(255,255,255,.55)) drop-shadow(0 6px 6px rgba(0,0,0,.45)); } /* v0.67: statt Abdunkeln – Figuren heben sich durch Lichtkante + Schatten ab */
+.reactpick .rp-shop { font-size: 12px; color: #555; }
 /* Jubel / Pleite (gleiche Requisiten wie früher, jetzt an der ganzen Figur) */
 .actor .ameins { position: absolute; left: 50%; top: -26px; transform: translateX(-50%); padding: 2px 9px; border-radius: 999px; background: #fff; color: #1a1a1a; font: 800 13px var(--font-head); white-space: nowrap; box-shadow: 0 2px 0 rgba(0,0,0,.25); animation: ppop .4s cubic-bezier(.2,.9,.3,1.5) both; }
 .actor .aconf { position: absolute; left: 34px; top: 10px; width: 7px; height: 11px; border-radius: 2px; opacity: 0; animation: aconf 1.4s ease-out both; }
@@ -3376,7 +3378,6 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .tsweat { font-size: 20px; animation-name: tpshow, tpulse; animation-duration: var(--d), .4s; animation-delay: var(--t0), var(--t0); animation-iteration-count: 1, 6; animation-direction: normal, alternate; animation-fill-mode: both, both; }
 .tnote { font: 900 20px var(--font-head); color: #9fe0ff; text-shadow: 0 2px 0 #1b4a66; animation-name: tpshow, thaup; animation-duration: var(--d), var(--d); animation-delay: var(--t0), var(--t0); animation-fill-mode: both, both; }
 /* v0.64 Bühne: Tisch kurz abdunkeln, Requisiten etwas größer */
-.tdim { position: absolute; inset: 0; z-index: 39; pointer-events: none; background: rgba(10,16,40,.5); opacity: 0; animation: tdim var(--d) linear both; }
 @keyframes tdim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
 .tprop { scale: 1.35; }
 .tprop.tbub { scale: 1; }

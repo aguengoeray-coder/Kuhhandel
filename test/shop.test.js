@@ -65,7 +65,7 @@ test('Shop-SQL beschränkt Schreib-RPCs auf angemeldete Nutzer', () => {
 });
 
 test('Datenbank-Preisliste kennt jeden Shop-Artikel mit demselben Preis wie die App', () => {
-  const sql = readFileSync(new URL('../supabase/v0.48-shop.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.58-neue-charaktere.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.61-emote-pruegel.sql', import.meta.url), 'utf8');
+  const sql = readFileSync(new URL('../supabase/v0.48-shop.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.58-neue-charaktere.sql', import.meta.url), 'utf8') + readFileSync(new URL('../supabase/v0.67-emotes.sql', import.meta.url), 'utf8');
   for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), `${item.id} fehlt oder falscher Preis in der SQL`);
   for (const item of SHOP_AVATARS) assert.ok(sql.includes(`'${item.id}'`), `${item.id} fehlt in shop_set_avatar`);
 });
@@ -116,8 +116,8 @@ test('v0.58: zwei Gratis-Sprüche – nur Sprüche, höchstens 2, App und SQL pa
 });
 
 test('v0.61: Emote „Verprügeln“ – im Shop, SQL-Preis aktuell, App erlaubt es Käufern und Admins', () => {
-  assert.deepEqual(SHOP_EMOTES.map(({ id, price }) => [id, price]), [['emote-pruegel', 100]]);
-  const sql = readFileSync(new URL('../supabase/v0.61-emote-pruegel.sql', import.meta.url), 'utf8');
+  assert.deepEqual(SHOP_EMOTES.map(({ id, price }) => [id, price]).slice(0, 1), [['emote-pruegel', 100]]);
+  const sql = readFileSync(new URL('../supabase/v0.67-emotes.sql', import.meta.url), 'utf8');
   // die neue shop_buy kennt weiterhin alle Avatare und Sprüche (sie ersetzt die Funktion komplett)
   for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), item.id);
   const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
@@ -127,11 +127,23 @@ test('v0.61: Emote „Verprügeln“ – im Shop, SQL-Preis aktuell, App erlaubt
 test('v0.63: Eigener Spruch – Preis in shop_buy, nur mit Kauf speicherbar, max. 40 Zeichen, Mitspieler sehen nur den hinterlegten Text', () => {
   assert.deepEqual([SHOP_CUSTOM.id, SHOP_CUSTOM.price, SHOP_CUSTOM.max], ['spruch-eigener', 50, 40]);
   const sql = readFileSync(new URL('../supabase/v0.63-eigener-spruch.sql', import.meta.url), 'utf8');
-  for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES, SHOP_CUSTOM]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), item.id);
+  for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES.filter((x) => !x.scene), SHOP_CUSTOM]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), item.id); // Stand v0.63 (Theater-Emotes kamen mit v0.67)
   assert.match(sql, /item_id = 'spruch-eigener'/);
   assert.match(sql, /char_length\(v\) > 40/);
   assert.match(sql, /revoke all on public\.shop_custom_sayings from public, anon, authenticated/);
   const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
   assert.match(app, /sb\.rpc\('shop_set_custom_saying'/);
   assert.match(app, /customSayings\.get\(userOfSeat\(payload\.seat\)\) === payload\.text/);
+});
+
+test('v0.67: Figuren-Theater-Emotes im Shop – teurer als Sprüche, SQL kennt sie, App schaltet nur Käufer/Admins frei', () => {
+  const theater = SHOP_EMOTES.filter((x) => x.scene);
+  assert.deepEqual(theater.map((x) => x.scene).sort(), ['baum', 'laugh', 'schleim', 'torte', 'verschwoerung']);
+  const maxSaying = Math.max(...SHOP_SAYINGS.map((x) => x.price));
+  for (const e of theater) assert.ok(e.price > maxSaying, `${e.id} muss teurer sein als Sprüche`);
+  const sql = readFileSync(new URL('../supabase/v0.67-emotes.sql', import.meta.url), 'utf8');
+  for (const item of [...SHOP_AVATARS, ...SHOP_SAYINGS, ...SHOP_EMOTES, SHOP_CUSTOM]) assert.ok(sql.includes(`when '${item.id}' then ${item.price}`), item.id);
+  const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  assert.match(app, /function canScene\(kind\) \{ return !!ui\.isAdmin \|\| shopMe\.owned\.has\(SCENE_ITEM\[kind\]\); \}/);
+  assert.match(app, /if \(!SCENE_OK\.includes\(kind\) \|\| !canScene\(kind\)\) return;/);
 });

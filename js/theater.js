@@ -169,9 +169,7 @@ export function sceneScript(s) {
 // Wann ist eine Figur nicht auf ihrem Platz? (Platz zeigt dann nichts – die Figur steht auf der Bühne)
 export function sceneHtml(s, sc, figOf, meId) {
   // Bühne: Tisch wird kurz abgedunkelt, damit die Figuren gut zu sehen sind (nur bei Szenen mit Laufwegen)
-  const walks = sc.actors.some((a) => a.track.some((x) => x[1] !== 'seat'));
-  const dim = walks ? `<div class="tdim" style="--d:${sc.ms}ms" aria-hidden="true"></div>` : '';
-  return dim + sc.actors.map((a) => `<div class="actor ${sc.cls || ''} ${a.pid === meId ? 'mine' : ''}" data-actor="${esc(a.pid)}" data-track="${esc(JSON.stringify(a.track))}" data-ms="${sc.ms}" aria-hidden="true">
+  return sc.actors.map((a) => `<div class="actor ${sc.cls || ''} ${a.pid === meId ? 'mine' : ''}" data-actor="${esc(a.pid)}" data-track="${esc(JSON.stringify(a.track))}" data-ms="${sc.ms}" aria-hidden="true">
     <div class="abody">${figOf(a.pid)}${a.inner || ''}</div></div>`).join('') + sc.props;
 }
 

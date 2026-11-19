@@ -2152,9 +2152,9 @@ export function renderGame(root, ctx) {
     return `<div class="reactpick v2 ${self ? 'self' : ''}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
       ${self && ctx.canPunch ? `<div class="rp-lbl rp-admin">${esc(ctx.punchLabel || '🥊 Verprügeln')}</div><div class="rp-punch">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" class="rp-pu" data-a="punch" data-v="${esc(p.id)}" aria-label="${esc(p.name)} verprügeln">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div>` : ''}
-      ${ctx.scene ? (self
-        ? `<div class="rp-lbl">Für alle</div><div class="rp-acts"><button type="button" class="rp-act" data-a="scene" data-v="baum|">${esc(SCENE_LABEL.baum)}</button></div>`
-        : `<div class="rp-lbl">Aktion mit ${esc(nameOf(to))}</div><div class="rp-acts">${FREE_SCENES.filter((k) => k !== 'baum' && (k !== 'verschwoerung' || v.players.length >= 3)).map((k) => `<button type="button" class="rp-act" data-a="scene" data-v="${k}|${esc(to)}">${esc(k === 'verschwoerung' ? '🤫 Verschwörung gegen ihn' : SCENE_LABEL[k])}</button>`).join('')}${ctx.canPunch ? `<button type="button" class="rp-act pu" data-a="punch" data-v="${esc(to)}">🥊 Verprügeln</button>` : ''}</div>`) : ''}
+      ${ctx.scene ? ((ok) => self
+        ? (ok.includes('baum') ? `<div class="rp-lbl">Für alle</div><div class="rp-acts"><button type="button" class="rp-act" data-a="scene" data-v="baum|">${esc(SCENE_LABEL.baum)}</button></div>` : '')
+        : `<div class="rp-lbl">Aktion mit ${esc(nameOf(to))}</div><div class="rp-acts">${FREE_SCENES.filter((k) => ok.includes(k) && k !== 'baum' && (k !== 'verschwoerung' || v.players.length >= 3)).map((k) => `<button type="button" class="rp-act" data-a="scene" data-v="${k}|${esc(to)}">${esc(k === 'verschwoerung' ? '🤫 Verschwörung gegen ihn' : SCENE_LABEL[k])}</button>`).join('')}${ctx.canPunch ? `<button type="button" class="rp-act pu" data-a="punch" data-v="${esc(to)}">🥊 Verprügeln</button>` : ''}${ok.filter((k) => k !== 'baum').length || ctx.canPunch ? '' : '<span class="rp-shop">Aktionen wie Auslachen, Torte oder Verschwörung gibt’s im Shop unter „Emotes“.</span>'}</div>`)(ctx.sceneOk || []) : ''}
       ${last}
       ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
       ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}
