@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.70.0 – Alles läuft dorthin, wo es liegt
+
+- [x] **Tiere laufen zu dir:** Wer ein Tier bekommt (Versteigerung, Spezialkarte, Ratte, Kuhhandel), zu dem läuft das ganze Tier aus der Tischmitte bis auf seinen Stapel und wird dort zur Karte. Die runde Tierkarte, die vorher zusätzlich flog, ist weg.
+- [x] **Kuhhandel in zwei Schritten:** Nach dem VS laufen die Einsätze beider Spieler von ihren Stapeln in die Mitte – der Topf füllt sich, wenn sie ankommen. Nach dem Ergebnis laufen alle Tiere (mit Koffer) aus der Mitte zum Gewinner.
+- [x] **Nie mehr zum Avatar:** Geld fliegt immer vom Geld des Zahlers zum Geld des Empfängers (bei dir: dein Fächer, bei Mitspielern: ihre Kartenanzahl), Tiere zu den Tierstapeln. Auch der gezogene Geldschein, der Rattentopf, das Kuhhandel-Angebot und die Rattenrunde. Der Esel-Bonus trifft weiter am Kopf – danach landet der Schein im Geld.
+- [x] **Getaktet:** Erst das Tier, dann das Geld, dann wandert der Zug weiter – der Ablauf rechnet mit der neuen Laufzeit.
+
 ## v0.69.0 – Börsen-Hype
 
 - [x] **Neue Börsen-News 🚀 „Hype!“:** Der Wert eines Tiers verdoppelt sich (×2). Das Tier wird beim Mischen ausgelost.

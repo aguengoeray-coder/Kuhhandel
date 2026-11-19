@@ -3539,3 +3539,19 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .decknews b { font: 900 11px/1 var(--font-head); letter-spacing: .08em; color: #F2C230; }
 .gtable .tcenter .deck .decknews svg { width: 50px; height: 30px; }
 .gtable .tcenter .deck .decknews b { font-size: 13px; }
+
+/* ===== v0.70 Choreografie (Alp): Tiere laufen bis auf ihren Stapel und werden dort zur Karte ===== */
+.tripwalk.home { z-index: 36; animation: walkin .15s linear var(--start) 1 both; } /* erst sichtbar, wenn es losläuft */
+@keyframes walkin { from { opacity: 0; } to { opacity: 1; } }
+.tripwalk.home .bcard { position: absolute; left: 50%; top: 50%; width: 30px; translate: -50% -50%; opacity: 0; scale: .4;
+  animation: bcardin .55s cubic-bezier(.3, 1.5, .5, 1) var(--land) 1 both; pointer-events: none; }
+.tripwalk.home .bcard > * { width: 100%; }
+.tripwalk.home.tocard > .beast { animation: bwob .28s ease-in-out infinite alternate, beastout .3s ease-in var(--land) 1 forwards; }
+.tripwalk.home.topot > .beast { animation: bwob .28s ease-in-out infinite alternate, beastpot .35s ease-in var(--land) 1 forwards; }
+@keyframes bcardin { 0% { opacity: 0; scale: .4; } 35% { opacity: 1; scale: 1.25; } 70% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: .9; } }
+@keyframes beastout { to { opacity: 0; scale: .3; } }
+@keyframes beastpot { to { opacity: 0; scale: .5; translate: 0 6px; } }
+.beast .bstar { position: absolute; right: 2px; top: -8px; width: 18px; height: 18px; z-index: 3; }
+.beast .bstar svg { width: 100%; height: 100%; }
+.tpot.pwait .tpc { animation: tpcin .4s cubic-bezier(.3, 1.4, .5, 1) var(--pw) 1 both; }
+@keyframes tpcin { from { opacity: 0; scale: .5; } to { opacity: 1; scale: 1; } }

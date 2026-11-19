@@ -221,7 +221,10 @@ export const evWait = (type, deckLeft) => (type === 'trade' && deckLeft === 0 ? 
 // Ablauf nach einem Ergebnis – EIN Plan, aus den echten Flügen berechnet (nicht geschätzt):
 //   Fenster steht (W) → Tier fliegt → Geld fliegt (Kuhhandel: erst Angebot hin, wenn gelandet Gegenangebot zurück)
 //   → kurze Ruhe → gelber „dran“-Rahmen wandert → erst dann darf aufgedeckt werden.
-const FLY_MS = 1200; // Tierkarte (.fly)
+const WALK_MS = 1500; // v0.70: ganzes Tier läuft aus der Mitte zum Stapel des Empfängers …
+const CARD_MS = 350;  // … und wird dort zur Karte
+const POT_WALK_MS = 1300; // Kuhhandel-Start: Tiere laufen in die Mitte
+const FLY_MS = WALK_MS + CARD_MS; // Tier ist angekommen (danach fliegt Geld)
 const MFLY_MS = 1000; // ein Geldschein (.mfly)
 const MSTEP = 70; // Abstand zwischen zwei Scheinen
 const HALO_PAUSE = 700; // Ruhe nach dem letzten Schein
@@ -334,6 +337,32 @@ function seatPoint(root, pid, sr, sc) {
     const cx = sr.width / sc / 2, cy = sr.height / sc / 2;
     const dx = cx - a.x, dy = cy - a.y, d = Math.hypot(dx, dy) || 1;
     return { x: a.x + (dx / d) * 64, y: a.y + (dy / d) * 64 + 26 };
+  }
+  // v0.70 (Alp): Geld und Tiere gehen nie zum Avatar, sondern dorthin, wo sie liegen.
+  // „@cash:<pid>“ = Geld (du: dein Fächer · Mitspieler: seine Kartenanzahl) · „@stall:<pid>:<tier>“ = Tierstapel
+  // (du: dein Stapel in der Auslage · Mitspieler: sein Tier-Chip) · „@tpot“ = Topf in der Kuhhandel-Mitte
+  if (typeof pid === 'string' && pid.startsWith('@cash:')) {
+    const who = pid.slice(6);
+    if (who === meNow || who === '@me') return seatPoint(root, '@myfan', sr, sc);
+    const el = root.querySelector(`.prow[data-pid="${CSS.escape(who)}"] .mcnt`) || root.querySelector(`.prow[data-pid="${CSS.escape(who)}"] .tag-s`);
+    if (el) { const r = el.getBoundingClientRect(); if (r.width) return { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height / 2 - sr.top) / sc }; }
+    return seatPoint(root, who, sr, sc);
+  }
+  if (typeof pid === 'string' && pid.startsWith('@stall:')) {
+    const [, who, an] = pid.split(':');
+    const rc = (el) => { const r = el && el.getBoundingClientRect(); return r && r.width ? { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height / 2 - sr.top) / sc } : null; };
+    if (who === meNow || who === '@me') {
+      const p = rc(root.querySelector(`.auslage [data-animal="${an}"] .spile, .auslage [data-animal="${an}"] .scard, .auslage [data-animal="${an}"] .acard, .auslage [data-animal="${an}"]`)) || rc(root.querySelector('.auslage'));
+      if (p) return p;
+      return seatPoint(root, '@myfan', sr, sc);
+    }
+    const row = `.prow[data-pid="${CSS.escape(who)}"]`;
+    return rc(root.querySelector(`${row} .chips [data-animal="${an}"]`)) || rc(root.querySelector(`${row} .chips .chip:last-child`)) || rc(root.querySelector(`${row} .chips`)) || seatPoint(root, who, sr, sc);
+  }
+  if (pid === '@tpot') {
+    const el = root.querySelector('.tmid .tpot') || root.querySelector('.tmid');
+    if (el) { const r = el.getBoundingClientRect(); if (r.width) return { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height / 2 - sr.top) / sc }; }
+    return seatPoint(root, '@card', sr, sc);
   }
   // „@offer“: das verdeckte Angebot in der Mitte (Kuhhandel/Rattenhandel)
   if (pid === '@pot' || pid === '@offer') {
@@ -605,6 +634,9 @@ export function renderGame(root, ctx) {
   // Tier-Figur (Kopf = Kartenbild) für Ratte, Polonaise, Kuhhandel-Koffer
   // v0.68: ganzes Tier (Körper + Kartenkopf) statt Kopf im Kreis
   const beast = (id, cls = '', inner = '') => `<div class="beast whole ${cls}" style="--a:${ANIMAL_COLORS[id] || '#888'}">${animalBody(id)}${inner}</div>`;
+  // v0.70: Tier läuft von → nach (Stationen siehe seatPoint) und wird am Ziel zur Karte (toCard) oder verschwindet im Topf
+  const homeWalk = (an, from, to, delay, { count = 0, star = false, koffer = false, ms = WALK_MS, toCard = true } = {}) =>
+    `<div class="tripwalk home ${toCard ? 'tocard' : 'topot'}" data-route="${esc(from)};${esc(to)}" data-dur="${ms}" data-delay="${delay}" style="--start:${delay}ms;--land:${delay + ms}ms">${beast(an, 'walk', `${koffer ? '<i class="bkoffer"></i>' : ''}${count > 1 ? `<b class="bcount">${count}×</b>` : ''}${star ? `<i class="bstar">${STAR}</i>` : ''}`)}${toCard ? `<span class="bcard">${miniCard(an)}</span>` : ''}</div>`;
   // v0.61 Prügel-Animation (Comic, keine echte Gewalt): Laufen → Staubwolke mit POW/BAM → zurück
   const punchFx = (pu) => {
     const src = esc(pu.from); const dst = esc(pu.to); // '@me' wird erst in seatPoint aufgelöst
@@ -1095,7 +1127,8 @@ export function renderGame(root, ctx) {
   const tmid = (animal, count, extra = '') => {
     if (!animal) return `<div class="tmid"><div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span><span class="tvs">VS</span>${extra}</div>`;
     const n = count * 2; const isRat = animal === RAT;
-    return `<div class="tmid tmpot"><div class="tpot" style="--pn:${n};--sp:${Math.min(22, Math.round(54 / Math.max(1, n - 1)))}px">${Array.from({ length: n }, (_, k) => `<span class="tpc" style="--k:${k}">${miniCard(animal, 'fill')}</span>`).join('')}</div>
+    const pw = local.potLand ? local.potLand - Date.now() : 0; // v0.70: Topf füllt sich erst, wenn die Tiere angekommen sind
+    return `<div class="tmid tmpot"><div class="tpot ${pw > 0 ? 'pwait' : ''}" style="--pw:${Math.max(0, pw)}ms;--pn:${n};--sp:${Math.min(22, Math.round(54 / Math.max(1, n - 1)))}px">${Array.from({ length: n }, (_, k) => `<span class="tpc" style="--k:${k}">${miniCard(animal, 'fill')}</span>`).join('')}</div>
       <span class="tmidcnt">${count} gegen ${count}</span><small class="tpotl">${isRat ? `Verlierer bekommt alle ${n}` : `Gewinner bekommt alle ${n}`}</small><span class="tvs">VS</span>${extra}</div>`;
   };
   // (alt) Mitte zwischen den beiden Seiten: das umkämpfte Tier groß, darunter „um 2“
@@ -1595,16 +1628,17 @@ export function renderGame(root, ctx) {
   local.prevQuartets = quartets;
   // Zuschlag: Hammer-Ton, „Verkauft!“-Stempel liegt auf der Karte beim Bezahlen
   if (entered && state.phase === 'payment' && (prev.phase === 'auction' || prev.phase === 'special')) sounds.push('gavel');
+  // v0.70 (Alp): Wer ein Tier bekommt, zu dem LÄUFT das ganze Tier aus der Mitte – bis auf seinen Stapel – und wird dort zur Karte.
+  // Kuhhandel: beide Einsätze laufen gemeinsam aus der Mitte zum Gewinner. Startet, wenn das Ergebnis-Fenster zugeht (evDelay).
   if (evFresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade' || le.type === 'special_won' || le.type === 'rat_taken')) {
-    let to = le.type === 'trade' ? le.winner : le.type === 'rat_taken' ? le.player : le.buyer;
-    if (le.type === 'trade' && le.animal === RAT) to = le.winner === le.challenger ? le.target : le.challenger;
-    const flyAnimal = le.type === 'rat_taken' ? RAT : le.animal;
-    const mine = to === meId;
-    const n = le.type === 'trade' ? le.count : 1;
-    // Ziel wird nach dem Zeichnen gemessen: deine Auslage bzw. der Platz des Mitspielers
-    keepFx(Array.from({ length: n }, (_, k) => `<div class="fly ${evDelay ? 'fromev' : ''}" ${mine ? `data-flyto="${flyAnimal}"` : `data-aim-to="${esc(to)}" data-aim-scale="0.32"`} style="--tx:0px;--ty:-120px;animation-delay:${evDelay + k * 120}ms">
-      <div class="bigcard-head" style="--a:${ANIMAL_COLORS[flyAnimal]}"><span class="mono">${art(flyAnimal)}</span>${le.type === 'special_won' ? STAR : ''}</div></div>`).join('')
-, evDelay + 1700 + n * 120, evDelay ? 'ev' : null);
+    const to = le.type === 'trade' ? receiverOf(le) : le.type === 'rat_taken' ? le.player : le.buyer;
+    const an = le.type === 'rat_taken' ? RAT : le.animal;
+    if (idxOf(to) >= 0) {
+      const walkers = le.type === 'trade' ? [0, 1].map((k) => homeWalk(an, '@card', `@stall:${to}:${an}`, evDelay + k * 220, { count: le.count || 1, koffer: true })) : [homeWalk(an, '@card', `@stall:${to}:${an}`, evDelay, { star: le.type === 'special_won' })];
+      keepFx(walkers.join(''), evDelay + FLY_MS + 400, evDelay ? 'ev' : null);
+      later.push(['trade', evDelay + 100]);
+      later.push(['flipcard', evDelay + WALK_MS]);
+    }
   }
   // Der Zug wandert sichtbar im Uhrzeigersinn: ein goldener Schein gleitet vom alten zum neuen Platz
   const holder = shownHolder;
@@ -1617,6 +1651,8 @@ export function renderGame(root, ctx) {
     const n = Math.min(count, 15);
     // deine eigenen Scheine fliegen offen: beim Bezahlen kurz hochgeschoben aus dem Fächer, beim Bekommen in den Fächer hinein
     const mine = (from === meId || to === meId) && vals && vals.length >= n ? (from === meId ? 'out' : 'in') : '';
+    const cash = (pid) => (pid.startsWith('@') ? pid : `@cash:${pid}`); // v0.70: von Geld zu Geld, nie zum Avatar
+    from = cash(from); to = cash(to);
     return Array.from({ length: n }, (_, k) => { const dx = Math.round((k - (n - 1) / 2) * Math.min(30, 200 / n));
       return mine ? `<div class="mfly mine ${mine}" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" ${mine === 'out' ? `data-aim-fdx="${dx}"` : `data-aim-tdx="${dx}"`} style="--m:${MONEY_COLORS[vals[k]]};animation-delay:${delay + k * MSTEP}ms">${vals[k]}</div>`
         : `<div class="mfly" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" style="animation-delay:${delay + k * MSTEP}ms"></div>`; }).join(''); // so viele Scheine, wie wirklich bezahlt werden
@@ -1645,7 +1681,7 @@ export function renderGame(root, ctx) {
   // v0.52.1: Rattenrunde – wer eine Karte legt, dessen Schein fliegt verdeckt in den Topf in der Mitte
   if (state.phase === 'rat' && local.ratLaid && !entered) {
     Object.entries(v.rat.laid).forEach(([pid, c]) => { const d = c - (local.ratLaid[pid] || 0);
-      if (d > 0 && idxOf(pid) >= 0) keepFx(Array.from({ length: Math.min(d, 3) }, (_, k) => `<div class="mfly topot" data-aim-from="${esc(pid)}" data-aim-to="@pot" style="animation-delay:${k * MSTEP}ms"></div>`).join(''), 1000 + 3 * MSTEP); });
+      if (d > 0 && idxOf(pid) >= 0) keepFx(Array.from({ length: Math.min(d, 3) }, (_, k) => `<div class="mfly topot" data-aim-from="@cash:${esc(pid)}" data-aim-to="@pot" style="animation-delay:${k * MSTEP}ms"></div>`).join(''), 1000 + 3 * MSTEP); });
   }
   if (state.phase === 'rat') local.ratLaid = { ...v.rat.laid }; else if (state.phase !== 'turn') local.ratLaid = null;
 
@@ -1659,7 +1695,7 @@ export function renderGame(root, ctx) {
   const moneySig = lem?.type === 'money_drawn' ? `${lem.n}|${lem.player}|${lem.value}` : null;
   if (moneySig && evFresh && local.moneySig !== moneySig) {
     local.moneySig = moneySig;
-    keepFx(`<div class="moneyreveal" data-aim-to="${esc(lem.player)}" data-aim-anchor="center" style="--ty:0px;--tx:0px">
+    keepFx(`<div class="moneyreveal" data-aim-to="@cash:${esc(lem.player)}" data-aim-anchor="center" style="--ty:0px;--tx:0px">
       <div class="money big" style="--m:${MONEY_COLORS[lem.value] || '#eee'}">${mIn(lem.value)}${lem.value >= 100 ? glitz(lem.value >= 500 ? 14 : lem.value >= 200 ? 10 : 6, lem.value >= 500 ? 'gold' : '') : ''}</div>
       <span class="mrlabel">${esc(lem.player === meId ? 'Du' : nameOf(lem.player))} ${lem.player === meId ? 'ziehst' : 'zieht'} <b>${lem.value}</b></span></div>`, 2700);
   }
@@ -1778,7 +1814,7 @@ export function renderGame(root, ctx) {
       <small>um ${t.count}× ${esc(isRat ? 'Ratte' : aname(t.animal))}</small></div>`, 1500);
     later.push(['drum', 0]);
     const oc = Math.min(Array.isArray(t.offer) ? t.offer.length : t.offer || 0, 8);
-    if (oc) keepFx(Array.from({ length: oc }, (_, k) => `<div class="mfly topot" data-aim-from="${esc(t.challenger)}" data-aim-to="@offer" style="animation-delay:${OFFER_FLY + k * MSTEP}ms"></div>`).join(''), OFFER_FLY + MFLY_MS + oc * MSTEP + 100);
+    if (oc) keepFx(Array.from({ length: oc }, (_, k) => `<div class="mfly topot" data-aim-from="@cash:${esc(t.challenger)}" data-aim-to="@offer" style="animation-delay:${OFFER_FLY + k * MSTEP}ms"></div>`).join(''), OFFER_FLY + MFLY_MS + oc * MSTEP + 100);
   }
   // Große Auftritte – nur bei besonderen Ereignissen, höchstens einer pro Ergebnis (Rang: Gleichstand > Bluff > Geschenkt > Quartett)
   const boom = (title, sub, cls = '', delay = 0) => { keepFx(`<div class="khscrim" style="--d:${delay}ms" aria-hidden="true"></div><div class="khsplash boom ${cls}" style="--d:${delay}ms" aria-live="polite"><b>${title}</b><small>${sub}</small></div>`, delay + 1500); later.push(['wow', delay]); };
@@ -1864,6 +1900,13 @@ export function renderGame(root, ctx) {
         short: nth >= 3, rival: nth >= 3 && nth === maxPair,
       });
       if (dur) local.ttDelay = dur; // Kuhhandel-Zeit startet erst nach dem Intro
+      // v0.70 (Alp): nach dem VS laufen die Einsätze beider Seiten von ihren Stapeln in die Mitte; der Topf erscheint, wenn sie ankommen
+      if (t.animal && t.count) {
+        const d0 = (dur || 0) + 150;
+        keepFx([t.challenger, t.target].map((pid, k) => homeWalk(t.animal, `@stall:${pid}:${t.animal}`, '@tpot', d0 + k * 160, { count: t.count, ms: POT_WALK_MS, toCard: false })).join(''), d0 + POT_WALK_MS + 400);
+        local.potLand = Date.now() + d0 + POT_WALK_MS + 160;
+        later.push(['trade', d0 + 60]);
+      }
     }
   }
   if (evFresh && le?.type === 'trade' && le.winner) { const pk = pairKey(le.challenger, le.target); local.duelWins[pk] = local.duelWins[pk] || {}; local.duelWins[pk][le.winner] = (local.duelWins[pk][le.winner] || 0) + 1; }
@@ -1894,20 +1937,11 @@ export function renderGame(root, ctx) {
     if (le.type === 'money_drawn' && le.value > 0) kach(le.player, `+${le.value}`, -500);
     if (le.type === 'rat_taken' && le.count > 0) kach(le.player, `+${le.count} Karte${le.count === 1 ? '' : 'n'}`, -300);
     if (le.type === 'trade') { const win = receiverOf(le); const lose = win === le.challenger ? le.target : le.challenger; kach(lose, '💰', 600); }
-    // Kuhhandel entschieden: das ganze Tier läuft mit Koffer vom Abgeber zum Empfänger
-    if (le.type === 'trade') {
-      const to = receiverOf(le); const from = to === le.challenger ? le.target : le.challenger;
-      if (idxOf(to) >= 0 && idxOf(from) >= 0) {
-        const pt = (pid) => (pid === meId ? '@me' : pid);
-        keepFx(`<div class="tripwalk" data-route="${esc(pt(from))};${esc(pt(to))}" data-dur="1900" data-delay="${evDelay + 250}">${beast(le.animal, 'walk', `<i class="bkoffer"></i>${le.count > 1 ? `<b class="bcount">${le.count}×</b>` : ''}`)}</div>`, evDelay + 2300);
-        later.push(['trade', evDelay + 300]);
-      }
-    }
   }
   // Ratte aufgedeckt: die Ratte klettert aus der Karte, flitzt zu jedem Geldstapel, schnüffelt, und zurück
   if (le?.type === 'rat_drawn' && evFresh && local.ratRunSig !== le.n) {
     local.ratRunSig = le.n;
-    const stops = v.players.map((p) => (p.id === meId ? '@myfan' : p.id));
+    const stops = v.players.map((p) => `@cash:${p.id}`); // v0.70: schnüffelt am Geld, nicht am Avatar
     const SEG = 480, HOLD = 520, START = 900;
     const route = ['@card']; const offs = [0]; let t = 0;
     stops.forEach((st) => { t += SEG; route.push(st); offs.push(t); t += HOLD; route.push(st); offs.push(t); });
@@ -1918,7 +1952,7 @@ export function renderGame(root, ctx) {
   // Quartett komplett: die 4 Tiere tanzen eine Polonaise über den Tisch und zurück
   if (local.poloNext) {
     const { pid, animal, delay } = local.poloNext; local.poloNext = null;
-    const pt = pid === meId ? '@me' : pid;
+    const pt = `@stall:${pid}:${animal}`; // v0.70: vom eigenen Stapel los und wieder zurück
     keepFx([0, 1, 2, 3].map((k) => `<div class="polo" data-route="${esc(pt)};@cl;@cr;${esc(pt)}" data-offs="0,.3,.7,1" data-dur="3000" data-delay="${delay + k * 190}">${beast(animal, 'dance')}</div>`).join(''), delay + 3800);
   }
 
@@ -2120,7 +2154,8 @@ export function renderGame(root, ctx) {
         const to = p.id === meId ? '@me' : esc(p.id);
         ouchMark(p.id, local.donkeyAt + t + ESEL_FLIGHT, local.donkeyAt + t + ESEL_FLIGHT + OUCH_MS);
         return `<div class="eball" data-aim-from="@esel" data-aim-to="${to}" style="animation-delay:${t - el}ms;--ty:0px;--tx:0px" aria-hidden="true"></div>`
-          + `<div class="ebam epay" data-aim-from="${to}" data-aim-to="${to}" style="animation-delay:${t + ESEL_FLIGHT - el}ms;--ty:0px;--tx:0px;--rot:${pi % 2 ? 9 : -8}deg" aria-hidden="true">+${pay}</div>`;
+          + `<div class="ebam epay" data-aim-from="${to}" data-aim-to="${to}" style="animation-delay:${t + ESEL_FLIGHT - el}ms;--ty:0px;--tx:0px;--rot:${pi % 2 ? 9 : -8}deg" aria-hidden="true">+${pay}</div>`
+          + `<div class="mfly" data-aim-from="${to}" data-aim-to="@cash:${esc(p.id)}" style="animation-delay:${t + ESEL_FLIGHT + 700 - el}ms" aria-hidden="true"></div>`; // v0.70: der Schein landet danach im Geld
       }).join('');
       wakeLocal(local.donkeyAt + DONKEY_END + 20); // danach einmal aufräumen
     }
