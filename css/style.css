@@ -3376,7 +3376,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .tsweat { font-size: 20px; animation-name: tpshow, tpulse; animation-duration: var(--d), .4s; animation-delay: var(--t0), var(--t0); animation-iteration-count: 1, 6; animation-direction: normal, alternate; animation-fill-mode: both, both; }
 .tnote { font: 900 20px var(--font-head); color: #9fe0ff; text-shadow: 0 2px 0 #1b4a66; animation-name: tpshow, thaup; animation-duration: var(--d), var(--d); animation-delay: var(--t0), var(--t0); animation-fill-mode: both, both; }
 /* v0.64 Bühne: Tisch kurz abdunkeln, Requisiten etwas größer */
-.tdim { position: absolute; inset: 0; z-index: 39; pointer-events: none; background: radial-gradient(ellipse 60% 55% at 50% 62%, rgba(10,16,40,.32), rgba(10,16,40,.6)); opacity: 0; animation: tdim var(--d) linear both; }
+.tdim { position: absolute; inset: 0; z-index: 39; pointer-events: none; background: rgba(10,16,40,.5); opacity: 0; animation: tdim var(--d) linear both; }
 @keyframes tdim { 0% { opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { opacity: 0; } }
 .tprop { scale: 1.35; }
 .tprop.tbub { scale: 1; }

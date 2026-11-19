@@ -213,9 +213,11 @@ export function placePoint(root, S, place, actorPid) {
     return { x, y, s: t.s };
   }
   if (place.startsWith('mid:')) {
+    // Sitzkreis um den Stapel wie um ein Lagerfeuer: links und rechts im Bogen, keiner steht mitten auf dem Stapel
     const [k, n] = place.slice(4).split('/').map(Number); const c = midCenter(root, S);
-    const a = Math.PI + (k / n) * Math.PI * 2; const rx = n === 2 ? 70 : 150, ry = n === 2 ? 0 : 40;
-    return { x: c.x + Math.cos(a) * rx, y: c.y - Math.sin(a) * ry, s: MID_SCALE };
+    const ARC = { 1: [[0, 0]], 2: [[-70, 0], [70, 0]], 3: [[-165, -2], [-85, 26], [125, 14]], 4: [[-180, -6], [-98, 24], [98, 24], [180, -6]] };
+    const [dx, dy] = (ARC[n] || ARC[4])[k % (ARC[n] || ARC[4]).length];
+    return { x: c.x + dx, y: c.y + dy, s: MID_SCALE };
   }
   if (place.startsWith('midx:')) { const [dx, dy] = place.slice(5).split(',').map(Number); const c = midCenter(root, S); return { x: c.x + dx, y: c.y + dy, s: MID_SCALE }; }
   return { x: S.W / 2, y: S.H / 2, s: MID_SCALE };
