@@ -25,7 +25,8 @@ export function auctionStartMs(state) { if (state && state.auction && state.auct
 export function auctionBidMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_BID_MS; }
 
 // ---------- Börsen-Chaos (eigene Spielart, nie zusammen mit Turbo) ----------
-// 8 Börsen-News im Stapel: 2× Kursrallye, 2× Kurssturz (je ein Tier, beim Mischen ausgelost), Dividende, Steuerprüfung, Marktpanik, Hektik.
+// 13 Börsen-News im Stapel: 2× Kursrallye, 2× Kurssturz, Hype (×2), Blase platzt (÷2) (je ein Tier, beim Mischen ausgelost),
+// Dividende, Steuerprüfung, Marktpanik, Hektik, 2× Zwangsversteigerung, Einspruch.
 // Aufgedeckt → Wirkung sofort, danach deckt der Aufdecker nochmal auf (wie bei der Ratte).
 export const NEWS_PREFIX = 'news-';
 export const HEKTIK_MS = 5000;          // Hektik: Versteigerungen nur 5 s
@@ -38,6 +39,16 @@ export const RALLYE_WEIGHTS = [4, 4, 3, 2, 2, 1, 1, 1];
 export const CRASH_WEIGHTS = [1, 1, 1, 2, 2, 3, 4, 4];
 export const RALLYE_MIN = 30, RALLYE_MAX = 100;
 export const DIVIDENDE = 50;
+// v0.69 (Alp): Kurse wirken multiplikativ wie an der echten Börse (×1,5 dann ×0,5 = ×0,75), höchstens ×4 (KURS_MAX_FACTOR).
+// Gespeichert bleibt der Kurs in Prozentpunkten zum Grundwert (+100 = ×2), damit laufende Partien weiter stimmen.
+export const KURS_MAX_FACTOR = 4;
+const KURS_FACTOR = { rallye: (p) => 1 + p / 100, crash: (p) => 1 - p / 100, hype: () => 2, blase: () => 0.5 };
+export const KURS_KINDS = Object.keys(KURS_FACTOR);
+export function applyKurs(kurse, animal, factor) {
+  const f = Math.min(KURS_MAX_FACTOR, Math.max(0, (100 + (kurse[animal] || 0)) / 100 * factor));
+  kurse[animal] = Math.round(f * 1000) / 10 - 100; // eine Nachkommastelle, damit sich Rundungen nicht aufschaukeln
+  return kurse;
+}
 // v0.65 Handkarten (Börsen-Chaos): kommen beim Aufdecken auf die Hand (verdeckt), Aufdecker deckt nochmal auf
 //  • Zwangsversteigerung (Pfändung): statt eines Zuges ausspielen – ein Tier eines Mitspielers wird versteigert,
 //    der Besitzer MUSS verkaufen (kein Vorkaufsrecht), das Geld bekommt er. Bietet niemand, behält er das Tier.
@@ -82,7 +93,7 @@ function newsCards(seed) {
   const r = rng(seed ^ 0x5eed);
   const pick = () => ANIMALS[Math.floor(r() * ANIMALS.length)].id;
   const pct = (w) => { let x = r() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { x -= w[i]; if (x < 0) return KURS_PCTS[i]; } return KURS_PCTS.at(-1); };
-  return [`rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, 'dividende', 'steuer', 'panik', 'hektik', 'pfaendung', 'pfaendung', 'einspruch'].map((x) => NEWS_PREFIX + x);
+  return [`rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `hype-${pick()}`, `blase-${pick()}`, 'dividende', 'steuer', 'panik', 'hektik', 'pfaendung', 'pfaendung', 'einspruch'].map((x) => NEWS_PREFIX + x);
 }
 
 export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
@@ -423,16 +434,18 @@ const NEWS_TEXT = {
   dividende: () => `Dividende: alle bekommen ${DIVIDENDE}`,
   steuer: () => 'Steuerprüfung: alle geben ihren höchsten Schein ab',
   panik: () => 'Marktpanik: alle schieben einen zufälligen Schein nach links',
+  hype: (a) => `Hype: ${animalName(a)} ×2`,
+  blase: (a) => `Blase platzt: ${animalName(a)} ÷2`,
   hektik: () => `Hektik: die nächsten ${HEKTIK_COUNT} Versteigerungen nur ${HEKTIK_MS / 1000} s`,
 };
 function applyNews(state, me, card) {
   const n = newsOf(card);
   if (!state.kurse) state.kurse = {};
   const ev = { n: state.log.length, type: 'news', kind: n.kind, player: me.id };
-  if (n.kind === 'rallye' || n.kind === 'crash') {
+  if (KURS_KINDS.includes(n.kind)) {
     const before = kursValue(n.animal, state.kurse);
-    state.kurse[n.animal] = (state.kurse[n.animal] || 0) + (n.kind === 'rallye' ? n.pct : -n.pct);
-    Object.assign(ev, { pct: n.pct, animal: n.animal, from: before, to: kursValue(n.animal, state.kurse) });
+    applyKurs(state.kurse, n.animal, KURS_FACTOR[n.kind](n.pct));
+    Object.assign(ev, { animal: n.animal, from: before, to: kursValue(n.animal, state.kurse) }, n.pct ? { pct: n.pct } : {});
   } else if (n.kind === 'dividende') {
     for (const p of state.players) giveCards(p, bankCards(DIVIDENDE));
     ev.amount = DIVIDENDE;

@@ -6,7 +6,7 @@ import {
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
-  isBoerse, kursValue, KURS_STEP, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
+  isBoerse, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
@@ -112,8 +112,8 @@ const CHIP_MAX = 7; // passt in eine Reihe unter dem Profil
 function playerChips(p, tradeable = new Set(), max = CHIP_MAX) {
   const items = [];
   const chip = (id, cls, inner, title) => (tradeable.has(id)
-    ? `<button type="button" class="chip ${cls} tradechip" data-a="tradeWith" data-v="${esc(p.id)}|${id}" aria-label="Kuhhandel mit ${esc(p.name)} um ${aname(id)}">${inner}</button>`
-    : `<span class="chip ${cls}" title="${title}">${inner}</span>`);
+    ? `<button type="button" class="chip ${cls} tradechip" data-animal="${id}" data-a="tradeWith" data-v="${esc(p.id)}|${id}" aria-label="Kuhhandel mit ${esc(p.name)} um ${aname(id)}">${inner}</button>`
+    : `<span class="chip ${cls}" data-animal="${id}" title="${title}">${inner}</span>`);
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
     if (n > 0) items.push({ rank: n === 4 ? 0 : tradeable.has(a.id) ? 1 : 3, n, val: a.value, html: chip(a.id, `card ${n === 4 ? 'done' : n === 3 ? 'near3' : ''}`, `${miniCard(a.id)}<em>${n === 4 ? '✓' : `${n}×`}</em>`, `${n}× ${a.name}`) });
@@ -525,16 +525,19 @@ function muscleDonkey(throwDelay, n) {
 }
 
 // ---------- Börsen-Chaos: News-Karte, Kurszettel ----------
-const NEWS_ICON = { rallye: '📈', crash: '📉', dividende: '💰', steuer: '🧾', panik: '🔀', hektik: '⚡' };
+const NEWS_ICON = { rallye: '📈', crash: '📉', hype: '🚀', blase: '🫧', dividende: '💰', steuer: '🧾', panik: '🔀', hektik: '⚡' };
+const KURS_UP = { rallye: true, hype: true, crash: false, blase: false };
 function newsTitle(e) {
   if (e.kind === 'rallye') return `Kursrallye ${aname(e.animal)}`;
   if (e.kind === 'crash') return `Kurssturz ${aname(e.animal)}`;
+  if (e.kind === 'hype') return `Hype! ${aname(e.animal)} ×2`;
+  if (e.kind === 'blase') return `Blase platzt! ${aname(e.animal)} ÷2`;
   return ({ dividende: 'Dividende', steuer: 'Steuerprüfung', panik: 'Marktpanik', hektik: 'Hektik' })[e.kind] || 'Börsen-News';
 }
 function newsReveal(e, meId, nameOf) {
   let body = '';
   let mine = '';
-  if (e.kind === 'rallye' || e.kind === 'crash') body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${e.kind === 'rallye' ? 'up' : 'down'}">${e.to} ${e.kind === 'rallye' ? '▲' : '▼'}</b></div><small>${e.kind === 'rallye' ? '+' : '−'}${e.pct || KURS_STEP} % bis Spielende</small>`;
+  if (KURS_UP[e.kind] != null) { const up = KURS_UP[e.kind]; const cap = up && e.to === e.from; body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${up ? 'up' : 'down'}">${e.to} ${up ? '▲' : '▼'}</b></div><small>${cap ? `schon am Höchstkurs (×${KURS_MAX_FACTOR})` : e.kind === 'hype' ? 'Wert verdoppelt' : e.kind === 'blase' ? 'Wert halbiert' : `${up ? '+' : '−'}${e.pct || KURS_STEP} %`} bis Spielende</small>`; }
   else if (e.kind === 'dividende') body = `<p>Alle bekommen <b>${e.amount ?? DIVIDENDE}</b> aus der Bank.</p>`;
   else if (e.kind === 'steuer') { body = '<p>Alle geben ihren <b>höchsten Schein</b> ab.</p>'; const l = e.lost && e.lost[meId]; mine = l != null ? `Du gibst <b>${l}</b> ab` : 'Du hattest keinen Schein'; }
   else if (e.kind === 'panik') { body = '<p>Jeder schiebt einen <b>zufälligen Schein</b> nach links.</p>'; const m = e.moved || {}; mine = `${m.gave != null ? `Du gibst <b>${m.gave}</b>` : 'Du gibst nichts'} · ${m.got != null ? `bekommst <b>${m.got}</b> von ${esc(nameOf(m.from))}` : 'bekommst nichts'}`; }
@@ -543,7 +546,7 @@ function newsReveal(e, meId, nameOf) {
 }
 function kursZettel(state) {
   if (!isBoerse(state) || !state.kurse) return '';
-  const rows = ANIMALS.filter((a) => state.kurse[a.id]).map((a) => { const up = state.kurse[a.id] > 0; return `<span class="kz ${up ? 'up' : 'down'}" style="--a:${ANIMAL_COLORS[a.id]}" title="${aname(a.id)}"><em>${art(a.id)}</em><b>${aval(a.id)}</b><i>${up ? '▲' : '▼'}</i></span>`; });
+  const rows = ANIMALS.filter((a) => state.kurse[a.id]).map((a) => { const up = state.kurse[a.id] > 0; return `<span class="kz ${up ? 'up' : 'down'}" data-animal="${a.id}" style="--a:${ANIMAL_COLORS[a.id]}" title="${aname(a.id)}"><em>${art(a.id)}</em><b>${aval(a.id)}</b><i>${up ? '▲' : '▼'}</i></span>`; });
   return rows.length ? `<span class="kurszettel" aria-label="Kurse">${rows.join('')}</span>` : '';
 }
 
@@ -1661,7 +1664,9 @@ export function renderGame(root, ctx) {
   if (newsSig && evFresh && local.newsSig !== newsSig) {
     local.newsSig = newsSig;
     keepFx(newsReveal(lem, meId, nameOf), 3400);
-    sounds.push('flip'); later.push([lem.kind === 'crash' || lem.kind === 'steuer' ? 'boo' : lem.kind === 'hektik' ? 'tick' : 'coins', 600]);
+    sounds.push('flip'); later.push([lem.kind === 'crash' || lem.kind === 'blase' || lem.kind === 'steuer' ? 'boo' : lem.kind === 'hektik' ? 'tick' : 'coins', 600]);
+    // v0.69 Kurssprung: alle Karten dieses Tiers (Auslagen, Mitspieler, Kurszettel) blinken ▲/▼, Börsenglocke
+    if (KURS_UP[lem.kind] != null && lem.from !== lem.to) { local.kursFx = { animal: lem.animal, up: KURS_UP[lem.kind], at: Date.now() + 3400 }; later.push(['bell', 3400]); }
   }
   // v0.61 Admin-Fähigkeit „Verprügeln“: Figur läuft hin, Prügelwolke, läuft zurück (bei allen)
   for (const pu of ctx.punches || []) {
@@ -2260,6 +2265,9 @@ export function renderGame(root, ctx) {
   aimFx(root);
   routeFx(root);
   KEEP_SCROLL.forEach((sel, i) => { const el = root.querySelector(sel); if (el && keptScroll[i]) el.scrollTop = keptScroll[i]; });
+  // v0.69 Kurssprung-Blinken (nach der News-Karte, 2,4 s; negative Verzögerung, damit Neuzeichnen es nicht neu startet)
+  { const kf = local.kursFx; const el = kf ? Date.now() - kf.at : -1;
+    if (kf && el > -3400 && el < 2400) root.querySelectorAll(`[data-animal="${kf.animal}"]`).forEach((n) => { n.classList.add('kursjump', kf.up ? 'kup' : 'kdown'); if (getComputedStyle(n).position === 'static') n.style.position = 'relative'; n.style.setProperty('--kd', `${-Math.max(0, el)}ms`); n.style.setProperty('--kw', `${Math.max(0, -el)}ms`); }); }
   theaterFx(root);
   // v0.66 Knöpfe: der eine „erwartete“ Knopf leuchtet nach 3 s sanft (Zeit läuft ab Phasenwechsel, nicht ab jedem Neuzeichnen)
   { root.querySelectorAll('.hintme').forEach((b) => b.style.setProperty('--hd', `${3000 - (Date.now() - local.hintAt)}ms`)); }

@@ -324,7 +324,7 @@ export function buildDemoState(kind, local) {
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
       return g;
     }
-    case 'news': { // ?demo=news&k=rallye-kuh|crash-pferd|dividende|steuer|panik|hektik – Börsen-Chaos
+    case 'news': { // ?demo=news&k=rallye-kuh|crash-pferd|hype-kuh|blase-schaf|dividende|steuer|panik|hektik – Börsen-Chaos
       const k = new URLSearchParams(location.search).get('k') || 'rallye-kuh';
       g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
       const b = base(); g.players = b.players; g.donkeysDrawn = 1;
