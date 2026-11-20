@@ -7,6 +7,7 @@ import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
 import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
+import { MODES, modeArt } from './modes.js';
 import { haptic } from './haptics.js';
 import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM, SCENE_ITEM } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
@@ -14,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.72.0';
+export const APP_VERSION = '0.73.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -318,9 +319,7 @@ function renderStart() {
   }).join('')}</div>`;
   let felt = '';
   if (!it) {
-    felt = `<b class="hb-title">Gerade ist kein Spiel offen</b><small class="hb-sub">Erstelle eins und lade deine Freunde ein.</small>
-      ${seatRow(me.name ? [{ id: me.id, name: me.name }] : [])}
-      <button class="pill pill-red hb-cta" type="button" id="create" ${me.name ? '' : 'disabled'}>＋ Neues Spiel</button>`;
+    felt = '';
   } else if (it.kind === 'test') {
     const on = !!store.get('kh_dbg_money');
     felt = `<b class="hb-title">Testspiel <span class="hb-tag">Debug</span></b><small class="hb-sub">Nur auf diesem Gerät, mit Test-Spielern</small>
@@ -352,6 +351,9 @@ function renderStart() {
     <span class="hb-count">${ui.homeIdx + 1} / ${items.length}</span>` : '';
   const dock = [['play', '▶️', 'Spielen'], ['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
     .map(([k, i, l]) => `<button type="button" class="hb-dk ${k === 'play' ? 'on' : ''}" data-dock="${k}"><i>${i}</i>${l}</button>`).join('');
+  // v0.73 (Alp): große Modus-Kacheln wie bei einem Konsolen-Spiel; erst nach dem Antippen kommen die Einstellungen
+  const tiles = MODES.map((m) => `<button type="button" class="mode-tile m-${m.id}" data-mode="${m.id}" ${m.id !== 'join' && !me.name ? 'disabled' : ''}>
+      <span class="mt-art">${modeArt(m.id)}</span><span class="mt-txt"><b>${esc(m.name)}</b><small>${esc(m.tag)}</small></span></button>`).join('');
   app.innerHTML = `
     <section class="home">
       ${tickerHtml()}
@@ -359,20 +361,35 @@ function renderStart() {
         <div class="logorow tb hb-logo"><span class="logocow" aria-hidden="true">${art('kuh')}</span><div class="tbname"><span class="tbteam">🚀 Team Rockets</span><h1 class="logo tbtitle">Tier <span class="tbb">Börse</span></h1></div></div>
         <button type="button" class="hb-me" data-modal="profile" aria-label="Profilbild ändern">${avatarHtml(me.id, me.name)}<b>${esc(me.name)}</b>${shopMe.state === 'ok' ? `<span class="hb-dub" title="Dublonen"><i class="dub" aria-hidden="true"></i> ${shopMe.balance}</span>` : ''}</button>
       </div>
-      <div class="hb-stage">
-        <div class="hb-felt">${nav}${felt}
+      <div class="hb-stage modes">
+        <div class="hb-main">
+          ${felt ? `<div class="hb-strip">${nav}${felt}</div>` : ''}
           ${ui.error ? `<div class="error hb-err" role="alert">${esc(ui.error)}</div>` : ui.homeNote ? `<div class="hb-note" role="status">${esc(ui.homeNote)}</div>` : ''}
+          <div class="mode-row">${tiles}</div>
         </div>
         ${shopMe.state === 'ok' ? heroHtml() : ''}
-        <div class="hb-side">
-          ${it ? `<button class="pill pill-white pill-small" type="button" id="create" ${me.name ? '' : 'disabled'}>＋ Neues Spiel</button>` : ''}
-          <button class="pill pill-white pill-small" type="button" data-modal="rejoin">🔑 Mit Code</button>
-        </div>
       </div>
+      ${ui.mode ? modePanel(ui.mode) : ''}
       <nav class="hb-dock" aria-label="Bereiche">${dock}</nav>
     </section>`;
 
-  document.getElementById('create')?.addEventListener('click', onCreate);
+  document.getElementById('create')?.addEventListener('click', () => onCreate());
+  app.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => { ui.mode = b.dataset.mode; ui.modeOpts = {}; ui.joinErr = ''; render(); setTimeout(() => app.querySelector('.mp-code input')?.focus(), 50); }));
+  app.querySelectorAll('[data-mp]').forEach((b) => b.addEventListener('click', () => {
+    const k = b.dataset.mp;
+    if (k === 'close') { ui.mode = null; return render(); }
+    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.money ? { money: { ...DEFAULT_MONEY } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }
+    if (k === 'pin') { ui.mode = null; return openModal('rejoin'); }
+    ui.modeOpts = { ...(ui.modeOpts || {}), [k]: !(ui.modeOpts || {})[k] }; render();
+  }));
+  const jf = app.querySelector('#join-form');
+  if (jf) jf.onsubmit = async (e) => {
+    e.preventDefault();
+    const code = String(new FormData(jf).get('code') || '').trim().toUpperCase();
+    if (!/^[A-Z]{4}$/.test(code)) { ui.joinErr = 'Der Code hat 4 Buchstaben.'; return render(); }
+    ui.joinErr = await findAndJoin(code); if (ui.joinErr) render();
+  };
+  app.querySelectorAll('[data-joinid]').forEach((b) => b.addEventListener('click', () => { ui.mode = null; onJoin(b.dataset.joinid); }));
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-test]').forEach((b) => b.addEventListener('click', () => startLocalGame(Number(b.dataset.test))));
@@ -389,6 +406,46 @@ function renderStart() {
     const { data } = await sb.from('games').select('*').eq('id', b.dataset.resume).maybeSingle();
     if (data) enterRoom(data); else { await loadGames(); render(); }
   }));
+}
+
+// v0.73: Modus angetippt → großes Fenster mit Bild links, Einstellungen der Runde rechts
+function modePanel(id) {
+  const m = MODES.find((x) => x.id === id);
+  if (!m) return '';
+  const o = ui.modeOpts || {};
+  let right;
+  if (id === 'join') {
+    const open = (ui.games || []).filter((g) => !g.status || g.status === 'lobby').slice(0, 3);
+    right = `<form id="join-form" class="mp-code"><input name="code" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Spiel-Code (4 Buchstaben)">
+        <button type="submit" class="pill pill-red">Beitreten</button></form>
+      ${ui.joinErr ? `<div class="error" role="alert">${esc(ui.joinErr)}</div>` : ''}
+      ${open.length ? `<div class="mp-open"><small>Offene Räume</small>${open.map((g) => { const host = (g.players.find((p) => p.id === g.host) || g.players[0])?.name || '?'; const full = g.players.length >= MAX_PLAYERS;
+        return `<button type="button" class="mp-room" data-joinid="${esc(g.id)}" ${full ? 'disabled' : ''}><b>${esc(host)}</b><span>${g.players.length}/${MAX_PLAYERS} · ${esc(g.code)}</span></button>`; }).join('')}</div>` : ''}
+      <button type="button" class="mp-link" data-mp="pin">Schon im Spiel gewesen? Mit Code + PIN zurück auf deinen Platz</button>`;
+  } else {
+    const opts = [['money', '💵 Geldscheine im Stapel', 'Extra-Scheine zwischen den Tieren'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${m.settings.turbo ? 12 : 20} s`, 'Angebote mit Zeitlimit'], ['moneyCounts', '💰 Geld zählt am Ende', 'Taler werden mitgewertet']];
+    right = `<div class="mp-opts">${opts.map(([k, l, s]) => `<button type="button" class="mp-opt ${o[k] ? 'on' : ''}" data-mp="${k}" aria-pressed="${!!o[k]}"><i class="mp-check">${o[k] ? '✓' : ''}</i><span><b>${l}</b><small>${s}</small></span></button>`).join('')}</div>
+      <small class="mp-hint">Alles lässt sich im Warteraum noch ändern.</small>
+      <button type="button" class="pill pill-red mp-go" data-mp="create">Raum erstellen</button>`;
+  }
+  return `<div class="mpback" data-mp="close"></div><div class="mpanel m-${id}" role="dialog" aria-modal="true" aria-label="${esc(m.name)}">
+    <div class="mp-art">${modeArt(id, 'meet')}<div class="mp-name"><b>${esc(m.name)}</b><small>${esc(m.tag)}</small></div></div>
+    <div class="mp-body"><button type="button" class="mclose" data-mp="close" aria-label="Zurück">✕</button><p class="mp-desc">${esc(m.desc)}</p>${right}</div></div>`;
+}
+
+// v0.73: Beitreten per Code – Warteraum suchen; klare Meldung, wenn das Spiel schon läuft oder es den Code nicht gibt
+async function findAndJoin(code) {
+  if (DEMO) return code === 'MUHH' ? '' : `Kein Raum mit Code ${code} gefunden.`;
+  const { data, error } = await sb.from('games').select('id, status, players').eq('code', code).order('created_at', { ascending: false }).limit(1);
+  if (error) return 'Keine Verbindung – bitte gleich nochmal versuchen.';
+  const g = data && data[0];
+  if (!g) return `Kein Raum mit Code ${code} gefunden – Tippfehler?`;
+  if (g.players.some((p) => p.id === me.id)) { ui.mode = null; const { data: full } = await sb.from('games').select('*').eq('id', g.id).maybeSingle(); if (full) enterRoom(full); return ''; }
+  if (g.status !== 'lobby') return 'Dieses Spiel läuft schon. Warst du dabei? Dann „Mit Code + PIN zurück“.';
+  if (g.players.length >= MAX_PLAYERS) return 'Der Raum ist schon voll.';
+  ui.mode = null;
+  await onJoin(g.id);
+  return '';
 }
 
 let roomSeen = null; let roomJoin = null; // wer zuletzt eingestiegen ist (kurze Einblendung)
@@ -1225,10 +1282,9 @@ function toastRoom(msg) { ui.error = msg; render(); setTimeout(() => { if (ui.er
 
 async function joinByCode(code) {
   history.replaceState(null, '', location.pathname);
-  const { data } = await sb.from('games').select('id, status').eq('code', code.toUpperCase()).eq('status', 'lobby')
-    .order('created_at', { ascending: false }).limit(1);
-  if (data?.length) return onJoin(data[0].id);
-  ui.error = `Kein offener Warteraum mit Code ${code} gefunden.`;
+  const err = await findAndJoin(String(code).trim().toUpperCase());
+  if (!err) return;
+  ui.error = err;
   return openStart();
 }
 
@@ -1553,10 +1609,11 @@ function showGame(g) {
 
 const randomCode = () => Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random() * 24)]).join('');
 
-async function onCreate() {
+async function onCreate(settings = null) {
   ui.error = '';
+  const st = settings && Object.keys(settings).length ? { state: { settings } } : {}; // v0.73: Modus + Einstellungen gleich mitgeben
   const { data, error } = await sb.from('games')
-    .insert({ code: randomCode(), host: me.id, players: [{ id: me.id, name: me.name }] })
+    .insert({ code: randomCode(), host: me.id, players: [{ id: me.id, name: me.name }], ...st })
     .select().single();
   if (error) { ui.error = 'Spiel konnte nicht erstellt werden.'; logError(`Erstellen: ${error.message}`); return render(); }
   enterRoom(data);
@@ -1850,7 +1907,7 @@ function renderModal() {
   if (form) form.onsubmit = async (e) => {
     e.preventDefault();
     const f = new FormData(form);
-    const { data, error } = await sb.rpc('claim_seat', { p_code: String(f.get('code')), p_pin: String(f.get('pin')) });
+    const { data, error } = await sb.rpc('claim_seat', { p_code: String(f.get('code')).trim().toUpperCase(), p_pin: String(f.get('pin')).trim() }); // v0.73: Kleinbuchstaben/Leerzeichen egal
     if (error || !data) { modal.error = 'Code oder PIN stimmt nicht.'; return render(); }
     modal = null;
     enterRoom(data);
@@ -1983,6 +2040,7 @@ function demo(kind) {
   if (params.get('score')) gameLocal.scoreOpen = params.get('score');
   if (params.get('oldv')) versions = { u3: '0.11.0' };
   if (params.get('admin')) ui.isAdmin = true;
+  if (params.get('mode')) ui.mode = params.get('mode'); // v0.73 Screenshot: ?demo=start&mode=classic|turbo|boerse|join
   if (params.get('recap')) gameLocal.recap = true;
   ui.editingName = kind === 'name';
   if (kind === 'name') me.name = '';

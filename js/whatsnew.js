@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.73.0', date: '20.11.', items: ['🎮 Neuer Start: Modus-Kacheln mit Bild – Klassisch, Turbo, Börsen-Chaos, Beitreten', '🔑 Beitreten mit Spiel-Code funktioniert jetzt ohne PIN', '⚙️ Einstellungen der Runde direkt nach der Modus-Wahl'] },
   { v: '0.72.0', date: '20.11.', items: ['💸 Dividende, Steuer und Marktpanik: die Scheine fliegen sichtbar', '🤝 Kuhhandel-Geld fliegt aus der Mitte zu euch', '⚡ Weniger Warten nach einer Versteigerung'] },
   { v: '0.71.0', date: '20.11.', items: ['🧠 Kein Zwischenstand mehr – merk dir, wer vorne liegt', '🌧️ Der Letzte lässt auf dem Podest den Kopf hängen'] },
   { v: '0.70.0', date: '19.11.', items: ['🐄 Gewonnene Tiere laufen bis auf deinen Stapel und werden dort zur Karte', '🤝 Kuhhandel: Einsätze laufen erst in die Mitte, dann zum Gewinner', '💸 Geld fliegt immer von Geld zu Geld – nie mehr zum Avatar'] },
