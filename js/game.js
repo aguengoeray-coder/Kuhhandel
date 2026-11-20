@@ -1549,6 +1549,7 @@ export function renderGame(root, ctx) {
       <button type="button" class="round" data-a="menu" aria-label="Menü">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
       </button>
+      <button type="button" class="round rinfo" data-a="modal" data-v="rules:${isDuo(state) ? 'duo' : isBoerse(state) ? 'boerse' : isTurbo(state) ? 'turbo' : 'classic'}" aria-label="Regeln dieser Spielart">i</button>
     </div>
     ${local.menu ? `<div class="menu">
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">🔊 Ton: ${ctx.soundName || (ctx.sound ? 'an' : 'aus')}</button>

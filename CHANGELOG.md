@@ -1,5 +1,15 @@
 # Änderungsprotokoll
 
+## v0.80.0 – Mein Profil
+
+- [x] **„Mein Profil“ statt „Dein Spielerbild“** (Startseite → auf deinen Namen tippen): links deine Figur groß, Name, Titel (z. B. „Kuh-Kaiser“), Dublonen und Kurz-Statistik (Spiele, Siege, Rekord) mit Abkürzung zu Statistik und Shop.
+- [x] **Reiter „Figur“:** alle gekauften Shop-Figuren zum Anziehen per Antippen, dazu die 10 Gratis-Tiere. Ein Gratis-Tier antippen legt die Shop-Figur ab – die Farbe gibt es nur noch, wenn ein Gratis-Tier gewählt ist (vorher wirkte sie mit Shop-Figur gar nicht).
+- [x] **Reiter „Sprüche & Emotes“:** alles, was du im Shop gekauft hast, inkl. eigenem Spruch.
+- [x] **Reiter „Konto“:** Passwort ändern.
+- [x] **Spielregeln überarbeitet:** Reiter je Spielart (Grundregeln, Turbo, Börsen-Chaos, Zu zweit), aktuell mit Tempo, „Warte, warte, warte!“, „Zeig Batzen!“ und Rattenkönig. Börsen-Chaos zeigt alle News als eigene Karten (Symbol, Anzahl, Wirkung). Fehler behoben: oben standen große Balken „Orange“ und „Lila“ (die Farb-Legende der Knöpfe war verrutscht).
+- [x] **ⓘ für die Spielart:** im Spiel oben links neben dem Menü und im Modus-Fenster neben dem Namen – öffnet die Regeln direkt beim passenden Reiter.
+- [x] Datenbank: `supabase/v0.80-avatar-ablegen.sql` – Shop-Figur ablegen (`shop_set_avatar(null)`).
+
 ## v0.79.0 – Warte, warte, warte!
 
 - [x] **„✋ Warte, warte, warte!“ bei der Versteigerung:** Jeder Bieter (nicht der Auktionator) darf einmal pro Versteigerung drücken – die Uhr bekommt die Versteigerungszeit der Runde dazu (Gemütlich +15 s, Normal +10 s, Schnell +7 s, Turbo +6 s, bei Hektik die halbe Zeit). Ab dem zweiten Drücken in derselben Versteigerung gibt es nur noch die halbe Zeit. Der Knopf sitzt unter dem Gebots-Schild; alle sehen „WARTE, WARTE, WARTE!“ mit Namen und hören ein dreifaches „Wa-wa-wa“.
