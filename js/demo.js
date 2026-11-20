@@ -2,7 +2,7 @@
 import { pay,
   createGame, drawForAuction, bid, closeAuction, startTrade, counterTrade, acceptTrade, ANIMALS,
   RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS, showBatzen, playPfaendung,
-  divideLook, divideChoose,
+  divideLook, divideChoose, waitAuction,
 } from '../src/engine.js';
 
 const PLAYERS = [
@@ -89,6 +89,7 @@ export function buildDemoState(kind, local) {
       g = base(); g.turn = 1; g.deck[0] = 'esel';
       g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u4', 60, t + 3200); g = bid(g, 'u1', 100, t + 3200); g = bid(g, 'u3', 120, t + 3200);
+      if (new URLSearchParams(location.search).get('wpop')) g = waitAuction(g, 'u3', Date.now() - 200); // v0.79: „Warte, warte, warte!“ von Lea
       return g;
     }
     case 'auctionrun': {
@@ -187,6 +188,7 @@ export function buildDemoState(kind, local) {
     }
     case 'traderespond':
       g = base(); g.turn = 1;
+      if (new URLSearchParams(location.search).get('tt')) g.settings = { ...(g.settings || {}), tradeTimer: 20 }; // v0.79: mit Kuhhandel-Zeit (Warte-Knopf)
       g = startTrade(g, 'u2', 'u1', 'hund', [0, 2, 6]);
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
       if (new URLSearchParams(location.search).get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'turn' }; // v0.70: VS + Tiere laufen in die Mitte
@@ -428,6 +430,9 @@ export function buildDemoState(kind, local) {
       g.players[1].specials = ['pferd', 'hund'];
       g.deck = [];
       g.phase = 'block'; g.block = { player: 'u1' };
+      { const q = new URLSearchParams(location.search); // v0.79: &pop=1 Rattenkönig-Show, &other=1 Nico ist König
+        if (q.get('other')) { g.players[0].animals[RAT] = 0; g.players[1].animals[RAT] = 4; g.block = { player: 'u2' }; }
+        if (q.get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'trade' }; }
       return g;
     }
     case 'ended': {

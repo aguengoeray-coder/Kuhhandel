@@ -62,6 +62,8 @@ const SOUNDS = {
   quartet: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.1, 0.28, { vol: 0.16 })),
   react: () => tone(660, 0, 0.08, { type: 'sine', vol: 0.12, slide: 200 }),
   tick: () => tone(1250, 0, 0.05, { type: 'square', vol: 0.07 }),
+  // v0.79 „Warte, warte, warte!“ – drei Mal „wa“, jedes tiefer
+  warte: () => [[523, 0], [466, 0.22], [392, 0.44]].forEach(([f, d]) => { tone(f, d, 0.16, { type: 'triangle', vol: 0.16 }); tone(f * 0.5, d, 0.16, { type: 'sine', vol: 0.06 }); }),
   // v0.69 Börsenglocke beim Kurssprung
   bell: () => [0, 0.32].forEach((d) => { tone(880, d, 0.9, { type: 'sine', vol: 0.13 }); tone(1320, d, 0.7, { type: 'sine', vol: 0.06 }); tone(2200, d, 0.25, { type: 'triangle', vol: 0.03 }); }),
   buzz: () => { tone(110, 0, 0.45, { type: 'sawtooth', vol: 0.22 }); tone(116, 0, 0.45, { type: 'square', vol: 0.12 }); },

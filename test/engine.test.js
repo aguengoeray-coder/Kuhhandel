@@ -1019,3 +1019,41 @@ test('v0.78 Tempo: Denkzeiten voll (×1,5/×0,7), Info-Fenster leicht (×1,3/×0
   assert.equal(g.auction.endsAt - g.auction.opensAt, 7500);
   assert.equal(g.auction.opensAt - 1000, 3900);
 });
+
+test('v0.79 „Warte, warte, warte!“: Versteigerung +volle Zeit (ab dem zweiten halb), je Spieler einmal; Kuhhandel und Aufteilen je einmal', async () => {
+  const E = await import('../src/engine.js');
+  let g = E.drawForAuction(gameWithDeck(['kuh', 'hahn']), 'a', 0);
+  const open = g.auction.opensAt, end0 = g.auction.endsAt;
+  assert.throws(() => E.waitAuction(g, 'a', open + 100), /Auktionator/);
+  g = E.waitAuction(g, 'b', open + 1000);
+  assert.equal(g.auction.endsAt, end0 + 10000);
+  assert.throws(() => E.waitAuction(g, 'b', open + 2000), /schon/);
+  g = E.waitAuction(g, 'c', open + 2000);
+  assert.equal(g.auction.endsAt, end0 + 15000);
+  assert.deepEqual(g.auction.lastWait, { player: 'c', at: open + 2000, ms: 5000 });
+  // Gebot danach: Uhr wird nicht verkürzt
+  g = E.bid(g, 'd', 10, open + 3000);
+  assert.equal(g.auction.endsAt, end0 + 15000);
+  // Gemütlich: +15 s
+  let h = gameWithDeck(['kuh']); h.settings = { ...(h.settings || {}), tempo: 'gemuetlich' }; h = E.drawForAuction(h, 'a', 0);
+  const e1 = h.auction.endsAt; h = E.waitAuction(h, 'b', h.auction.opensAt + 10);
+  assert.equal(h.auction.endsAt, e1 + 15000);
+  // Kuhhandel: nur mit Uhr, nur der Herausgeforderte, einmal
+  let t = gameWithDeck(['hahn']); t.players[0].animals.kuh = 1; t.players[1].animals.kuh = 1;
+  t = startTrade(t, 'a', 'b', 'kuh', [6]);
+  assert.throws(() => E.tradeWait(t, 'b'), /ohne Uhr/);
+  t.settings = { ...(t.settings || {}), tradeTimer: 20 };
+  assert.throws(() => E.tradeWait(t, 'a'), /herausgefordert/);
+  const logLen = t.log.length;
+  t = E.tradeWait(t, 'b');
+  assert.equal(t.trade.extraSec, 20); assert.equal(t.log.length, logLen);
+  assert.throws(() => E.tradeWait(t, 'b'), /schon/);
+  // Aufteilen
+  let d = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], seed: 9, settings: { duo: true } });
+  d = E.divideLook(d, 'a', 1000);
+  const de = d.divide.endsAt;
+  assert.throws(() => E.divideWait(d, 'b', 2000), /ansieht/);
+  d = E.divideWait(d, 'a', 2000);
+  assert.equal(d.divide.endsAt, de + 10000);
+  assert.throws(() => E.divideWait(d, 'a', 3000), /schon/);
+});

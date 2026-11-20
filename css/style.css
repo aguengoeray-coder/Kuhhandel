@@ -3858,3 +3858,76 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .room-settings .rs-extra { row-gap: 3px; }
 .room-settings .rs-extra .rs-chip { padding-block: 1px; }
 .room-settings .rs-extra .tempo-seg button { padding-block: 2px; }
+/* v0.79 „Warte, warte, warte!“ – Knopf (einmal pro Versteigerung / Kuhhandel / Karte) und Auftritt für alle */
+.waitbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; width: 100%; min-height: 34px; padding: 3px 6px; border: 2px solid #2B2B2B; border-radius: 12px;
+  background: linear-gradient(180deg, #FFE27A, #FFC93C); color: #2B2B2B; box-shadow: 0 3px 0 rgba(0,0,0,.3); font: inherit; cursor: pointer; animation: waitwig 2.4s ease-in-out 1s infinite; }
+.waitbtn b { font: 900 11.5px/1.1 var(--font-head); white-space: nowrap; }
+.waitbtn small { font-size: 10px; font-weight: 800; opacity: .8; }
+.waitbtn:active { translate: 0 2px; box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.aside.r .waitbtn { width: auto; margin-top: 8px; padding: 4px 10px; }
+.waitbtn.tt { width: auto; min-height: 0; padding: 2px 9px; margin-top: 4px; border-radius: 999px; flex-direction: row; gap: 5px; }
+.waitbtn.tt b { font-size: 10.5px; }
+@keyframes waitwig { 0%, 86%, 100% { rotate: 0deg; } 90% { rotate: -3deg; } 94% { rotate: 3deg; } }
+.divtrow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.divtrow .waitbtn.tt { margin-top: 4px; }
+.waitpop { position: absolute; left: 50%; top: 30%; z-index: 45; pointer-events: none; translate: -50% -50%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 18px 9px;
+  border-radius: 18px; background: #FFD34E; border: 3px solid #2B2B2B; box-shadow: 0 0 0 4px var(--c), 0 6px 0 rgba(0,0,0,.35); color: #2B2B2B; animation: waitpop 1.9s cubic-bezier(.3,1.4,.5,1) both; }
+.waitpop b { font: 900 22px/1 var(--font-head); letter-spacing: .02em; white-space: nowrap; }
+.waitpop small { font-weight: 800; font-size: 12px; }
+@keyframes waitpop { 0% { opacity: 0; scale: .4; rotate: -6deg; } 14% { opacity: 1; scale: 1.08; rotate: 2deg; } 22% { scale: 1; rotate: 0deg; } 30% { rotate: -2deg; } 38% { rotate: 2deg; } 46% { rotate: 0deg; } 85% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: .9; translate: -50% -70%; } }
+@media (prefers-reduced-motion: reduce) { .waitbtn { animation: none; } }
+.tmid .waitbtn.tt { flex-direction: column; gap: 0; max-width: 118px; padding: 3px 8px; border-radius: 12px; line-height: 1.05; }
+.tmid .waitbtn.tt b { white-space: normal; text-align: center; font-size: 10px; }
+.tmid .waitbtn.tt small { font-size: 9.5px; }
+/* v0.79 Rattenkönig: Kanalisation, 4 Ratten aus den Gullys, PUFF – die Figur bekommt Rattenmütze und Krone */
+.rking .rk-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 70%, #2F5A3A 0%, #15281C 60%, #0A140E 100%),
+  repeating-linear-gradient(0deg, transparent 0 22px, rgba(0,0,0,.25) 22px 24px); background-blend-mode: multiply; }
+.rking .rk-bg::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; background: linear-gradient(180deg, #3E7A4A, #24452C); box-shadow: 0 -3px 0 #4E9A5C; opacity: .85; }
+.rk-drip { position: absolute; top: -12px; left: var(--x); width: 6px; height: 12px; border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%; background: #7BE08F; opacity: 0; z-index: 1;
+  animation: rkdrip 1.6s ease-in calc(var(--qd) + var(--i) * .27s) 3 both; }
+@keyframes rkdrip { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: .8; } 100% { opacity: 0; transform: translateY(420px); } }
+.rk-hole { position: absolute; bottom: 7%; left: calc(50% + (var(--k) - 1.5) * 150px); width: 74px; height: 20px; margin-left: -37px; border-radius: 50%; z-index: 1;
+  background: radial-gradient(ellipse, #050806 40%, #39423B 62%, #6B756C 70%); }
+.rk-hero { position: absolute; left: 50%; bottom: 10%; width: 72px; height: 120px; margin-left: -36px; z-index: 2; transform: scale(1.6); transform-origin: 50% 100%; }
+.rk-fig { position: absolute; inset: 0; transform-origin: 50% 100%; animation: rkfig calc(var(--kf) * 6.2s) cubic-bezier(.3,1.4,.5,1) var(--qd) both; }
+.rk-fig .afull, .rk-fig .afull .shop-avatar-full { display: block; width: 72px; height: 120px; } .rk-fig .afull svg { width: 100%; height: 100%; }
+@keyframes rkfig { 0%, 9% { opacity: 0; scale: .2; } 16% { opacity: 1; scale: 1.06; } 20% { scale: 1; } 46% { rotate: 0deg; } 48% { rotate: -6deg; scale: .94; } 50% { rotate: 6deg; scale: 1.1; } 53% { rotate: -3deg; scale: 1; } 56%, 100% { rotate: 0deg; scale: 1; opacity: 1; } }
+.rathat { position: absolute; left: 50%; top: -16%; width: 76%; translate: -50% 0; pointer-events: none; z-index: 3; font-style: normal; display: block; }
+.rathat svg { width: 100%; height: auto; display: block; overflow: visible; filter: drop-shadow(0 3px 2px rgba(0,0,0,.35)); }
+.rk-hat { animation: rkhat calc(var(--kf) * 6.2s) cubic-bezier(.3,1.6,.5,1) var(--qd) both; }
+@keyframes rkhat { 0%, 50% { opacity: 0; scale: .2; } 55% { opacity: 1; scale: 1.25; } 60%, 100% { opacity: 1; scale: 1; } }
+.rk-hat .rh-crown { animation: rkcrown calc(var(--kf) * 6.2s) cubic-bezier(.3,1.5,.5,1) var(--qd) both; }
+@keyframes rkcrown { 0%, 58% { opacity: 0; translate: 0 -60px; } 66% { opacity: 1; translate: 0 4px; } 70%, 100% { opacity: 1; translate: 0 0; } }
+.rk-ring { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.rk-rat { position: absolute; bottom: 8%; left: calc(50% + (var(--k) - 1.5) * 150px); width: 92px; height: 70px; margin-left: -46px; opacity: 0;
+  --dir: calc((var(--k) - 1.5) * -1); animation: rkrat calc(var(--kf) * 6.2s) linear var(--qd) both; }
+.rk-rat .bbody { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 5px 5px rgba(0,0,0,.4)); }
+.rk-rat .lg { animation: lgstep .14s ease-in-out infinite alternate; } .rk-rat .lg.b { animation-direction: alternate-reverse; }
+/* Ratten links schauen nach rechts (zur Figur), rechts gespiegelt; kreisen um die Füße, springen dann auf den Kopf */
+.rk-rat:nth-child(-n+2) { --fx: 1; } .rk-rat:nth-child(n+3) { --fx: -1; }
+@keyframes rkrat {
+  0%, 4% { opacity: 0; transform: translate(0, 40px) scale(var(--fx), 1); }
+  9% { opacity: 1; transform: translate(0, -46px) scale(var(--fx), 1); }
+  13% { transform: translate(0, 0) scale(var(--fx), 1); }
+  22% { transform: translate(calc(var(--dir) * 70px), 0) scale(var(--fx), 1); }
+  26% { transform: translate(calc(var(--dir) * 70px), 0) scale(calc(var(--fx) * -1), 1); }
+  33% { transform: translate(calc(var(--dir) * -10px), 0) scale(calc(var(--fx) * -1), 1); }
+  37% { transform: translate(calc(var(--dir) * -10px), 0) scale(var(--fx), 1); }
+  42% { opacity: 1; transform: translate(calc(var(--dir) * 85px), 0) scale(var(--fx), 1); }
+  48% { opacity: 1; transform: translate(calc(var(--dir) * 150px), -190px) scale(calc(var(--fx) * .55), .55) rotate(calc(var(--fx) * 25deg)); }
+  50%, 100% { opacity: 0; transform: translate(calc(var(--dir) * 150px), -200px) scale(calc(var(--fx) * .2), .2); }
+}
+.rk-puff { position: absolute; left: 50%; top: 14%; width: 44px; height: 44px; margin: -22px; border-radius: 50%; background: radial-gradient(circle, #DDFBE2 0%, #9BE6A9 55%, rgba(155,230,169,0) 72%); opacity: 0; z-index: 4;
+  animation: rkpuff calc(var(--kf) * 1.3s) ease-out calc(var(--qd) + var(--kf) * 3s + var(--i) * 25ms) both; }
+@keyframes rkpuff { 0% { opacity: 0; transform: translate(0, 0) scale(.3); } 20% { opacity: .95; } 100% { opacity: 0; transform: translate(calc(cos(var(--i) * 40deg) * 60px), calc(sin(var(--i) * 40deg) * 45px)) scale(2.2); } }
+.rking .rk-shout { top: 46%; left: 24%; color: #C8F7D0; animation-delay: calc(var(--qd) + var(--kf) * 2.95s); animation-duration: 1.3s; }
+.rking .rk-badge { background: linear-gradient(180deg, #FFE27A, #FFC93C); }
+.rking .qs-title small { color: #C8F7D0; }
+.rking .qs-icon { background: #DDE0E6; }
+/* Nach der Show trägt der Rattenkönig die Mütze am Tisch und auf dem Treppchen */
+.seatfig .rathat { width: 84%; top: -88%; } .mefig .rathat { width: 76%; top: -1%; }
+.mefig { position: relative; }
+.pfig, .podfig { position: relative; }
+@media (prefers-reduced-motion: reduce) { .rk-rat, .rk-drip, .rk-puff { animation-duration: 1ms !important; } }
+.podhat { position: relative; display: inline-block; }
+.podhat .rathat { width: 92%; top: -44%; } .podhat .pfig ~ .rathat { width: 80%; top: -12%; }

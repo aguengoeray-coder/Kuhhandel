@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.79.0 – Warte, warte, warte!
+
+- [x] **„✋ Warte, warte, warte!“ bei der Versteigerung:** Jeder Bieter (nicht der Auktionator) darf einmal pro Versteigerung drücken – die Uhr bekommt die Versteigerungszeit der Runde dazu (Gemütlich +15 s, Normal +10 s, Schnell +7 s, Turbo +6 s, bei Hektik die halbe Zeit). Ab dem zweiten Drücken in derselben Versteigerung gibt es nur noch die halbe Zeit. Der Knopf sitzt unter dem Gebots-Schild; alle sehen „WARTE, WARTE, WARTE!“ mit Namen und hören ein dreifaches „Wa-wa-wa“.
+- [x] **Auch beim Kuhhandel (mit Kuhhandel-Zeit):** Der Herausgeforderte darf einmal pro Kuhhandel verlängern (+30 / +20 / +14 s).
+- [x] **Auch beim Aufteilen zu zweit:** Wer die Karte ansieht, darf einmal pro Karte verlängern (+15 / +10 / +7 s).
+- [x] **Rattenkönig:** Hat jemand am Ende alle Ratten, sehen alle eine eigene Show – Kanalisation, vier Ratten springen aus den Gullys, flitzen um die Figur, springen ihr auf den Kopf, *PUFF!* – und die Figur trägt eine Rattenmütze mit Krone. Die Mütze bleibt am Tisch und auf dem Siegertreppchen. Erst danach wird das Quartett geopfert bzw. abgerechnet.
+
 ## v0.78.0 – Mehr Ruhe
 
 - [x] **Ergebnisse länger sichtbar:** Ohne Spielverlauf ist das Ergebnis-Fenster die einzige Stelle, an der man sieht, wer was bekommt und zahlt – es bleibt jetzt 4,5 s (Kuhhandel 5,8 s, „umsonst“ 3 s) statt 3 s. Für dich selbst weiter wegtippbar.

@@ -618,6 +618,18 @@ export function divideChoose(prev, playerId, keep) {
 }
 
 // Bedenkzeit vorbei: jeder darf auslösen – die Karte wird automatisch behalten
+// Zu zweit: wer die Karte ansieht, darf einmal pro Karte verlängern (+ volle Bedenkzeit)
+export function divideWait(prev, playerId, now) {
+  const state = clone(prev);
+  if (state.phase !== 'divide' || !state.divide) fail('Gerade wird nicht aufgeteilt.');
+  const d = state.divide;
+  if (d.by !== playerId) fail('Nur wer die Karte ansieht, kann um Bedenkzeit bitten.');
+  if (d.waited) fail('Du hast schon „Warte“ gedrückt.');
+  if (d.endsAt == null || now == null) fail('Ohne Uhr gibt es nichts zu verlängern.');
+  d.endsAt = Math.max(d.endsAt, now) + Math.round(DIVIDE_MS * tempoFactor(state));
+  d.waited = true;
+  return state;
+}
 export function divideTimeout(prev, now) {
   if (prev.phase !== 'divide' || !prev.divide || prev.divide.endsAt == null || now < prev.divide.endsAt) fail('Die Bedenkzeit läuft noch.');
   const s = divideChoose(prev, prev.divide.by, true);
@@ -694,6 +706,43 @@ export function bid(prev, playerId, amount, now) {
   const bs = stat(state, playerId); bs.bids = (bs.bids || 0) + 1; bs.maxBid = Math.max(bs.maxBid || 0, amount);
   if (a.endsAt != null && now != null) a.endsAt = Math.max(a.endsAt, now + auctionBidMs(state));
   log(state, `${me.name} bietet ${amount}.`);
+  return state;
+}
+
+// v0.79 (Alp) „Warte, warte, warte!“: jeder Bieter darf einmal pro Versteigerung die Uhr verlängern –
+// um die Versteigerungszeit der Runde (Tempo/Turbo/Hektik); ab dem zweiten Drücken nur noch die halbe Zeit.
+export function waitAuction(prev, playerId, now) {
+  const state = clone(prev);
+  if (state.phase !== 'auction') fail('Gerade läuft keine Versteigerung.');
+  const a = state.auction;
+  if (playerId === a.auctioneer) fail('Der Auktionator bietet nicht mit.');
+  player(state, playerId);
+  a.waits = a.waits || [];
+  if (a.waits.includes(playerId)) fail('Du hast in dieser Versteigerung schon „Warte“ gedrückt.');
+  if (a.endsAt == null || now == null) fail('Diese Versteigerung läuft ohne Uhr.');
+  if (now > a.endsAt + GRACE_MS) fail('Die Versteigerung ist schon vorbei.');
+  if (a.opensAt != null && now < a.opensAt - GRACE_MS) fail('Die Karte wird gerade aufgedeckt – gleich geht es los.');
+  const ext = waitExtraMs(state, a.waits.length);
+  a.endsAt = Math.max(a.endsAt, now) + ext;
+  a.waits.push(playerId);
+  a.lastWait = { player: playerId, at: now, ms: ext };
+  log(state, `${player(state, playerId).name}: „Warte, warte, warte!“ (+${Math.round(ext / 1000)} s)`);
+  return state;
+}
+export function waitExtraMs(state, already = 0) { const full = auctionStartMs(state); return already > 0 ? Math.round(full / 2) : full; }
+
+// Kuhhandel-Zeit (Einstellung): der Herausgeforderte darf einmal pro Kuhhandel verlängern (+ volle Kuhhandel-Zeit).
+// Kein Logeintrag – die Uhr läuft auf den Geräten ab dem Start des Kuhhandels.
+export function tradeWait(prev, playerId) {
+  const state = clone(prev);
+  if (state.phase !== 'trade' || !state.trade) fail('Gerade läuft kein Kuhhandel.');
+  const t = state.trade;
+  if (playerId !== t.target) fail('Nur wer herausgefordert ist, kann um Bedenkzeit bitten.');
+  const sec = tradeTimerSec(state);
+  if (!sec) fail('Der Kuhhandel läuft ohne Uhr.');
+  if (t.waited) fail('Du hast schon „Warte“ gedrückt.');
+  t.waited = true;
+  t.extraSec = sec;
   return state;
 }
 
