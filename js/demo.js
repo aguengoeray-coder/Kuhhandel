@@ -186,6 +186,7 @@ export function buildDemoState(kind, local) {
       g = startTrade(g, 'u2', 'u1', 'hund', [0, 2, 6]);
       g = counterTrade(g, 'u1', [5, 6]);
       if (new URLSearchParams(location.search).get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'trade' }; // v0.70: Tiere laufen aus der Mitte zu dir
+      if (new URLSearchParams(location.search).get('fast')) local.potLand = Date.now() + 1500; // v0.76: schneller Kuhhandel – Einsätze laufen noch in die Mitte
       return g;
     }
     case 'tradeseen': { // Kuhhandel zwischen zwei anderen: Zuschauer sehen nur Rückseiten

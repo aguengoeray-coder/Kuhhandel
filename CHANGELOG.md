@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.76.0 – Erst in die Mitte, dann zum Gewinner
+
+- [x] **Schneller Kuhhandel, richtig:** Wird der Handel entschieden, während die Einsätze noch in die Mitte laufen, laufen sie jetzt fertig – das Ergebnis-Fenster wartet, bis sie in der Mitte stehen. Danach laufen alle nur noch aus der Mitte zum Gewinner. Kein Hin und Her mehr.
+- [x] **VS nicht mehr wegtippbar:** Die VS-Auftritte (Kuhhandel, Spezialkarte, Spielstart …) laufen immer ganz durch – Antippen überspringt sie nicht mehr.
+
 ## v0.75.0 – Flüssiger
 
 - [x] **Schneller Kuhhandel ohne Hin und Her:** Ist der Handel entschieden, während die Einsätze noch in die Mitte laufen, bleiben sie in der Mitte – von dort laufen alle zum Gewinner. Kein Zurücklaufen mehr zum Spieler und wieder in die Mitte.

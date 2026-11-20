@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.76.0', date: '20.11.', items: ['🤝 Kuhhandel: Tiere stehen erst in der Mitte, dann laufen sie zum Gewinner', '🎬 VS-Auftritte laufen immer ganz durch'] },
   { v: '0.75.0', date: '20.11.', items: ['🤝 Schneller Kuhhandel: Tiere laufen nicht mehr hin und her', '🫏 Esel: Papierbälle erst beim Wurf', '💵 Geld gleitet sauber auf seinen Platz in deiner Hand'] },
   { v: '0.74.0', date: '20.11.', items: ['🧹 Startseite aufgeräumt: größere Modus-Kacheln', '▶ „Weiter spielen“ klein oben neben deinem Namen', '🔑 Beitreten zeigt offene Räume und dein laufendes Spiel'] },
   { v: '0.73.0', date: '20.11.', items: ['🎮 Neuer Start: Modus-Kacheln mit Bild – Klassisch, Turbo, Börsen-Chaos, Beitreten', '🔑 Beitreten mit Spiel-Code funktioniert jetzt ohne PIN', '⚙️ Einstellungen der Runde direkt nach der Modus-Wahl'] },
