@@ -363,13 +363,21 @@ function renderStart() {
     </section>`;
 
   document.getElementById('create')?.addEventListener('click', () => onCreate());
-  app.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => { ui.mode = b.dataset.mode; ui.modeOpts = {}; ui.joinErr = ''; render(); setTimeout(() => app.querySelector('.mp-code input')?.focus(), 50); }));
+  app.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => { ui.mode = b.dataset.mode; ui.modeOpts = {}; ui.mpMoney = false; ui.joinErr = ''; render(); setTimeout(() => app.querySelector('.mp-code input')?.focus(), 50); }));
   app.querySelectorAll('[data-mp]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.mp;
     if (k === 'close') { ui.mode = null; return render(); }
-    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.money ? { money: { ...DEFAULT_MONEY } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }
+    if (k === 'moneyEdit') { ui.mpMoney = true; return render(); }
+    if (k === 'moneyDone') { ui.mpMoney = false; return render(); }
+    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }
     if (k === 'pin') { ui.mode = null; return openModal('rejoin'); }
     ui.modeOpts = { ...(ui.modeOpts || {}), [k]: !(ui.modeOpts || {})[k] }; render();
+  }));
+  app.querySelectorAll('[data-mptempo]').forEach((b) => b.addEventListener('click', () => { ui.modeOpts = { ...(ui.modeOpts || {}), tempo: b.dataset.mptempo }; render(); }));
+  app.querySelectorAll('[data-mpm]').forEach((b) => b.addEventListener('click', () => {
+    const o = ui.modeOpts || {}; const ms = { ...(o.moneySet || DEFAULT_MONEY) }; const v = b.dataset.mpm; const cnt = Object.values(ms).reduce((a, c) => a + c, 0);
+    const n = Math.max(0, (ms[v] || 0) + Number(b.dataset.d)); if (Number(b.dataset.d) > 0 && cnt >= MAX_MONEY_CARDS) return;
+    ms[v] = n; if (!n) delete ms[v]; ui.modeOpts = { ...o, moneySet: ms }; render();
   }));
   const jf = app.querySelector('#join-form');
   if (jf) jf.onsubmit = async (e) => {
@@ -383,7 +391,7 @@ function renderStart() {
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-mptest]').forEach((b) => b.addEventListener('click', () => { // v0.74 Debug: Testspiel mit diesem Modus und diesen Einstellungen
     const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null;
-    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.money ? { money: { ...DEFAULT_MONEY } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }));
+    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }));
   app.querySelectorAll('[data-hb]').forEach((b) => b.addEventListener('click', () => { ui.homeIdx = (ui.homeIdx || 0) + (b.dataset.hb === 'next' ? 1 : -1); render(); }));
   app.querySelectorAll('[data-dock]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.dock;
@@ -421,16 +429,32 @@ function modePanel(id) {
       ${open.length ? `<div class="mp-open"><small>Offene Räume</small>${open.map((g) => { const host = (g.players.find((p) => p.id === g.host) || g.players[0])?.name || '?'; const full = g.players.length >= MAX_PLAYERS;
         return `<button type="button" class="mp-room" data-joinid="${esc(g.id)}" ${full ? 'disabled' : ''}><b>${esc(host)}</b><span>${g.players.length}/${MAX_PLAYERS} · ${esc(g.code)}</span></button>`; }).join('')}</div>` : ''}
       <button type="button" class="mp-link" data-mp="pin">Schon im Spiel gewesen? Mit Code + PIN zurück auf deinen Platz</button>`;
+  } else if (ui.mpMoney) {
+    // v0.78: welche Scheine kommen in den Stapel? (wie im Warteraum)
+    const ms = o.moneySet || DEFAULT_MONEY; const cnt = Object.values(ms).reduce((a, b) => a + b, 0); const sum = Object.entries(ms).reduce((a, [v, n]) => a + Number(v) * n, 0);
+    right = `<div class="mp-hd"><b>💵 Geldscheine im Stapel</b><span>${cnt} von max. ${MAX_MONEY_CARDS} · ${sum} Taler</span></div>
+      <div class="msteps mp-msteps">${MONEY_VALUES.map((v) => { const n = ms[v] || 0; return `<div class="mstep ${n ? 'on' : ''}"><div class="mval" style="--m:${MONEY_CARD_COLORS[v]}">${v}</div>
+        <div class="mctl"><button type="button" data-mpm="${v}" data-d="-1" ${n ? '' : 'disabled'} aria-label="${v}er weniger">−</button><b>${n}</b><button type="button" data-mpm="${v}" data-d="1" ${cnt < MAX_MONEY_CARDS ? '' : 'disabled'} aria-label="${v}er mehr">+</button></div></div>`; }).join('')}</div>
+      <small class="mp-hint">Die Scheine werden zwischen die Tierkarten gemischt.${o.duo ? ' Zu zweit ohne 0er.' : ''}</small>
+      <button type="button" class="pill pill-red mp-go" data-mp="moneyDone">Fertig</button>`;
   } else {
-    const opts = [...(id === 'classic' ? [['duo', '👥 Zu zweit', 'Aufteilen statt Versteigern – genau 2 Spieler']] : []), ['money', '💵 Geldscheine im Stapel', 'Extra-Scheine zwischen den Tieren'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${m.settings.turbo ? 12 : 20} s`, 'Angebote mit Zeitlimit'], ['moneyCounts', '💰 Geld zählt am Ende', 'Taler werden mitgewertet']];
-    right = `<div class="mp-opts">${opts.map(([k, l, s]) => `<button type="button" class="mp-opt ${o[k] ? 'on' : ''}" data-mp="${k}" aria-pressed="${!!o[k]}"><i class="mp-check">${o[k] ? '✓' : ''}</i><span><b>${l}</b><small>${s}</small></span></button>`).join('')}</div>
-      ${DEBUG ? '' : '<small class="mp-hint">Alles lässt sich im Warteraum noch ändern.</small>'}
-      ${DEBUG ? `<div class="mp-test"><span>🧪 Testspiel <small>nur hier</small></span><button type="button" class="pill pill-white pill-small" data-mptest="3">3 Spieler</button><button type="button" class="pill pill-white pill-small" data-mptest="4">4 Spieler</button></div>` : ''}
-      <button type="button" class="pill pill-red mp-go" data-mp="create">Raum erstellen</button>`;
+    // v0.78 (Alp, Vorschlag A): Eckdaten oben, Einstellungen als Schalter-Kacheln, Tempo als Leiste
+    const ms = o.moneySet || DEFAULT_MONEY; const mcnt = Object.values(ms).reduce((a, b) => a + b, 0); const msum = Object.entries(ms).reduce((a, [v, n]) => a + Number(v) * n, 0);
+    const tiles = [
+      ...(id === 'classic' ? [['duo', '👥', 'Zu zweit', 'Aufteilen statt Versteigern']] : []),
+      ['money', '💵', 'Geld im Stapel', o.money ? `${mcnt} Scheine · ${msum} Taler` : 'Extra-Scheine zwischen den Tieren'],
+      ['tradeTimer', '⏱', 'Kuhhandel-Zeit', `${m.settings.turbo ? 12 : 20} s pro Angebot`],
+      ['moneyCounts', '💰', 'Geld zählt', 'Taler am Ende mitwerten'],
+    ];
+    right = `<div class="mp-hd"><b>${esc(m.name)}</b><span>${esc(m.tag)} · ${o.duo ? '2 Spieler' : esc(m.players || '3–4 Spieler')}</span></div>
+      <div class="mp-facts">${(m.facts || []).slice(0, 3).map((f) => `<i>${esc(f)}</i>`).join('')}</div>
+      <div class="mp-tiles">${tiles.map(([k, ic, l, s]) => `<div class="mp-tile ${o[k] ? 'on' : ''}"><button type="button" class="mp-tbtn" data-mp="${k}" role="switch" aria-checked="${!!o[k]}"><span class="ic" aria-hidden="true">${ic}</span><span class="tx"><b>${l}</b><small>${s}</small></span><i class="sw" aria-hidden="true"></i></button>${k === 'money' && o.money ? '<button type="button" class="mp-edit" data-mp="moneyEdit">Scheine anpassen ›</button>' : ''}</div>`).join('')}</div>
+      ${tempoSeg(o.tempo, true, 'data-mptempo')}
+      <div class="mp-gorow"><button type="button" class="pill pill-red mp-go" data-mp="create">Raum erstellen</button>${DEBUG ? `<button type="button" class="pill pill-white mp-tst" data-mptest="3" title="Testspiel (nur auf diesem Gerät)">🧪 3</button><button type="button" class="pill pill-white mp-tst" data-mptest="4" title="Testspiel (nur auf diesem Gerät)">🧪 4</button>` : ''}</div>`;
   }
   return `<div class="mpback" data-mp="close"></div><div class="mpanel m-${id}" role="dialog" aria-modal="true" aria-label="${esc(m.name)}">
     <div class="mp-art">${modeArt(id, 'meet')}<div class="mp-name"><b>${esc(m.name)}</b><small>${esc(m.tag)}</small></div></div>
-    <div class="mp-body"><button type="button" class="mclose" data-mp="close" aria-label="Zurück">✕</button><p class="mp-desc">${esc(m.desc)}</p>${right}</div></div>`;
+    <div class="mp-body"><button type="button" class="mclose" data-mp="close" aria-label="Zurück">✕</button>${id === 'join' ? `<p class="mp-desc">${esc(m.desc)}</p>` : ''}${right}</div></div>`;
 }
 
 // v0.73: Beitreten per Code – Warteraum suchen; klare Meldung, wenn das Spiel schon läuft oder es den Code nicht gibt

@@ -513,7 +513,8 @@ function seekFx(root) {
 // ---------- v0.63 Encounter-Intro („VS“): Farbflächen + Figuren sliden rein, VS-Knall, dann weiter ----------
 // Reine Anzeige (keine Spiellogik). parts: [{ fig, name, color, tag }], 2–n Teilnehmer; Aufteilung in schräge Bänder.
 // v0.63.1 (Alp): länger zum Anschauen – Kuhhandel 2 s, Spielstart 3 s; kurze Fassung ab dem 3. Duell desselben Paares
-export const INTRO_MS = 2000, INTRO_START_MS = 3000, INTRO_SHORT_MS = 900;
+// v0.78 (Alp): VS-Auftritte länger – man soll lesen können, wer gegen wen um welches Tier; skaliert mit dem Tempo der Runde
+export const INTRO_MS = 3200, INTRO_START_MS = 3200, INTRO_SHORT_MS = 2400;
 // „Test 1 will die Kuh von Test 2“ – Artikel/Plural je Tier (Akkusativ)
 const TIER_AKK = { hahn: ['den', 'deinen', 'Hahn', 'Hähne'], gans: ['die', 'deine', 'Gans', 'Gänse'], katze: ['die', 'deine', 'Katze', 'Katzen'], hund: ['den', 'deinen', 'Hund', 'Hunde'], schaf: ['das', 'dein', 'Schaf', 'Schafe'], ziege: ['die', 'deine', 'Ziege', 'Ziegen'], esel: ['den', 'deinen', 'Esel', 'Esel'], schwein: ['das', 'dein', 'Schwein', 'Schweine'], kuh: ['die', 'deine', 'Kuh', 'Kühe'], pferd: ['das', 'dein', 'Pferd', 'Pferde'], ratte: ['die', 'deine', 'Ratte', 'Ratten'] };
 export function wantText(who, whom, animal, count, meIsWho, meIsWhom) {
@@ -538,7 +539,7 @@ function encounterHtml({ parts, title, badge = '', center = '', vs = 'VS', sub =
     <div class="eivs">${rival ? '<i class="eiflame"></i>' : ''}<b>${esc(vs)}</b>${center}${sub ? `<small class="eisub">${esc(sub)}</small>` : ''}</div></div>`;
 }
 
-const introDur = (o) => (o.short ? INTRO_SHORT_MS : o.ms || INTRO_MS);
+const introDur = (o) => Math.round((o.short ? INTRO_SHORT_MS : o.ms || INTRO_MS) * TEMPO_F);
 
 // ---------- v0.62 „Profilbild wird lebendig“ ----------
 // Standard-Körper für alle ohne Shop-Avatar: einfacher Körper in Platzfarbe, das runde Profilbild ist der Kopf

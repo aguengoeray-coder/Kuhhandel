@@ -5,6 +5,8 @@
 - [x] **Ergebnisse länger sichtbar:** Ohne Spielverlauf ist das Ergebnis-Fenster die einzige Stelle, an der man sieht, wer was bekommt und zahlt – es bleibt jetzt 4,5 s (Kuhhandel 5,8 s, „umsonst“ 3 s) statt 3 s. Für dich selbst weiter wegtippbar.
 - [x] **Karte in Ruhe ansehen:** Nach dem Aufdecken bleiben 3 s (statt 1,5 s), bevor die Versteigerungsuhr läuft.
 - [x] **Tempo pro Runde:** Im Warteraum „Tempo: 🐢 Gemütlich / Normal / ⚡ Schnell“ – Gemütlich macht Versteigerung, Anschauen, Aufteilen und Ergebnisse 1,5× so lang, Schnell 0,7×.
+- [x] **VS-Auftritte länger:** Kuhhandel-VS 3,2 s (Wiederholung 2,4 s statt 0,9 s), Spielstart 3,2 s – man sieht in Ruhe, wer gegen wen um welches Tier spielt. Läuft mit dem Tempo der Runde mit.
+- [x] **Neues Modus-Fenster:** Oben Name, Untertitel und Eckdaten (z. B. „10 Tierarten · Versteigerung 10 s · Kuhhandel“), darunter die Einstellungen als Kacheln mit Symbol, kurzer Erklärung und Schiebeschalter (an = grün), Tempo als Leiste. Bei „Geld im Stapel“ führt „Scheine anpassen ›“ zu den Scheinen (0 bis 500 einzeln mit − / +).
 - [x] **Ratte:** Kein Rattenrudel mehr über den Tisch – nur noch die eine Ratte aus der Karte, die reihum am Geld knabbert.
 
 ## v0.77.0 – Zu zweit

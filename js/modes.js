@@ -3,9 +3,9 @@
 import { art } from './animals.js';
 
 export const MODES = [
-  { id: 'classic', name: 'Klassisch', tag: 'Das Original', desc: 'Versteigern, Kuhhandeln, Quartette sammeln – die Hausregeln, wie ihr sie kennt.', settings: {} },
-  { id: 'turbo', name: 'Turbo', tag: 'Schnelle Runde', desc: 'Nur 7 Tierarten, Versteigerung 6 s, Kuhhandel 12 s – perfekt für zwischendurch.', settings: { turbo: true } },
-  { id: 'boerse', name: 'Börsen-Chaos', tag: 'Mit 13 Börsen-News', desc: 'Kursrallye, Hype, Blase, Steuerprüfung, Zwangsversteigerung … die Werte tanzen.', settings: { boerse: true } },
+  { id: 'classic', name: 'Klassisch', tag: 'Das Original', players: '3–4 Spieler', facts: ['10 Tierarten', 'Versteigerung 10 s', 'Kuhhandel', 'Ratten & Spezialkarten'], desc: 'Versteigern, Kuhhandeln, Quartette sammeln – die Hausregeln, wie ihr sie kennt.', settings: {} },
+  { id: 'turbo', name: 'Turbo', tag: 'Schnelle Runde', players: '3–4 Spieler', facts: ['7 Tierarten', 'Versteigerung 6 s', 'Kuhhandel 12 s', 'Für zwischendurch'], desc: 'Nur 7 Tierarten, Versteigerung 6 s, Kuhhandel 12 s – perfekt für zwischendurch.', settings: { turbo: true } },
+  { id: 'boerse', name: 'Börsen-Chaos', tag: 'Mit 13 Börsen-News', players: '3–4 Spieler', facts: ['13 Börsen-News', 'Kurse ×½ bis ×4', 'Zwangsversteigerung', 'Wertung mit Kursen'], desc: 'Kursrallye, Hype, Blase, Steuerprüfung, Zwangsversteigerung … die Werte tanzen.', settings: { boerse: true } },
   { id: 'join', name: 'Beitreten', tag: 'Mit Spiel-Code', desc: 'Ein Freund hat schon einen Raum? Code eingeben und Platz nehmen.' },
 ];
 
