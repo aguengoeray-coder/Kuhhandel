@@ -280,7 +280,8 @@ function botStep(g, rand) {
   }
   if (g.phase === 'block') {
     const p = g.players.find((x) => x.id === g.block.player);
-    return chooseBlock(g, p.id, ANIMALS.find((a) => p.animals[a.id] === 4).id);
+    const pool = g.settings && g.settings.teams ? { animals: g.players.filter((x, i) => i % 2 === g.players.indexOf(p) % 2).reduce((o, x) => { for (const [k, n] of Object.entries(x.animals)) o[k] = (o[k] || 0) + n; return o; }, {}) } : p;
+    return chooseBlock(g, p.id, ANIMALS.find((a) => pool.animals[a.id] === 4).id);
   }
   if (g.phase === 'payment' && g.payment.special) {
     const p = g.players.find((x) => x.id === g.payment.payer);
@@ -1100,4 +1101,52 @@ test('v0.82 Geheimaufträge: jeder bekommt einen eigenen Auftrag, nur der eigene
   assert.equal(sc.score, before + 400);
   h.phase = 'ended';
   assert.equal(Object.keys(E.viewFor(h, P[0].id).missions).length, P.length); // am Ende sehen alle alles
+});
+
+test('v0.83 Teams 2 gegen 2: Partner gegenüber, kein Kuhhandel im Team, Tiere zählen zusammen, Team gewinnt gemeinsam', async () => {
+  const E = await import('../src/engine.js');
+  const g = createGame({ players: P, seed: 3, settings: { teams: true } });
+  assert.equal(E.partnerOf(g, P[0].id), P[2].id);
+  assert.equal(E.partnerOf(g, P[1].id), P[3].id);
+  assert.equal(createGame({ players: P.slice(0, 3), seed: 3, settings: { teams: true } }).settings.teams, null);
+  // Partnergeld sichtbar, fremdes nicht
+  const v = E.viewFor(g, P[0].id);
+  assert.ok(Array.isArray(v.players[2].money)); assert.equal(typeof v.players[1].money, 'number');
+  // kein Kuhhandel mit dem Partner
+  g.players[0].animals.kuh = 1; g.players[2].animals.kuh = 1; g.players[1].animals.kuh = 1;
+  assert.ok(E.possibleTrades(g, P[0].id).every((t) => t.target !== P[2].id));
+  assert.ok(E.possibleTrades(g, P[0].id).some((t) => t.target === P[1].id));
+  assert.throws(() => E.startTrade(g, P[0].id, P[2].id, 'kuh', [2]), /Partner/);
+  // Wertung: 2 + 2 Pferde beim Team = Quartett, beide Partner gleiche Punkte und beide gewinnen
+  const h = createGame({ players: P, seed: 3, settings: { teams: true } });
+  h.players[0].animals.pferd = 2; h.players[2].animals.pferd = 2;
+  h.players[1].animals.hahn = 4;
+  assert.ok(E.isQuartetComplete(h, 'pferd'));
+  const sc = E.scores(h);
+  assert.equal(sc[0].score, 1000); assert.equal(sc[2].score, 1000); assert.equal(sc[1].score, 10);
+  assert.equal(sc[0].teamName, `${P[0].name} & ${P[2].name}`);
+});
+
+test('v0.83 Teams: 60 zufällige Komplettspiele (auch Börsen-Chaos + Geheimaufträge) enden sauber, Team gewinnt gemeinsam', async () => {
+  const E = await import('../src/engine.js');
+  for (let seed = 1; seed <= 60; seed++) {
+    let g = createGame({ players: P, seed, settings: { teams: true, missions: seed % 3 === 0, boerse: seed % 2 === 0 } });
+    let r = seed * 4421;
+    const rand = () => { r = (r * 16807) % 2147483647; return r / 2147483647; };
+    let steps = 0;
+    while (g.phase !== 'ended') { g = botStep(g, rand); if (++steps > 80000) throw new Error('Team-Spiel endet nicht (Seed ' + seed + ')'); }
+    for (const a of ANIMALS) assert.ok(E.isQuartetComplete(g, a.id), `${a.id} (Seed ${seed})`);
+    const sc = E.scores(g);
+    assert.equal(sc[0].score, sc[2].score); assert.equal(sc[1].score, sc[3].score);
+    assert.ok(g.winner.length === 2 || g.winner.length === 4, `Seed ${seed}: ${g.winner}`);
+  }
+});
+
+test('v0.83 Team-Wahl: teamPick ordnet die Plätze so, dass Partner gegenüber sitzen', async () => {
+  const E = await import('../src/engine.js');
+  const g = createGame({ players: P, seed: 3, settings: { teams: true, teamPick: { [P[0].id]: 0, [P[1].id]: 0, [P[2].id]: 1, [P[3].id]: 1 } } });
+  assert.equal(E.partnerOf(g, P[0].id), P[1].id);
+  assert.equal(E.partnerOf(g, P[2].id), P[3].id);
+  const u = createGame({ players: P, seed: 3, settings: { teams: true, teamPick: { [P[0].id]: 0, [P[1].id]: 0, [P[2].id]: 0 } } }); // ungleich → Reihenfolge bleibt
+  assert.equal(E.partnerOf(u, P[0].id), P[2].id);
 });

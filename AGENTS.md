@@ -96,6 +96,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 - Wertung: (Summe der Quartettwerte + 250 je passender Spezialkarte) × Anzahl der Quartette, danach + 250 je Spezialkarte
   ohne zählendes Quartett.
 - **Geheimaufträge** (Schalter `missions`, alle Spielarten): jeder bekommt zu Beginn verdeckt einen Auftrag (`MISSIONS` in `src/engine.js`, je Spieler verschieden, zu zweit ohne Versteigerungs-Aufträge); nur der eigene ist sichtbar, am Ende alle; erfüllt → +300 … +500 Punkte zur Wertung.
+- **Teams 2 gegen 2** (Schalter `teams`, nur genau 4 Spieler, nicht zu zweit): Gastgeber wählt im Warteraum die Teams (`teamPick`, sonst Platz 1+3 gegen 2+4), Partner sitzen gegenüber; Tiere/Spezialkarten/Geld des Teams zählen zusammen (`teamPool`), Quartett = Team hat alle 4; Wertung pro Team wie ein Spieler + erfüllte Aufträge beider; Partnergeld offen; kein Kuhhandel und keine Pfändung im Team, Team-Quartett vor Pfändung geschützt; Rattenkönig blockiert ein Team-Quartett; beide Partner gewinnen gemeinsam.
 
 ## Design
 

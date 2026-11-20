@@ -4037,3 +4037,25 @@ em.kursed .kv, em.cv.kursed .kv { font-weight: 900; }
 /* v0.82: ab 5 Schaltern (z. B. Geheimaufträge) werden die Kacheln flacher, damit alles ohne Scrollen passt */
 .mp-tiles:has(> :nth-child(5)) .mp-tbtn { min-height: 38px; padding-block: 3px; }
 .mp-tiles:has(> :nth-child(5)) { gap: 5px; }
+/* v0.83 Teams 2 gegen 2 */
+.team-badge { position: absolute; left: 50%; bottom: -8px; translate: -50% 0; padding: 1px 8px; border-radius: 999px; font: 900 10px/1.3 var(--font-head); border: 2px solid #2B2B2B; white-space: nowrap; }
+.team-badge.t0 { background: #FFD34E; color: #2B2B2B; } .team-badge.t1 { background: #9FD0FF; color: #14202F; }
+.teamb { margin-right: 3px; font-weight: 400; }
+.mcnt .psum { margin-left: 4px; padding: 0 5px; border-radius: 6px; background: #E6F8EC; color: #138A3A; font-weight: 900; }
+.pods.teams { gap: 6px; }
+.pods.teams .pod { min-width: 0; }
+.turbotag.teamtag { background: #2B2B2B; color: #FFE27A; }
+.room-settings .rs-extra { grid-template-columns: repeat(3, minmax(0, auto)); } /* v0.83: 7 Schalter in 3 Spalten */
+.room-settings .rs-extra .rs-chip { white-space: nowrap; }
+.pods.teams .pod { width: 118px; }
+.pods.teams .pod .pblock b { font-size: 22px; }
+.pods.teams .pod .picons { max-width: 108px; }
+.pods.teams .pod.p1:nth-child(3) { margin-left: -6px; }
+.seat .team-badge { bottom: auto; top: -10px; }
+.pods.teams .picons .ci { width: 19px; height: 19px; }
+.ending.podium:has(.pods.teams) .sform2 { font-size: 11.5px; line-height: 1.25; }
+.ending.podium:has(.pods.teams) .pods { margin-top: -6px; margin-bottom: -8px; }
+.pods.teams .pdub { scale: .85; }
+button.team-badge { cursor: pointer; font-family: var(--font-head); box-shadow: 0 2px 0 rgba(0,0,0,.3); }
+button.team-badge:active { translate: -50% 1px; box-shadow: none; }
+.seat .team-badge { z-index: 4; }

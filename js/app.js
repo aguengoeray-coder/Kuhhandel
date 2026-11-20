@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.82.0';
+export const APP_VERSION = '0.83.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -370,7 +370,7 @@ function renderStart() {
     if (k === 'moneyEdit') { ui.mpMoney = true; return render(); }
     if (k === 'info') return openModal(`rules:${(ui.modeOpts || {}).duo ? 'duo' : ui.mode}`); // v0.80: ⓘ erklärt die Spielart
     if (k === 'moneyDone') { ui.mpMoney = false; return render(); }
-    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}) }); }
+    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}), ...(o.teams && !o.duo ? { teams: true } : {}) }); }
     if (k === 'pin') { ui.mode = null; return openModal('rejoin'); }
     ui.modeOpts = { ...(ui.modeOpts || {}), [k]: !(ui.modeOpts || {})[k] }; render();
   }));
@@ -392,7 +392,7 @@ function renderStart() {
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-mptest]').forEach((b) => b.addEventListener('click', () => { // v0.74 Debug: Testspiel mit diesem Modus und diesen Einstellungen
     const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null;
-    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}) }); }));
+    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}), ...(o.teams && !o.duo ? { teams: true } : {}) }); }));
   app.querySelectorAll('[data-hb]').forEach((b) => b.addEventListener('click', () => { ui.homeIdx = (ui.homeIdx || 0) + (b.dataset.hb === 'next' ? 1 : -1); render(); }));
   app.querySelectorAll('[data-dock]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.dock;
@@ -447,6 +447,7 @@ function modePanel(id) {
       ['tradeTimer', '⏱', 'Kuhhandel-Zeit', `${tradeTimerSec({ settings: { ...m.settings, tradeTimer: 20, tempo: o.tempo } })} s pro Angebot`],
       ['moneyCounts', '💰', 'Geld zählt', 'Taler am Ende mitwerten'],
       ['missions', '🎯', 'Geheimaufträge', 'Jeder bekommt einen Auftrag – Bonus am Ende'],
+      ...(o.duo ? [] : [['teams', '🤝', 'Teams 2 gegen 2', 'Nur zu viert · Partner gegenüber']]),
     ];
     right = `<div class="mp-hd"><b>${esc(m.name)}</b><span>${esc(m.tag)} · ${o.duo ? '2 Spieler' : esc(m.players || '3–4 Spieler')}</span><button type="button" class="mp-info" data-mp="info" aria-label="Regeln dieser Spielart">i</button></div>
       <div class="mp-facts">${(m.facts || []).slice(0, 3).map((f) => `<i>${esc(f)}</i>`).join('')}</div>
@@ -496,10 +497,11 @@ function renderRoom() {
       ${kick}${avatarHtml(p.id, p.name)}
       <div class="ribbon">${esc(p.name)}${you}</div>
       ${p.id === g.host ? '<span class="host-badge">Gastgeber</span>' : ''}
+      ${g.state?.settings?.teams ? (() => { const t = teamPickOf(g, p, i); return isHost ? `<button type="button" class="team-badge t${t}" data-teampick="${esc(p.seat || p.id)}" aria-label="${esc(p.name)}: Team wechseln">Team ${t ? 'B' : 'A'} ⇄</button>` : `<span class="team-badge t${t}">Team ${t ? 'B' : 'A'}</span>`; })() : ''}
     </div>`;
   }).join('');
   const duo = !!g.state?.settings?.duo; // v0.77 Zu zweit: genau 2 Spieler
-  const enough = duo ? g.players.length === 2 : g.players.length >= MIN_PLAYERS;
+  const enough = (duo ? g.players.length === 2 : g.players.length >= MIN_PLAYERS) && !teamsUneven(g);
   const outdated = g.players.filter((p) => { const v = versions[p.seat || p.id]; return v && v !== APP_VERSION && olderThan(v, APP_VERSION); });
   const money = g.state?.settings?.money || null;
   const moneyCount = money ? Object.values(money).reduce((a, b) => a + b, 0) : 0;
@@ -516,7 +518,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (14 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt am Ende'], ['missions', '🎯 Geheimaufträge']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['duo', '👥 Zu zweit'], ['turbo', '⚡ Turbo'], ['boerse', '📈 Börsen-Chaos'], ['tradeTimer', `⏱ Kuhhandel ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt'], ['missions', '🎯 Aufträge'], ...(duo ? [] : [['teams', '🤝 Teams 2:2']])].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
       ${tempoSeg(g.state?.settings?.tempo, isHost, 'data-tempo')}
     </div>
@@ -526,7 +528,7 @@ function renderRoom() {
   const hint = outdated.length
     ? `${outdated.map((p) => esc(p.name)).join(', ')} ${outdated.length > 1 ? 'haben' : 'hat'} eine alte Version – bitte App neu laden.`
     : isHost
-    ? (enough ? 'Alle da? Dann los!' : duo ? (g.players.length > 2 ? 'Zu zweit heißt genau 2 – „Zu zweit“ ausschalten oder jemand geht.' : 'Warte auf deinen Gegner – zu zweit.') : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
+    ? (enough ? (g.state?.settings?.teams ? (g.players.length === 4 ? 'Teams mit ⇄ wählen' : 'Teams nur zu viert') : 'Alle da? Dann los!') : teamsUneven(g) ? 'Bitte 2 gegen 2 (⇄)' : duo ? (g.players.length > 2 ? 'Zu zweit heißt genau 2 – „Zu zweit“ ausschalten oder jemand geht.' : 'Warte auf deinen Gegner – zu zweit.') : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
     : `Warte, bis ${esc((g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'der Gastgeber')} das Spiel startet.`;
 
   app.innerHTML = `
@@ -555,7 +557,12 @@ function renderRoom() {
   document.getElementById('start')?.addEventListener('click', onStart);
   document.getElementById('moneyToggle')?.addEventListener('click', () => saveSettings({ money: money ? null : { ...DEFAULT_MONEY } }));
   app.querySelectorAll('[data-tempo]').forEach((b) => b.addEventListener('click', () => saveSettings({ tempo: b.dataset.tempo === 'normal' ? null : b.dataset.tempo })));
-  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true), ...(!cur && k === 'turbo' ? { boerse: null, duo: null } : {}), ...(!cur && k === 'boerse' ? { turbo: null, duo: null } : {}), ...(!cur && k === 'duo' ? { turbo: null, boerse: null } : {}) }); })); // Turbo, Börsen-Chaos und Zu zweit schließen sich aus
+  app.querySelectorAll('[data-teampick]').forEach((b) => b.addEventListener('click', () => {
+    const g = ui.game; const tp = { ...(g.state?.settings?.teamPick || {}) };
+    g.players.forEach((p, i) => { const k = p.seat || p.id; if (tp[k] == null) tp[k] = i % 2; });
+    tp[b.dataset.teampick] = tp[b.dataset.teampick] ? 0 : 1; saveSettings({ teamPick: tp });
+  }));
+  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true), ...(!cur && k === 'turbo' ? { boerse: null, duo: null } : {}), ...(!cur && k === 'boerse' ? { turbo: null, duo: null } : {}), ...(!cur && k === 'duo' ? { turbo: null, boerse: null, teams: null } : {}), ...(!cur && k === 'teams' ? { duo: null } : {}) }); })); // Turbo, Börsen-Chaos und Zu zweit schließen sich aus
   app.querySelectorAll('[data-money]').forEach((b) => b.addEventListener('click', () => {
     const v = b.dataset.money;
     const next = { ...money, [v]: Math.max(0, (money[v] || 0) + Number(b.dataset.d)) };
@@ -568,6 +575,10 @@ const MONEY_CARD_COLORS = { 0: '#ECE7DB', 10: '#F6D98B', 20: '#F2B880', 50: '#A8
 const DEFAULT_MONEY = { 0: 3, 10: 2, 50: 2, 100: 1, 200: 1, 500: 1 };
 
 // Einstellungen im Warteraum speichern (nur Gastgeber). Liegen bis zum Start in games.state.settings.
+// v0.83 Team-Wahl im Warteraum: Gastgeber tippt „Team A/B ⇄“ an; ohne Wahl gilt die Reihenfolge (1+3 gegen 2+4)
+function teamPickOf(g, p, i) { const tp = g.state?.settings?.teamPick || {}; return tp[p.seat || p.id] ?? i % 2; }
+function teamsUneven(g) { if (!g.state?.settings?.teams || g.players.length !== 4) return false; const a = g.players.filter((p, i) => teamPickOf(g, p, i) === 0).length; return a !== 2; }
+
 async function saveSettings(patch) {
   const g = ui.game;
   const settings = { ...(g.state?.settings || {}), ...patch };
@@ -1881,7 +1892,7 @@ function rulesBody(tab = 'classic') {
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
   <b>👑 Rattenkönig:</b> Am Ende hat einer alle 4 Ratten – er bekommt die Rattenmütze und wählt eines seiner Quartette, das nicht zählt.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Erst 3 s „Zeig Batzen!“ (jeder darf drücken – dann liegen alle Geldstapel mit Anzahl kurz offen), dann zählt für alle außer dem Aufdecker ein Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
-  <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.<br><b>🎯 Geheimaufträge:</b> Jeder bekommt zu Beginn verdeckt einen Auftrag (z. B. „Gewinne mindestens 3 Kuhhandel“ oder „Sammle das Esel-Quartett“) – nur du siehst deinen (🎯 oben links, mit Stand). Am Ende werden alle aufgedeckt; wer seinen erfüllt, bekommt 300–500 Punkte dazu.</p>
+  <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.<br><b>🎯 Geheimaufträge:</b> Jeder bekommt zu Beginn verdeckt einen Auftrag (z. B. „Gewinne mindestens 3 Kuhhandel“ oder „Sammle das Esel-Quartett“) – nur du siehst deinen (🎯 oben links, mit Stand). Am Ende werden alle aufgedeckt; wer seinen erfüllt, bekommt 300–500 Punkte dazu.<br><b>🤝 Teams 2 gegen 2</b> (nur zu viert): Platz 1 + 3 und 2 + 4 sind ein Team und sitzen sich gegenüber. Eure Tiere zählen zusammen – 2 + 2 Kühe sind euer Kuh-Quartett. Das Geld deines Partners siehst du offen (🤝), Kuhhandel im eigenen Team gibt es nicht. Gewertet wird pro Team wie ein Spieler (Quartette zusammen), plus erfüllte Geheimaufträge beider; das bessere Team gewinnt gemeinsam.</p>
   <h3>Knöpfe</h3><p class="rlegend"><span class="rl rl-get">Grün</span> du bekommst etwas (+ ⬇) · <span class="rl rl-pay">Orange</span> du zahlst (− ⬆) · <span class="rl rl-move">Rot</span> Karte aufdecken · <span class="rl rl-trade">Lila</span> Kuhhandel · <span class="rl rl-neutral">Weiß</span> neutral / zurück. Gestrichelt = gerade gesperrt. Der Knopf, der gerade erwartet wird, leuchtet nach ein paar Sekunden sanft.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
   return `<h2>Spielregeln</h2>${tabs}<div class="rules">${body}</div>`;
@@ -2175,7 +2186,7 @@ function demo(kind) {
   if (kind === 'room') {
     ui.screen = 'room';
     ui.game = { id: 'g0', code: 'HOFX', host: params.get('guest') ? 'u2' : 'u1', status: 'lobby', version: 2, players: [{ id: 'u1', name: 'Alp' }, { id: 'u2', name: 'Nico' }, { id: 'u3', name: 'Lea' }],
-      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : params.get('turbo') ? { settings: { turbo: true, tradeTimer: 20 } } : null };    if (params.get('join')) setTimeout(() => { ui.game = { ...ui.game, players: [...ui.game.players, { id: 'u4', name: 'Mo' }] }; render(); }, 300); // Screenshots: jemand steigt ein
+      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : params.get('teams') ? { settings: { teams: true, missions: true } } : params.get('turbo') ? { settings: { turbo: true, tradeTimer: 20 } } : null };    if (params.get('join')) setTimeout(() => { ui.game = { ...ui.game, players: [...ui.game.players, { id: 'u4', name: 'Mo' }] }; render(); }, 300); // Screenshots: jemand steigt ein
   }
   const demoState = buildDemoState(kind, gameLocal);
   if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen
