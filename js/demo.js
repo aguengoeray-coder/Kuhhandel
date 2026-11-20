@@ -395,6 +395,7 @@ export function buildDemoState(kind, local) {
     case 'won': { // v0.62: Versteigerung gerade gewonnen (mit ?pop=1) → Gewinner jubelt
       const wb = new URLSearchParams(location.search).get('who') || 'u4';
       g = base(); g.turn = 1; g.deck[0] = 'schwein';
+      if (qs.get('q4')) g.players.find((x) => x.id === wb).animals.schwein = 3; // v0.77: ?demo=won&pop=1&q4=1 → Quartett-Show
       g = drawForAuction(g, 'u2');
       g = bid(g, wb, 50);
       g = closeAuction(g, 'u2', 'sell');
@@ -402,6 +403,7 @@ export function buildDemoState(kind, local) {
       [...pl.money.keys()].sort((a, b) => pl.money[b] - pl.money[a]).forEach((i) => { if (sum < 50) { idx.push(i); sum += pl.money[i]; } });
       g = pay(g, wb, idx);
       local.prev = { logLen: g.log.length - 1, phase: 'auction' };
+      if (qs.get('q4')) { local.prevQuartets = []; g.players.forEach((p) => Object.entries(p.animals).forEach(([id, n]) => { if (n === 4 && !(p.id === wb && id === 'schwein')) local.prevQuartets.push(`${p.id}|${id}`); })); }
       return g;
     }
     case 'moneydrawn': {
