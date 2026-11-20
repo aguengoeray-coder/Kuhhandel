@@ -39,10 +39,11 @@ export function hektikMs(state) { return Math.round(AUCTION_START_MS * tempoFact
 export function tradeTimerSec(state) { const t = Number(state?.settings?.tradeTimer) || 0; return t ? Math.round((isTurbo(state) ? 12 : t) * tempoFactor(state)) : 0; }
 
 // ---------- Börsen-Chaos (eigene Spielart, nie zusammen mit Turbo) ----------
-// 13 Börsen-News im Stapel: 2× Kursrallye, 2× Kurssturz, Hype (×2), Blase platzt (÷2) (je ein Tier, beim Mischen ausgelost),
-// Dividende, Steuerprüfung, Marktpanik, Hektik, 2× Zwangsversteigerung, Einspruch.
+// 14 Börsen-News im Stapel: 2× Kursrallye, 2× Kurssturz, Hype (×2), Blase platzt (÷2) (je ein Tier, beim Mischen ausgelost),
+// Dividende, Steuerprüfung, Marktpanik, Hektik, Blindmarkt, 2× Zwangsversteigerung, Einspruch.
 // Aufgedeckt → Wirkung sofort, danach deckt der Aufdecker nochmal auf (wie bei der Ratte).
 export const NEWS_PREFIX = 'news-';
+export const BLIND_COUNT = 3;           // v0.81 Blindmarkt: so viele Versteigerungen laufen verdeckt
 export const HEKTIK_MS = 5000;          // Hektik bei Normal-Tempo (sonst halbe Versteigerungszeit, siehe hektikMs)
 export const HEKTIK_COUNT = 3;          // … die nächsten 3
 export const KURS_STEP = 50;            // alte Karten ohne Zahl (laufende Partien): ±50 %
@@ -108,7 +109,7 @@ function newsCards(seed) {
   const r = rng(seed ^ 0x5eed);
   const pick = () => ANIMALS[Math.floor(r() * ANIMALS.length)].id;
   const pct = (w) => { let x = r() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { x -= w[i]; if (x < 0) return KURS_PCTS[i]; } return KURS_PCTS.at(-1); };
-  return [`rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `hype-${pick()}`, `blase-${pick()}`, 'dividende', 'steuer', 'panik', 'hektik', 'pfaendung', 'pfaendung', 'einspruch'].map((x) => NEWS_PREFIX + x);
+  return [`rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `rallye-${pick()}-${pct(RALLYE_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `crash-${pick()}-${pct(CRASH_WEIGHTS)}`, `hype-${pick()}`, `blase-${pick()}`, 'dividende', 'steuer', 'panik', 'hektik', 'blind', 'pfaendung', 'pfaendung', 'einspruch'].map((x) => NEWS_PREFIX + x);
 }
 
 export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
@@ -468,6 +469,7 @@ const NEWS_TEXT = {
   hype: (a) => `Hype: ${animalName(a)} ×2`,
   blase: (a) => `Blase platzt: ${animalName(a)} ÷2`,
   hektik: () => `Hektik: die nächsten ${HEKTIK_COUNT} Versteigerungen nur halb so lang`,
+  blind: () => `Blindmarkt: die nächsten ${BLIND_COUNT} Versteigerungen verdeckt`,
 };
 function applyNews(state, me, card) {
   const n = newsOf(card);
@@ -501,6 +503,8 @@ function applyNews(state, me, card) {
     ev.movers = Object.keys(ev.moved); // v0.72: wer einen Schein geschoben hat (öffentlich, ohne Werte)
   } else if (n.kind === 'hektik') {
     state.hektik = (state.hektik || 0) + HEKTIK_COUNT;
+  } else if (n.kind === 'blind') {
+    state.blind = (state.blind || 0) + BLIND_COUNT; // v0.81 Blindmarkt: Katze im Sack
   } else fail('Unbekannte Börsen-News.');
   log(state, `${me.name} deckt Börsen-News auf – ${NEWS_TEXT[n.kind](n.animal, n.pct)}.`);
   state.lastEvent = ev;
@@ -561,8 +565,14 @@ export function drawForAuction(prev, playerId, now) {
     log(state, `${me.name} deckt die ${animalName(sp)}-Spezialkarte auf.`);
     return state;
   }
-  log(state, `${me.name} versteigert: ${animalName(animal)}.`);
-  if (animal === 'esel') {
+  // v0.81 Blindmarkt (Börsen-Chaos): die Karte bleibt für alle verdeckt bis zum Zuschlag – auch der Esel-Bonus kommt erst dann
+  const blind = (state.blind || 0) > 0;
+  if (blind) {
+    state.blind -= 1;
+    log(state, `${me.name} versteigert verdeckt eine Karte (Blindmarkt).`);
+    state.lastEvent = { n: state.log.length, type: 'draw', blind: true };
+  } else log(state, `${me.name} versteigert: ${animalName(animal)}.`);
+  if (blind) { /* Esel-Bonus erst beim Aufdecken (closeAuction) */ } else if (animal === 'esel') {
     const payout = DONKEY_PAYOUTS[state.donkeysDrawn];
     state.donkeysDrawn += 1;
     for (const p of state.players) giveCards(p, bankCards(payout));
@@ -573,7 +583,7 @@ export function drawForAuction(prev, playerId, now) {
   }
   const fast = (state.hektik || 0) > 0; // Börsen-Chaos „Hektik“: diese Versteigerung nur 5 s
   if (fast) state.hektik -= 1;
-  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + revealMs(state) : null, endsAt: now != null ? now + revealMs(state) + (fast ? hektikMs(state) : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
+  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + revealMs(state) : null, endsAt: now != null ? now + revealMs(state) + (fast ? hektikMs(state) : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}), ...(blind ? { blind: true } : {}) };
   state.phase = 'auction';
   return state;
 }
@@ -767,6 +777,18 @@ export function closeAuction(prev, playerId, mode, now) {
   if (playerId !== a.auctioneer) fail('Nur der Auktionator kann die Versteigerung beenden.');
   if (a.endsAt != null && now != null && now < a.endsAt) fail('Die Versteigerung läuft noch.');
   const auctioneer = player(state, a.auctioneer);
+  if (a.blind) { // v0.81 Blindmarkt: jetzt wird aufgedeckt (Esel-Bonus erst jetzt)
+    a.blind = false;
+    const rev = { n: state.log.length + 1, animal: a.animal };
+    if (a.animal === 'esel') {
+      const payout = DONKEY_PAYOUTS[state.donkeysDrawn];
+      state.donkeysDrawn += 1;
+      for (const p of state.players) giveCards(p, bankCards(payout));
+      rev.eselBonus = payout; rev.eselNr = state.donkeysDrawn;
+    }
+    log(state, `Aufgedeckt: ${animalName(a.animal)}${rev.eselBonus ? ` – ${rev.eselNr}. Esel, alle bekommen ${rev.eselBonus} Taler` : ''}.`);
+    state.blindReveal = rev;
+  }
 
   if (!a.high) {
     auctioneer.animals[a.animal] += 1;
@@ -1204,6 +1226,7 @@ export function viewFor(state, playerId) {
   if (v.trade && v.trade.challenger !== playerId) v.trade.offer = v.trade.offer.length;
   if (v.rat) v.rat.pot = v.rat.pot.length; // gelegte Karten liegen verdeckt
   if (v.divide && v.divide.by !== playerId) v.divide.card = null; // nur wer aufteilt, sieht die Karte
+  if (v.phase === 'auction' && v.auction && v.auction.blind) v.auction.animal = null; // v0.81 Blindmarkt: auch der Auktionator sieht nichts
   if (v.lastEvent && v.lastEvent.type === 'divided') {
     for (const k of ['first', 'second']) { const x = v.lastEvent[k]; if (x && x.to !== playerId && isMoneyCard(x.card)) x.card = 'geld-?'; } // fremdes Geld bleibt verdeckt
   }

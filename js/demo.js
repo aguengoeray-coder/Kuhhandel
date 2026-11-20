@@ -367,6 +367,18 @@ export function buildDemoState(kind, local) {
       { const top = new URLSearchParams(location.search).get('top'); if (top === 'news') g.deck.unshift('news-hype-kuh'); if (top === 'money') g.deck.unshift('geld-100'); }
       return g;
     }
+    case 'blind': { // v0.81 Blindmarkt: verdeckte Versteigerung (&rev=1: Aufdecken nach dem Zuschlag, &esel=1 mit Esel-Bonus)
+      g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
+      const b = base(); g.players = b.players; g.deck = b.deck; g.turn = 1; g.donkeysDrawn = 1;
+      g.kurse = { kuh: 50, pferd: -50, schaf: 100 };
+      const q = new URLSearchParams(location.search);
+      g.blind = q.get('open') ? 0 : 3; g.deck.unshift(q.get('esel') ? 'esel' : q.get('open') || 'kuh');
+      const t = Date.now() - 4200;
+      g = drawForAuction(g, g.players[1].id, t);
+      g = bid(g, g.players[2].id, 60, t + 3300);
+      if (q.get('rev')) { g.auction.endsAt = Date.now() - 100; g = closeAuction(g, g.players[1].id, 'sell', Date.now()); local.prev = { logLen: g.log.length - 1, phase: 'auction' }; }
+      return g;
+    }
     case 'pfaend': { // v0.65: du hast „Zwangsversteigerung“ + „Einspruch“ auf der Hand, Mitspieler je eine verdeckte Karte
       g = createGame({ players: P3 ? PLAYERS.slice(0, 3) : PLAYERS, seed: 7, settings: { boerse: true } });
       const b = base(); g.players = b.players; g.deck = b.deck; g.turn = b.turn;
