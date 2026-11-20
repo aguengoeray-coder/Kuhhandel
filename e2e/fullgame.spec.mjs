@@ -17,7 +17,7 @@ const GAMES = (process.env.E2E_GAMES ? (x) => x.filter((g) => process.env.E2E_GA
   { name: 'spiel3-anfang', q: '?debug=1&demo=testspiel3', vp: [800, 360], seed: 23, dauer: 240000 },
   // v0.60 Börsen-Chaos: News, Kurse, Hektik im echten Ablauf (3 Minuten)
   { name: 'boerse4-anfang', q: '?debug=1&demo=testspiel&boerse=1', vp: [844, 390], seed: 31, dauer: 180000 },
-  { name: 'duo-komplett', q: '?debug=1&demo=testspiel2', vp: [844, 390], seed: 41 }, // v0.77 Zu zweit: Partie bis zum Ende
+  { name: 'duo-komplett', q: '?debug=1&demo=testspiel2', vp: [844, 390], seed: 41, max: 660000 }, // v0.77 Zu zweit: Partie bis zum Ende (v0.80: 11 min – seit v0.78 längere Ergebnis-Fenster/Shows, lokal ~400 s)
 ]);
 const MAX_MS = Number(process.env.E2E_GAME_MS || 420000);
 
@@ -41,7 +41,7 @@ async function play(browser, url, g) {
   const st = { ended: false, stuck: null, overlaps: new Map(), steps: 0, events: {} };
   let lastSig = '', sigAt = Date.now(); let shots = 0;
   const t0 = Date.now();
-  while (Date.now() - t0 < (g.dauer || MAX_MS)) {
+  while (Date.now() - t0 < (g.dauer || g.max || MAX_MS)) {
     st.steps++;
     await page.waitForTimeout(120);
     for (const m of await page.evaluate(tableOverlaps).catch(() => [])) {
@@ -103,7 +103,7 @@ test('Komplette Partien mit Test-Spielern', { timeout: 20 * 60 * 1000 }, async (
       for (const [g, r] of res) {
         const vp = `${g.vp[0]}×${g.vp[1]}`;
         lines.push(`| ${g.name} | ${vp} | ${r.ended ? `✅ nach ${r.endS} s` : g.dauer && !r.stuck ? `✅ ${g.dauer / 60000} min gespielt` : '❌'} | ${r.stuck ? `❌ ${r.stuck}` : '–'} | ${r.errs.length} | ${r.overlaps.size} | ${Object.entries(r.events).map(([k, v]) => `${k} ${v}`).join(', ').slice(0, 120)} |`);
-        if (!r.ended && !r.stuck && !g.dauer) rows.push({ seite: g.name, vp, art: 'kein-ende', stufe: 'fehler', ziel: 'Partie', text: `nach ${MAX_MS / 1000} s kein Siegertreppchen` });
+        if (!r.ended && !r.stuck && !g.dauer) rows.push({ seite: g.name, vp, art: 'kein-ende', stufe: 'fehler', ziel: 'Partie', text: `nach ${(g.max || MAX_MS) / 1000} s kein Siegertreppchen` });
         if (r.stuck) rows.push({ seite: g.name, vp, art: 'haengt', stufe: 'fehler', ziel: 'Partie', text: `40 s keine Änderung: ${r.stuck} · Knöpfe: ${(r.buttons || '').slice(0, 160)}`, shot: r.stuckShot });
         for (const e of r.errs) rows.push({ seite: g.name, vp, art: 'js-fehler', stufe: 'fehler', ziel: 'Konsole', text: e.slice(0, 160) });
         for (const m of r.overlaps.values()) { const k = known(g.name, m); rows.push({ seite: g.name, vp, ...m, bekannt: k ? k.grund : null }); }
