@@ -715,12 +715,12 @@ test('Debug: Spiel sofort beenden – nur wenn alle Quartette verteilt, dann reg
 });
 
 // ---------- Börsen-Chaos ----------
-test('Börsen-Chaos: 67 Karten (54 + 13 News inkl. Hype, Blase, 2× Zwangsversteigerung + Einspruch), nie zusammen mit Turbo', async () => {
+test('Börsen-Chaos: 68 Karten (54 + 14 News inkl. Hype, Blase, Blindmarkt, 2× Zwangsversteigerung + Einspruch), nie zusammen mit Turbo', async () => {
   const { isNewsCard, newsOf, isBoerse } = await import('../src/engine.js');
   const g = createGame({ players: P, seed: 9, settings: { boerse: true } });
-  assert.equal(g.deck.length, 67);
+  assert.equal(g.deck.length, 68);
   const news = g.deck.filter(isNewsCard).map((c) => newsOf(c).kind).sort();
-  assert.deepEqual(news, ['blase', 'crash', 'crash', 'dividende', 'einspruch', 'hektik', 'hype', 'panik', 'pfaendung', 'pfaendung', 'rallye', 'rallye', 'steuer']);
+  assert.deepEqual(news, ['blase', 'blind', 'crash', 'crash', 'dividende', 'einspruch', 'hektik', 'hype', 'panik', 'pfaendung', 'pfaendung', 'rallye', 'rallye', 'steuer']);
   assert.deepEqual(g.kurse, {});
   const t = createGame({ players: P.slice(0, 3), seed: 9, settings: { boerse: true, turbo: true } });
   assert.equal(t.deck.filter(isNewsCard).length, 0);
@@ -1056,4 +1056,24 @@ test('v0.79 „Warte, warte, warte!“: Versteigerung +volle Zeit (ab dem zweite
   d = E.divideWait(d, 'a', 2000);
   assert.equal(d.divide.endsAt, de + 10000);
   assert.throws(() => E.divideWait(d, 'a', 3000), /schon/);
+});
+
+test('v0.81 Blindmarkt: nächste 3 Versteigerungen verdeckt (auch für den Auktionator), Aufdecken beim Zuschlag, Esel-Bonus erst dann', async () => {
+  const E = await import('../src/engine.js');
+  let g = E.drawForAuction(boerseWithTop('news-blind'), 'a', 0);
+  assert.equal(g.blind, 3);
+  g.deck.unshift('esel');
+  g = E.drawForAuction(g, 'a', 1000);
+  assert.equal(g.blind, 2);
+  assert.equal(g.auction.blind, true);
+  assert.equal(g.lastEvent.type, 'draw'); assert.equal(g.lastEvent.animal, undefined);
+  const before = g.players.map((p) => p.money.length);
+  assert.deepEqual(g.players.map((p) => p.money.length), before); // noch kein Esel-Bonus
+  for (const pid of ['a', 'b']) assert.equal(E.viewFor(g, pid).auction.animal, null);
+  assert.ok(!/Esel/.test(g.log.at(-1)));
+  g = E.closeAuction(g, 'a', 'sell', g.auction.endsAt + 1);
+  assert.equal(g.blindReveal.animal, 'esel');
+  assert.equal(g.blindReveal.eselBonus, 50);
+  assert.equal(g.players[0].animals.esel, 1);
+  assert.ok(g.players.every((p, i) => p.money.length === before[i] + 1));
 });

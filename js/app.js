@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.80.0';
+export const APP_VERSION = '0.81.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -515,7 +515,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (13 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (14 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
       ${tempoSeg(g.state?.settings?.tempo, isHost, 'data-tempo')}
     </div>
@@ -1847,6 +1847,7 @@ const NEWS_RULES = [
   ['🧾', 'Steuerprüfung', '1×', 'Jeder gibt seinen höchsten Schein ab (du siehst nur deinen).'],
   ['🔀', 'Marktpanik', '1×', 'Jeder schiebt einen zufälligen Schein verdeckt nach links.'],
   ['⚡', 'Hektik', '1×', 'Die nächsten 3 Versteigerungen laufen nur halb so lang.'],
+  ['🙈', 'Blindmarkt', '1×', 'Die nächsten 3 Versteigerungen laufen verdeckt – niemand sieht das Tier, auch der Auktionator nicht. Erst beim Zuschlag wird aufgedeckt (ein Esel bringt den Bonus erst dann).'],
   ['⚖️', 'Zwangsversteigerung', '2×', 'Handkarte (verdeckt). Spielst du <i>statt</i> deines Zuges: Ein Tier eines Mitspielers wird versteigert, er muss verkaufen und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld.'],
   ['🛡️', 'Einspruch', '1×', 'Handkarte. Wehrt eine Pfändung gegen dich automatisch ab.'],
 ];
@@ -1858,9 +1859,9 @@ function rulesBody(tab = 'classic') {
   <h3>⚡ Turbo – schnelle Runde</h3><p>Alles wie in den Grundregeln, nur kürzer:</p>
   <ul class="rlist"><li><b>7 Tierarten</b> – ohne Hahn, Gans und Katze (28 Tierkarten).</li><li><b>Versteigerung 6 s</b> statt 10 s (nach jedem Gebot wieder 6 s).</li><li><b>Kuhhandel-Zeit 12 s</b>, wenn sie eingeschaltet ist.</li><li>Nicht zusammen mit Börsen-Chaos oder Zu zweit.</li></ul>`;
   else if (tab === 'boerse') body = `
-  <h3>📈 Börsen-Chaos</h3><p>Wie die Grundregeln, dazu liegen <b>13 Börsen-News</b> im Stapel. Ihre Rückseite ist schwarz-gold mit Kurve – du siehst also, wenn als Nächstes eine News kommt. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf.</p>
+  <h3>📈 Börsen-Chaos</h3><p>Wie die Grundregeln, dazu liegen <b>14 Börsen-News</b> im Stapel. Ihre Rückseite ist schwarz-gold mit Kurve – du siehst also, wenn als Nächstes eine News kommt. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf.</p>
   <div class="rnews">${NEWS_RULES.map(([i, n, c, t]) => `<div class="rnew"><i>${i}</i><b>${n} <small>${c}</small></b><span>${t}</span></div>`).join('')}</div>
-  <p><b>Kurse</b> rechnen wie an der Börse mal (×2 und danach ÷2 = wieder normal), höchstens ×4, nie unter 0. Der Kurszettel neben dem Stapel zeigt den aktuellen Wert. Gewertet wird mit den Kursen am Spielende; Spezialkarten (250) und Esel-Bonus bleiben gleich.</p>`;
+  <p><b>Kurse</b> rechnen wie an der Börse mal (×2 und danach ÷2 = wieder normal), höchstens ×4, nie unter 0. Der Kurszettel neben dem Stapel zeigt den aktuellen Wert. Auf allen Tierkarten steht der Kurs sofort: alter Wert durchgestrichen, neuer grün (gestiegen) oder rot (gefallen). Gewertet wird mit den Kursen am Spielende; Spezialkarten (250) und Esel-Bonus bleiben gleich.</p>`;
   else if (tab === 'duo') body = `
   <h3>👥 Zu zweit (Kuhhandel-Master-Variante)</h3>
 <p>Genau 2 Spieler. Statt zu versteigern wird <b>aufgeteilt</b>: Wer dran ist, schaut sich die oberste Karte heimlich an und <b>behält</b> sie – dann bekommt der andere die nächste Karte – oder <b>gibt sie ab</b> und bekommt selbst die nächste. 10 s Bedenkzeit, danach wird automatisch behalten. Die Rückseite der nächsten Karte zeigt, ob ein Tier oder 💰 Geld kommt. Geldscheine (ohne 0er) liegen im Stapel, es gibt keinen Esel-Bonus, Ratten und Spezialkarten werden einfach mit aufgeteilt. Statt aufzuteilen darf man auch einen Kuhhandel starten. Ist der Stapel leer, gibt es nur noch Kuhhandel; verzichten beide nacheinander, ist das Spiel vorbei. Wertung wie immer.</p>

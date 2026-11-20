@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.81.0 – Börsen-Chaos: Kurse sofort + Blindmarkt
+
+- [x] **Kurse wirken sofort:** Auf allen Tierkarten im Börsen-Chaos (Versteigerung, Auslage, Kuhhandel, Mitspieler) steht der aktuelle Kurs – alter Wert durchgestrichen, neuer Wert grün (gestiegen) oder rot (gefallen).
+- [x] **Neue Börsen-News „🙈 Blindmarkt“** (1×, jetzt 14 News): Die nächsten 3 Versteigerungen laufen verdeckt – niemand sieht das Tier, auch der Auktionator nicht. Beim Zuschlag dreht sich die Karte für alle um; ein Esel bringt seinen Bonus erst dann. Neben dem Stapel steht „🙈 Blind 3“.
+- [x] Spielregeln (Reiter Börsen-Chaos) und Modus-Kachel angepasst.
+
 ## v0.80.0 – Mein Profil
 
 - [x] **„Mein Profil“ statt „Dein Spielerbild“** (Startseite → auf deinen Namen tippen): links deine Figur groß, Name, Titel (z. B. „Kuh-Kaiser“), Dublonen und Kurz-Statistik (Spiele, Siege, Rekord) mit Abkürzung zu Statistik und Shop.

@@ -6,7 +6,7 @@ import {
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
-  isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, isMoneyCard, playPfaendung, pfaendTargets,
+  isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, BLIND_COUNT, isMoneyCard, playPfaendung, pfaendTargets,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, waitAuction, waitExtraMs, tradeWait, divideWait, batzenStage, showBatzen,
   isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue, tempoFactor,
 } from '../src/engine.js';
@@ -50,7 +50,10 @@ const ESEL_CLIMB_AT = 700, ESEL_THROW_AT = ESEL_CLIMB_AT + 950, ESEL_THROW_GAP =
 const PUNCH_MS = 3400; // Admin-Fähigkeit „Verprügeln“: Dauer der Animation
 // Börsen-Chaos: aktuelle Kurse des gerade gezeichneten Spiels (null = Grundwerte)
 let KURSE = null;
-const aval = (id) => (id === RAT ? null : kursValue(id, KURSE));
+const aval = (id) => (id === RAT || !id ? null : kursValue(id, KURSE));
+// v0.81 Kurse wirken sofort (Alp): Weicht der Kurs vom Kartenwert ab, steht der alte Wert durchgestrichen und der neue farbig darunter
+const kursDiff = (id) => { const v = aval(id); const base = id && ANIMAL_BY_ID[id] ? ANIMAL_BY_ID[id].value : null; return v != null && base != null && v !== base ? { base, v, up: v > base } : null; };
+const valHtml = (id) => { const d = kursDiff(id); return d ? `<s>${d.base}</s><b class="kv ${d.up ? 'up' : 'down'}">${d.v}</b>` : `${aval(id) ?? ''}`; };
 const specialsOf = (p) => p.specials || [];
 const ratsOf = (p) => p.animals[RAT] || 0;
 const karten = (n) => (n === 1 ? '1 Karte' : `${n} Karten`);
@@ -82,7 +85,7 @@ function animalMini(id, n) {
   for (let i = 1; i < n; i++) shadows.push(`${i * 3}px ${-i * 3}px 0 -1px #D6CCB4`);
   const v = aval(id);
   return `<div class="amini ${n === 4 && id !== RAT ? 'quartet' : ''} ${id === RAT ? 'rat' : ''}" title="${aname(id)}">
-    <div class="acard" style="--a:${ANIMAL_COLORS[id]};box-shadow:${shadows.join(',') || 'none'}"><i></i><b>${art(id)}</b>${v != null ? `<em class="cv">${v}</em>` : ''}</div>
+    <div class="acard" style="--a:${ANIMAL_COLORS[id]};box-shadow:${shadows.join(',') || 'none'}"><i></i><b>${art(id)}</b>${v != null ? `<em class="cv ${kursDiff(id) ? 'kursed' : ''}">${valHtml(id)}</em>` : ''}</div>
     <span>${n === 4 && id !== RAT ? aname(id) + ' ✓' : aname(id) + ' ×' + n}</span>
   </div>`;
 }
@@ -91,7 +94,7 @@ function animalMini(id, n) {
 function stackHtml(id, n, { special = false, bump = false, tap = false, trade = false } = {}) {
   const v = aval(id);
   const done = n === 4 && id !== RAT;
-  const cards = Array.from({ length: n }, (_, k) => `<div class="scard ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--k:${n - 1 - k};--a:${ANIMAL_COLORS[id]}">${k === n - 1 ? `${v != null ? `<em>${v}</em>` : ''}<b>${art(id)}</b>` : ''}</div>`).join('');
+  const cards = Array.from({ length: n }, (_, k) => `<div class="scard ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--k:${n - 1 - k};--a:${ANIMAL_COLORS[id]}">${k === n - 1 ? `${v != null ? `<em class="${kursDiff(id) ? 'kursed' : ''}">${valHtml(id)}</em>` : ''}<b>${art(id)}</b>` : ''}</div>`).join('');
   const near = n === 3 && id !== RAT;
   const label = `${n}×`; // v0.56.2: wie bei den Mitspielern – Anzahl statt „noch …“
   return `<div class="stack ${done ? 'done' : ''} ${near ? 'near' : ''} ${id === RAT ? 'rat' : ''} ${bump ? 'bump' : ''} ${trade ? 'cantrade' : ''}" data-animal="${id}" style="--n:${n}" title="${n}× ${aname(id)}${special ? ' + Spezialkarte' : ''}"${tap ? ` data-a="setTrade" data-v="${id}" role="button" aria-label="${trade ? `Kuhhandel um ${aname(id)}` : `${aname(id)}: kein Kuhhandel möglich`}"` : ''}>
@@ -175,11 +178,17 @@ export function miniCard(id, cls = '') {
   return `<span class="mcard ${cls} ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--a:${ANIMAL_COLORS[id]}">${art(id)}</span>`;
 }
 
+// v0.81 Blindmarkt: verdeckte Versteigerung – Rückseite mit Fragezeichen
+function blindCard() {
+  return `<div class="pcard blind" aria-label="Verdeckte Karte"><div class="pcblind"><b>?</b><small>BLINDMARKT</small></div><div class="pcname">KATZE IM SACK</div></div>`;
+}
+
 function playCard(id, kind = 'animal') {
   const val = kind === 'special' ? SPECIAL_VALUE : kind === 'rat' ? '' : ANIMAL_BY_ID[id].value;
   const name = aname(id).toUpperCase();
-  return `<div class="pcard ${kind} ${DARK_ANIMALS.has(id) ? 'dark' : ''}" style="--a:${ANIMAL_COLORS[id]}">
-    ${val !== '' ? `<span class="pcv">${val}</span>` : ''}
+  const kd = kind === 'animal' ? kursDiff(id) : null; // v0.81: Börsen-Kurs auf der Karte
+  return `<div class="pcard ${kind} ${DARK_ANIMALS.has(id) ? 'dark' : ''} ${kd ? 'kursed' : ''}" style="--a:${ANIMAL_COLORS[id]}">
+    ${val !== '' ? `<span class="pcv">${kd ? `<s>${val}</s>` : val}</span>` : ''}${kd ? `<span class="pckurs ${kd.up ? 'up' : 'down'}">${kd.v}<i>${kd.up ? '▲' : '▼'}</i></span>` : ''}
     ${kind === 'special' ? `<span class="pcstar">${STAR}</span>` : ''}
     <div class="pcart">${art(id)}</div>
     <div class="pcname">${name}</div>
@@ -617,14 +626,14 @@ function muscleDonkey(throwDelay, n) {
 }
 
 // ---------- Börsen-Chaos: News-Karte, Kurszettel ----------
-const NEWS_ICON = { rallye: '📈', crash: '📉', hype: '🚀', blase: '🫧', dividende: '💰', steuer: '🧾', panik: '🔀', hektik: '⚡' };
+const NEWS_ICON = { rallye: '📈', crash: '📉', hype: '🚀', blase: '🫧', dividende: '💰', steuer: '🧾', panik: '🔀', hektik: '⚡', blind: '🙈' };
 const KURS_UP = { rallye: true, hype: true, crash: false, blase: false };
 function newsTitle(e) {
   if (e.kind === 'rallye') return `Kursrallye ${aname(e.animal)}`;
   if (e.kind === 'crash') return `Kurssturz ${aname(e.animal)}`;
   if (e.kind === 'hype') return 'Hype!'; // v0.72: Tier und Wert stehen darunter
   if (e.kind === 'blase') return 'Blase platzt!';
-  return ({ dividende: 'Dividende', steuer: 'Steuerprüfung', panik: 'Marktpanik', hektik: 'Hektik' })[e.kind] || 'Börsen-News';
+  return ({ dividende: 'Dividende', steuer: 'Steuerprüfung', panik: 'Marktpanik', hektik: 'Hektik', blind: 'Blindmarkt' })[e.kind] || 'Börsen-News';
 }
 function newsReveal(e, meId, nameOf) {
   let body = '';
@@ -633,6 +642,7 @@ function newsReveal(e, meId, nameOf) {
   else if (e.kind === 'dividende') body = `<p>Alle bekommen <b>${e.amount ?? DIVIDENDE}</b> aus der Bank.</p>`;
   else if (e.kind === 'steuer') { body = '<p>Alle geben ihren <b>höchsten Schein</b> ab.</p>'; const l = e.lost && e.lost[meId]; mine = l != null ? `Du gibst <b>${l}</b> ab` : 'Du hattest keinen Schein'; }
   else if (e.kind === 'panik') { body = '<p>Jeder schiebt einen <b>zufälligen Schein</b> nach links.</p>'; const m = e.moved || {}; mine = `${m.gave != null ? `Du gibst <b>${m.gave}</b>` : 'Du gibst nichts'} · ${m.got != null ? `bekommst <b>${m.got}</b> von ${esc(nameOf(m.from))}` : 'bekommst nichts'}`; }
+  else if (e.kind === 'blind') body = `<p>Die nächsten <b>${BLIND_COUNT}</b> Versteigerungen laufen <b>verdeckt</b> – Katze im Sack! Erst beim Zuschlag wird aufgedeckt.</p>`;
   else if (e.kind === 'hektik') body = `<p>Die nächsten <b>${HEKTIK_COUNT}</b> Versteigerungen laufen nur <b>${String(Math.round(hektikMs(CUR_STATE) / 100) / 10).replace('.', ',')} s</b> (halb so lang).</p>`;
   return `<div class="newsreveal k-${e.kind}" role="status" style="--nwd:${newsMs()}ms"><div class="nwcard"><span class="nwtag">Börsen-News</span><i class="nwicon">${NEWS_ICON[e.kind] || '📰'}</i><b class="nwtitle">${esc(newsTitle(e))}</b>${body}${mine ? `<span class="nwmine">${mine}</span>` : ''}</div></div>`;
 }
@@ -732,6 +742,10 @@ export function renderGame(root, ctx) {
   // Kennung aus Nummer und Art: zwei Ereignisse mit derselben Nummer (z. B. „umsonst“ und danach Geldschein) gelten trotzdem beide als neu
   const evN = v.lastEvent ? `${v.lastEvent.n}|${v.lastEvent.type}` : null;
   const evFresh = fresh && evN != null && local.seenEvN !== evN;
+  // v0.81 Blindmarkt: beim Zuschlag dreht sich die verdeckte Karte für alle um
+  { const br = v.blindReveal; const bsig = br ? `${br.n}|${br.animal}` : null;
+    if (bsig && local.blindSig !== bsig) { const first = local.blindSig === undefined && !fresh; local.blindSig = bsig;
+      if (!first && v.log.length - br.n < 3) { local.blindQ = `<div class="blindrev" role="status" style="--bd:${Math.round(2600 * INFO_F)}ms"><span class="brtag">🙈 Aufgedeckt!</span><div class="brcard">${playCard(br.animal)}</div><b>${esc(aname(br.animal))}${aval(br.animal) != null ? ` · ${aval(br.animal)}` : ''}</b>${br.eselBonus ? `<small>${br.eselNr}. Esel – alle +${br.eselBonus}</small>` : ''}</div>`; later.push(['flip', 0]); if (br.eselBonus) later.push(['iah', 500]); } } }
   // v0.79 Rattenkönig: wer am Ende alle Ratten hat, wird vor allen zur Ratte gekrönt (Show, danach Mütze am Tisch und auf dem Treppchen)
   const king = ratKingOf(state);
   let kingExtra = 0;
@@ -906,7 +920,7 @@ export function renderGame(root, ctx) {
     if (!revealing) local.infoShown = infoKey;
     const holders = v.players.map((p, i) => [p, i]).filter(([p]) => p.animals[a.animal] > 0);
     const ainfo = `<div class="owners ${infoFresh ? 'fade' : ''}">
-      ${holders.length ? `<small>Haben schon</small><div class="olist">${holders.map(([p, i]) => `<span class="own ${p.id === meId ? 'me' : ''}">${avatar(p, i)}<b>${p.id === meId ? 'Du' : esc(p.name)} ×${p.animals[a.animal]}</b></span>`).join('')}</div>`
+      ${!a.animal ? '<span class="onew blindinfo">🙈 Blindmarkt<br><small>Was es ist, siehst du erst nach dem Zuschlag</small></span>' : holders.length ? `<small>Haben schon</small><div class="olist">${holders.map(([p, i]) => `<span class="own ${p.id === meId ? 'me' : ''}">${avatar(p, i)}<b>${p.id === meId ? 'Du' : esc(p.name)} ×${p.animals[a.animal]}</b></span>`).join('')}</div>`
         : '<span class="onew">Neu im Spiel</span>'}
       ${a.animal === 'esel' && v.lastEvent?.type === 'donkey' ? `<span class="ebonus">Esel-Bonus: alle +${v.lastEvent.payout}</span>` : ''}
     </div>`;
@@ -919,9 +933,9 @@ export function renderGame(root, ctx) {
     // v0.65 Zwangsversteigerung: Karte wird nicht umgedreht, sondern bekommt das Siegel „GEPFÄNDET“ (bleibt während der Versteigerung drauf)
     const seal = a.forced ? `<span class="aucseal" style="animation-delay:${revealing ? Math.max(0, 1150 - (pfaendShowMs(state) - (a.opensAt - nowR))) : -999}ms" aria-label="gepfändet"><b>⚖</b><small>GEPFÄNDET</small></span>` : '';
     const card = revealing
-      ? (a.forced ? `<div class="revealcard forced">${playCard(a.animal)}${seal}</div>` : `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`)
+      ? (!a.animal ? `<div class="revealcard blindc">${blindCard()}</div>` : a.forced ? `<div class="revealcard forced">${playCard(a.animal)}${seal}</div>` : `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`)
       : `<div class="aucard center ringwrap ${infoFresh ? 'settle' : ''} ${running ? (secs <= 3 ? 'low' : '') : 'over'}" ${a.endsAt != null ? `data-ends="${a.endsAt}" data-total="${total}" data-fmt="n"` : ''}>
-          ${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(7, 'calm') : ''}${seal}
+          ${a.animal ? playCard(a.animal) : blindCard()}${aval(a.animal) >= 650 ? glitz(7, 'calm') : ''}${seal}
           <svg class="ring" viewBox="0 0 112 152" aria-hidden="true"><rect class="ringbg" x="4" y="4" width="104" height="144" rx="16" pathLength="100"></rect><rect class="ringp" x="4" y="4" width="104" height="144" rx="16" pathLength="100" style="stroke-dashoffset:${100 - pct}"></rect></svg>
           <span class="ringsec">${running ? secs : '✓'}</span></div>`;
     // Auktionator lässt sich Zeit: nach 8 s freundlicher Hinweis, die Knöpfe pulsieren
@@ -1223,7 +1237,7 @@ export function renderGame(root, ctx) {
   };
   // (alt) Mitte zwischen den beiden Seiten: das umkämpfte Tier groß, darunter „um 2“
   const tmidOld = (animal, count, extra = '') => `<div class="tmid">${animal ? `<div class="tmidcard">${playCard(animal, animal === RAT ? 'rat' : undefined)}</div><span class="tmidcnt">um ${count}</span>` : '<div class="tmidcard empty">?</div><span class="tmidcnt">Tier wählen</span>'}<span class="tvs">VS</span>${extra}</div>`;
-  const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}">${miniCard(animal)}<span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${aval(animal)}` : ''}</b>${note ? `<small>${note}</small>` : ''}</span></div>`;
+  const animalStrip = (animal, count, note) => `<div class="tanimal" style="--a:${ANIMAL_COLORS[animal]}">${miniCard(animal)}<span><b>${count}× ${aname(animal)}${aval(animal) != null ? ` · ${valHtml(animal)}` : ''}</b>${note ? `<small>${note}</small>` : ''}</span></div>`;
   if (state.phase === 'turn' && myTurn && local.tradeOpen) {
     const trades0 = possibleTrades(state, meId);
     const targets = [...new Set(trades0.map((t) => t.target))];
@@ -1244,7 +1258,7 @@ export function renderGame(root, ctx) {
           <div class="tp-opps">${targets.map((id) => { const i = idxOf(id); return targets.length > 1 ? `<button type="button" class="tp-opp ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${avatar(v.players[i], i)}<span>${tName(id)}</span></button>` : `<span class="tp-opp on solo">${avatar(v.players[i], i)}<span>${tName(id)}</span></span>`; }).join('')}</div>
           <button type="button" class="tp-x" data-a="tradeClose" aria-label="Abbrechen">✕</button></div>
         <div class="tp-grid ${many}">${forTarget.map((t) => `<button type="button" class="tp-t" data-a="tAnimal" data-v="${t.animal}" style="--a:${ANIMAL_COLORS[t.animal]}" aria-label="${aname(t.animal)}: es geht um ${t.count}">
-          <span class="tp-um">um ${t.count}</span>${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="tp-val">${aval(t.animal)}</em>` : ''}<span class="tp-nm">${esc(aname(t.animal))}</span>
+          <span class="tp-um">um ${t.count}</span>${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="tp-val">${valHtml(t.animal)}</em>` : ''}<span class="tp-nm">${esc(aname(t.animal))}</span>
           <span class="tp-cnt"><span class="me">Du ${me.animals[t.animal] || 0}</span><span class="op" style="--c:${SEAT_COLORS[idxOf(target.id)]}">${tName(target.id)} ${target.animals[t.animal] || 0}</span></span></button>`).join('')}</div>
       </div>`;
       aucLeft = '';
@@ -1536,7 +1550,7 @@ export function renderGame(root, ctx) {
     <div class="deck-wrap">
       ${canDraw ? `<button type="button" class="deck go ${topCls}" data-a="auction" aria-label="${isDuo(state) ? 'Karte ansehen' : topMoney ? 'Geldschein aufdecken' : topNews ? 'Börsen-News aufdecken' : 'Karte aufdecken'}">${deckFace}<span class="deckgo">Tippen</span></button>`
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''} ${topCls}">${v.deck > 0 ? deckFace : ''}</div>`}
-      <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}</b>` : ''}${kursZettel(state)}</span>
+      <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}${state.blind ? ` · 🙈 Blind ${state.blind}` : ''}</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
     <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 36)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
@@ -1736,7 +1750,8 @@ export function renderGame(root, ctx) {
   local.fx = (local.fx || []).filter((f) => f.until > Date.now());
   const keepFx = (html, dur, tag = null) => { if (html) local.fx.push({ html, at: Date.now(), until: Date.now() + dur, tag }); if (local.fx.length > 14) local.fx.splice(0, local.fx.length - 14); };
   if (local.waitQ) { keepFx(local.waitQ, WAITPOP_MS, 'waitpop'); local.waitQ = null; }
-  if (local.kingQ) { keepFx(local.kingQ.html, local.kingQ.dur, 'qshow'); local.kingQ = null; } // v0.79 „Warte, warte, warte!“
+  if (local.kingQ) { keepFx(local.kingQ.html, local.kingQ.dur, 'qshow'); local.kingQ = null; }
+  if (local.blindQ) { keepFx(local.blindQ, Math.round(2600 * INFO_F), 'blindrev'); local.blindQ = null; } // v0.79 „Warte, warte, warte!“
   const le = v.lastEvent;
   // Ergebnis-Fenster (ein Design für alles): Versteigerung, Spezialkarte, Kuhhandel.
   // Karte und Geld fliegen erst los, wenn das Fenster zugeht (Zeit um oder Antippen).
@@ -1965,8 +1980,8 @@ export function renderGame(root, ctx) {
     sounds.push('flip');
     if (v.lastEvent?.type === 'donkey') { const sh = auction.opensAt != null ? Math.max(0, auction.opensAt - ctx.now()) : 0; later.push(['crumple', sh + ESEL_CLIMB_AT + 350]); v.players.forEach((_, pi) => later.push(['thud', sh + ESEL_THROW_AT + pi * ESEL_THROW_GAP + ESEL_FLIGHT - 20])); later.push(['coins', sh + ESEL_THROW_AT + v.players.length * ESEL_THROW_GAP + ESEL_FLIGHT]); }
     const VOICE = { kuh: 'muh', esel: 'iah', hahn: 'kikeriki' };
-    if (aval(auction.animal) >= 650) { sounds.push('drum'); later.push(['glitz', 1050]); } // teure Karte: Trommelwirbel, nach dem Umdrehen Glitzern
-    if (VOICE[auction.animal]) later.push([VOICE[auction.animal], 1350]);
+    if (auction.animal && aval(auction.animal) >= 650) { sounds.push('drum'); later.push(['glitz', 1050]); } // teure Karte: Trommelwirbel, nach dem Umdrehen Glitzern
+    if (auction.animal && VOICE[auction.animal]) later.push([VOICE[auction.animal], 1350]);
   }
   else if (fresh && state.phase === 'auction' && auction.high) sounds.push('bid');
   // Überboten: du lagst vorne, jetzt jemand anderes
