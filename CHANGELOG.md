@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.75.0 – Flüssiger
+
+- [x] **Schneller Kuhhandel ohne Hin und Her:** Ist der Handel entschieden, während die Einsätze noch in die Mitte laufen, bleiben sie in der Mitte – von dort laufen alle zum Gewinner. Kein Zurücklaufen mehr zum Spieler und wieder in die Mitte.
+- [x] **Esel:** Die Papierbälle erscheinen erst, wenn der Esel wirft – nicht schon vorher in seiner Hand.
+- [x] **Geld landet sauber in deiner Hand:** Dein Schein fliegt in einem weichen Bogen genau auf seinen Platz im Fächer – gleiche Drehung, gleiche Größe – und leuchtet dort kurz auf, ohne Nachhüpfen. Gilt auch für Dividende und Marktpanik; abgegebene Scheine (Steuer, Panik) bleiben im Fächer, bis sie losfliegen.
+
 ## v0.74.0 – Start aufgeräumt
 
 - [x] **Dein Spiel klein im Kopf:** „Du bist dran! ▶ Weiter“ bzw. „Spiel von … Platz nehmen“ steht jetzt als schmale Leiste zwischen „Tier Börse“ und deinem Namen – die vier Modus-Kacheln werden dadurch deutlich größer.

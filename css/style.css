@@ -3669,3 +3669,21 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
   .hb-top .tbteam { font-size: 9px; }
 }
 .m-classic .mt-art { background: #2A8A4A; } .m-turbo .mt-art { background: #F07A33; } .m-boerse .mt-art { background: #14202F; } .m-join .mt-art { background: #5E42B8; }
+
+/* v0.75 (Alp): Esel – die Papierbälle erscheinen erst beim Wurf (nicht schon vorher in der Hand) */
+@keyframes eball {
+  0% { opacity: 0; transform: translate(0, 0) scale(.8) rotate(0); }
+  4% { opacity: 1; }
+  50% { transform: translate(calc(var(--tx) * .5), calc(var(--ty) * .5 - 22px)) scale(1.1) rotate(360deg); }
+  94% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1.05) rotate(700deg); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(1.9) rotate(720deg); }
+}
+/* v0.75 (Alp): eigenes Geld gleitet in einem Bogen genau auf seinen Platz im Fächer (gleiche Drehung und Größe) – ohne Nachhüpfen */
+@keyframes mflyin {
+  0% { opacity: 0; transform: translate(0, 0) scale(.6) rotate(0deg); }
+  12% { opacity: 1; }
+  60% { transform: translate(calc(var(--tx, 0px) * .62), calc(var(--ty, 0px) * .62 - 26px)) scale(calc(var(--ts, 1) * 1.05)) rotate(calc(var(--trot, 0deg) - 8deg)); }
+  100% { opacity: 1; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--ts, 1)) rotate(var(--trot, 0deg)); }
+}
+.mfly.mine.in { animation-timing-function: cubic-bezier(.25, .7, .3, 1); }
+@keyframes newcard { 0% { box-shadow: 0 0 0 3px var(--gold), 0 0 18px 6px rgba(255,211,78,.75); } 100% { box-shadow: -3px 3px 8px rgba(0,0,0,.25), 0 0 0 0 rgba(255,211,78,0); } }
