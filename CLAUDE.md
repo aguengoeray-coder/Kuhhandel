@@ -46,6 +46,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `css/style.css` | Gestaltung |
 | `js/shop.js`, `css/shop.css` | Shop (Reiter Avatare/Sprüche, Kaufen/Auswählen) |
 | `js/shopavatars.js` | 14 Shop-Avatare als SVG: runder Kopf (Tisch) + Ganzkörper `shopAvatarFull` (Shop, Startseite) |
+| `js/modes.js` | Startbildschirm: Spielmodus-Kacheln (Klassisch, Turbo, Börsen-Chaos, Beitreten) mit eigenen Bildern |
 | `js/whatsnew.js` | „Was ist neu?“ für Spieler – oberster Eintrag = `APP_VERSION` (Check prüft das) |
 | `e2e/` | Browser-Tests (Playwright): alle Ansichten × 4 Handygrößen, einheitliche Größen, komplette Partien |
 | `scripts/check.mjs` | Syntax, Versionen, „Was ist neu“, AGENTS = CLAUDE |

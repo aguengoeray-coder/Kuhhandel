@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.73.0 – Modus wählen
+
+- [x] **Neuer Startbildschirm:** Vier große Kacheln mit eigenem Bild – Klassisch, Turbo, Börsen-Chaos und Beitreten. Erst nach dem Antippen öffnet sich das Fenster mit den Einstellungen der Runde (Geldscheine im Stapel, Kuhhandel-Zeit, Geld zählt am Ende) und „Raum erstellen“. Alles lässt sich im Warteraum weiter ändern.
+- [x] **Dein Spiel bleibt oben:** Laufende und offene Spiele stehen als schmale Leiste über den Kacheln („Weiter spielen“ / „Platz nehmen“).
+- [x] **Beitreten per Code repariert:** Der alte Knopf „🔑 Mit Code“ war eigentlich der *Wiedereinstieg* (Code **und PIN** vom alten Gerät) – wer nur den Raum-Code hatte, bekam „Code oder PIN stimmt nicht“. Jetzt: Kachel „Beitreten“ → nur den 4-Buchstaben-Code eingeben (klein geschrieben geht auch). Klare Meldungen: Tippfehler, Spiel läuft schon, Raum voll. Offene Räume stehen direkt darunter. Der Wiedereinstieg mit PIN ist ein Link im selben Fenster.
+- [x] Einladungs-Link nutzt dieselbe Prüfung und sagt genau, warum es nicht klappt.
+
 ## v0.72.0 – Jeder Schein fliegt
 
 - [x] **Börsen-News bewegen Geld sichtbar:** Dividende – aus der Bank fliegt jedem ein Schein ins Geld (deiner offen). Steuerprüfung – von jedem Geld fliegt ein Schein in die Bank (nur deiner offen). Marktpanik – jeder Schein fliegt verdeckt zum linken Nachbarn (deinen gegebenen und bekommenen siehst du).
