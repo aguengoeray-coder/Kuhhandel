@@ -8,6 +8,7 @@ import {
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
   isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
+  isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
 import { theaterFx, sceneScript, sceneHtml } from './theater.js';
@@ -184,6 +185,18 @@ function playCard(id, kind = 'animal') {
   </div>`;
 }
 
+// v0.77 Zu zweit: eine Stapelkarte groß zeigen (Tier, Ratte, Spezialkarte oder Geldschein)
+function cardFace(card) {
+  if (isMoneyCard(card)) { const v = moneyValue(card); return `<div class="money big divmoney" style="--m:${MONEY_COLORS[v] || '#eee'}">${mIn(v)}</div>`; }
+  if (isSpecialCard(card)) return playCard(specialAnimal(card), 'special');
+  if (card === RAT) return playCard(RAT, 'rat');
+  return playCard(card);
+}
+function cardLabel(card) {
+  if (isMoneyCard(card)) return `${moneyValue(card)} Taler`;
+  if (isSpecialCard(card)) return `${aname(specialAnimal(card))}-Spezialkarte`;
+  return aname(card);
+}
 function bigAnimalCard(id, extraRows = '', cls = '') {
   return `<div class="bigcard ${cls}">${playCard(id)}
     <div class="bcinfo"><div class="bctitle">${esc(aname(id))}<small>Quartettwert ${ANIMAL_BY_ID[id].value}</small></div>${extraRows}</div>
@@ -258,7 +271,7 @@ export function choreo(le, deckLeft, W = evWait(le.type, deckLeft, le) || 0, pil
 }
 export const calmFor = (le, deckLeft) => (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
-export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
+export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn', 'divided'];
 
 // Auslage passt nicht in ihre Breite (viele Tiere, große Schrift)? Dann nachmessen und kleiner machen – nie unter die Knöpfe
 function fitAuslage(root) {
@@ -708,6 +721,10 @@ export function renderGame(root, ctx) {
       loseAt: outS ? t0 + outS.at : le0.type === 'trade' ? t0 + ch0.W : t0,
       gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 20 : le0.type === 'trade' ? t0 + ch0.W : t0,
     } : null;
+  }
+  // v0.77 Zu zweit: dein aufgeteilter Geldschein erscheint erst, wenn er gelandet ist
+  if (evFresh && v.lastEvent?.type === 'divided') {
+    [v.lastEvent.first, v.lastEvent.second].forEach((x, k) => { if (x && x.to === meId && /^geld-\d+$/.test(x.card)) local.handFx = { gain: [Number(x.card.slice(5))], lose: [], gainAt: Date.now() + 250 + k * 450 + 300 + MFLY_MS - 20, loseAt: Date.now() }; });
   }
   if (Array.isArray(me.money)) local.prevMoney = me.money.slice();
   if (local.handFx && Date.now() > Math.max(local.handFx.loseAt, local.handFx.gainAt) + 1000) local.handFx = null;
@@ -1293,6 +1310,40 @@ export function renderGame(root, ctx) {
     }
   }
 
+  // ----- v0.77 Zu zweit: Aufteilen -----
+  if (state.phase === 'divide' && v.divide) {
+    const by = v.divide.by; const mine = by === meId; const other = v.players.find((p) => p.id !== by);
+    const leftMs = v.divide.endsAt != null ? Math.max(0, v.divide.endsAt - ctx.now()) : DIVIDE_MS;
+    const left = Math.ceil(leftMs / 1000);
+    if (leftMs > 0) wakeLocal(Date.now() + (leftMs % 1000 || 1000) + 20);
+    // Zeit um: der Aufteiler (oder nach 2,5 s der andere) behält automatisch
+    const due = v.divide.endsAt != null ? v.divide.endsAt + (mine ? 0 : 2500) : null;
+    if (due != null && ctx.now() >= due && local.divTO !== v.divide.endsAt) { local.divTO = v.divide.endsAt; ctx.act((s) => divideTimeout(s, ctx.now())); }
+    else if (due != null) wakeLocal(Date.now() + Math.max(0, due - ctx.now()) + 30);
+    const nxt = Array.isArray(state.deck) ? state.deck[1] : null;
+    const nextTxt = nxt == null ? 'Danach: keine Karte mehr' : isMoneyCard(nxt) ? 'Danach: 💰 ein Geldschein' : 'Danach: 🐄 eine Tierkarte';
+    const nextBack = nxt == null ? '' : `<span class="divnext ${isMoneyCard(nxt) ? 'money' : ''}" aria-hidden="true">${isMoneyCard(nxt) ? '💰' : `<span class="deckcow">${art('kuh')}</span>`}</span>`;
+    const timer = `<span class="ttimer divtimer ${left <= 3 ? 'low' : ''}">⏱ ${left} s</span>`;
+    aucBanner = mine ? 'Behalten oder abgeben?' : `${esc(nameOf(by))} teilt auf`;
+    if (mine) {
+      const c = v.divide.card;
+      aucCenter = `<div class="divpanel ${entered ? 'pop' : ''}">
+        <div class="divcard flip">${cardFace(c)}</div>
+        <div class="divinfo"><b>${esc(cardLabel(c))}</b><small>Nur du siehst diese Karte.</small>
+          <div class="divnextrow">${nextBack}<span>${nextTxt}</span></div>${timer}</div></div>`;
+      aucLeft = `<button type="button" class="pill pill-red divbtn" data-a="divKeep"><small>BEHALTEN</small><span>${esc(nameOf(other.id))} bekommt die nächste</span></button>
+        <button type="button" class="pill pill-white divbtn" data-a="divGive"><small>ABGEBEN</small><span>du bekommst die nächste</span></button>`;
+      H.divKeep = () => ctx.act((s) => divideChoose(s, meId, true));
+      H.divGive = () => ctx.act((s) => divideChoose(s, meId, false));
+    } else {
+      aucCenter = `<div class="divpanel other ${entered ? 'pop' : ''}">
+        <div class="divcard wobble"><div class="deck">${`<span class="deckcow">${art('kuh')}</span>`}</div></div>
+        <div class="divinfo"><b>${esc(nameOf(by))} schaut sich die Karte an …</b><small>Behält er sie, bekommst du die nächste.</small>
+          <div class="divnextrow">${nextBack}<span>${nextTxt}</span></div>${timer}</div></div>`;
+      aucLeft = `<div class="ldecide">${esc(nameOf(by))} entscheidet …</div>`;
+    }
+  }
+
   // ----- Tisch -----
   const canDraw = state.phase === 'turn' && myTurn && !local.tradeOpen && v.deck > 0 && !calmLeft;
   // v0.63.2 (Alp): Geldscheine im Stapel haben eine grüne Rückseite – man sieht vorher, ob ein Schein oder eine Tierkarte kommt
@@ -1409,8 +1460,8 @@ export function renderGame(root, ctx) {
   // Nicht dran: unten links bleibt frei (wer dran ist, steht oben im Schild und an der Sanduhr)
   if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
     leftActionsHtml = `
-      <button type="button" class="pill pill-red ${calmLeft ? 'calm' : 'hintme'}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>KARTE<br>AUFDECKEN</button>
-      <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>${pfaendBtn}`;
+      <button type="button" class="pill pill-red ${calmLeft ? 'calm' : 'hintme'}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>${isDuo(state) ? 'KARTE<br>ANSEHEN' : 'KARTE<br>AUFDECKEN'}</button>
+      <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>${pfaendBtn}${isDuo(state) && v.deck === 0 ? `<button type="button" class="pill pill-white pill-small duopass" data-a="duoPass" ${calmLeft ? 'disabled' : ''} title="Verzichten beide nacheinander, ist das Spiel vorbei">Verzichten${state.duoPasses ? ' · dann Ende' : ''}</button>` : ''}`;
   }
   const askMe = local.urgeNow || (state.phase === 'turn' && myTurn && !local.tradeOpen) || (state.phase === 'payment' && v.payment.payer === meId)
     || (state.phase === 'trade' && v.trade.target === meId) || (state.phase === 'rat' && ratCurrent(v) === meId) || (state.phase === 'block' && v.block.player === meId);
@@ -1423,7 +1474,7 @@ export function renderGame(root, ctx) {
     ${shownHolder === meId && realHolder === meId && state.phase === 'turn' ? `<div class="myglow ${flashing ? 'in' : ''}" style="--fl:-${Math.min(flashEl, 99999)}ms" aria-hidden="true"></div>` : ''}
     <div class="tcenter">${aucCenter || `
     <div class="deck-wrap">
-      ${canDraw ? `<button type="button" class="deck go ${topCls}" data-a="auction" aria-label="${topMoney ? 'Geldschein aufdecken' : topNews ? 'Börsen-News aufdecken' : 'Karte aufdecken'}">${deckFace}<span class="deckgo">Tippen</span></button>`
+      ${canDraw ? `<button type="button" class="deck go ${topCls}" data-a="auction" aria-label="${isDuo(state) ? 'Karte ansehen' : topMoney ? 'Geldschein aufdecken' : topNews ? 'Börsen-News aufdecken' : 'Karte aufdecken'}">${deckFace}<span class="deckgo">Tippen</span></button>`
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''} ${topCls}">${v.deck > 0 ? deckFace : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
@@ -1482,7 +1533,8 @@ export function renderGame(root, ctx) {
   H.intros = () => ctx.toggleIntros && ctx.toggleIntros();
   H.push = () => ctx.togglePush && ctx.togglePush();
   H.modal = (kind) => ctx.openModal(kind);
-  H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
+  H.auction = () => ctx.act((s) => (isDuo(s) ? divideLook(s, meId, ctx.now()) : drawForAuction(s, meId, ctx.now())));
+  H.duoPass = () => ctx.act((s) => duoPass(s, meId));
   H.tradeOpen = () => { local.tradeOpen = true; local.tradePicked = false; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
   H.tradeWith = (val) => { const [pid, animal] = String(val).split('|'); local.tradeOpen = true; local.tradePicked = true; local.sel = []; local.tradeTarget = pid; local.tradeAnimal = animal; ctx.rerender(); };
 
@@ -1753,6 +1805,24 @@ export function renderGame(root, ctx) {
       const mi = Math.max(0, (lem.movers || []).indexOf(meId)); const gi = lem.kind === 'panik' ? Math.max(0, (lem.movers || []).indexOf(lem.moved?.from)) : k;
       if (gain.length || lose.length) local.handFx = { gain, lose, gainAt: t0 + NF + gi * (lem.kind === 'panik' ? 120 : 140) + MFLY_MS - 20, loseAt: t0 + NF + (lem.kind === 'panik' ? mi * 120 : k * 140) }; }
   }
+  // v0.77 Zu zweit: aufgeteilt – beide Karten laufen/fliegen aus der Mitte zu ihrem Platz (Tier zum Stapel, Geld ins Geld)
+  if (evFresh && le && le.type === 'divided') {
+    const parts = [le.first, le.second].filter(Boolean);
+    let fx = `<div class="divstrip" aria-live="polite">${esc(nameOf(le.by))} ${le.by === meId ? (le.keep ? 'behältst' : 'gibst ab') : le.keep ? 'behält' : 'gibt ab'}${le.auto ? ' (Zeit um)' : ''}</div>`;
+    parts.forEach((x, k) => {
+      const d = 250 + k * 450;
+      if (String(x.card).startsWith('geld-')) {
+        const val = x.card === 'geld-?' ? null : moneyValue(x.card);
+        fx += moneyFly('@card', x.to, 1, d + 300, x.to === meId && val != null ? [val] : null);
+      } else {
+        const an = isSpecialCard(x.card) ? specialAnimal(x.card) : x.card;
+        fx += homeWalk(an, '@card', `@stall:${x.to}:${an}`, d, { star: isSpecialCard(x.card) });
+      }
+    });
+    keepFx(fx, 250 + parts.length * 450 + FLY_MS + 400);
+    sounds.push('flip'); later.push(['trade', 300]);
+  }
+  if (entered && state.phase === 'divide') sounds.push('flip');
   // v0.61 Admin-Fähigkeit „Verprügeln“: Figur läuft hin, Prügelwolke, läuft zurück (bei allen)
   for (const pu of ctx.punches || []) {
     const sig = `${pu.from}|${pu.to}|${pu.at}`;
@@ -1965,7 +2035,7 @@ export function renderGame(root, ctx) {
   // Spielstart: alle Spieler, „Die Börse ist eröffnet!“
   if (state.phase === 'turn' && !v.lastEvent && state.log.length <= 2 && v.players.length >= 2) {
     playIntro(`start|${v.players.map((p) => p.id).join(',')}|${state.log[0] || ''}`, {
-      parts: v.players.map((p) => partOf(p.id)), title: 'DIE BÖRSE IST ERÖFFNET!', vs: 'LOS!', ms: INTRO_START_MS,
+      parts: v.players.map((p) => partOf(p.id)), title: isDuo(state) ? 'DUELL ZU ZWEIT!' : 'DIE BÖRSE IST ERÖFFNET!', vs: isDuo(state) ? 'VS' : 'LOS!', ms: INTRO_START_MS,
       badge: isTurbo(state) ? '⚡ Turbo' : isBoerse(state) ? '📈 Börsen-Chaos' : '',
     });
   }

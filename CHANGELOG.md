@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.77.0 – Zu zweit
+
+- [x] **Neuer Modus „Zu zweit“** (nach der offiziellen 2-Spieler-Variante von Kuhhandel Master): im Klassisch-Fenster „👥 Zu zweit“ anhaken oder im Warteraum einschalten – genau 2 Spieler.
+- [x] **Aufteilen statt Versteigern:** Wer dran ist, tippt „Karte ansehen“ und sieht die oberste Karte als Einziger. Behalten → der andere bekommt die nächste; Abgeben → man bekommt selbst die nächste. Die Rückseite der nächsten Karte zeigt, ob ein Tier oder 💰 Geld kommt. 10 s Bedenkzeit, dann wird automatisch behalten. Der andere sieht „… schaut sich die Karte an“ mit wackelnder Karte.
+- [x] **Danach:** Tiere laufen zu ihrem Stapel, Geld fliegt (fremdes verdeckt) ins Geld.
+- [x] **Regeln zu zweit:** Geldscheine (ohne 0er) liegen im Stapel – aus „Geld im Stapel“, sonst der Standard-Satz; kein Esel-Bonus; Ratten und Spezialkarten werden einfach mit aufgeteilt; statt aufzuteilen darf man kuhhandeln. Ist der Stapel leer, gibt es nur noch Kuhhandel – verzichten beide nacheinander („Verzichten“), ist das Spiel vorbei. Wertung wie immer.
+- [x] Nur Klassisch (kein Turbo/Börsen-Chaos zu zweit). Spielstart-Auftritt „DUELL ZU ZWEIT!“. Debug: Testspiel zu zweit über das Klassisch-Fenster.
+
 ## v0.76.0 – Erst in die Mitte, dann zum Gewinner
 
 - [x] **Schneller Kuhhandel, richtig:** Wird der Handel entschieden, während die Einsätze noch in die Mitte laufen, laufen sie jetzt fertig – das Ergebnis-Fenster wartet, bis sie in der Mitte stehen. Danach laufen alle nur noch aus der Mitte zum Gewinner. Kein Hin und Her mehr.

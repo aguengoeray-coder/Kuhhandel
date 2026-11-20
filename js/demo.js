@@ -2,6 +2,7 @@
 import { pay,
   createGame, drawForAuction, bid, closeAuction, startTrade, counterTrade, acceptTrade, ANIMALS,
   RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS, showBatzen, playPfaendung,
+  divideLook, divideChoose,
 } from '../src/engine.js';
 
 const PLAYERS = [
@@ -32,8 +33,26 @@ function base() {
   return g;
 }
 
+// v0.77 Zu zweit: ?demo=duo (du bist dran) · divide (du schaust die Karte an; &other=1: Nico schaut) · divided (gerade aufgeteilt, &pop=1)
+function duoBase() {
+  const g = createGame({ players: PLAYERS.slice(0, 2), seed: 11, settings: { duo: true } });
+  Object.assign(g.players[0].animals, { hund: 2, kuh: 1, ziege: 1, katze: 1 });
+  Object.assign(g.players[1].animals, { kuh: 2, pferd: 1, katze: 1, schaf: 2 });
+  g.players[1].specials = ['pferd'];
+  g.players[0].money = [0, 0, 10, 10, 10, 20, 50, 100];
+  g.deck = ['kuh', 'geld-200', 'hund', 'esel', ...g.deck.filter((c) => !['kuh', 'hund', 'esel'].includes(c)).slice(0, 26)];
+  return g;
+}
 export function buildDemoState(kind, local) {
   let g;
+  const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+  if (kind === 'duo') return duoBase();
+  if (kind === 'divide') { g = duoBase(); if (qs.get('other')) g.turn = 1; return divideLook(g, g.players[g.turn].id, Date.now()); }
+  if (kind === 'divided') {
+    g = divideChoose(divideLook(duoBase(), 'u1', Date.now()), 'u1', qs.get('give') ? false : true);
+    if (qs.get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'divide' };
+    return g;
+  }
   switch (kind) {
     case 'turn': { // &geldtop=1: oberste Stapelkarte ist ein Geldschein (grüne Rückseite)
       g = base();

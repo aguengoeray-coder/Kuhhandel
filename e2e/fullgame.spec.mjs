@@ -17,6 +17,7 @@ const GAMES = [
   { name: 'spiel3-anfang', q: '?debug=1&demo=testspiel3', vp: [800, 360], seed: 23, dauer: 240000 },
   // v0.60 Börsen-Chaos: News, Kurse, Hektik im echten Ablauf (3 Minuten)
   { name: 'boerse4-anfang', q: '?debug=1&demo=testspiel&boerse=1', vp: [844, 390], seed: 31, dauer: 180000 },
+  { name: 'duo-komplett', q: '?debug=1&demo=testspiel2', vp: [844, 390], seed: 41 }, // v0.77 Zu zweit: Partie bis zum Ende
 ];
 const MAX_MS = Number(process.env.E2E_GAME_MS || 420000);
 
@@ -86,7 +87,7 @@ async function play(browser, url, g) {
       if (!await tap('[data-a="tradeGo"]:not([disabled])')) await tap('[data-a="tradeClose"]');
       continue;
     }
-    for (const sel of ['[data-a="block"]', '[data-a="batzen"]', 'button.pill[data-a="auction"]:not([disabled])', 'button.bidbtn:not([disabled])', '[data-a="sell"]', '[data-a="spSell"]', '[data-a="buzz"]:not([disabled])', '[data-a="rps"]']) if (await tap(sel)) break;
+    for (const sel of ['[data-a="divKeep"]', '[data-a="duoPass"]:not([disabled])', '[data-a="block"]', '[data-a="batzen"]', 'button.pill[data-a="auction"]:not([disabled])', 'button.bidbtn:not([disabled])', '[data-a="sell"]', '[data-a="spSell"]', '[data-a="buzz"]:not([disabled])', '[data-a="rps"]']) if (await tap(sel)) break;
   }
   await page.close();
   return { ...st, errs: [...new Set(errs)] };

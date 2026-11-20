@@ -3688,3 +3688,30 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .mfly.mine.in { animation-timing-function: cubic-bezier(.25, .7, .3, 1); }
 @keyframes newcard { 0% { box-shadow: 0 0 0 3px var(--gold), 0 0 18px 6px rgba(255,211,78,.75); } 100% { box-shadow: -3px 3px 8px rgba(0,0,0,.25), 0 0 0 0 rgba(255,211,78,0); } }
 .eintro { cursor: default; }
+
+/* ===== v0.77 Zu zweit: Aufteilen ===== */
+.divpanel { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-radius: 20px; background: rgba(0,0,0,.28); border: 2px solid rgba(255,255,255,.18); color: #fff; max-width: 440px; }
+.divpanel.pop { animation: divpop .35s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes divpop { from { opacity: 0; scale: .85; } to { opacity: 1; scale: 1; } }
+.divcard { flex: none; width: 92px; display: grid; place-items: center; perspective: 600px; }
+.divcard .pcard { width: 92px; }
+.divcard .money.big { width: 70px; height: 100px; font-size: 26px; }
+.divcard.flip > * { animation: divflip .55s cubic-bezier(.3,1.2,.5,1) both; }
+@keyframes divflip { 0% { transform: rotateY(90deg) scale(.9); } 100% { transform: none; } }
+.divcard.wobble .deck { width: 72px; height: 100px; animation: divwob 1.4s ease-in-out infinite; }
+@keyframes divwob { 0%, 100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(4deg) translateY(-4px); } }
+.divinfo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.divinfo b { font-family: var(--font-head); font-size: 18px; line-height: 1.15; }
+.divinfo small { font-size: 12px; font-weight: 700; opacity: .8; }
+.divnextrow { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; padding: 4px 8px 4px 4px; border-radius: 10px; background: rgba(255,255,255,.12); width: fit-content; }
+.divnext { width: 26px; height: 36px; border-radius: 5px; border: 2px solid #fff; background: var(--back-pat), var(--back); display: grid; place-items: center; font-size: 16px; }
+.divnext .deckcow { width: 22px; height: 22px; display: block; } .divnext .deckcow svg { width: 100%; height: 100%; }
+.divnext.money { background: #3E9B5E; }
+.divtimer { position: static; align-self: flex-start; }
+.divbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; line-height: 1.05; }
+.divbtn small { font-family: var(--font-head); font-size: 17px; letter-spacing: .03em; }
+.divbtn span { font-size: 10px; font-weight: 700; opacity: .85; }
+.duopass { margin-top: 2px; }
+.divstrip { position: absolute; z-index: 40; left: 50%; top: 34%; translate: -50% -50%; padding: 6px 16px; border-radius: 999px; background: rgba(0,0,0,.72); color: #fff; font-family: var(--font-head); font-size: 17px; white-space: nowrap; pointer-events: none; animation: divstrip 1.5s ease-out both; }
+@keyframes divstrip { 0% { opacity: 0; scale: .8; } 15%, 75% { opacity: 1; scale: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .divcard.wobble .deck, .divcard.flip > *, .divstrip { animation: none; } }
