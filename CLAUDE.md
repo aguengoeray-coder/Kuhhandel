@@ -71,7 +71,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   Ziege 350, Esel 500, Schwein 650, Kuh 800, Pferd 1000.
 - Startgeld: 2× 0, 3× 10, 1× 20, 1× 50 = 100 Taler. Fremdes Geld ist verdeckt (nur Kartenanzahl sichtbar).
 - Esel-Bonus beim Aufdecken für alle: 50 / 100 / 200 / 500.
-- Versteigerung auf Zeit: 3 s Karte ansehen, dann 10 s, nach jedem Gebot wieder 10 s (Tempo der Runde im Warteraum: Gemütlich ×1,5 / Normal / Schnell ×0,7). Gebotsknöpfe +10/+20/+50/+100 (mehr bieten = mehrmals tippen).
+- Versteigerung auf Zeit: 3 s Karte ansehen, dann 10 s, nach jedem Gebot wieder 10 s (Tempo der Runde im Warteraum: Denkzeiten – Versteigerung, Aufteilen, Kuhhandel-Zeit – ×1,5 / ×1 / ×0,7; Info-Fenster – Ansehen, Ergebnisse, VS, News, Quartett-Show – ×1,3 / ×1 / ×0,85, „Kann nicht zahlen“ nie unter 5 s; Spezialkarte und Bewegungen immer gleich). Gebotsknöpfe +10/+20/+50/+100 (mehr bieten = mehrmals tippen).
   Erst nach Ablauf entscheidet der Auktionator: Zuschlag an den Höchstbietenden oder selbst zum Höchstgebot kaufen.
 - **Kein Wechselgeld.** Wer nicht zahlen kann, zeigt alle Scheine offen; Auktion startet neu, er darf höchstens altes Gebot − 10 bieten.
 - Kuhhandel: verdecktes Angebot; annehmen (Geld nehmen, Tier abgeben) oder Gegenangebot.
@@ -91,7 +91,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 - **Börsen-Chaos** (Spielart, nie mit Turbo): + 13 Börsen-News im Stapel; aufgedeckt → Wirkung sofort, Aufdecker deckt nochmal auf.
   Kursrallye 2× (zufällig +30 … +100 %, meist klein), Kurssturz 2× (zufällig −30 … −100 %, meist groß), **Hype** (Tier ×2), **Blase platzt** (Tier ÷2) – Kurse werden multipliziert (wie an der Börse), höchstens ×4, nie unter 0; Tier beim Mischen ausgelost, Dividende (alle +50),
   Steuerprüfung (jeder gibt seinen höchsten Schein ab, nur eigener sichtbar), Marktpanik (jeder schiebt einen zufälligen Schein verdeckt nach links),
-  Hektik (nächste 3 Versteigerungen 5 s), **Zwangsversteigerung** (2×, Handkarte, verdeckt; aufgedeckt → auf die Hand + nochmal aufdecken; später *statt* des Zuges ausspielen: Tier eines Mitspielers wird versteigert, Besitzer muss verkaufen und bekommt das Geld, ohne Gebot behält er es; geschützt: fertige Quartette, Ratten, Spieler ohne Geld; kein Mindestgebot; mehrfach pfändbar), **Einspruch** (Handkarte, wehrt eine Pfändung automatisch ab). Wertung mit aktuellen Kursen; Spezialkarte (250) und Esel-Bonus unverändert.
+  Hektik (nächste 3 Versteigerungen halbe Zeit, bei Normal 5 s), **Zwangsversteigerung** (2×, Handkarte, verdeckt; aufgedeckt → auf die Hand + nochmal aufdecken; später *statt* des Zuges ausspielen: Tier eines Mitspielers wird versteigert, Besitzer muss verkaufen und bekommt das Geld, ohne Gebot behält er es; geschützt: fertige Quartette, Ratten, Spieler ohne Geld; kein Mindestgebot; mehrfach pfändbar), **Einspruch** (Handkarte, wehrt eine Pfändung automatisch ab). Wertung mit aktuellen Kursen; Spezialkarte (250) und Esel-Bonus unverändert.
 - Wertung: (Summe der Quartettwerte + 250 je passender Spezialkarte) × Anzahl der Quartette, danach + 250 je Spezialkarte
   ohne zählendes Quartett.
 

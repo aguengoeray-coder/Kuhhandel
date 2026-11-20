@@ -1001,3 +1001,21 @@ test('Zu zweit: Bedenzeit 10 s → automatisch behalten; beide verzichten → Sp
   h = duoPass(h, 'a'); assert.equal(h.phase, 'turn'); assert.equal(h.turn, 1);
   h = duoPass(h, 'b'); assert.equal(h.phase, 'ended');
 });
+
+test('v0.78 Tempo: Denkzeiten voll (×1,5/×0,7), Info-Fenster leicht (×1,3/×0,85), Kann-nicht-zahlen nie unter 5 s, Hektik = halbe Zeit', async () => {
+  const E = await import('../src/engine.js');
+  const S = (tempo, extra = {}) => ({ settings: { ...(tempo ? { tempo } : {}), ...extra } });
+  assert.deepEqual(['gemuetlich', null, 'schnell'].map((t) => E.auctionStartMs(S(t))), [15000, 10000, 7000]);
+  assert.deepEqual(['gemuetlich', null, 'schnell'].map((t) => E.revealMs(S(t))), [3900, 3000, 2550]);
+  assert.deepEqual(['gemuetlich', null, 'schnell'].map((t) => E.cantpayMs(S(t))), [6500, 5000, 5000]);
+  assert.deepEqual(['gemuetlich', null, 'schnell'].map((t) => E.hektikMs(S(t))), [7500, 5000, 3500]);
+  assert.deepEqual(['gemuetlich', null, 'schnell'].map((t) => E.tradeTimerSec(S(t, { tradeTimer: 20 }))), [30, 20, 14]);
+  assert.equal(E.tradeTimerSec(S(null)), 0);
+  assert.equal(E.hektikMs(S(null)), E.HEKTIK_MS);
+  // Hektik in gemütlicher Runde: 7,5 s statt fest 5 s
+  let g = drawForAuction(boerseWithTop('news-hektik'), 'a', 0);
+  g.settings.tempo = 'gemuetlich';
+  g = drawForAuction(g, 'a', 1000);
+  assert.equal(g.auction.endsAt - g.auction.opensAt, 7500);
+  assert.equal(g.auction.opensAt - 1000, 3900);
+});

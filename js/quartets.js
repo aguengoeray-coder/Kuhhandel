@@ -3,7 +3,8 @@
 import { animalBody } from './beasts.js';
 import { art } from './animals.js';
 
-export const QSHOW_MS = 3800;
+export const QSHOW_MS = 5500; // v0.78 (Alp): länger (3,8 → 5,5 s), Tiere und Requisiten spielen ihre Szene zweimal
+export const qshowMs = (f = 1) => Math.round(QSHOW_MS * f); // Info-Fenster: folgt dem Tempo leicht
 
 // Szene je Tier: bg = Hintergrund, move = Bewegung der Tiere, shout = Ruf, props = Requisiten (Emoji), fx = Art der Requisiten, extra = Bühnenbild
 const SCENES = {
@@ -33,12 +34,12 @@ export const quartetSound = (animal) => (SCENES[animal] || {}).sound || 'quartet
 const NAMES = { hahn: 'Hähne', gans: 'Gänse', katze: 'Katzen', hund: 'Hunde', schaf: 'Schafe', ziege: 'Ziegen', esel: 'Esel', schwein: 'Schweine', kuh: 'Kühe', pferd: 'Pferde' };
 
 // who = „Du“ oder Name, color = Platzfarbe des Spielers, delay = Start in ms (für die Taktung)
-export function quartetShow(animal, who, color, delay = 0, isMe = false) {
+export function quartetShow(animal, who, color, delay = 0, isMe = false, ms = QSHOW_MS) {
   const s = SCENES[animal];
   if (!s) return '';
   const props = Array.from({ length: 14 }, (_, i) => `<i class="qs-p ${s.fx}" style="--i:${i};--x:${(i * 37) % 100}%;--r:${((i * 53) % 60) - 30}deg">${s.props[i % s.props.length]}</i>`).join('');
   const beasts = [0, 1, 2, 3].map((k) => `<div class="qs-a m-${s.move}" style="--k:${k}">${animalBody(animal)}</div>`).join('');
-  return `<div class="qshow q-${animal}" role="status" aria-live="polite" style="--qbg:${s.bg};--qc:${color};--qd:${delay}ms;--qms:${QSHOW_MS}ms">
+  return `<div class="qshow q-${animal}" role="status" aria-live="polite" style="--qbg:${s.bg};--qc:${color};--qd:${delay}ms;--qms:${ms}ms;--qrep:${ms > 4500 ? 2 : 1}">
     <div class="qs-bg"></div>${s.extra}
     <div class="qs-props">${props}</div>
     <div class="qs-stage">${beasts}</div>

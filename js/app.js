@@ -1,6 +1,6 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
-import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf } from '../src/engine.js';
+import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf, tradeTimerSec } from '../src/engine.js';
 import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor, showBusy } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
@@ -443,7 +443,7 @@ function modePanel(id) {
     const tiles = [
       ...(id === 'classic' ? [['duo', '👥', 'Zu zweit', 'Aufteilen statt Versteigern']] : []),
       ['money', '💵', 'Geld im Stapel', o.money ? `${mcnt} Scheine · ${msum} Taler` : 'Extra-Scheine zwischen den Tieren'],
-      ['tradeTimer', '⏱', 'Kuhhandel-Zeit', `${m.settings.turbo ? 12 : 20} s pro Angebot`],
+      ['tradeTimer', '⏱', 'Kuhhandel-Zeit', `${tradeTimerSec({ settings: { ...m.settings, tradeTimer: 20, tempo: o.tempo } })} s pro Angebot`],
       ['moneyCounts', '💰', 'Geld zählt', 'Taler am Ende mitwerten'],
     ];
     right = `<div class="mp-hd"><b>${esc(m.name)}</b><span>${esc(m.tag)} · ${o.duo ? '2 Spieler' : esc(m.players || '3–4 Spieler')}</span></div>
@@ -514,7 +514,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (13 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (13 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
       ${tempoSeg(g.state?.settings?.tempo, isHost, 'data-tempo')}
     </div>

@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md – gemeinsamer Projektstand
 
-Stand: 20.11.2026, 00:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
+Stand: 20.11.2026, 10:45 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
 
 > Maßgeblich sind GitHub (`main`, PRs, Workflow-Ergebnisse). Diese Datei wird nach jeder Arbeitseinheit aktualisiert.
 > Freigaben laufen nach der **Ampel** in `AGENTS.md` (🟢 KI mergt bei grünen Tests · 🟡 Alps Go · 🔴 nur Alp).
@@ -9,9 +9,9 @@ Stand: 20.11.2026, 00:10 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.69.0** – Merge `8a543ad` (#45); Cloudflare-Build erfolgreich · v0.70.0 (#46) und v0.71.0 folgen |
-| In Arbeit | – |
-| Nächste Versionen | Erste echte Partien spielen (noch kein einziges Spielergebnis in der DB) · Börsen-Chaos danach nachjustieren · 2-Spieler-Modus |
+| Live-Version (`main`) | **v0.77.0** (#52, Zu zweit + Quartett-Show); Cloudflare-Build erfolgreich |
+| In Arbeit | v0.78.0 (PR #53): Mehr Ruhe – Ergebnisse länger, Tempo (Denkzeiten voll, Info-Fenster leicht, Spezialkarte/Bewegungen fest), Modus-Fenster A, Quartett-Show 5,5 s |
+| Nächste Versionen | Erste echte Partien spielen (noch kein einziges Spielergebnis in der DB) · Börsen-Chaos danach nachjustieren · Shop-Ideen (Preise = Alp) · Rückblick nach dem Spiel |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.67-emotes.sql` (Claude über Connector 14.11., Prüfabfrage + Advisors ✓); davor `v0.60-admin-nur-angemeldet.sql`, `v0.61-emote-pruegel.sql` (Claude) |
 
 ### Zuletzt live gegangen

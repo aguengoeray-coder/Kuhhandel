@@ -24,16 +24,26 @@ export function animalsOf(stateOrSettings) { return isTurbo(stateOrSettings) ? A
 // v0.78 Tempo (Alp): pro Runde im Warteraum wählbar – Gemütlich ×1,5 · Normal ×1 · Schnell ×0,7 (Versteigerung, Anschauen, Aufteilen, Ergebnisse)
 export const TEMPOS = { gemuetlich: 1.5, normal: 1, schnell: 0.7 };
 export function tempoFactor(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return (st && TEMPOS[st.tempo]) || 1; }
-export function auctionStartMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return Math.round((isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_START_MS) * tempoFactor(state)); }
-export function auctionBidMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return Math.round((isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_BID_MS) * tempoFactor(state)); }
-export function revealMs(state) { return Math.round(REVEAL_MS * tempoFactor(state)); }
+export function auctionStartMs(state) { if (state && state.auction && state.auction.fast) return hektikMs(state); return Math.round((isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_START_MS) * tempoFactor(state)); }
+export function auctionBidMs(state) { if (state && state.auction && state.auction.fast) return hektikMs(state); return Math.round((isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_BID_MS) * tempoFactor(state)); }
+// v0.78 (Alp): Info-Fenster (Karte ansehen, Ergebnisse, VS, News, Quartett-Show, „Kann nicht zahlen“) folgen dem Tempo nur leicht –
+// ohne Spielverlauf muss man sie auch bei „Schnell“ noch lesen können. Denkzeiten (Versteigerung, Aufteilen, Kuhhandel-Zeit) folgen voll.
+export const INFO_TEMPOS = { gemuetlich: 1.3, normal: 1, schnell: 0.85 };
+export function infoFactor(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return (st && INFO_TEMPOS[st.tempo]) || 1; }
+export function revealMs(state) { return Math.round(REVEAL_MS * infoFactor(state)); }
+// „Kann nicht zahlen“: Scheine merken – nie kürzer als 5 s
+export function cantpayMs(state) { return Math.round(CANTPAY_HOLD_MS * Math.max(1, infoFactor(state))); }
+// Hektik (Börsen-Chaos): halbe Versteigerungszeit der Runde (Gemütlich 7,5 s / Normal 5 s / Schnell 3,5 s)
+export function hektikMs(state) { return Math.round(AUCTION_START_MS * tempoFactor(state) / 2); }
+// Kuhhandel-Zeit (Einstellung, in s): folgt dem Tempo voll (Normal 20 s / Turbo 12 s)
+export function tradeTimerSec(state) { const t = Number(state?.settings?.tradeTimer) || 0; return t ? Math.round((isTurbo(state) ? 12 : t) * tempoFactor(state)) : 0; }
 
 // ---------- Börsen-Chaos (eigene Spielart, nie zusammen mit Turbo) ----------
 // 13 Börsen-News im Stapel: 2× Kursrallye, 2× Kurssturz, Hype (×2), Blase platzt (÷2) (je ein Tier, beim Mischen ausgelost),
 // Dividende, Steuerprüfung, Marktpanik, Hektik, 2× Zwangsversteigerung, Einspruch.
 // Aufgedeckt → Wirkung sofort, danach deckt der Aufdecker nochmal auf (wie bei der Ratte).
 export const NEWS_PREFIX = 'news-';
-export const HEKTIK_MS = 5000;          // Hektik: Versteigerungen nur 5 s
+export const HEKTIK_MS = 5000;          // Hektik bei Normal-Tempo (sonst halbe Versteigerungszeit, siehe hektikMs)
 export const HEKTIK_COUNT = 3;          // … die nächsten 3
 export const KURS_STEP = 50;            // alte Karten ohne Zahl (laufende Partien): ±50 %
 // v0.63: Kursrallye/Kurssturz zufällig 30 … 100 % (10er-Schritte, beim Mischen ausgelost, stapelbar, nie unter 0).
@@ -59,7 +69,8 @@ export function applyKurs(kurse, animal, factor) {
 //    Geschützt: fertige Quartette, Ratten, Spieler ohne Geld. Wer schon gepfändet wurde, kann nochmal gepfändet werden (Alp, 19.11.).
 //  • Einspruch: wehrt eine Pfändung gegen dich automatisch ab (beide Karten sind dann weg).
 export const HAND_KINDS = ['pfaendung', 'einspruch'];
-export const PFAEND_SHOW_MS = 3200; // Auftritt des Gerichtsvollziehers, erst danach wird geboten
+export const PFAEND_SHOW_MS = 3200; // Auftritt des Gerichtsvollziehers, erst danach wird geboten (Info-Fenster: folgt dem Tempo leicht)
+export function pfaendShowMs(state) { return Math.round(PFAEND_SHOW_MS * infoFactor(state)); }
 // Preis fürs Vorkaufsrecht (bei Zwangsversteigerung gibt es keins)
 export function buyPrice(auction) { return auction && auction.high && !auction.forced ? auction.high.amount : 0; }
 // Darf pid gerade dieses Tier von target pfänden?
@@ -456,7 +467,7 @@ const NEWS_TEXT = {
   panik: () => 'Marktpanik: alle schieben einen zufälligen Schein nach links',
   hype: (a) => `Hype: ${animalName(a)} ×2`,
   blase: (a) => `Blase platzt: ${animalName(a)} ÷2`,
-  hektik: () => `Hektik: die nächsten ${HEKTIK_COUNT} Versteigerungen nur ${HEKTIK_MS / 1000} s`,
+  hektik: () => `Hektik: die nächsten ${HEKTIK_COUNT} Versteigerungen nur halb so lang`,
 };
 function applyNews(state, me, card) {
   const n = newsOf(card);
@@ -562,7 +573,7 @@ export function drawForAuction(prev, playerId, now) {
   }
   const fast = (state.hektik || 0) > 0; // Börsen-Chaos „Hektik“: diese Versteigerung nur 5 s
   if (fast) state.hektik -= 1;
-  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + revealMs(state) : null, endsAt: now != null ? now + revealMs(state) + (fast ? HEKTIK_MS : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
+  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + revealMs(state) : null, endsAt: now != null ? now + revealMs(state) + (fast ? hektikMs(state) : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
   state.phase = 'auction';
   return state;
 }
@@ -659,7 +670,7 @@ export function playPfaendung(prev, playerId, targetId, animal, now) {
   const fast = (state.hektik || 0) > 0;
   if (fast) state.hektik -= 1;
   state.auction = { animal, auctioneer: targetId, forced: { by: playerId }, high: null, caps: {}, passed: [],
-    opensAt: now != null ? now + PFAEND_SHOW_MS : null, endsAt: now != null ? now + PFAEND_SHOW_MS + (fast ? HEKTIK_MS : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
+    opensAt: now != null ? now + pfaendShowMs(state) : null, endsAt: now != null ? now + pfaendShowMs(state) + (fast ? hektikMs(state) : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
   state.phase = 'auction';
   return state;
 }
@@ -735,7 +746,7 @@ export function closeAuction(prev, playerId, mode, now) {
     a.high = null;
     a.passed = [];
     if (a.endsAt != null && now != null) {
-      a.holdUntil = now + CANTPAY_HOLD_MS; // alle schauen erst die Scheine an – vorher bietet niemand
+      a.holdUntil = now + cantpayMs(state); // alle schauen erst die Scheine an – vorher bietet niemand
       a.endsAt = a.holdUntil + auctionStartMs(state);
     }
     log(state, `${bidder.name} kann ${failed} nicht zahlen und muss alle Karten zeigen: ${bidder.money.join(', ') || 'keine'}. Die Versteigerung beginnt neu.`);
@@ -1055,7 +1066,7 @@ export function specialDecide(prev, playerId, mode, now) {
     sp.buzzes = {};
     sp.rps = null;
     sp.winner = null;
-    sp.startsAt = (now != null ? now : 0) + CANTPAY_HOLD_MS + SPECIAL_DELAY_MS; // erst Scheine anschauen, dann „Achtung“
+    sp.startsAt = (now != null ? now : 0) + cantpayMs(state) + SPECIAL_DELAY_MS; // erst Scheine anschauen, dann „Achtung“
     log(state, `${other.name} hat keine ${res.count} Karten und muss alle zeigen: ${other.money.join(', ') || 'keine'}. Der Countdown beginnt neu.`);
     return state;
   }
