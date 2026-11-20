@@ -4059,3 +4059,25 @@ em.kursed .kv, em.cv.kursed .kv { font-weight: 900; }
 button.team-badge { cursor: pointer; font-family: var(--font-head); box-shadow: 0 2px 0 rgba(0,0,0,.3); }
 button.team-badge:active { translate: -50% 1px; box-shadow: none; }
 .seat .team-badge { z-index: 4; }
+/* v0.84 Einsatz & Kasse */
+.stake-badge { position: absolute; left: -6px; top: 18px; z-index: 4; padding: 1px 6px; border-radius: 999px; font: 900 10px/1.3 var(--font-head); border: 2px solid #2B2B2B; background: #fff; color: #667; white-space: nowrap; }
+.stake-badge.ok { background: #DDF5E3; color: #138A3A; }
+button.stake-badge.ask { cursor: pointer; background: #FFD34E; color: #2B2B2B; box-shadow: 0 2px 0 rgba(0,0,0,.3); animation: waitwig 2.4s ease-in-out .5s infinite; }
+.stake-picks { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 8px 0; }
+.stake-pick { padding: 10px 4px; border-radius: 12px; border: 2px solid #2B2B2B; background: #fff; font: 900 15px/1 var(--font-head); cursor: pointer; color: #2B2B2B; }
+.stake-pick.on { background: #FFD34E; box-shadow: 0 0 0 3px rgba(255,211,78,.5); }
+.mtext.small { font-size: 12px; color: #667; }
+.kbox { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px 14px; }
+.kbox section:last-child { grid-column: 1 / -1; }
+.kbal, .kopen, .kgame { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 10px; background: #F3F6FA; margin-bottom: 4px; font-size: 13.5px; }
+.kbal span { font: 900 15px/1 var(--font-head); } .kbal.plus span { color: #138A3A; } .kbal.minus span { color: #D6342C; }
+.kbal.me, .kopen.me { background: #FFF3C4; }
+.kopen span { flex: 1; } .kopen em { font-style: normal; font: 900 15px/1 var(--font-head); } .kopen small { color: #888; font-size: 11px; }
+.kopen .pill { min-height: 30px; padding-inline: 10px; font-size: 12px; }
+.kgame { font-size: 12.5px; } .kgame em { font-style: normal; font-weight: 800; color: #556; }
+@media (max-width: 560px) { .kbox { grid-template-columns: 1fr; } }
+.turbotag.staketag { background: #1F8A3F; color: #fff; }
+.podstake { font: 900 15px/1.2 var(--font-head); color: #7CF0A0; text-align: center; }
+.podstake small { color: rgba(255,255,255,.7); font: 700 11px var(--font-body); }
+.mbox:has(.kbox) { width: min(760px, 95vw); }
+.kbal, .kopen, .kgame { white-space: nowrap; }

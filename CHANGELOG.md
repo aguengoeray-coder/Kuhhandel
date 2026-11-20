@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v0.84.0 – Einsatz & Kasse
+
+- [x] **💶 Einsatz** (in jeder Spielart, Warteraum „💶 Einsatz“ oder Modus-Fenster): 1 / 2 / 5 / 10 / 20 € pro Kopf. Jeder bestätigt am eigenen Platz mit „💶 Dabei?“ – gestartet wird erst, wenn alle ✓ haben. Am Tisch steht „💶 Topf 20 €“.
+- [x] **Platz 1 bekommt den ganzen Topf** (bei Gleichstand oder im Team geteilt), angezeigt beim Treppchen.
+- [x] **Neue 💶 Kasse** (Startseite unten): Bilanz pro Person, „Wer schuldet wem“ (paarweise verrechnet), „Bezahlt ✓“ – nur wer das Geld bekommt, darf abhaken –, und die letzten Runden mit Einsatz.
+- [x] Die App bewegt **kein** Geld, sie ist nur euer Schuldenbuch.
+- [x] Datenbank: `supabase/v0.84-kasse.sql` (Tabelle `kasse`, Funktionen `kasse_settle`, `kasse_paid_pair`).
+
 ## v0.83.0 – Teams 2 gegen 2
 
 - [x] **🤝 Teams 2 gegen 2** (Schalter im Warteraum und im Modus-Fenster, nur zu viert, nicht zu zweit): Partner sitzen sich gegenüber. Im Warteraum steht „Team A/B ⇄“ über den Figuren – der Gastgeber tippt an, wer in welchem Team ist (Start erst bei 2 gegen 2).

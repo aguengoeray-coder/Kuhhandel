@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.83.0';
+export const APP_VERSION = '0.84.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -337,7 +337,7 @@ function renderStart() {
   const nav = items.length > 1 ? `<button type="button" class="hb-nav l" data-hb="prev" aria-label="Vorheriges Spiel" ${ui.homeIdx ? '' : 'disabled'}>‹</button>
     <button type="button" class="hb-nav r" data-hb="next" aria-label="Nächstes Spiel" ${ui.homeIdx < items.length - 1 ? '' : 'disabled'}>›</button>
     <span class="hb-count">${ui.homeIdx + 1} / ${items.length}</span>` : '';
-  const dock = [['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
+  const dock = [['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['kasse', '💶', 'Kasse'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
     .map(([k, i, l]) => `<button type="button" class="hb-dk" data-dock="${k}"><i>${i}</i>${l}</button>`).join('');
   // v0.73 (Alp): große Modus-Kacheln wie bei einem Konsolen-Spiel; erst nach dem Antippen kommen die Einstellungen
   const openN = (ui.games || []).length;
@@ -370,7 +370,7 @@ function renderStart() {
     if (k === 'moneyEdit') { ui.mpMoney = true; return render(); }
     if (k === 'info') return openModal(`rules:${(ui.modeOpts || {}).duo ? 'duo' : ui.mode}`); // v0.80: ⓘ erklärt die Spielart
     if (k === 'moneyDone') { ui.mpMoney = false; return render(); }
-    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}), ...(o.teams && !o.duo ? { teams: true } : {}) }); }
+    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}), ...(o.teams && !o.duo ? { teams: true } : {}), ...(o.stake ? { stake: 5, stakeOk: { [me.id]: true } } : {}) }); }
     if (k === 'pin') { ui.mode = null; return openModal('rejoin'); }
     ui.modeOpts = { ...(ui.modeOpts || {}), [k]: !(ui.modeOpts || {})[k] }; render();
   }));
@@ -448,6 +448,7 @@ function modePanel(id) {
       ['moneyCounts', '💰', 'Geld zählt', 'Taler am Ende mitwerten'],
       ['missions', '🎯', 'Geheimaufträge', 'Jeder bekommt einen Auftrag – Bonus am Ende'],
       ...(o.duo ? [] : [['teams', '🤝', 'Teams 2 gegen 2', 'Nur zu viert · Partner gegenüber']]),
+      ['stake', '💶', 'Einsatz 5 €', 'Platz 1 bekommt den Topf · im Warteraum änderbar'],
     ];
     right = `<div class="mp-hd"><b>${esc(m.name)}</b><span>${esc(m.tag)} · ${o.duo ? '2 Spieler' : esc(m.players || '3–4 Spieler')}</span><button type="button" class="mp-info" data-mp="info" aria-label="Regeln dieser Spielart">i</button></div>
       <div class="mp-facts">${(m.facts || []).slice(0, 3).map((f) => `<i>${esc(f)}</i>`).join('')}</div>
@@ -497,11 +498,13 @@ function renderRoom() {
       ${kick}${avatarHtml(p.id, p.name)}
       <div class="ribbon">${esc(p.name)}${you}</div>
       ${p.id === g.host ? '<span class="host-badge">Gastgeber</span>' : ''}
+      ${g.state?.settings?.stake ? (() => { const ok = !!g.state.settings.stakeOk?.[p.seat || p.id]; const mine = p.id === me.id; return mine && !ok ? `<button type="button" class="stake-badge ask" data-stakeok="1">💶 Dabei?</button>` : `<span class="stake-badge ${ok ? 'ok' : ''}">${ok ? `💶 ✓` : '💶 …'}</span>`; })() : ''}
       ${g.state?.settings?.teams ? (() => { const t = teamPickOf(g, p, i); return isHost ? `<button type="button" class="team-badge t${t}" data-teampick="${esc(p.seat || p.id)}" aria-label="${esc(p.name)}: Team wechseln">Team ${t ? 'B' : 'A'} ⇄</button>` : `<span class="team-badge t${t}">Team ${t ? 'B' : 'A'}</span>`; })() : ''}
     </div>`;
   }).join('');
   const duo = !!g.state?.settings?.duo; // v0.77 Zu zweit: genau 2 Spieler
-  const enough = (duo ? g.players.length === 2 : g.players.length >= MIN_PLAYERS) && !teamsUneven(g);
+  const stakeWait = !!g.state?.settings?.stake && g.players.some((p) => !g.state.settings.stakeOk?.[p.seat || p.id]); // v0.84: alle müssen den Einsatz bestätigen
+  const enough = (duo ? g.players.length === 2 : g.players.length >= MIN_PLAYERS) && !teamsUneven(g) && !stakeWait;
   const outdated = g.players.filter((p) => { const v = versions[p.seat || p.id]; return v && v !== APP_VERSION && olderThan(v, APP_VERSION); });
   const money = g.state?.settings?.money || null;
   const moneyCount = money ? Object.values(money).reduce((a, b) => a + b, 0) : 0;
@@ -518,7 +521,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['duo', '👥 Zu zweit'], ['turbo', '⚡ Turbo'], ['boerse', '📈 Börsen-Chaos'], ['tradeTimer', `⏱ Kuhhandel ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt'], ['missions', '🎯 Aufträge'], ...(duo ? [] : [['teams', '🤝 Teams 2:2']])].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['duo', '👥 Zu zweit'], ['turbo', '⚡ Turbo'], ['boerse', '📈 Börsen-Chaos'], ['tradeTimer', `⏱ Kuhhandel ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt'], ['missions', '🎯 Aufträge'], ...(duo ? [] : [['teams', '🤝 Teams 2:2']]), ['stake', `💶 ${g.state?.settings?.stake ? `${g.state.settings.stake} € Einsatz` : 'Einsatz'}`]].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
       ${tempoSeg(g.state?.settings?.tempo, isHost, 'data-tempo')}
     </div>
@@ -528,7 +531,7 @@ function renderRoom() {
   const hint = outdated.length
     ? `${outdated.map((p) => esc(p.name)).join(', ')} ${outdated.length > 1 ? 'haben' : 'hat'} eine alte Version – bitte App neu laden.`
     : isHost
-    ? (enough ? (g.state?.settings?.teams ? (g.players.length === 4 ? 'Teams mit ⇄ wählen' : 'Teams nur zu viert') : 'Alle da? Dann los!') : teamsUneven(g) ? 'Bitte 2 gegen 2 (⇄)' : duo ? (g.players.length > 2 ? 'Zu zweit heißt genau 2 – „Zu zweit“ ausschalten oder jemand geht.' : 'Warte auf deinen Gegner – zu zweit.') : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
+    ? (stakeWait && (duo ? g.players.length === 2 : g.players.length >= MIN_PLAYERS) ? 'Alle müssen 💶 bestätigen' : enough ? (g.state?.settings?.teams ? (g.players.length === 4 ? 'Teams mit ⇄ wählen' : 'Teams nur zu viert') : 'Alle da? Dann los!') : teamsUneven(g) ? 'Bitte 2 gegen 2 (⇄)' : duo ? (g.players.length > 2 ? 'Zu zweit heißt genau 2 – „Zu zweit“ ausschalten oder jemand geht.' : 'Warte auf deinen Gegner – zu zweit.') : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
     : `Warte, bis ${esc((g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'der Gastgeber')} das Spiel startet.`;
 
   app.innerHTML = `
@@ -557,12 +560,13 @@ function renderRoom() {
   document.getElementById('start')?.addEventListener('click', onStart);
   document.getElementById('moneyToggle')?.addEventListener('click', () => saveSettings({ money: money ? null : { ...DEFAULT_MONEY } }));
   app.querySelectorAll('[data-tempo]').forEach((b) => b.addEventListener('click', () => saveSettings({ tempo: b.dataset.tempo === 'normal' ? null : b.dataset.tempo })));
+  app.querySelectorAll('[data-stakeok]').forEach((b) => b.addEventListener('click', () => { const k = seatIn(ui.game) || me.id; saveSettings((cur) => ({ stakeOk: { ...(cur.stakeOk || {}), [k]: true } })); }));
   app.querySelectorAll('[data-teampick]').forEach((b) => b.addEventListener('click', () => {
     const g = ui.game; const tp = { ...(g.state?.settings?.teamPick || {}) };
     g.players.forEach((p, i) => { const k = p.seat || p.id; if (tp[k] == null) tp[k] = i % 2; });
     tp[b.dataset.teampick] = tp[b.dataset.teampick] ? 0 : 1; saveSettings({ teamPick: tp });
   }));
-  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true), ...(!cur && k === 'turbo' ? { boerse: null, duo: null } : {}), ...(!cur && k === 'boerse' ? { turbo: null, duo: null } : {}), ...(!cur && k === 'duo' ? { turbo: null, boerse: null, teams: null } : {}), ...(!cur && k === 'teams' ? { duo: null } : {}) }); })); // Turbo, Börsen-Chaos und Zu zweit schließen sich aus
+  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; if (k === 'stake') return openModal('stake'); const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true), ...(!cur && k === 'turbo' ? { boerse: null, duo: null } : {}), ...(!cur && k === 'boerse' ? { turbo: null, duo: null } : {}), ...(!cur && k === 'duo' ? { turbo: null, boerse: null, teams: null } : {}), ...(!cur && k === 'teams' ? { duo: null } : {}) }); })); // Turbo, Börsen-Chaos und Zu zweit schließen sich aus
   app.querySelectorAll('[data-money]').forEach((b) => b.addEventListener('click', () => {
     const v = b.dataset.money;
     const next = { ...money, [v]: Math.max(0, (money[v] || 0) + Number(b.dataset.d)) };
@@ -581,7 +585,9 @@ function teamsUneven(g) { if (!g.state?.settings?.teams || g.players.length !== 
 
 async function saveSettings(patch) {
   const g = ui.game;
-  const settings = { ...(g.state?.settings || {}), ...patch };
+  // patch darf eine Funktion sein (v0.84): wird bei jedem Versuch auf den frischen Stand angewendet – so gehen gleichzeitige Zusagen nicht verloren
+  const merge = (base) => ({ ...(base || {}), ...(typeof patch === 'function' ? patch(base || {}) : patch) });
+  let settings = merge(g.state?.settings);
   const count = settings.money ? Object.values(settings.money).reduce((a, b) => a + b, 0) : 0;
   if (count > MAX_MONEY_CARDS) return;
   ui.game = { ...g, state: { ...(g.state || {}), settings } };
@@ -596,6 +602,7 @@ async function saveSettings(patch) {
     if (data && data.length) { ui.game = data[0]; return render(); }
     const fresh = await sb.from('games').select('*').eq('id', cur.id).single();
     if (!fresh.data || fresh.data.status !== 'lobby') return;
+    settings = merge(fresh.data.state?.settings);
     ui.game = { ...fresh.data, state: { ...(fresh.data.state || {}), settings } };
   }
 }
@@ -1429,12 +1436,54 @@ function maybeRecordResults() {
     const extras = { animals: r.quartets, maxBuy: st.maxBuy || null, tradesWon: st.tradesWon || 0, tradesLost: st.tradesLost || 0, ratsTaken: st.ratsTaken || 0, specialsWon: st.specialsWon || 0 };
     return pl ? { player_id: pl.id, name: r.name, score: r.score, quartets: r.quartets.length, won: (g.state.winner || []).includes(r.id), extras } : null;
   }).filter(Boolean);
+  if (g.state.settings?.stake) sb.rpc('kasse_settle', { p_game: g.id }).then(({ error }) => { if (error) logError(`Kasse: ${error.message}`); }); // v0.84 Einsatz abrechnen
   sb.rpc('record_results', { p_game: g.id, p_rows: rows }).then(async ({ error }) => {
     if (error) { logError(`Ergebnisse: ${error.message}`); return; }
     // v0.55: eigene Gutschriften dieser Partie fürs Siegertreppchen (fehlt die Funktion noch → altes „+10 am Sieger“)
     const rw = await sb.rpc('shop_my_rewards', { p_game: g.id }).then((r) => r, () => ({ error: true }));
     if (!rw.error) { myRewards = { game: g.id, list: rw.data || [] }; loadShop(true); render(); }
   });
+}
+
+// ---------- v0.84 Kasse: Schuldenbuch für Runden mit Einsatz (die App bewegt kein Geld) ----------
+const DEMO_KASSE = (() => { const t = Date.now(); const e = (g, d, c, ct, h, paid) => ({ id: `${g}${d}${c}`, game_id: g, debtor: d, creditor: c, cents: ct, stake_cents: 500, created_at: new Date(t - h * 36e5).toISOString(), paid_at: paid ? new Date(t).toISOString() : null });
+  return [e('g3', 'u1', 'u2', 500, 2), e('g3', 'u3', 'u2', 500, 2), e('g3', 'u4', 'u2', 500, 2), e('g2', 'u2', 'u1', 500, 26), e('g2', 'u3', 'u1', 500, 26), e('g2', 'u4', 'u1', 500, 26), e('g1', 'u2', 'u1', 500, 50, true), e('g1', 'u3', 'u1', 500, 50, true), e('g1', 'u4', 'u1', 500, 50, true)]; })();
+async function loadKasse() {
+  if (DEMO) { modal.kasse = DEMO_KASSE; return render(); }
+  const { data, error } = await sb.from('kasse').select('*').order('created_at', { ascending: false }).limit(2000);
+  if (error) { modal.error = 'Kasse konnte nicht geladen werden (Datenbank-Update kommt gleich).'; return render(); }
+  modal.kasse = data || []; render();
+}
+async function kassePaid(other) {
+  if (!DEMO) { const { error } = await sb.rpc('kasse_paid_pair', { p_other: other }); if (error) { modal.error = error.message; return render(); } return loadKasse(); }
+  modal.kasse = modal.kasse.map((e) => (!e.paid_at && ((e.creditor === me.id && e.debtor === other) || (e.debtor === me.id && e.creditor === other)) ? { ...e, paid_at: new Date().toISOString() } : e)); render();
+}
+const euro = (c) => `${(c / 100).toFixed(c % 100 ? 2 : 0).replace('.', ',')} €`;
+const kName = (id) => (id === me.id ? 'Du' : profiles.get(id)?.name || DEMO_NAMES[id] || '?');
+const DEMO_NAMES = { u1: 'Alp', u2: 'Nico', u3: 'Lea', u4: 'Mo' };
+function kasseBody() {
+  const k = modal.kasse;
+  if (!k) return '<h2>💶 Kasse</h2><p class="mtext">Lade …</p>';
+  if (!k.length) return `<h2>💶 Kasse</h2><p class="mtext">Noch keine Runde mit Einsatz. Im Warteraum unter „💶 Einsatz“ einstellen – Platz 1 bekommt den Topf, hier steht dann, wer wem was schuldet.</p>`;
+  const bal = new Map(); // Gewinn/Verlust insgesamt (bezahlt + offen)
+  for (const e of k) { bal.set(e.creditor, (bal.get(e.creditor) || 0) + e.cents); bal.set(e.debtor, (bal.get(e.debtor) || 0) - e.cents); }
+  const pairs = new Map(); // offene Posten paarweise verrechnet
+  for (const e of k.filter((x) => !x.paid_at)) { const [a, b] = [e.debtor, e.creditor].sort(); const key = `${a}|${b}`; const sgn = e.creditor === b ? 1 : -1; pairs.set(key, (pairs.get(key) || 0) + sgn * e.cents); }
+  const open = [...pairs].filter(([, v]) => v).map(([key, v]) => { const [a, b] = key.split('|'); return v > 0 ? { from: a, to: b, cents: v } : { from: b, to: a, cents: -v }; })
+    .sort((x, y) => (y.to === me.id || y.from === me.id) - (x.to === me.id || x.from === me.id) || y.cents - x.cents);
+  const games = [...new Map(k.map((e) => [e.game_id, e])).values()].slice(0, 12).map((e) => {
+    const rows = k.filter((x) => x.game_id === e.game_id); const winners = [...new Set(rows.map((x) => x.creditor))]; const players = new Set(rows.flatMap((x) => [x.debtor, x.creditor]));
+    return { at: e.created_at, stake: e.stake_cents, pot: e.stake_cents * players.size, winners };
+  });
+  const balRows = [...bal].sort((a, b) => b[1] - a[1]);
+  return `<h2>💶 Kasse</h2>
+    <div class="kbox">
+      <section><h3 class="ph">Bilanz</h3>${balRows.map(([id, c]) => `<div class="kbal ${c > 0 ? 'plus' : c < 0 ? 'minus' : ''} ${id === me.id ? 'me' : ''}"><b>${esc(kName(id))}</b><span>${c > 0 ? '+' : ''}${euro(c)}</span></div>`).join('')}</section>
+      <section><h3 class="ph">Offen – wer schuldet wem</h3>${open.length ? open.map((o) => `<div class="kopen ${o.to === me.id || o.from === me.id ? 'me' : ''}"><span><b>${esc(kName(o.from))}</b> → <b>${esc(kName(o.to))}</b></span><em>${euro(o.cents)}</em>${o.to === me.id ? `<button type="button" class="pill pill-white pill-small" data-m="kassePaid" data-v="${esc(o.from)}">Bezahlt ✓</button>` : o.from === me.id ? '<small>du zahlst</small>' : ''}</div>`).join('') : '<p class="mtext">Alles beglichen 🎉</p>'}
+        <p class="mtext small">Abhaken kann nur, wer das Geld bekommt.</p></section>
+      <section><h3 class="ph">Letzte Runden</h3>${games.map((gm) => `<div class="kgame"><span>${new Date(gm.at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span><span>${euro(gm.stake)} p. P.</span><span>🏆 ${gm.winners.map((w) => esc(kName(w))).join(' & ')}</span><em>Topf ${euro(gm.pot)}</em></div>`).join('')}</section>
+    </div>
+    <p class="mtext small">Die App bewegt kein Geld – sie ist nur euer Schuldenbuch.</p>${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
 }
 
 const DEMO_STATS = [
@@ -1837,6 +1886,7 @@ function openModal(kind) {
   if (kind === 'pin') loadPin();
   if (kind === 'stats') loadStats();
   if (kind === 'mystats') loadMyStats();
+  if (kind === 'kasse') loadKasse();
   if (kind === 'profile') { modal.tab = 'figur'; loadMyStats(); loadShop(); } // v0.80 Mein Profil
   if (kind === 'admin') { modal.tab = 'users'; loadAdmin(); }
   render();
@@ -1892,7 +1942,7 @@ function rulesBody(tab = 'classic') {
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
   <b>👑 Rattenkönig:</b> Am Ende hat einer alle 4 Ratten – er bekommt die Rattenmütze und wählt eines seiner Quartette, das nicht zählt.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Erst 3 s „Zeig Batzen!“ (jeder darf drücken – dann liegen alle Geldstapel mit Anzahl kurz offen), dann zählt für alle außer dem Aufdecker ein Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
-  <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.<br><b>🎯 Geheimaufträge:</b> Jeder bekommt zu Beginn verdeckt einen Auftrag (z. B. „Gewinne mindestens 3 Kuhhandel“ oder „Sammle das Esel-Quartett“) – nur du siehst deinen (🎯 oben links, mit Stand). Am Ende werden alle aufgedeckt; wer seinen erfüllt, bekommt 300–500 Punkte dazu.<br><b>🤝 Teams 2 gegen 2</b> (nur zu viert): Platz 1 + 3 und 2 + 4 sind ein Team und sitzen sich gegenüber. Eure Tiere zählen zusammen – 2 + 2 Kühe sind euer Kuh-Quartett. Das Geld deines Partners siehst du offen (🤝), Kuhhandel im eigenen Team gibt es nicht. Gewertet wird pro Team wie ein Spieler (Quartette zusammen), plus erfüllte Geheimaufträge beider; das bessere Team gewinnt gemeinsam.</p>
+  <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.<br><b>🎯 Geheimaufträge:</b> Jeder bekommt zu Beginn verdeckt einen Auftrag (z. B. „Gewinne mindestens 3 Kuhhandel“ oder „Sammle das Esel-Quartett“) – nur du siehst deinen (🎯 oben links, mit Stand). Am Ende werden alle aufgedeckt; wer seinen erfüllt, bekommt 300–500 Punkte dazu.<br><b>🤝 Teams 2 gegen 2</b> (nur zu viert): Platz 1 + 3 und 2 + 4 sind ein Team und sitzen sich gegenüber. Eure Tiere zählen zusammen – 2 + 2 Kühe sind euer Kuh-Quartett. Das Geld deines Partners siehst du offen (🤝), Kuhhandel im eigenen Team gibt es nicht. Gewertet wird pro Team wie ein Spieler (Quartette zusammen), plus erfüllte Geheimaufträge beider; das bessere Team gewinnt gemeinsam.<br><b>💶 Einsatz</b> (jede Spielart): Jeder setzt den gleichen Betrag (1–20 €), alle bestätigen im Warteraum mit „💶 Dabei“. Platz 1 bekommt den ganzen Topf (Gleichstand/Team: geteilt). Die App bewegt kein Geld – in der 💶 Kasse steht, wer wem was schuldet; abhaken kann nur, wer das Geld bekommt.</p>
   <h3>Knöpfe</h3><p class="rlegend"><span class="rl rl-get">Grün</span> du bekommst etwas (+ ⬇) · <span class="rl rl-pay">Orange</span> du zahlst (− ⬆) · <span class="rl rl-move">Rot</span> Karte aufdecken · <span class="rl rl-trade">Lila</span> Kuhhandel · <span class="rl rl-neutral">Weiß</span> neutral / zurück. Gestrichelt = gerade gesperrt. Der Knopf, der gerade erwartet wird, leuchtet nach ein paar Sekunden sanft.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
   return `<h2>Spielregeln</h2>${tabs}<div class="rules">${body}</div>`;
@@ -1921,6 +1971,11 @@ function renderModal() {
       ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
   }
   if (modal.kind === 'profile') body = profileBody();
+  if (modal.kind === 'stake') { const cur = ui.game?.state?.settings?.stake || 0; body = `<h2>💶 Einsatz</h2>
+    <p class="mtext">Jeder setzt den gleichen Betrag – <b>Platz 1 bekommt den ganzen Topf</b> (bei Gleichstand oder im Team wird geteilt). Gestartet wird erst, wenn alle „💶 Dabei“ bestätigt haben.</p>
+    <div class="stake-picks">${[0, 1, 2, 5, 10, 20].map((v) => `<button type="button" class="stake-pick ${cur === v ? 'on' : ''}" data-m="stakeSet" data-v="${v}">${v ? `${v} €` : 'Ohne'}</button>`).join('')}</div>
+    <p class="mtext small">Die App bewegt kein Geld – sie merkt sich nur in der 💶 Kasse, wer wem was schuldet. Bezahlt wird unter euch.</p>`; }
+  if (modal.kind === 'kasse') body = kasseBody();
   if (modal.kind === 'admin') body = adminBody();
   if (modal.kind === 'mystats') body = `<h2>Meine Statistik</h2>${myStatsBody(modal.mine)}`;
   if (modal.kind === 'stats') {
@@ -2011,6 +2066,8 @@ function renderModal() {
       if (b.dataset.m === 'clearErrors') return adminAction('admin_clear_errors', {}, 'Fehlerberichte gelöscht.');
     }
     if (b.dataset.m === 'color') return saveProfile({ color: b.dataset.v });
+    if (b.dataset.m === 'stakeSet') { const v = Number(b.dataset.v) || null; const k = seatIn(ui.game) || me.id; modal = null; render(); return saveSettings({ stake: v, stakeOk: v ? { [k]: true } : null }); }
+    if (b.dataset.m === 'kassePaid') return kassePaid(b.dataset.v);
     if (b.dataset.m === 'rTab') { modal.rtab = b.dataset.v; render(); el.querySelector('.mbox')?.scrollTo?.(0, 0); return; }
     if (b.dataset.m === 'pfTab') { modal.tab = b.dataset.v; modal.pfErr = ''; return render(); }
     if (b.dataset.m === 'pfStats') return openModal('mystats');
@@ -2186,7 +2243,7 @@ function demo(kind) {
   if (kind === 'room') {
     ui.screen = 'room';
     ui.game = { id: 'g0', code: 'HOFX', host: params.get('guest') ? 'u2' : 'u1', status: 'lobby', version: 2, players: [{ id: 'u1', name: 'Alp' }, { id: 'u2', name: 'Nico' }, { id: 'u3', name: 'Lea' }],
-      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : params.get('teams') ? { settings: { teams: true, missions: true } } : params.get('turbo') ? { settings: { turbo: true, tradeTimer: 20 } } : null };    if (params.get('join')) setTimeout(() => { ui.game = { ...ui.game, players: [...ui.game.players, { id: 'u4', name: 'Mo' }] }; render(); }, 300); // Screenshots: jemand steigt ein
+      state: params.get('money') ? { settings: { money: { 200: 4, 0: 5, 50: 2 } } } : params.get('teams') ? { settings: { teams: true, missions: true } } : params.get('stake') ? { settings: { stake: 5, stakeOk: { u2: true } } } : params.get('turbo') ? { settings: { turbo: true, tradeTimer: 20 } } : null };    if (params.get('join')) setTimeout(() => { ui.game = { ...ui.game, players: [...ui.game.players, { id: 'u4', name: 'Mo' }] }; render(); }, 300); // Screenshots: jemand steigt ein
   }
   const demoState = buildDemoState(kind, gameLocal);
   if (kind === 'turn' || kind === 'menu') online = new Set(['u1', 'u2', 'u4']); // Lea offline zeigen
@@ -2202,6 +2259,7 @@ function demo(kind) {
   }
   if (params.get('modal')) { modal = { kind: params.get('modal'), pin: '4821', stats: params.get('modal') === 'stats' ? DEMO_STATS : undefined }; }
   if (params.get('modal') === 'mystats') modal.mine = DEMO_MYSTATS;
+  if (params.get('modal') === 'kasse') modal.kasse = DEMO_KASSE;
   if (params.get('modal') === 'admin') { modal.tab = params.get('tab') || 'users'; modal.adminData = { ...ADMIN_DEMO }; modal.pwFor = params.get('pwfor') || null; modal.confirm = params.get('confirm') || null; }
   render();
   if (demoState) return;
