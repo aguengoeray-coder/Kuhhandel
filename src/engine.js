@@ -305,6 +305,7 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
     ...(isBoerse(settings) ? { kurse: {}, hektik: 0 } : {}),
   };
   for (const p of players) stat(state, p.id);
+  if (settings && settings.missions) state.missions = dealMissions(state, seed); // v0.82 Geheimaufträge
   log(state, 'Das Spiel beginnt.');
   return state;
 }
@@ -361,7 +362,8 @@ export function scores(state) {
   return state.players.map((p) => {
     const blocked = state.blocked && state.blocked.player === p.id ? state.blocked.animal : null;
     const r = scoreFor(p, blocked, !!(state.settings && state.settings.moneyCounts), state.kurse || null);
-    return { id: p.id, name: p.name, quartets: r.quartets, score: r.score, money: r.money, specials: (p.specials || []).slice(), rats: p.animals[RAT] || 0, blocked };
+    const mi = state.missions && state.missions[p.id] ? missionStatus(state, p.id) : null; // v0.82: erfüllter Geheimauftrag zählt dazu
+    return { id: p.id, name: p.name, quartets: r.quartets, score: r.score + (mi && mi.done ? mi.bonus : 0), base: r.score, money: r.money, specials: (p.specials || []).slice(), rats: p.animals[RAT] || 0, blocked, ...(mi ? { mission: mi } : {}) };
   });
 }
 
@@ -370,6 +372,45 @@ function finishGame(state) {
   const s = scores(state);
   const best = Math.max(...s.map((x) => x.score));
   state.winner = s.filter((x) => x.score === best).map((x) => x.id);
+}
+
+// ---------- v0.82 Geheimaufträge (Alp): jeder bekommt verdeckt einen Auftrag, Bonus am Spielende ----------
+// need = Ziel, got(state, p, st) = aktueller Stand; jeder Auftrag nur einmal pro Partie
+export const MISSIONS = {
+  quartett: { bonus: 400, text: (a) => `Sammle das ${animalName(a)}-Quartett`, need: 4, got: (s, p, st, a) => p.animals[a] || 0 },
+  viele: { bonus: 500, text: () => 'Habe am Ende mindestens 3 Quartette', need: 3, got: (s, p) => ANIMALS.filter((x) => p.animals[x.id] === 4).length },
+  handel: { bonus: 400, text: () => 'Gewinne mindestens 3 Kuhhandel', need: 3, got: (s, p, st) => st.tradesWon || 0 },
+  kaeufer: { bonus: 300, text: () => 'Ersteigere mindestens 4 Tiere', need: 4, got: (s, p, st) => st.buys || 0, auction: true },
+  teuer: { bonus: 300, text: () => 'Kaufe ein Tier für mindestens 300', need: 300, got: (s, p, st) => (st.maxBuy ? st.maxBuy.amount : 0), auction: true },
+  geizhals: { bonus: 400, text: () => 'Habe am Ende mindestens 300 Taler', need: 300, got: (s, p) => (Array.isArray(p.money) ? sum(p.money) : 0) },
+  spezial: { bonus: 300, text: () => 'Hole dir mindestens 1 Spezialkarte', need: 1, got: (s, p) => (p.specials || []).length },
+  ratte: { bonus: 300, text: () => 'Nimm mindestens 2× die Ratte', need: 2, got: (s, p, st) => st.ratsTaken || 0, auction: true },
+};
+function dealMissions(state, seed) {
+  const r = rng((seed ^ 0x6d15) >>> 0);
+  const duo = isDuo(state.settings);
+  const kinds = animalsOf(state.settings).map((a) => a.id).filter((id) => !['hahn', 'pferd'].includes(id)); // weder geschenkt noch zu schwer
+  const pool = Object.keys(MISSIONS).filter((k) => !(duo && MISSIONS[k].auction));
+  const out = {};
+  const used = new Set(); const usedAnimals = new Set();
+  for (const p of state.players) {
+    let k; let tries = 0;
+    do { k = pool[Math.floor(r() * pool.length)]; tries += 1; } while ((used.has(k) && k !== 'quartett') && tries < 50);
+    used.add(k);
+    const m = { id: k };
+    if (k === 'quartett') { let a; do { a = kinds[Math.floor(r() * kinds.length)]; } while (usedAnimals.has(a) && usedAnimals.size < kinds.length); usedAnimals.add(a); m.animal = a; }
+    out[p.id] = m;
+  }
+  return out;
+}
+export function missionStatus(state, playerId) {
+  const m = state.missions && state.missions[playerId];
+  if (!m || !MISSIONS[m.id]) return null;
+  const def = MISSIONS[m.id];
+  const p = player(state, playerId);
+  const st = (state.stats && state.stats[playerId]) || {};
+  const got = def.got(state, p, st, m.animal);
+  return { id: m.id, ...(m.animal ? { animal: m.animal } : {}), text: def.text(m.animal), bonus: def.bonus, need: def.need, got: Math.min(got, def.need), done: got >= def.need };
 }
 
 // Alles verteilt: Wer alle Ratten hat, blockiert ein eigenes Quartett (falls er eins hat)
@@ -1226,7 +1267,8 @@ export function viewFor(state, playerId) {
   if (v.trade && v.trade.challenger !== playerId) v.trade.offer = v.trade.offer.length;
   if (v.rat) v.rat.pot = v.rat.pot.length; // gelegte Karten liegen verdeckt
   if (v.divide && v.divide.by !== playerId) v.divide.card = null; // nur wer aufteilt, sieht die Karte
-  if (v.phase === 'auction' && v.auction && v.auction.blind) v.auction.animal = null; // v0.81 Blindmarkt: auch der Auktionator sieht nichts
+  if (v.phase === 'auction' && v.auction && v.auction.blind) v.auction.animal = null;
+  if (v.missions && v.phase !== 'ended') v.missions = v.missions[playerId] ? { [playerId]: v.missions[playerId] } : {}; // v0.82: fremde Aufträge erst am Ende // v0.81 Blindmarkt: auch der Auktionator sieht nichts
   if (v.lastEvent && v.lastEvent.type === 'divided') {
     for (const k of ['first', 'second']) { const x = v.lastEvent[k]; if (x && x.to !== playerId && isMoneyCard(x.card)) x.card = 'geld-?'; } // fremdes Geld bleibt verdeckt
   }

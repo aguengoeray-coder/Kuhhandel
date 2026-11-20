@@ -1077,3 +1077,27 @@ test('v0.81 Blindmarkt: nächste 3 Versteigerungen verdeckt (auch für den Aukti
   assert.equal(g.players[0].animals.esel, 1);
   assert.ok(g.players.every((p, i) => p.money.length === before[i] + 1));
 });
+
+test('v0.82 Geheimaufträge: jeder bekommt einen eigenen Auftrag, nur der eigene ist sichtbar, erfüllt → Bonus in der Wertung', async () => {
+  const E = await import('../src/engine.js');
+  const g = createGame({ players: P, seed: 5, settings: { missions: true } });
+  assert.equal(Object.keys(g.missions).length, P.length);
+  for (const p of P) assert.ok(E.MISSIONS[g.missions[p.id].id]);
+  const v = E.viewFor(g, P[0].id);
+  assert.deepEqual(Object.keys(v.missions), [P[0].id]);
+  // Zu zweit: keine Versteigerungs-Aufträge
+  for (let seed = 1; seed < 40; seed++) {
+    const d = createGame({ players: P.slice(0, 2), seed, settings: { duo: true, missions: true } });
+    for (const m of Object.values(d.missions)) assert.ok(!E.MISSIONS[m.id].auction, m.id);
+  }
+  // Auftrag „geizhals“ erfüllt
+  const h = createGame({ players: P, seed: 5, settings: { missions: true } });
+  h.missions[P[1].id] = { id: 'geizhals' };
+  h.players[1].money = [100, 100, 100];
+  const before = E.scoreFor(h.players[1]).score;
+  const sc = E.scores(h).find((r) => r.id === P[1].id);
+  assert.equal(sc.mission.done, true);
+  assert.equal(sc.score, before + 400);
+  h.phase = 'ended';
+  assert.equal(Object.keys(E.viewFor(h, P[0].id).missions).length, P.length); // am Ende sehen alle alles
+});

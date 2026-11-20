@@ -58,6 +58,7 @@ export function buildDemoState(kind, local) {
     case 'turn': { // &geldtop=1: oberste Stapelkarte ist ein Geldschein (grüne Rückseite)
       g = base();
       if (new URLSearchParams(location.search).get('geldtop')) g.deck[0] = 'geld-50';
+      if (new URLSearchParams(location.search).get('mission')) { g.settings = { ...(g.settings || {}), missions: true }; g.missions = { u1: { id: 'handel' }, u2: { id: 'quartett', animal: 'esel' }, u3: { id: 'geizhals' }, u4: { id: 'teuer' } }; g.stats.u1.tradesWon = 2; } // v0.82 Geheimauftrag
       return g;
     }
     case 'auction3': { // 3 Spieler, volle Plätze (wie im echten Spiel spät in der Partie)
@@ -458,6 +459,7 @@ export function buildDemoState(kind, local) {
       g.players[3].animals[RAT] = 4;
       g.blocked = { player: 'u4', animal: 'hahn' };
       Object.assign(g.stats.u2, { buys: 5, maxBuy: { amount: 620, animal: 'pferd' }, tradesWon: 2 });
+      if (new URLSearchParams(location.search).get('mission')) { g.settings = { ...(g.settings || {}), missions: true }; g.missions = { u1: { id: 'quartett', animal: 'esel' }, u2: { id: 'teuer' }, u3: { id: 'handel' }, u4: { id: 'spezial' } }; } // v0.82
       Object.assign(g.stats.u1, { tradesWon: 4, ratsTaken: 2, ratCards: 6 });
       Object.assign(g.stats.u3, { bluffZeros: 3, overpaid: 80 }); Object.assign(g.stats.u4, { closeLosses: 2, bids: 6, maxBid: 50 });
       Object.assign(g.stats.u4, { ratsTaken: 3, ratCards: 11, specialsWon: 3 });
