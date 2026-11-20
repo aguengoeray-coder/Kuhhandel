@@ -2,7 +2,7 @@
 
 ## v0.83.0 – Teams 2 gegen 2
 
-- [x] **🤝 Teams 2 gegen 2** (Schalter im Warteraum und im Modus-Fenster, nur zu viert, nicht zu zweit): Platz 1 + 3 gegen 2 + 4 – Partner sitzen sich gegenüber, im Warteraum steht „Team A/B“ über den Figuren.
+- [x] **🤝 Teams 2 gegen 2** (Schalter im Warteraum und im Modus-Fenster, nur zu viert, nicht zu zweit): Partner sitzen sich gegenüber. Im Warteraum steht „Team A/B ⇄“ über den Figuren – der Gastgeber tippt an, wer in welchem Team ist (Start erst bei 2 gegen 2).
 - [x] Eure Tiere zählen zusammen (2 + 2 = Quartett des Teams), Wertung pro Team wie ein Spieler, dazu erfüllte Geheimaufträge beider Partner. Beide Partner stehen gemeinsam auf dem Treppchen: „Team Nico & Mo gewinnt!“.
 - [x] Das Geld deines Partners siehst du offen (🤝 und Summe am Platz), Kuhhandel und Zwangsversteigerung im eigenen Team gibt es nicht; ein fertiges Team-Quartett ist vor Pfändung geschützt. Rattenkönig: blockiert ein Quartett seines Teams.
 

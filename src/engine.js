@@ -267,6 +267,12 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
     fail(`Es braucht ${MIN_PLAYERS} bis ${MAX_PLAYERS} Spieler.`);
   }
   if (settings && settings.teams && (players.length !== 4 || isDuo(settings))) settings = { ...settings, teams: null }; // v0.83 Teams nur zu viert
+  // v0.83 Team-Wahl im Warteraum (teamPick: Spieler-ID → 0/1): Sitzordnung so, dass Partner sich gegenübersitzen (A, B, A, B)
+  if (settings && settings.teams && settings.teamPick) {
+    const tp = settings.teamPick;
+    const A = players.filter((p, i) => (tp[p.id] ?? i % 2) === 0); const B = players.filter((p, i) => (tp[p.id] ?? i % 2) === 1);
+    if (A.length === 2 && B.length === 2) players = [A[0], B[0], A[1], B[1]];
+  }
   const ids = new Set(players.map((p) => p.id));
   if (ids.size !== players.length) fail('Spieler-IDs müssen eindeutig sein.');
   const kinds = animalsOf(settings);

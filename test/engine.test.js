@@ -1141,3 +1141,12 @@ test('v0.83 Teams: 60 zufällige Komplettspiele (auch Börsen-Chaos + Geheimauft
     assert.ok(g.winner.length === 2 || g.winner.length === 4, `Seed ${seed}: ${g.winner}`);
   }
 });
+
+test('v0.83 Team-Wahl: teamPick ordnet die Plätze so, dass Partner gegenüber sitzen', async () => {
+  const E = await import('../src/engine.js');
+  const g = createGame({ players: P, seed: 3, settings: { teams: true, teamPick: { [P[0].id]: 0, [P[1].id]: 0, [P[2].id]: 1, [P[3].id]: 1 } } });
+  assert.equal(E.partnerOf(g, P[0].id), P[1].id);
+  assert.equal(E.partnerOf(g, P[2].id), P[3].id);
+  const u = createGame({ players: P, seed: 3, settings: { teams: true, teamPick: { [P[0].id]: 0, [P[1].id]: 0, [P[2].id]: 0 } } }); // ungleich → Reihenfolge bleibt
+  assert.equal(E.partnerOf(u, P[0].id), P[2].id);
+});

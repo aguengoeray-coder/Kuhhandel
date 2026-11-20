@@ -4056,3 +4056,6 @@ em.kursed .kv, em.cv.kursed .kv { font-weight: 900; }
 .ending.podium:has(.pods.teams) .sform2 { font-size: 11.5px; line-height: 1.25; }
 .ending.podium:has(.pods.teams) .pods { margin-top: -6px; margin-bottom: -8px; }
 .pods.teams .pdub { scale: .85; }
+button.team-badge { cursor: pointer; font-family: var(--font-head); box-shadow: 0 2px 0 rgba(0,0,0,.3); }
+button.team-badge:active { translate: -50% 1px; box-shadow: none; }
+.seat .team-badge { z-index: 4; }
