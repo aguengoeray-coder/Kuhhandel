@@ -3637,3 +3637,53 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .mt-art svg { height: 100%; }
 .mpanel.m-classic .mp-art { background: #2A8A4A; } .mpanel.m-turbo .mp-art { background: #F07A33; } .mpanel.m-boerse .mp-art { background: #14202F; } .mpanel.m-join .mp-art { background: #5E42B8; }
 .mp-art > svg { position: absolute; inset: 0; }
+
+/* ===== v0.74 Start aufgeräumt: Spiel-Leiste klein im Kopf, Kacheln groß ===== */
+.hb-top .hb-gap { flex: 1; }
+.hb-chip { flex: 1 1 auto; min-width: 0; max-width: 420px; margin: 0 auto; position: relative; display: flex; align-items: center; gap: 8px; padding: 4px 6px 4px 12px; border-radius: 999px; color: #fff;
+  background: linear-gradient(90deg, var(--tbl-2), var(--tbl-1)); border: 2.5px solid rgba(0,0,0,.3); box-shadow: 0 3px 10px rgba(0,0,0,.3); }
+.hb-chip .hc-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.1; }
+.hb-chip .hc-txt b { font-family: var(--font-head); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hb-chip .hc-txt b.hb-turn { color: #FFD34E; }
+.hb-chip .hc-txt small { font-size: 10px; font-weight: 700; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hb-chip .hc-cta { flex: none; min-height: 32px; padding: 0 14px; font-size: 13px; }
+.hb-chip .hb-nav { position: static !important; transform: none; width: 24px; height: 24px; font-size: 16px; flex: none; order: 9; }
+.hb-chip .hb-nav.l { order: 8; } .hb-chip .hb-count { display: none; }
+.hb-stage.modes .mode-row { max-height: none; height: 100%; }
+.hb-stage.modes .hb-main { justify-content: stretch; padding-bottom: 4px; }
+.mt-badge { position: absolute; z-index: 2; top: 8px; right: 8px; padding: 2px 8px; border-radius: 999px; background: #FFD34E; color: #2B2B2B; border: 2px solid #2B2B2B; font-weight: 900; font-size: 11px; }
+.mp-resume { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; min-height: 50px; font-size: 17px; line-height: 1.1; }
+.mp-resume small { font-size: 11px; font-weight: 700; opacity: .85; }
+.mp-test { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 12px; border: 2px dashed #B9B2A2; background: #FFFBEA; }
+.mp-test span { flex: 1; font-weight: 800; font-size: 13px; } .mp-test small { font-weight: 600; opacity: .6; font-size: 11px; }
+.mp-test .pill-small { min-height: 32px; padding: 0 12px; font-size: 13px; }
+@media (max-height: 380px) { .hb-chip .hc-txt small { display: none; } }
+.mp-body { gap: 7px; padding: 12px 14px; }
+.mp-opt { padding: 5px 10px; }
+.mp-link { font-size: 11px; padding: 2px 0; }
+.mp-go { min-height: 44px; flex: none; }
+.tbteam { white-space: nowrap; }
+@media (max-width: 720px) {
+  .hb-chip { gap: 5px; padding-left: 9px; } .hb-chip .hc-txt b { font-size: 12px; } .hb-chip .hc-txt small { display: none; }
+  .hb-chip .hb-nav { display: none; } .hb-chip .hc-cta { padding: 0 10px; font-size: 12px; min-height: 30px; }
+  .hb-top .tbteam { font-size: 9px; }
+}
+.m-classic .mt-art { background: #2A8A4A; } .m-turbo .mt-art { background: #F07A33; } .m-boerse .mt-art { background: #14202F; } .m-join .mt-art { background: #5E42B8; }
+
+/* v0.75 (Alp): Esel – die Papierbälle erscheinen erst beim Wurf (nicht schon vorher in der Hand) */
+@keyframes eball {
+  0% { opacity: 0; transform: translate(0, 0) scale(.8) rotate(0); }
+  4% { opacity: 1; }
+  50% { transform: translate(calc(var(--tx) * .5), calc(var(--ty) * .5 - 22px)) scale(1.1) rotate(360deg); }
+  94% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1.05) rotate(700deg); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(1.9) rotate(720deg); }
+}
+/* v0.75 (Alp): eigenes Geld gleitet in einem Bogen genau auf seinen Platz im Fächer (gleiche Drehung und Größe) – ohne Nachhüpfen */
+@keyframes mflyin {
+  0% { opacity: 0; transform: translate(0, 0) scale(.6) rotate(0deg); }
+  12% { opacity: 1; }
+  60% { transform: translate(calc(var(--tx, 0px) * .62), calc(var(--ty, 0px) * .62 - 26px)) scale(calc(var(--ts, 1) * 1.05)) rotate(calc(var(--trot, 0deg) - 8deg)); }
+  100% { opacity: 1; transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--ts, 1)) rotate(var(--trot, 0deg)); }
+}
+.mfly.mine.in { animation-timing-function: cubic-bezier(.25, .7, .3, 1); }
+@keyframes newcard { 0% { box-shadow: 0 0 0 3px var(--gold), 0 0 18px 6px rgba(255,211,78,.75); } 100% { box-shadow: -3px 3px 8px rgba(0,0,0,.25), 0 0 0 0 rgba(255,211,78,0); } }

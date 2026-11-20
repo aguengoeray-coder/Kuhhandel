@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.73.0';
+export const APP_VERSION = '0.75.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -287,7 +287,7 @@ function homeItems() {
   const items = [];
   (ui.myGames || []).forEach((g) => items.push({ kind: 'resume', g }));
   ui.games.forEach((g) => items.push({ kind: 'open', g }));
-  if (DEBUG) items.push({ kind: 'test' }); // Testspiel zuletzt – echte Spiele gehen vor
+  // v0.74: Testspiel steckt jetzt in jedem Modus-Fenster (Debug), nicht mehr auf der Startseite
   return items;
 }
 // v0.52: dein aktiver Shop-Avatar steht groß neben dem Tisch (Tippen öffnet den Shop)
@@ -320,31 +320,19 @@ function renderStart() {
   let felt = '';
   if (!it) {
     felt = '';
-  } else if (it.kind === 'test') {
-    const on = !!store.get('kh_dbg_money');
-    felt = `<b class="hb-title">Testspiel <span class="hb-tag">Debug</span></b><small class="hb-sub">Nur auf diesem Gerät, mit Test-Spielern</small>
-      <div class="hb-row">
-        <button class="pill pill-white pill-small toggle-pill ${on ? 'on' : ''}" type="button" id="dbgMoney" aria-pressed="${on}">Geld im Stapel: ${on ? 'an' : 'aus'}</button>
-        <button class="pill pill-white pill-small toggle-pill ${store.get('kh_dbg_boerse') ? 'on' : ''}" type="button" id="dbgBoerse" aria-pressed="${!!store.get('kh_dbg_boerse')}">📈 Börsen-Chaos: ${store.get('kh_dbg_boerse') ? 'an' : 'aus'}</button>
-        <button class="pill pill-white pill-small" type="button" data-test="3">3 Spieler</button>
-        <button class="pill pill-red pill-small" type="button" data-test="4">4 Spieler</button>
-      </div>`;
   } else if (it.kind === 'resume') {
     const g = it.g;
     let who = null;
     try { who = g.state ? whoMustAct(g.state, Date.now()) : null; } catch { who = null; }
     const mine = who === me.id || (Array.isArray(who) && who.includes(me.id));
-    felt = `<b class="hb-title">${mine ? '<span class="hb-turn">Du bist dran!</span>' : 'Dein laufendes Spiel'}</b>
-      ${seatRow(g.players)}
-      <button class="pill pill-red hb-cta" type="button" data-resume="${esc(g.id)}">Weiter spielen</button>`;
+    felt = `<span class="hc-txt"><b class="${mine ? 'hb-turn' : ''}">${mine ? 'Du bist dran!' : 'Dein Spiel läuft'}</b><small>${esc(g.players.map((p) => (p.id === me.id ? 'Du' : p.name)).join(' · '))}</small></span>
+      <button class="pill pill-red hc-cta" type="button" data-resume="${esc(g.id)}">▶ Weiter</button>`;
   } else {
     const g = it.g;
     const host = (g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'Unbekannt';
     const n = g.players.length; const full = n >= MAX_PLAYERS;
-    felt = `<b class="hb-title">Spiel von ${esc(host)} <span class="hb-subin">· ${n} von ${MAX_PLAYERS} Plätzen</span></b>
-      <small class="hb-sub">Code ${esc(g.code)}${moneyNote(g)}</small>
-      ${seatRow(g.players)}
-      <button class="pill pill-red hb-cta" type="button" data-join="${esc(g.id)}" ${full || !me.name ? 'disabled' : ''}>${full ? 'Voll' : 'Platz nehmen'}</button>`;
+    felt = `<span class="hc-txt"><b>Spiel von ${esc(host)}</b><small>${n}/${MAX_PLAYERS} · Code ${esc(g.code)}</small></span>
+      <button class="pill pill-red hc-cta" type="button" data-join="${esc(g.id)}" ${full || !me.name ? 'disabled' : ''}>${full ? 'Voll' : 'Platz nehmen'}</button>`;
   }
   const nav = items.length > 1 ? `<button type="button" class="hb-nav l" data-hb="prev" aria-label="Vorheriges Spiel" ${ui.homeIdx ? '' : 'disabled'}>‹</button>
     <button type="button" class="hb-nav r" data-hb="next" aria-label="Nächstes Spiel" ${ui.homeIdx < items.length - 1 ? '' : 'disabled'}>›</button>
@@ -352,18 +340,19 @@ function renderStart() {
   const dock = [['play', '▶️', 'Spielen'], ['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
     .map(([k, i, l]) => `<button type="button" class="hb-dk ${k === 'play' ? 'on' : ''}" data-dock="${k}"><i>${i}</i>${l}</button>`).join('');
   // v0.73 (Alp): große Modus-Kacheln wie bei einem Konsolen-Spiel; erst nach dem Antippen kommen die Einstellungen
+  const openN = (ui.games || []).length;
   const tiles = MODES.map((m) => `<button type="button" class="mode-tile m-${m.id}" data-mode="${m.id}" ${m.id !== 'join' && !me.name ? 'disabled' : ''}>
-      <span class="mt-art">${modeArt(m.id)}</span><span class="mt-txt"><b>${esc(m.name)}</b><small>${esc(m.tag)}</small></span></button>`).join('');
+      ${m.id === 'join' && openN ? `<span class="mt-badge">${openN} offen</span>` : ''}<span class="mt-art">${modeArt(m.id, 'meet')}</span><span class="mt-txt"><b>${esc(m.name)}</b><small>${esc(m.tag)}</small></span></button>`).join('');
   app.innerHTML = `
     <section class="home">
       ${tickerHtml()}
       <div class="hb-top">
         <div class="logorow tb hb-logo"><span class="logocow" aria-hidden="true">${art('kuh')}</span><div class="tbname"><span class="tbteam">🚀 Team Rockets</span><h1 class="logo tbtitle">Tier <span class="tbb">Börse</span></h1></div></div>
+        ${felt ? `<div class="hb-chip">${nav}${felt}</div>` : '<span class="hb-gap"></span>'}
         <button type="button" class="hb-me" data-modal="profile" aria-label="Profilbild ändern">${avatarHtml(me.id, me.name)}<b>${esc(me.name)}</b>${shopMe.state === 'ok' ? `<span class="hb-dub" title="Dublonen"><i class="dub" aria-hidden="true"></i> ${shopMe.balance}</span>` : ''}</button>
       </div>
       <div class="hb-stage modes">
         <div class="hb-main">
-          ${felt ? `<div class="hb-strip">${nav}${felt}</div>` : ''}
           ${ui.error ? `<div class="error hb-err" role="alert">${esc(ui.error)}</div>` : ui.homeNote ? `<div class="hb-note" role="status">${esc(ui.homeNote)}</div>` : ''}
           <div class="mode-row">${tiles}</div>
         </div>
@@ -392,7 +381,9 @@ function renderStart() {
   app.querySelectorAll('[data-joinid]').forEach((b) => b.addEventListener('click', () => { ui.mode = null; onJoin(b.dataset.joinid); }));
   app.querySelectorAll('[data-join]').forEach((b) => b.addEventListener('click', () => onJoin(b.dataset.join)));
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
-  app.querySelectorAll('[data-test]').forEach((b) => b.addEventListener('click', () => startLocalGame(Number(b.dataset.test))));
+  app.querySelectorAll('[data-mptest]').forEach((b) => b.addEventListener('click', () => { // v0.74 Debug: Testspiel mit diesem Modus und diesen Einstellungen
+    const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null;
+    startLocalGame(Number(b.dataset.mptest), { ...m.settings, ...(o.money ? { money: { ...DEFAULT_MONEY } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }));
   app.querySelectorAll('[data-hb]').forEach((b) => b.addEventListener('click', () => { ui.homeIdx = (ui.homeIdx || 0) + (b.dataset.hb === 'next' ? 1 : -1); render(); }));
   app.querySelectorAll('[data-dock]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.dock;
@@ -400,8 +391,6 @@ function renderStart() {
     if (k === 'shop') { openShop(); return; }
     openModal(k);
   }));
-  document.getElementById('dbgBoerse')?.addEventListener('click', () => { if (store.get('kh_dbg_boerse')) store.del('kh_dbg_boerse'); else store.set('kh_dbg_boerse', '1'); render(); });
-  document.getElementById('dbgMoney')?.addEventListener('click', () => { if (store.get('kh_dbg_money')) store.del('kh_dbg_money'); else store.set('kh_dbg_money', '1'); render(); });
   app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
     const { data } = await sb.from('games').select('*').eq('id', b.dataset.resume).maybeSingle();
     if (data) enterRoom(data); else { await loadGames(); render(); }
@@ -416,7 +405,9 @@ function modePanel(id) {
   let right;
   if (id === 'join') {
     const open = (ui.games || []).filter((g) => !g.status || g.status === 'lobby').slice(0, 3);
-    right = `<form id="join-form" class="mp-code"><input name="code" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Spiel-Code (4 Buchstaben)">
+    const run = (ui.myGames || [])[0];
+    right = `${run ? `<button type="button" class="pill pill-red mp-resume" data-resume="${esc(run.id)}">▶ Weiter spielen <small>${esc(run.players.map((p) => (p.id === me.id ? 'Du' : p.name)).join(' · '))}</small></button>` : ''}
+      <form id="join-form" class="mp-code"><input name="code" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Spiel-Code (4 Buchstaben)">
         <button type="submit" class="pill pill-red">Beitreten</button></form>
       ${ui.joinErr ? `<div class="error" role="alert">${esc(ui.joinErr)}</div>` : ''}
       ${open.length ? `<div class="mp-open"><small>Offene Räume</small>${open.map((g) => { const host = (g.players.find((p) => p.id === g.host) || g.players[0])?.name || '?'; const full = g.players.length >= MAX_PLAYERS;
@@ -425,7 +416,8 @@ function modePanel(id) {
   } else {
     const opts = [['money', '💵 Geldscheine im Stapel', 'Extra-Scheine zwischen den Tieren'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${m.settings.turbo ? 12 : 20} s`, 'Angebote mit Zeitlimit'], ['moneyCounts', '💰 Geld zählt am Ende', 'Taler werden mitgewertet']];
     right = `<div class="mp-opts">${opts.map(([k, l, s]) => `<button type="button" class="mp-opt ${o[k] ? 'on' : ''}" data-mp="${k}" aria-pressed="${!!o[k]}"><i class="mp-check">${o[k] ? '✓' : ''}</i><span><b>${l}</b><small>${s}</small></span></button>`).join('')}</div>
-      <small class="mp-hint">Alles lässt sich im Warteraum noch ändern.</small>
+      ${DEBUG ? '' : '<small class="mp-hint">Alles lässt sich im Warteraum noch ändern.</small>'}
+      ${DEBUG ? `<div class="mp-test"><span>🧪 Testspiel <small>nur hier</small></span><button type="button" class="pill pill-white pill-small" data-mptest="3">3 Spieler</button><button type="button" class="pill pill-white pill-small" data-mptest="4">4 Spieler</button></div>` : ''}
       <button type="button" class="pill pill-red mp-go" data-mp="create">Raum erstellen</button>`;
   }
   return `<div class="mpback" data-mp="close"></div><div class="mpanel m-${id}" role="dialog" aria-modal="true" aria-label="${esc(m.name)}">
@@ -894,9 +886,9 @@ setInterval(() => {
 
 // ---------- Debug-Modus ----------
 
-function startLocalGame(n) {
+function startLocalGame(n, modeSettings = null) {
   const players = [{ id: 'me', name: me.name || 'Ich' }, ...Array.from({ length: n - 1 }, (_, i) => ({ id: `t${i + 1}`, name: `Test ${i + 1}` }))];
-  let state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: (store.get('kh_dbg_money') || store.get('kh_dbg_boerse') || new URLSearchParams(location.search).has('boerse')) ? { ...(store.get('kh_dbg_money') ? { money: { ...DEFAULT_MONEY } } : {}), ...(store.get('kh_dbg_boerse') || new URLSearchParams(location.search).has('boerse') ? { boerse: true } : {}) } : null });
+  let state = createGame({ players, seed: Math.floor(Math.random() * 2 ** 31), settings: modeSettings ? (Object.keys(modeSettings).length ? modeSettings : null) : (store.get('kh_dbg_money') || store.get('kh_dbg_boerse') || new URLSearchParams(location.search).has('boerse')) ? { ...(store.get('kh_dbg_money') ? { money: { ...DEFAULT_MONEY } } : {}), ...(store.get('kh_dbg_boerse') || new URLSearchParams(location.search).has('boerse') ? { boerse: true } : {}) } : null });
   // Debug „?spaet=1“: Test-Spieler spielen bis kurz vor Schluss vor (viele Tiere, viel Geld) – zum Prüfen voller Plätze
   if (new URLSearchParams(location.search).has('spaet')) {
     let t = now(), k = 0;

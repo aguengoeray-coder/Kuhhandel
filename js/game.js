@@ -331,6 +331,12 @@ function seatPoint(root, pid, sr, sc) {
   // v0.62 „Profilbild wird lebendig“: '@near:<pid>' = Stehplatz neben dem Profilbild Richtung Tischmitte,
   // '@myfan' = Mitte deines Geldes, '@cl'/'@cr' = links/rechts der Tischmitte (Polonaise)
   if (pid === '@cl' || pid === '@cr') return { x: sr.width / sc / 2 + (pid === '@cl' ? -150 : 150), y: sr.height / sc * 0.5 };
+  // v0.75: '@fanslot:<wert>' = genau der Platz dieses Scheins in deinem Fächer (dort landet er)
+  if (typeof pid === 'string' && pid.startsWith('@fanslot:')) {
+    const el = root.querySelector(`.fan-wrap [data-v="${pid.slice(9)}"]`);
+    if (el) { const r = el.getBoundingClientRect(); if (r.width) return { x: (r.left + r.width / 2 - sr.left) / sc, y: (r.top + r.height / 2 - sr.top) / sc }; }
+    return seatPoint(root, '@myfan', sr, sc);
+  }
   if (pid === '@myfan') {
     const fans = [...root.querySelectorAll('.fan-wrap .money.fan')].map((e) => e.getBoundingClientRect());
     if (fans.length) { const l = Math.min(...fans.map((r) => r.left)); const rr = Math.max(...fans.map((r) => r.right)); const t = Math.min(...fans.map((r) => r.top)); return { x: ((l + rr) / 2 - sr.left) / sc, y: (t + 10 - sr.top) / sc }; }
@@ -427,6 +433,8 @@ function aimFx(root) {
     f.style.setProperty('--tx', `${Math.round(b.x - cx + (Number(f.dataset.aimTdx) || 0))}px`);
     f.style.setProperty('--ty', `${Math.round(b.y - cy)}px`);
     if (f.dataset.aimScale) f.style.setProperty('--fs', f.dataset.aimScale);
+    if (f.dataset.aimTo.startsWith('@fanslot:')) { const slot = root.querySelector(`.fan-wrap [data-v="${f.dataset.aimTo.slice(9)}"]`);
+      if (slot) { f.style.setProperty('--trot', getComputedStyle(slot).getPropertyValue('--rot') || '0deg'); f.style.setProperty('--ts', (slot.offsetWidth / (f.offsetWidth || 1)).toFixed(2)); } }
     aimed.push(f);
   });
   // Animation neu anlegen, damit sie sicher mit dem gemessenen Ziel läuft (sonst fliegt sie in manchen Browsern
@@ -694,7 +702,7 @@ export function renderGame(root, ctx) {
     local.handFx = lose.length || gain.length ? {
       lose: [...lose].sort((a, b) => a - b), gain: [...gain].sort((a, b) => a - b),
       loseAt: outS ? t0 + outS.at : le0.type === 'trade' ? t0 + ch0.W : t0,
-      gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 60 : le0.type === 'trade' ? t0 + ch0.W : t0,
+      gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 20 : le0.type === 'trade' ? t0 + ch0.W : t0,
     } : null;
   }
   if (Array.isArray(me.money)) local.prevMoney = me.money.slice();
@@ -1373,12 +1381,12 @@ export function renderGame(root, ctx) {
   const fan = fanCards.map(([m, cnt], i) => {
     const off = i - mid;
     const style = `--m:${MONEY_COLORS[m]};--rot:${(off * 2.5).toFixed(1)}deg;--dy:${Math.round(Math.abs(off) * 2.5)}px`;
-    if (!cnt) return `<span class="mghost" style="${style}" aria-hidden="true"><i>${m}</i></span>`;
+    if (!cnt) return `<span class="mghost" data-v="${m}" style="${style}" aria-hidden="true"><i>${m}</i></span>`;
     const lift = pickMode === 'rat' && local.ratSel === m && !lifted;
     if (lift) lifted = true;
     const inner = `${mIn(m)}${cnt > 1 ? `<span class="mcount">×${cnt}</span>` : ''}`;
     const gi = glowVals.indexOf(m); const glow = gi >= 0; if (glow) glowVals.splice(0, glowVals.length);
-    if (!pickMode) return `<div class="money fan ${cnt > 1 ? 'multi' : ''} ${glow ? 'newcard' : ''}" style="${style}">${inner}</div>`;
+    if (!pickMode) return `<div class="money fan ${cnt > 1 ? 'multi' : ''} ${glow ? 'newcard' : ''}" data-v="${m}" style="${style}">${inner}</div>`;
     const label = pickMode === 'rat' ? `${m} zum Legen wählen` : `${m} ins Feld legen`;
     return `<button type="button" class="money fan pick ${cnt > 1 ? 'multi' : ''} ${lift ? 'lift' : ''}" style="${style}" data-a="${pickMode === 'rat' ? 'ratPick' : 'addv'}" data-v="${m}" aria-label="${label}"${lift ? ' aria-pressed="true"' : ''}>${inner}</button>`;
   }).join('');
@@ -1618,6 +1626,9 @@ export function renderGame(root, ctx) {
   const evSig = le && EV_DUR[le.type] ? `${le.type}|${le.n}` : null;
   let evNew = false;
   if (evSig && local.resSig !== evSig) { local.resSig = evSig; evNew = !!(evFresh || ctx.demoPop); }
+  // v0.75 (Alp): schneller Kuhhandel – laufen die Einsätze noch in die Mitte, verschwinden sie jetzt dort (kein Hin und Her);
+  // aus der Mitte laufen danach alle zum Gewinner
+  if (evNew && le.type === 'trade' && local.fx.some((f) => f.tag === 'potin')) { local.fx = local.fx.filter((f) => f.tag !== 'potin'); local.potLand = 0; }
   const evDelay = evNew ? evWait(le.type, v.deck, le) : 0;
   const quartets = [];
   v.players.forEach((p) => Object.entries(p.animals).forEach(([id, n]) => { if (n === 4) quartets.push(`${p.id}|${id}`); }));
@@ -1664,7 +1675,7 @@ export function renderGame(root, ctx) {
     const cash = (pid) => (pid.startsWith('@') ? pid : `@cash:${pid}`); // v0.70: von Geld zu Geld, nie zum Avatar
     from = cash(from); to = cash(to);
     return Array.from({ length: n }, (_, k) => { const dx = Math.round((k - (n - 1) / 2) * Math.min(30, 200 / n));
-      return mine ? `<div class="mfly mine ${mine}" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" ${mine === 'out' ? `data-aim-fdx="${dx}"` : `data-aim-tdx="${dx}"`} style="--m:${MONEY_COLORS[vals[k]]};animation-delay:${delay + k * MSTEP}ms">${vals[k]}</div>`
+      return mine ? `<div class="mfly mine ${mine}" data-aim-from="${esc(from)}" data-aim-to="${esc(mine === 'in' ? `@fanslot:${vals[k]}` : to)}" ${mine === 'out' ? `data-aim-fdx="${dx}"` : ''} style="--m:${MONEY_COLORS[vals[k]]};animation-delay:${delay + k * MSTEP}ms">${vals[k]}</div>`
         : `<div class="mfly" data-aim-from="${esc(from)}" data-aim-to="${esc(to)}" style="animation-delay:${delay + k * MSTEP}ms"></div>`; }).join(''); // so viele Scheine, wie wirklich bezahlt werden
   };
   // Geld fliegt nach dem Ablauf-Plan: erst wenn das Tier gelandet ist; beim Kuhhandel das Gegenangebot erst, wenn das Angebot angekommen ist
@@ -1731,6 +1742,12 @@ export function renderGame(root, ctx) {
         return moneyFly(pid, to, 1, NF + k * 120, vals); }).join('');
     }
     if (nfx) { keepFx(nfx, NF + ids.length * 140 + MFLY_MS + 200); later.push(['coins', NF + 200]); }
+    // v0.75: dein Schein verschwindet erst aus dem Fächer, wenn er losfliegt – und erscheint erst, wenn er gelandet ist
+    { const t0 = Date.now(); const k = Math.max(0, ids.indexOf(meId));
+      const gain = lem.kind === 'dividende' ? [lem.amount ?? DIVIDENDE] : lem.kind === 'panik' && lem.moved?.got != null ? [lem.moved.got] : [];
+      const lose = lem.kind === 'steuer' && lem.lost?.[meId] != null ? [lem.lost[meId]] : lem.kind === 'panik' && lem.moved?.gave != null ? [lem.moved.gave] : [];
+      const mi = Math.max(0, (lem.movers || []).indexOf(meId)); const gi = lem.kind === 'panik' ? Math.max(0, (lem.movers || []).indexOf(lem.moved?.from)) : k;
+      if (gain.length || lose.length) local.handFx = { gain, lose, gainAt: t0 + NF + gi * (lem.kind === 'panik' ? 120 : 140) + MFLY_MS - 20, loseAt: t0 + NF + (lem.kind === 'panik' ? mi * 120 : k * 140) }; }
   }
   // v0.61 Admin-Fähigkeit „Verprügeln“: Figur läuft hin, Prügelwolke, läuft zurück (bei allen)
   for (const pu of ctx.punches || []) {
@@ -1927,7 +1944,7 @@ export function renderGame(root, ctx) {
       // v0.70 (Alp): nach dem VS laufen die Einsätze beider Seiten von ihren Stapeln in die Mitte; der Topf erscheint, wenn sie ankommen
       if (t.animal && t.count) {
         const d0 = (dur || 0) + 150;
-        keepFx([t.challenger, t.target].map((pid, k) => homeWalk(t.animal, `@stall:${pid}:${t.animal}`, '@tpot', d0 + k * 160, { count: t.count, ms: POT_WALK_MS, toCard: false })).join(''), d0 + POT_WALK_MS + 400);
+        keepFx([t.challenger, t.target].map((pid, k) => homeWalk(t.animal, `@stall:${pid}:${t.animal}`, '@tpot', d0 + k * 160, { count: t.count, ms: POT_WALK_MS, toCard: false })).join(''), d0 + POT_WALK_MS + 400, 'potin');
         local.potLand = Date.now() + d0 + POT_WALK_MS + 160;
         later.push(['trade', d0 + 60]);
       }
