@@ -2364,6 +2364,10 @@ export function renderGame(root, ctx) {
   // v0.68: Scroll-Stand offener Fenster (💬-Menü, Menü, Pfänden-Auswahl, Abrechnung) beim Neuzeichnen behalten
   const KEEP_SCROLL = ['.reactpick', '.menu', '.pfpick', '.ending.recap ul'];
   const keptScroll = KEEP_SCROLL.map((sel) => { const el = root.querySelector(sel); return el ? el.scrollTop : 0; });
+  // v0.77 (Alp): das 💬-Fenster bleibt beim Neuzeichnen dasselbe Element (sonst bricht Wischen/Scrollen auf dem Handy ab) –
+  // nur geänderte Abschnitte darin werden ausgetauscht
+  const oldPick = root.querySelector('.reactpick');
+  if (oldPick) oldPick.remove();
   root.dataset.me = meId;
   root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
@@ -2404,6 +2408,11 @@ export function renderGame(root, ctx) {
   aimFly(root);
   aimFx(root);
   routeFx(root);
+  { const np = root.querySelector('.reactpick');
+    if (np && oldPick && np.className === oldPick.className && np.children.length === oldPick.children.length) {
+      [...np.children].forEach((c, i) => { const o = oldPick.children[i]; if (o.outerHTML !== c.outerHTML) o.replaceWith(c.cloneNode(true)); });
+      np.replaceWith(oldPick);
+    } else if (np && oldPick && np.className === oldPick.className) { np.replaceWith(oldPick); oldPick.innerHTML = np.innerHTML; } }
   KEEP_SCROLL.forEach((sel, i) => { const el = root.querySelector(sel); if (el && keptScroll[i]) el.scrollTop = keptScroll[i]; });
   // v0.69 Kurssprung-Blinken (nach der News-Karte, 2,4 s; negative Verzögerung, damit Neuzeichnen es nicht neu startet)
   { const kf = local.kursFx; const el = kf ? Date.now() - kf.at : -1;
