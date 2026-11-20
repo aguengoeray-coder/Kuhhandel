@@ -3851,3 +3851,10 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .mp-msteps .mctl button { width: 20px; height: 22px; font-size: 13px; border-radius: 6px; border-width: 1.5px; }
 .mp-msteps .mval { width: 30px; height: 40px; }
 @media (max-width: 720px) { .mp-tbtn .ic { font-size: 18px; } .mp-tbtn { gap: 6px; } .mpanel .tempo-seg span { display: none; } }
+/* v0.78 Warteraum: Tempo-Leiste über die ganze Breite der Schalter, flach – passt auch auf kleine Handys */
+.room-settings .rs-extra .tempo-seg { grid-column: 1 / -1; margin-top: 0; border-color: #2B2B2B; color: #2B2B2B; }
+.room-settings .rs-extra .tempo-seg button { padding: 3px 4px; font-size: 11px; white-space: nowrap; border-left-color: #2B2B2B; }
+.room-settings .rs-extra .tempo-seg span { padding: 0 8px; font-size: 11px; }
+.room-settings .rs-extra { row-gap: 3px; }
+.room-settings .rs-extra .rs-chip { padding-block: 1px; }
+.room-settings .rs-extra .tempo-seg button { padding-block: 2px; }
