@@ -26,7 +26,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 - **Hosting:** Cloudflare Worker `kuhhandel` (statische Dateien, `wrangler.jsonc` + `.assetsignore`).
   Live: https://kuhhandel.a-guengoeray.workers.dev – jeder Push auf `main` baut automatisch neu.
 - **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results` (mit `extras` für die eigene Statistik), `seat_pins`, `error_reports` (automatische Fehlerberichte), `admins` (nur Alp),
-  `push_subscriptions` + `push_settings` (Push „Du bist dran“: Trigger `kh_push` auf `games` meldet per pg_net an den Worker `/push`).
+  `kasse` (v0.84 Schuldenbuch für Einsätze: nur über `kasse_settle`/`kasse_paid_pair`, die App bewegt kein Geld), `push_subscriptions` + `push_settings` (Push „Du bist dran“: Trigger `kh_push` auf `games` meldet per pg_net an den Worker `/push`).
   Admin-Bereich: Startseite → „⚙ Admin“ (nur für Admins; jede Admin-Funktion `admin_*` prüft in Supabase, ob der Aufrufer Admin ist).
   Konten: Name + Passwort (intern als `name@kuhhandel.app`, E-Mail-Bestätigung ist aus).
   SQL-Stand: `supabase/schema.sql` + spätere Dateien in `supabase/`.
@@ -97,6 +97,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   ohne zählendes Quartett.
 - **Geheimaufträge** (Schalter `missions`, alle Spielarten): jeder bekommt zu Beginn verdeckt einen Auftrag (`MISSIONS` in `src/engine.js`, je Spieler verschieden, zu zweit ohne Versteigerungs-Aufträge); nur der eigene ist sichtbar, am Ende alle; erfüllt → +300 … +500 Punkte zur Wertung.
 - **Teams 2 gegen 2** (Schalter `teams`, nur genau 4 Spieler, nicht zu zweit): Gastgeber wählt im Warteraum die Teams (`teamPick`, sonst Platz 1+3 gegen 2+4), Partner sitzen gegenüber; Tiere/Spezialkarten/Geld des Teams zählen zusammen (`teamPool`), Quartett = Team hat alle 4; Wertung pro Team wie ein Spieler + erfüllte Aufträge beider; Partnergeld offen; kein Kuhhandel und keine Pfändung im Team, Team-Quartett vor Pfändung geschützt; Rattenkönig blockiert ein Team-Quartett; beide Partner gewinnen gemeinsam.
+- **Einsatz** (Schalter `stake` = Euro pro Kopf, alle Spielarten): alle bestätigen im Warteraum (`stakeOk`), sonst kein Start; Platz 1 bekommt den Topf (Gleichstand/Team geteilt); Abrechnung serverseitig in `kasse_settle` (Verlierer schuldet jedem Sieger stake/Anzahl Sieger), Kasse-Ansicht mit Bilanz/Wer-schuldet-wem/„Bezahlt“ (nur Empfänger).
 
 ## Design
 
