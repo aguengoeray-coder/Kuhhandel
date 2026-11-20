@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.74.0 – Start aufgeräumt
+
+- [x] **Dein Spiel klein im Kopf:** „Du bist dran! ▶ Weiter“ bzw. „Spiel von … Platz nehmen“ steht jetzt als schmale Leiste zwischen „Tier Börse“ und deinem Namen – die vier Modus-Kacheln werden dadurch deutlich größer.
+- [x] **Beitreten-Kachel:** zeigt, wie viele Räume offen sind; im Fenster steht dein laufendes Spiel ganz oben („▶ Weiter spielen“), darunter Code und offene Räume.
+- [x] **Debug wie bei allen:** Das Testspiel steht nicht mehr auf der Startseite, sondern als Zeile „🧪 Testspiel 3/4 Spieler“ in jedem Modus-Fenster – mit genau diesem Modus und den gewählten Einstellungen. Deine Startseite sieht jetzt aus wie bei allen anderen.
+- [x] Kachel-Bilder werden nicht mehr abgeschnitten.
+
 ## v0.73.0 – Modus wählen
 
 - [x] **Neuer Startbildschirm:** Vier große Kacheln mit eigenem Bild – Klassisch, Turbo, Börsen-Chaos und Beitreten. Erst nach dem Antippen öffnet sich das Fenster mit den Einstellungen der Runde (Geldscheine im Stapel, Kuhhandel-Zeit, Geld zählt am Ende) und „Raum erstellen“. Alles lässt sich im Warteraum weiter ändern.
