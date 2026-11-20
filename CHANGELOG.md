@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.83.0 – Teams 2 gegen 2
+
+- [x] **🤝 Teams 2 gegen 2** (Schalter im Warteraum und im Modus-Fenster, nur zu viert, nicht zu zweit): Platz 1 + 3 gegen 2 + 4 – Partner sitzen sich gegenüber, im Warteraum steht „Team A/B“ über den Figuren.
+- [x] Eure Tiere zählen zusammen (2 + 2 = Quartett des Teams), Wertung pro Team wie ein Spieler, dazu erfüllte Geheimaufträge beider Partner. Beide Partner stehen gemeinsam auf dem Treppchen: „Team Nico & Mo gewinnt!“.
+- [x] Das Geld deines Partners siehst du offen (🤝 und Summe am Platz), Kuhhandel und Zwangsversteigerung im eigenen Team gibt es nicht; ein fertiges Team-Quartett ist vor Pfändung geschützt. Rattenkönig: blockiert ein Quartett seines Teams.
+
 ## v0.82.0 – Geheimaufträge
 
 - [x] **🎯 Geheimaufträge** (Schalter im Warteraum und im Modus-Fenster, mit allen Spielarten): Jeder bekommt zu Beginn verdeckt einen eigenen Auftrag – z. B. „Sammle das Esel-Quartett“ (+400), „Habe am Ende mindestens 3 Quartette“ (+500), „Gewinne mindestens 3 Kuhhandel“ (+400), „Ersteigere mindestens 4 Tiere“, „Kaufe ein Tier für mindestens 300“, „Habe am Ende mindestens 300 Taler“, „Hole dir eine Spezialkarte“, „Nimm 2× die Ratte“ (je +300/+400). Zu zweit gibt es nur passende Aufträge.

@@ -2,7 +2,7 @@
 import { shopAvatar, shopAvatarFull } from './shopavatars.js';
 import {
   ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
-  viewFor, possibleTrades, scores, currentPlayer, missionStatus,
+  viewFor, possibleTrades, scores, currentPlayer, missionStatus, isTeams, partnerOf, teamOf, teamPool,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
@@ -747,6 +747,7 @@ export function renderGame(root, ctx) {
   const myMission = v.missions && v.missions[meId] ? missionStatus(v, meId) : null;
   if (myMission && local.missAuto === undefined) { local.missAuto = v.log.length <= 4 ? Date.now() + 6500 : 0; if (local.missAuto) { local.missOpen = true; later.push(['bell', 600]); } }
   if (local.missAuto && Date.now() > local.missAuto && local.missOpen === true) { local.missOpen = false; local.missAuto = 0; }
+  const myPartner = isTeams(state) ? partnerOf(state, meId) : null; // v0.83 Teams
   const missPop = myMission && local.missOpen ? `<div class="misspop" role="dialog" aria-label="Dein Geheimauftrag"><span class="mptag">🎯 Dein Geheimauftrag <small>nur du siehst ihn</small></span>
     <b>${esc(myMission.text)}</b>
     <div class="mpbar"><i style="width:${Math.round(Math.min(1, myMission.got / myMission.need) * 100)}%"></i></div>
@@ -895,7 +896,7 @@ export function renderGame(root, ctx) {
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
-        <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}</span>` : status}</span></div>
+        <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${myPartner === p.id ? '<b class="teamb" title="Dein Partner">🤝</b>' : ''}${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}${myPartner === p.id && Array.isArray(p.money) ? `<b class="psum">${p.money.reduce((a, b) => a + b, 0)}</b>` : ''}</span>` : status}</span></div>
       </div>
       <div class="chips" data-a="reactTo" data-v="${esc(p.id)}">${chips}</div>
     </div>`;
@@ -1376,11 +1377,12 @@ export function renderGame(root, ctx) {
     const bp = v.players[idxOf(v.block.player)];
     aucBanner = `${esc(bp.id === meId ? 'Du hast' : `${bp.name} hat`)} alle ${RAT_COUNT} Ratten`;
     if (bp.id === meId) {
-      const opts = ANIMALS.filter((a) => me.animals[a.id] === 4);
+      const bpool = isTeams(state) ? teamPool(state, teamOf(state, meId)) : me; // v0.83: bei Teams ein Quartett des Teams
+      const opts = ANIMALS.filter((a) => bpool.animals[a.id] === 4);
       aucCenter = `<div class="blockpanel ${entered ? 'pop' : ''}">
         <p>Welches Quartett fällt weg?</p>
         <div class="blockgrid">${opts.map((a) => `<button type="button" class="blockopt" data-a="block" data-v="${a.id}" style="--a:${ANIMAL_COLORS[a.id]}">
-          ${miniCard(a.id, 'big')}<b>${a.name}${specialsOf(me).includes(a.id) ? ` ${STAR}` : ''}</b><small>${scoreFor(me, a.id, false, KURSE).score} Punkte</small></button>`).join('')}</div>
+          ${miniCard(a.id, 'big')}<b>${a.name}${(bpool.specials || []).includes(a.id) ? ` ${STAR}` : ''}</b><small>${scoreFor(bpool, a.id, false, KURSE).score} Punkte</small></button>`).join('')}</div>
       </div>`;
       aucLeft = `<div class="ldecide">Quartett wählen …</div>`;
       H.block = (id) => { if (showBusy()) return; ctx.act((s) => chooseBlock(s, meId, id)); }; // v0.79: erst nach der Rattenkönig-Show
@@ -1706,12 +1708,13 @@ export function renderGame(root, ctx) {
       <div class="fwin">${wins.map((r) => { const i = idxOf(r.id); return `<div class="fone" style="--c:${SEAT_COLORS[i]}"><div class="ffig">${figOf(r.id)}</div><b>${esc(r.id === meId ? 'Du!' : r.name)}</b><small>${r.score} Punkte</small></div>`; }).join('')}</div>
       ${Array.from({ length: 24 }, (_, k) => `<i class="fconf" style="--k:${k};--x:${(k * 37) % 100}%;--h:${(k * 47) % 360}"></i>`).join('')}</div>`;
   } else if (state.phase === 'ended' && !endWait) {
-    const s = scores(state).sort((a, b) => b.score - a.score);
-    // Platz nach Punkten (gleiche Punkte = gleicher Platz)
-    const ranked = s.map((r) => ({ ...r, place: s.findIndex((x) => x.score === r.score) + 1 }));
-    const top = ranked.slice(0, 3);
-    const order = top.length === 3 ? [top[1], top[0], top[2]] : top.length === 2 ? [top[1], top[0]] : top;
-    const rest = ranked.slice(3);
+    const s = scores(state).sort((a, b) => b.score - a.score || (a.team ?? 0) - (b.team ?? 0));
+    // Platz nach Punkten (gleiche Punkte = gleicher Platz); v0.83 Teams: Platz des Teams (1 oder 2), Partner nebeneinander
+    const teamsOn = isTeams(state);
+    const ranked = s.map((r) => ({ ...r, place: teamsOn ? (r.score === s[0].score ? 1 : 2) : s.findIndex((x) => x.score === r.score) + 1 }));
+    const top = teamsOn ? ranked : ranked.slice(0, 3);
+    const order = teamsOn ? [ranked[2], ranked[0], ranked[1], ranked[3]] : top.length === 3 ? [top[1], top[0], top[2]] : top.length === 2 ? [top[1], top[0]] : top;
+    const rest = teamsOn ? [] : ranked.slice(3);
     const winIdx = idxOf(s[0].id);
     // v0.71: Verlierer-Pose – wer allein ganz hinten liegt, lässt den Kopf hängen, über ihm regnet es
     const worst = Math.max(...ranked.map((x) => x.place));
@@ -1730,8 +1733,8 @@ export function renderGame(root, ctx) {
     const confetti = podiumIn ? `<div class="confetti" aria-hidden="true">${Array.from({ length: 40 }, (_, k) =>
       `<i style="left:${(k * 37) % 100}%;background:${cols[k % cols.length]};animation-delay:${(k % 10) * 90}ms;animation-duration:${1600 + (k % 7) * 180}ms;transform:rotate(${k * 29}deg)"></i>`).join('')}</div>` : '';
     overlay = `<div class="overlay endtable ${podiumIn ? 'enter' : ''}">${confetti}<div class="ending podium">
-      <h2 style="--c:${SEAT_COLORS[winIdx]}">${v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
-      <div class="pods">${order.map(step).join('')}</div>
+      <h2 style="--c:${SEAT_COLORS[winIdx]}">${teamsOn ? (v.winner?.includes(meId) ? 'Euer Team hat gewonnen!' : `Team ${esc(s[0].teamName)} gewinnt!`) : v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
+      <div class="pods ${teamsOn ? 'teams' : ''}">${order.map(step).join('')}</div>
       ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}${lastPlace(r) ? ' 🌧️' : ''}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
       ${ctx.rewards && ctx.myRewards ? (() => {
         // v0.55: was du in dieser Partie verdient hast (vom Server berechnet)
@@ -1740,7 +1743,7 @@ export function renderGame(root, ctx) {
         return ctx.myRewards.length ? `<div class="pdubs">${ctx.myRewards.map((x) => `<span>+${x.amount} ${lbl[x.kind] || ''}</span>`).join('')}<b>= +${tot} <i class="dub" aria-label="Dublonen"></i></b></div>`
           : '<div class="pdubs none" title="Zählt erst ab 3 Spielern, 6 Minuten und 25 Zügen; höchstens 60 am Tag">Keine Dublonen<small>Partie zu kurz/klein oder Tageslimit</small></div>';
       })() : ''}
-      <div class="sform2">${openRow ? `${esc(openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(state.players[idxOf(openRow.id)], openRow.blocked, !!state.settings?.moneyCounts, openRow.mission)}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}${openRow.mission ? `<span class="sfmiss">🎯 ${esc(openRow.mission.text)} – ${openRow.mission.done ? `erfüllt, +${openRow.mission.bonus}` : `nicht geschafft${openRow.mission.need <= 4 ? ` (${openRow.mission.got}/${openRow.mission.need})` : ''}`}</span>` : ''}` : ''}</div>
+      <div class="sform2">${openRow ? `${esc(teamsOn ? openRow.teamName : openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(teamsOn ? teamPool(state, openRow.team) : state.players[idxOf(openRow.id)], openRow.blocked, !!state.settings?.moneyCounts, openRow.mission)}${teamsOn ? ' (Team)' : ''}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}${openRow.mission ? `<span class="sfmiss">🎯 ${esc(openRow.mission.text)} – ${openRow.mission.done ? `erfüllt, +${openRow.mission.bonus}` : `nicht geschafft${openRow.mission.need <= 4 ? ` (${openRow.mission.got}/${openRow.mission.need})` : ''}`}</span>` : ''}` : ''}</div>
       <div class="endbtns">
         <button type="button" class="pill pill-white" data-a="recap">📈 Börsenbericht</button>
         <button type="button" class="pill pill-red ${ctx.rematchId ? 'pulse' : ''}" data-a="rematch">${ctx.rematchId ? 'Revanche läuft – mitmachen' : 'Revanche'}</button>

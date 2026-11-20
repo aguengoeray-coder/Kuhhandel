@@ -2,7 +2,7 @@
 import {
   ANIMAL_BY_ID, possibleTrades, drawForAuction, bid, passAuction, closeAuction, buyPrice,
   pay, startTrade, acceptTrade, counterTrade, ANIMALS, RAT, scoreFor, kursValue,
-  ratCurrent, ratLay, ratTake, buzz, rpsPick, RPS, specialDecide, specialStage, specialNumber, specialResult, chooseBlock,
+  ratCurrent, ratLay, ratTake, isTeams, teamPool, teamOf, buzz, rpsPick, RPS, specialDecide, specialStage, specialNumber, specialResult, chooseBlock,
   isDuo, divideLook, divideChoose, divideTimeout, duoPass, isMoneyCard, isSpecialCard, specialAnimal, moneyValue,
 } from '../src/engine.js';
 
@@ -110,7 +110,8 @@ export function botStep(s, bots, now, rand = Math.random) {
   if (s.phase === 'block') {
     if (!isBot(s.block.player)) return null;
     const p = P(s.block.player);
-    const best = ANIMALS.filter((a) => p.animals[a.id] === 4).sort((x, y) => scoreFor(p, y.id).score - scoreFor(p, x.id).score)[0];
+    const q = isTeams(s) ? teamPool(s, teamOf(s, p.id)) : p; // v0.83 Teams: Quartett des Teams
+    const best = ANIMALS.filter((a) => q.animals[a.id] === 4).sort((x, y) => scoreFor(q, y.id).score - scoreFor(q, x.id).score)[0];
     return chooseBlock(s, p.id, best.id);
   }
 

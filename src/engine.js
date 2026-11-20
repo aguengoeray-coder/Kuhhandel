@@ -83,6 +83,7 @@ export function canPfaend(state, pid, targetId, animal) {
   if (!t || animal === RAT || !ANIMAL_BY_ID[animal]) return false;
   const n = t.animals[animal] || 0;
   if (n < 1 || n >= 4) return false; // fertiges Quartett geschützt
+  if (isTeams(state) && (targetId === partnerOf(state, pid) || (teamPool(state, teamOf(state, targetId)).animals[animal] || 0) >= 4)) return false; // v0.83: nicht beim Partner, Team-Quartett geschützt
   return Array.isArray(t.money) ? sum(t.money) > 0 : t.money > 0; // Insolvenz-Schutz
 }
 export function pfaendTargets(state, pid) {
@@ -265,6 +266,7 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
   } else if (!Array.isArray(players) || players.length < MIN_PLAYERS || players.length > MAX_PLAYERS) {
     fail(`Es braucht ${MIN_PLAYERS} bis ${MAX_PLAYERS} Spieler.`);
   }
+  if (settings && settings.teams && (players.length !== 4 || isDuo(settings))) settings = { ...settings, teams: null }; // v0.83 Teams nur zu viert
   const ids = new Set(players.map((p) => p.id));
   if (ids.size !== players.length) fail('Spieler-IDs müssen eindeutig sein.');
   const kinds = animalsOf(settings);
@@ -316,17 +318,33 @@ export function currentPlayer(state) {
 
 // ---------- Hilfsabfragen ----------
 
-// Ist eine Tierart komplett bei einem Spieler (Quartett)?
+// ---------- v0.83 Teams 2 gegen 2 (Alp): Partner sitzen sich gegenüber (Platz 1+3, 2+4), Tiere zählen zusammen ----------
+export function isTeams(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.teams); }
+export function teamOf(state, playerId) { if (!isTeams(state)) return null; const i = state.players.findIndex((p) => p.id === playerId); return i < 0 ? null : i % 2; }
+export function partnerOf(state, playerId) { if (!isTeams(state)) return null; const i = state.players.findIndex((p) => p.id === playerId); return i < 0 ? null : state.players[(i + 2) % 4]?.id || null; }
+export function teamMembers(state, team) { return state.players.filter((p, i) => i % 2 === team); }
+// Tiere/Spezialkarten/Geld eines Teams zusammengelegt (für Quartette und Wertung)
+export function teamPool(state, team) {
+  const ms = teamMembers(state, team);
+  const animals = {};
+  for (const p of ms) for (const [k, n] of Object.entries(p.animals)) animals[k] = (animals[k] || 0) + n;
+  return { id: `team${team}`, name: ms.map((p) => p.name).join(' & '), animals, specials: ms.flatMap((p) => p.specials || []), money: ms.flatMap((p) => (Array.isArray(p.money) ? p.money : [])) };
+}
+// Wer zählt als „Besitzer“ (Spieler oder bei Teams das Team)?
+function holders(state) { return isTeams(state) ? [teamPool(state, 0), teamPool(state, 1)] : state.players; }
+
+// Ist eine Tierart komplett bei einem Spieler (Quartett)? Bei Teams: bei einem Team zusammen
 export function isQuartetComplete(state, animal) {
-  return state.players.some((p) => p.animals[animal] === 4);
+  return holders(state).some((p) => p.animals[animal] === 4);
 }
 
 // Mögliche Kuhhandel-Ziele für einen Spieler: [{ target, animal, count }]
 export function possibleTrades(state, playerId) {
   const me = player(state, playerId);
   const out = [];
+  const partner = partnerOf(state, me.id);
   for (const other of state.players) {
-    if (other.id === me.id) continue;
+    if (other.id === me.id || other.id === partner) continue; // v0.83: kein Kuhhandel im eigenen Team
     for (const id of [...ANIMALS.map((a) => a.id), RAT]) {
       const mine = me.animals[id] || 0;
       const theirs = other.animals[id] || 0;
@@ -342,7 +360,7 @@ function allQuartetsComplete(state) {
   // Ratten müssen alle bei einem liegen (alte Spielstände ohne Ratten: entfällt)
   const rats = state.players.reduce((n, p) => n + (p.animals[RAT] || 0), 0) + state.deck.filter((c) => c === RAT).length;
   return animalsOf(state).every((a) => isQuartetComplete(state, a.id))
-    && (rats === 0 || state.players.some((p) => (p.animals[RAT] || 0) === rats));
+    && (rats === 0 || holders(state).some((p) => (p.animals[RAT] || 0) === rats));
 }
 
 // Punkte eines Spielers. blockedAnimal = Quartett, das durch die Ratten nicht zählt.
@@ -359,11 +377,32 @@ export function scoreFor(p, blockedAnimal = null, withMoney = false, kurse = nul
 }
 
 export function scores(state) {
+  if (isTeams(state)) return teamScores(state);
   return state.players.map((p) => {
     const blocked = state.blocked && state.blocked.player === p.id ? state.blocked.animal : null;
     const r = scoreFor(p, blocked, !!(state.settings && state.settings.moneyCounts), state.kurse || null);
     const mi = state.missions && state.missions[p.id] ? missionStatus(state, p.id) : null; // v0.82: erfüllter Geheimauftrag zählt dazu
     return { id: p.id, name: p.name, quartets: r.quartets, score: r.score + (mi && mi.done ? mi.bonus : 0), base: r.score, money: r.money, specials: (p.specials || []).slice(), rats: p.animals[RAT] || 0, blocked, ...(mi ? { mission: mi } : {}) };
+  });
+}
+
+// v0.83 Teams: jedes Team wird wie ein Spieler gewertet (Tiere zusammen), dazu die erfüllten Geheimaufträge beider Partner.
+// Jede Zeile bekommt die Team-Summe als score (beide Partner stehen auf demselben Platz), own = eigener Anteil am Bonus
+function teamScores(state) {
+  const withMoney = !!(state.settings && state.settings.moneyCounts);
+  const teams = [0, 1].map((t) => {
+    const pool = teamPool(state, t);
+    const ids = teamMembers(state, t).map((p) => p.id);
+    const blocked = state.blocked && ids.includes(state.blocked.player) ? state.blocked.animal : null;
+    const r = scoreFor(pool, blocked, withMoney, state.kurse || null);
+    const mis = ids.map((id) => (state.missions && state.missions[id] ? missionStatus(state, id) : null));
+    const bonus = mis.reduce((a, m) => a + (m && m.done ? m.bonus : 0), 0);
+    return { t, ids, name: pool.name, r, blocked, bonus, mis, pool };
+  });
+  return state.players.map((p, i) => {
+    const T = teams[i % 2]; const k = T.ids.indexOf(p.id);
+    return { id: p.id, name: p.name, team: T.t, teamName: T.name, partner: T.ids[1 - k], quartets: T.r.quartets, score: T.r.score + T.bonus, base: T.r.score, money: T.r.money,
+      specials: (p.specials || []).slice(), rats: p.animals[RAT] || 0, blocked: T.blocked, ...(T.mis[k] ? { mission: T.mis[k] } : {}) };
   });
 }
 
@@ -377,8 +416,8 @@ function finishGame(state) {
 // ---------- v0.82 Geheimaufträge (Alp): jeder bekommt verdeckt einen Auftrag, Bonus am Spielende ----------
 // need = Ziel, got(state, p, st) = aktueller Stand; jeder Auftrag nur einmal pro Partie
 export const MISSIONS = {
-  quartett: { bonus: 400, text: (a) => `Sammle das ${animalName(a)}-Quartett`, need: 4, got: (s, p, st, a) => p.animals[a] || 0 },
-  viele: { bonus: 500, text: () => 'Habe am Ende mindestens 3 Quartette', need: 3, got: (s, p) => ANIMALS.filter((x) => p.animals[x.id] === 4).length },
+  quartett: { bonus: 400, text: (a) => `Sammle das ${animalName(a)}-Quartett`, need: 4, got: (s, p, st, a) => (isTeams(s) ? teamPool(s, teamOf(s, p.id)) : p).animals[a] || 0 },
+  viele: { bonus: 500, text: () => 'Habe am Ende mindestens 3 Quartette', need: 3, got: (s, p) => { const q = isTeams(s) ? teamPool(s, teamOf(s, p.id)) : p; return ANIMALS.filter((x) => q.animals[x.id] === 4).length; } },
   handel: { bonus: 400, text: () => 'Gewinne mindestens 3 Kuhhandel', need: 3, got: (s, p, st) => st.tradesWon || 0 },
   kaeufer: { bonus: 300, text: () => 'Ersteigere mindestens 4 Tiere', need: 4, got: (s, p, st) => st.buys || 0, auction: true },
   teuer: { bonus: 300, text: () => 'Kaufe ein Tier für mindestens 300', need: 300, got: (s, p, st) => (st.maxBuy ? st.maxBuy.amount : 0), auction: true },
@@ -418,7 +457,8 @@ function endGame(state) {
   state.phase = 'block';
   const ratOwner = state.players.find((p) => (p.animals[RAT] || 0) > 0);
   log(state, 'Alle Quartette sind vollständig – das Spiel ist vorbei.');
-  if (ratOwner && ANIMALS.some((a) => ratOwner.animals[a.id] === 4)) {
+  const ratPool = ratOwner && isTeams(state) ? teamPool(state, teamOf(state, ratOwner.id)) : ratOwner; // v0.83: bei Teams zählen die Quartette des Teams
+  if (ratOwner && ANIMALS.some((a) => ratPool.animals[a.id] === 4)) {
     state.block = { player: ratOwner.id };
     log(state, `${ratOwner.name} hat alle Ratten und muss ein Quartett blockieren.`);
     return;
@@ -440,7 +480,8 @@ export function chooseBlock(prev, playerId, animal) {
   if (state.phase !== 'block') fail('Gerade muss nichts blockiert werden.');
   if (state.block.player !== playerId) fail('Nur wer die Ratten hat, blockiert.');
   const p = player(state, playerId);
-  if (!ANIMAL_BY_ID[animal] || p.animals[animal] !== 4) fail('Du kannst nur ein eigenes Quartett blockieren.');
+  const pool = isTeams(state) ? teamPool(state, teamOf(state, playerId)) : p;
+  if (!ANIMAL_BY_ID[animal] || pool.animals[animal] !== 4) fail(isTeams(state) ? 'Du kannst nur ein Quartett deines Teams blockieren.' : 'Du kannst nur ein eigenes Quartett blockieren.');
   state.blocked = { player: playerId, animal };
   state.block = null;
   log(state, `${p.name} blockiert das ${animalName(animal)}-Quartett.`);
@@ -913,6 +954,7 @@ export function startTrade(prev, playerId, targetId, animal, cardIndices) {
   requireTurn(state, playerId);
   if (state.mustDraw) fail('Nach der Ratte musst du noch eine Karte aufdecken.');
   if (playerId === targetId) fail('Du kannst nicht mit dir selbst handeln.');
+  if (partnerOf(state, playerId) === targetId) fail('Mit deinem Partner kannst du nicht handeln – eure Tiere zählen sowieso zusammen.');
   const me = player(state, playerId);
   const target = player(state, targetId);
   if (!ANIMAL_BY_ID[animal] && animal !== RAT) fail('Unbekanntes Tier.');
@@ -1262,7 +1304,7 @@ export function viewFor(state, playerId) {
   const v = clone(state);
   v.deck = state.deck.length; // nur die Anzahl
   for (const p of v.players) {
-    if (p.id !== playerId) p.money = p.money.length; // fremdes Geld: nur Kartenanzahl
+    if (p.id !== playerId && p.id !== partnerOf(state, playerId)) p.money = p.money.length; // fremdes Geld: nur Kartenanzahl (v0.83: Partner offen)
   }
   if (v.trade && v.trade.challenger !== playerId) v.trade.offer = v.trade.offer.length;
   if (v.rat) v.rat.pot = v.rat.pot.length; // gelegte Karten liegen verdeckt

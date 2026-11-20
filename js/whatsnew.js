@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.83.0', date: '20.11.', items: ['🤝 Teams 2 gegen 2: Partner gegenüber, Tiere zählen zusammen, das bessere Team gewinnt (Schalter im Warteraum, nur zu viert)'] },
   { v: '0.82.0', date: '20.11.', items: ['🎯 Geheimaufträge: jeder bekommt verdeckt einen Auftrag – erfüllt gibt es Bonuspunkte am Ende (Schalter im Warteraum)'] },
   { v: '0.81.0', date: '20.11.', items: ['📈 Börsen-Chaos: der aktuelle Kurs steht sofort auf jeder Tierkarte (alt durchgestrichen, neu grün/rot)', '🙈 Neue Börsen-News Blindmarkt: 3 Versteigerungen verdeckt – Katze im Sack!'] },
   { v: '0.80.0', date: '20.11.', items: ['👤 Mein Profil: Figur, Dublonen, Statistik und alles Gekaufte an einem Ort', '🔄 Shop-Figuren wechseln oder wieder zum Gratis-Tier zurück', '📖 Spielregeln neu: Reiter je Spielart, Börsen-News als Karten', 'ℹ️ i-Knopf im Spiel erklärt die laufende Spielart'] },
