@@ -3795,3 +3795,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .qs-title small { padding: 2px 10px; }
 /* v0.77: sehr viele verdeckte Scheine im Angebot – stärker überlappen, damit es in einer Reihe bleibt */
 .tpanel .kslots.many:has(> :nth-child(9)) > * + * { margin-left: -18px; }
+/* v0.77: Annehmen-Knopf im Kuhhandel kompakter (Text in einer Zeile, Hinweis klein) – das Feld ragte sonst ins Geld */
+.stage .tduel.respond .tbtn[data-a="accept"] { line-height: 1.1; white-space: nowrap; }
+.stage .tduel.respond .tbtn[data-a="accept"] em { display: block; font-size: 10px; line-height: 1.1; white-space: normal; }
+.stage .tduel.respond .tpanel .tline.big { margin-block: 0; }

@@ -47,7 +47,7 @@ export function buildDemoState(kind, local) {
   let g;
   const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
   if (kind === 'duo') return duoBase();
-  if (kind === 'duotrade') { g = duoBase(); g.turn = 1; if (qs.get('rat')) { g.players[0].animals.ratte = 1; g.players[1].animals.ratte = 1; } g.players[0].money = [0, 0, 10, 10, 10, 20, 50, 100, 100, 200, 500]; g.players[1].money = [0, 0, 10, 10, 10, 20, 50, 100, 10, 10, 50, 200]; return startTrade(g, 'u2', 'u1', qs.get('rat') ? 'ratte' : 'kuh', qs.get('many') ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] : [0, 1]); } // v0.77: Kuhhandel zu zweit (du antwortest)
+  if (kind === 'duotrade') { g = duoBase(); g.turn = 1; if (qs.get('rat')) { g.players[0].animals.ratte = 1; g.players[1].animals.ratte = 1; } g.players[0].money = [0, 0, 10, 10, 10, 20, 50, 100, 100, 200, 500]; g.players[1].money = [0, 0, 10, 10, 10, 20, 50, 100, 10, 10, 50, 200]; return startTrade(g, 'u2', 'u1', qs.get('rat') ? 'ratte' : 'kuh', qs.get('many') ? Array.from({ length: Number(qs.get('many')) }, (_, i) => i) : [0, 1]); } // v0.77: Kuhhandel zu zweit (du antwortest)
   if (kind === 'divide') { g = duoBase(); if (qs.get('other')) g.turn = 1; return divideLook(g, g.players[g.turn].id, Date.now()); }
   if (kind === 'divided') {
     g = divideChoose(divideLook(duoBase(), 'u1', Date.now()), 'u1', qs.get('give') ? false : true);

@@ -716,7 +716,8 @@ export function renderGame(root, ctx) {
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
   const qExtra = evFresh && quartetOf(v.lastEvent, state) ? Q_EXTRA : 0; // v0.77: Quartett-Show – das Spiel wartet, bis sie vorbei ist
   if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = qExtra + (EV_WAIT[v.lastEvent.type] ? choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).calm : CALM_MS); local.calmUntil = Date.now() + local.calmDur; }
-  const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
+  const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now(), showUntilAt - Date.now()) : 0;
+  if (calmLeft && local.tradeOpen) local.tradeOpen = false; // v0.77: während Ruhe/Quartett-Show kein offenes Kuhhandel-Fenster
   if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + qExtra + choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).haloAt }; // Rahmen wandert erst nach Tier + Geld + Ruhe
   if (local.turnHold && (Date.now() >= local.turnHold.until || state.phase !== 'turn')) local.turnHold = null;
   // Dein Geld kommt und geht sichtbar aus deiner Hand: bezahlte Scheine bleiben im Fächer, bis sie losfliegen;
@@ -1242,7 +1243,7 @@ export function renderGame(root, ctx) {
     H.tAnimal = (id) => { local.tradeAnimal = id; local.tradePicked = true; local.pickedNow = true; ctx.rerender(); };
     H.tradeRepick = () => { local.tradePicked = false; ctx.rerender(); };
     H.tradeClose = () => { local.tradeOpen = false; local.tradePicked = false; local.sel = []; ctx.rerender(); };
-    H.tradeGo = () => ctx.act((s) => startTrade(s, meId, local.tradeTarget, local.tradeAnimal, local.sel));
+    H.tradeGo = () => { if (showBusy() || calmLeft) return; ctx.act((s) => startTrade(s, meId, local.tradeTarget, local.tradeAnimal, local.sel)); }; // v0.77: nicht während Ruhe/Quartett-Show
   }
 
   if (state.phase === 'trade') {
@@ -1470,7 +1471,7 @@ export function renderGame(root, ctx) {
   if (local.pfOpen && !pfTargets.length) local.pfOpen = false;
   H.pfOpen = () => { local.pfOpen = true; ctx.rerender(); };
   H.pfClose = () => { local.pfOpen = false; ctx.rerender(); };
-  H.pfGo = (val) => { const [tid, an] = String(val).split('|'); local.pfOpen = false; ctx.act((s) => playPfaendung(s, meId, tid, an, ctx.now())); };
+  H.pfGo = (val) => { if (showBusy() || calmLeft) return; const [tid, an] = String(val).split('|'); local.pfOpen = false; ctx.act((s) => playPfaendung(s, meId, tid, an, ctx.now())); };
   let leftActionsHtml = aucLeft;
   // Nicht dran: unten links bleibt frei (wer dran ist, steht oben im Schild und an der Sanduhr)
   if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
@@ -1548,9 +1549,9 @@ export function renderGame(root, ctx) {
   H.intros = () => ctx.toggleIntros && ctx.toggleIntros();
   H.push = () => ctx.togglePush && ctx.togglePush();
   H.modal = (kind) => ctx.openModal(kind);
-  H.auction = () => ctx.act((s) => (isDuo(s) ? divideLook(s, meId, ctx.now()) : drawForAuction(s, meId, ctx.now())));
+  H.auction = () => (showBusy() || calmLeft) ? undefined : ctx.act((s) => (isDuo(s) ? divideLook(s, meId, ctx.now()) : drawForAuction(s, meId, ctx.now())));
   H.duoPass = () => ctx.act((s) => duoPass(s, meId));
-  H.tradeOpen = () => { local.tradeOpen = true; local.tradePicked = false; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
+  H.tradeOpen = () => { if (showBusy() || calmLeft) return; local.tradeOpen = true; local.tradePicked = false; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
   H.tradeWith = (val) => { const [pid, animal] = String(val).split('|'); local.tradeOpen = true; local.tradePicked = true; local.sel = []; local.tradeTarget = pid; local.tradeAnimal = animal; ctx.rerender(); };
 
   // ----- Überlagerung je nach Phase -----
