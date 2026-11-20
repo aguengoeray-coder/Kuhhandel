@@ -6,6 +6,8 @@
 - [x] **Reiter „Figur“:** alle gekauften Shop-Figuren zum Anziehen per Antippen, dazu die 10 Gratis-Tiere. Ein Gratis-Tier antippen legt die Shop-Figur ab – die Farbe gibt es nur noch, wenn ein Gratis-Tier gewählt ist (vorher wirkte sie mit Shop-Figur gar nicht).
 - [x] **Reiter „Sprüche & Emotes“:** alles, was du im Shop gekauft hast, inkl. eigenem Spruch.
 - [x] **Reiter „Konto“:** Passwort ändern.
+- [x] **Spielregeln überarbeitet:** Reiter je Spielart (Grundregeln, Turbo, Börsen-Chaos, Zu zweit), aktuell mit Tempo, „Warte, warte, warte!“, „Zeig Batzen!“ und Rattenkönig. Börsen-Chaos zeigt alle News als eigene Karten (Symbol, Anzahl, Wirkung). Fehler behoben: oben standen große Balken „Orange“ und „Lila“ (die Farb-Legende der Knöpfe war verrutscht).
+- [x] **ⓘ für die Spielart:** im Spiel oben links neben dem Menü und im Modus-Fenster neben dem Namen – öffnet die Regeln direkt beim passenden Reiter.
 - [x] Datenbank: `supabase/v0.80-avatar-ablegen.sql` – Shop-Figur ablegen (`shop_set_avatar(null)`).
 
 ## v0.79.0 – Warte, warte, warte!

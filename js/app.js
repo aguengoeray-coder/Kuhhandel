@@ -368,6 +368,7 @@ function renderStart() {
     const k = b.dataset.mp;
     if (k === 'close') { ui.mode = null; return render(); }
     if (k === 'moneyEdit') { ui.mpMoney = true; return render(); }
+    if (k === 'info') return openModal(`rules:${(ui.modeOpts || {}).duo ? 'duo' : ui.mode}`); // v0.80: ⓘ erklärt die Spielart
     if (k === 'moneyDone') { ui.mpMoney = false; return render(); }
     if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }
     if (k === 'pin') { ui.mode = null; return openModal('rejoin'); }
@@ -446,7 +447,7 @@ function modePanel(id) {
       ['tradeTimer', '⏱', 'Kuhhandel-Zeit', `${tradeTimerSec({ settings: { ...m.settings, tradeTimer: 20, tempo: o.tempo } })} s pro Angebot`],
       ['moneyCounts', '💰', 'Geld zählt', 'Taler am Ende mitwerten'],
     ];
-    right = `<div class="mp-hd"><b>${esc(m.name)}</b><span>${esc(m.tag)} · ${o.duo ? '2 Spieler' : esc(m.players || '3–4 Spieler')}</span></div>
+    right = `<div class="mp-hd"><b>${esc(m.name)}</b><span>${esc(m.tag)} · ${o.duo ? '2 Spieler' : esc(m.players || '3–4 Spieler')}</span><button type="button" class="mp-info" data-mp="info" aria-label="Regeln dieser Spielart">i</button></div>
       <div class="mp-facts">${(m.facts || []).slice(0, 3).map((f) => `<i>${esc(f)}</i>`).join('')}</div>
       <div class="mp-tiles">${tiles.map(([k, ic, l, s]) => `<div class="mp-tile ${o[k] ? 'on' : ''}"><button type="button" class="mp-tbtn" data-mp="${k}" role="switch" aria-checked="${!!o[k]}"><span class="ic" aria-hidden="true">${ic}</span><span class="tx"><b>${l}</b><small>${s}</small></span><i class="sw" aria-hidden="true"></i></button>${k === 'money' && o.money ? '<button type="button" class="mp-edit" data-mp="moneyEdit">Scheine anpassen ›</button>' : ''}</div>`).join('')}</div>
       ${tempoSeg(o.tempo, true, 'data-mptempo')}
@@ -1818,7 +1819,8 @@ function profileBody() {
 
 let modal = null; // { kind, pin, error }
 function openModal(kind) {
-  modal = { kind };
+  const [k0, sub] = String(kind).split(':'); kind = k0; // v0.80: „rules:boerse“ öffnet die Regeln gleich beim passenden Reiter
+  modal = { kind, ...(sub ? { rtab: sub } : {}) };
   gameLocal.menu = false;
   if (kind === 'pin') loadPin();
   if (kind === 'stats') loadStats();
@@ -1835,24 +1837,53 @@ async function loadPin() {
   render();
 }
 
-const RULES = `
+// v0.80 (Alp) Spielregeln mit Reitern je Spielart – im Spiel öffnet „ⓘ“ direkt die laufende Spielart
+const NEWS_RULES = [
+  ['📈', 'Kursrallye', '2×', 'Ein Tier steigt um +30 bis +100 % (zufällig, meist wenig) – bis Spielende.'],
+  ['📉', 'Kurssturz', '2×', 'Ein Tier fällt um −30 bis −100 % (zufällig, meist kräftig).'],
+  ['🚀', 'Hype', '1×', 'Ein Tier ist doppelt so viel wert (×2).'],
+  ['🫧', 'Blase platzt', '1×', 'Ein Tier ist nur noch halb so viel wert (÷2).'],
+  ['💰', 'Dividende', '1×', 'Alle bekommen 50 aus der Bank.'],
+  ['🧾', 'Steuerprüfung', '1×', 'Jeder gibt seinen höchsten Schein ab (du siehst nur deinen).'],
+  ['🔀', 'Marktpanik', '1×', 'Jeder schiebt einen zufälligen Schein verdeckt nach links.'],
+  ['⚡', 'Hektik', '1×', 'Die nächsten 3 Versteigerungen laufen nur halb so lang.'],
+  ['⚖️', 'Zwangsversteigerung', '2×', 'Handkarte (verdeckt). Spielst du <i>statt</i> deines Zuges: Ein Tier eines Mitspielers wird versteigert, er muss verkaufen und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld.'],
+  ['🛡️', 'Einspruch', '1×', 'Handkarte. Wehrt eine Pfändung gegen dich automatisch ab.'],
+];
+const RULE_TABS = [['classic', '🐄 Grundregeln'], ['turbo', '⚡ Turbo'], ['boerse', '📈 Börsen-Chaos'], ['duo', '👥 Zu zweit']];
+function rulesBody(tab = 'classic') {
+  const tabs = `<div class="pf-tabs rtabs" role="tablist">${RULE_TABS.map(([k, l]) => `<button type="button" role="tab" aria-selected="${tab === k}" class="${tab === k ? 'on' : ''}" data-m="rTab" data-v="${k}">${l}</button>`).join('')}</div>`;
+  let body = '';
+  if (tab === 'turbo') body = `
+  <h3>⚡ Turbo – schnelle Runde</h3><p>Alles wie in den Grundregeln, nur kürzer:</p>
+  <ul class="rlist"><li><b>7 Tierarten</b> – ohne Hahn, Gans und Katze (28 Tierkarten).</li><li><b>Versteigerung 6 s</b> statt 10 s (nach jedem Gebot wieder 6 s).</li><li><b>Kuhhandel-Zeit 12 s</b>, wenn sie eingeschaltet ist.</li><li>Nicht zusammen mit Börsen-Chaos oder Zu zweit.</li></ul>`;
+  else if (tab === 'boerse') body = `
+  <h3>📈 Börsen-Chaos</h3><p>Wie die Grundregeln, dazu liegen <b>13 Börsen-News</b> im Stapel. Ihre Rückseite ist schwarz-gold mit Kurve – du siehst also, wenn als Nächstes eine News kommt. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf.</p>
+  <div class="rnews">${NEWS_RULES.map(([i, n, c, t]) => `<div class="rnew"><i>${i}</i><b>${n} <small>${c}</small></b><span>${t}</span></div>`).join('')}</div>
+  <p><b>Kurse</b> rechnen wie an der Börse mal (×2 und danach ÷2 = wieder normal), höchstens ×4, nie unter 0. Der Kurszettel neben dem Stapel zeigt den aktuellen Wert. Gewertet wird mit den Kursen am Spielende; Spezialkarten (250) und Esel-Bonus bleiben gleich.</p>`;
+  else if (tab === 'duo') body = `
+  <h3>👥 Zu zweit (Kuhhandel-Master-Variante)</h3>
+<p>Genau 2 Spieler. Statt zu versteigern wird <b>aufgeteilt</b>: Wer dran ist, schaut sich die oberste Karte heimlich an und <b>behält</b> sie – dann bekommt der andere die nächste Karte – oder <b>gibt sie ab</b> und bekommt selbst die nächste. 10 s Bedenkzeit, danach wird automatisch behalten. Die Rückseite der nächsten Karte zeigt, ob ein Tier oder 💰 Geld kommt. Geldscheine (ohne 0er) liegen im Stapel, es gibt keinen Esel-Bonus, Ratten und Spezialkarten werden einfach mit aufgeteilt. Statt aufzuteilen darf man auch einen Kuhhandel starten. Ist der Stapel leer, gibt es nur noch Kuhhandel; verzichten beide nacheinander, ist das Spiel vorbei. Wertung wie immer.</p>
+  <p><b>✋ Warte, warte, warte!</b> Einmal pro Karte darfst du die Bedenkzeit verlängern.</p>`;
+  else body = `
   <h3>Ziel</h3><p>Sammle Quartette (alle 4 Karten einer Tierart). Am Ende zählt: (Summe deiner Quartettwerte + passende Spezialkarten) × Anzahl deiner Quartette. Spezialkarten ohne eigenes Quartett: +250 danach.</p>
   <h3>Karten</h3><div class="rcards">${ANIMALS.map((a) => `<span class="rcard">${miniCard(a.id)}<b>${a.value}</b><small>${a.name}</small></span>`).join('')}</div><p>Dazu 10 Spezialkarten (je 250) und 4 Ratten. 54 Karten.</p>
   <h3>Start</h3><p>Jeder hat 100 Taler: 2× 0, 3× 10, 1× 20, 1× 50. Wie viel die anderen haben, siehst du nicht – nur wie viele Scheine.</p>
-  <h3>Dein Zug</h3><p><b>Versteigern:</b> Du deckst eine Karte auf. Bei einem Tier bieten die anderen. Nach jedem Gebot läuft die Uhr neu. Ist sie abgelaufen, entscheidest du: Zuschlag an den Höchstbietenden – oder du kaufst selbst zum Höchstgebot.<br>
+  <h3>Versteigern</h3><p>Du deckst eine Karte auf. 3 s lang schauen alle sie an, dann läuft die Uhr: 10 s, nach jedem Gebot wieder 10 s. Geboten wird mit +10 / +20 / +50 / +100. Ist die Zeit um, entscheidest du: Zuschlag an den Höchstbietenden – oder du kaufst selbst zum Höchstgebot.<br>
+  <b>✋ Warte, warte, warte!</b> Jeder Bieter darf einmal pro Versteigerung drücken: Die Uhr bekommt die Versteigerungszeit obendrauf (ab dem zweiten Drücken nur die halbe).<br>
   <b>Esel:</b> Wird ein Esel aufgedeckt, bekommen alle Geld von der Bank (50, 100, 200, 500).<br>
   <b>Kein Wechselgeld:</b> Wer zahlt, wählt seine Scheine selbst. Zu viel gezahlt ist weg.<br>
   <b>Kann nicht zahlen?</b> Dann alle Scheine offen zeigen, die Auktion startet neu – du darfst höchstens dein altes Gebot minus 10 bieten.</p>
-  <p><b>Kuhhandel:</b> Fordere jemanden heraus, der dieselbe Tierart hat. Du bietest verdeckt. Er nimmt dein Geld und gibt das Tier ab – oder bietet verdeckt dagegen. Die Gebote werden immer getauscht, das höhere gewinnt die Tiere, bei Gleichstand der Herausforderer. Haben beide 2 Karten, geht es um 2.</p>
+  <h3>Kuhhandel</h3><p>Fordere jemanden heraus, der dieselbe Tierart hat. Du bietest verdeckt. Er nimmt dein Geld und gibt das Tier ab – oder bietet verdeckt dagegen. Die Gebote werden immer getauscht, das höhere gewinnt die Tiere, bei Gleichstand der Herausforderer. Haben beide 2 Karten, geht es um 2. Mit „Kuhhandel-Zeit“ (Warteraum) hat der Herausgeforderte 20 s – einmal darf er „Warte, warte, warte!“ drücken.</p>
   <h3>Ratte</h3><p>Wird eine Ratte aufgedeckt, geht es reihum (links vom Aufdecker, er selbst macht mit): Jeder legt eine Karte verdeckt in die Mitte (auch ein 0er) – oder nimmt die Ratte und bekommt alle gelegten Karten. Wer keine Karten mehr hat, muss sie nehmen. Danach deckt der Aufdecker noch eine Karte auf (ist der Stapel leer: Kuhhandel).<br>
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
-  Am Ende hat einer alle 4 Ratten – er wählt eines seiner Quartette, das nicht zählt.</p>
-  <h3>👥 Zu zweit (Kuhhandel-Master-Variante)</h3><p>Genau 2 Spieler. Statt zu versteigern wird <b>aufgeteilt</b>: Wer dran ist, schaut sich die oberste Karte heimlich an und <b>behält</b> sie – dann bekommt der andere die nächste Karte – oder <b>gibt sie ab</b> und bekommt selbst die nächste. 10 s Bedenkzeit, danach wird automatisch behalten. Die Rückseite der nächsten Karte zeigt, ob ein Tier oder 💰 Geld kommt. Geldscheine (ohne 0er) liegen im Stapel, es gibt keinen Esel-Bonus, Ratten und Spezialkarten werden einfach mit aufgeteilt. Statt aufzuteilen darf man auch einen Kuhhandel starten. Ist der Stapel leer, gibt es nur noch Kuhhandel; verzichten beide nacheinander, ist das Spiel vorbei. Wertung wie immer.</p>
-  <h3>📈 Börsen-Chaos (eigene Spielart)</h3><p>Wie Klassisch, dazu 13 Börsen-News im Stapel. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf. <b>Kursrallye</b> (2×): ein Tier +30 bis +100 % (zufällig) bis Spielende · <b>Kurssturz</b> (2×): ein Tier −30 bis −100 % (zufällig, meist kräftig) · <b>🚀 Hype</b>: ein Tier ×2 · <b>🫧 Blase platzt</b>: ein Tier ÷2 · Kurse rechnen sich wie an der Börse mal (×2 und dann ÷2 = wieder normal), höchstens ×4, nie unter 0 · <b>Dividende</b>: alle +50 · <b>Steuerprüfung</b>: jeder gibt seinen höchsten Schein ab · <b>Marktpanik</b>: jeder schiebt einen zufälligen Schein verdeckt nach links · <b>Hektik</b>: die nächsten 3 Versteigerungen nur 5 s · <b>⚖️ Zwangsversteigerung</b> (2×, Handkarte): kommt verdeckt auf die Hand, du deckst gleich nochmal auf. Später spielst du sie <i>statt</i> deines Zuges: Ein Tier eines Mitspielers wird versteigert – er muss verkaufen und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld · <b>🛡️ Einspruch</b> (Handkarte): wehrt eine Pfändung gegen dich automatisch ab. Die Wertung rechnet mit den aktuellen Kursen (Kurszettel neben dem Stapel). Nicht zusammen mit Turbo.</p>
-  <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Alle außer dem Aufdecker sehen einen Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
-  <h3>Geldscheine im Stapel</h3><p>Kann der Gastgeber im Warteraum einschalten (bis zu 20 Scheine, Werte frei wählbar). Liegt ein Geldschein oben, ist die Rückseite <b>grün mit Taler</b>. Wird er aufgedeckt, bekommt ihn der Aufdecker – alle sehen den Betrag – und sein Zug ist vorbei.</p>
-  <h3>Knöpfe</h3><p class="rlegend"><span class="rl get">Grün</span> du bekommst etwas (+ ⬇) · <span class="rl pay">Orange</span> du zahlst (− ⬆) · <span class="rl move">Rot</span> Karte aufdecken · <span class="rl trade">Lila</span> Kuhhandel · <span class="rl neutral">Weiß</span> neutral / zurück. Gestrichelt = gerade gesperrt. Der Knopf, der gerade erwartet wird, leuchtet nach ein paar Sekunden sanft.</p>
+  <b>👑 Rattenkönig:</b> Am Ende hat einer alle 4 Ratten – er bekommt die Rattenmütze und wählt eines seiner Quartette, das nicht zählt.</p>
+  <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Erst 3 s „Zeig Batzen!“ (jeder darf drücken – dann liegen alle Geldstapel mit Anzahl kurz offen), dann zählt für alle außer dem Aufdecker ein Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
+  <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.</p>
+  <h3>Knöpfe</h3><p class="rlegend"><span class="rl rl-get">Grün</span> du bekommst etwas (+ ⬇) · <span class="rl rl-pay">Orange</span> du zahlst (− ⬆) · <span class="rl rl-move">Rot</span> Karte aufdecken · <span class="rl rl-trade">Lila</span> Kuhhandel · <span class="rl rl-neutral">Weiß</span> neutral / zurück. Gestrichelt = gerade gesperrt. Der Knopf, der gerade erwartet wird, leuchtet nach ein paar Sekunden sanft.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
+  return `<h2>Spielregeln</h2>${tabs}<div class="rules">${body}</div>`;
+}
 
 function renderModal() {
   let el = document.getElementById('modal');
@@ -1860,7 +1891,7 @@ function renderModal() {
   if (!el) { el = document.createElement('div'); el.id = 'modal'; document.body.appendChild(el); }
   let body = '';
   if (modal.kind === 'design') body = themeModal(theme);
-  if (modal.kind === 'rules') body = `<h2>Spielregeln</h2><div class="rules">${RULES}</div>`;
+  if (modal.kind === 'rules') body = rulesBody(modal.rtab);
   if (modal.kind === 'install') {
     body = `<h2>Als App aufs Handy</h2>
       ${installPrompt ? '<button type="button" class="pill pill-red pill-small" data-m="doInstall">Jetzt installieren</button>' : ''}
@@ -1967,6 +1998,7 @@ function renderModal() {
       if (b.dataset.m === 'clearErrors') return adminAction('admin_clear_errors', {}, 'Fehlerberichte gelöscht.');
     }
     if (b.dataset.m === 'color') return saveProfile({ color: b.dataset.v });
+    if (b.dataset.m === 'rTab') { modal.rtab = b.dataset.v; render(); el.querySelector('.mbox')?.scrollTo?.(0, 0); return; }
     if (b.dataset.m === 'pfTab') { modal.tab = b.dataset.v; modal.pfErr = ''; return render(); }
     if (b.dataset.m === 'pfStats') return openModal('mystats');
     if (b.dataset.m === 'pfShop') { modal = null; render(); return openShop(); }
