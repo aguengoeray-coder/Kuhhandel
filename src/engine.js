@@ -457,6 +457,7 @@ function applyNews(state, me, card) {
       const i = p.money.indexOf(Math.max(...p.money));
       ev.lost[p.id] = p.money.splice(i, 1)[0];
     }
+    ev.payers = Object.keys(ev.lost); // v0.72: wer etwas abgegeben hat, sehen alle (für die Animation) – die Werte nicht
   } else if (n.kind === 'panik') {
     // gleichzeitig: jeder schiebt eine zufällige Karte an seinen linken Nachbarn (nächster in Spielrichtung)
     const r = rng(state.deck.length * 7919 + state.log.length * 104729 + 17);
@@ -466,6 +467,7 @@ function applyNews(state, me, card) {
       const toP = state.players[(i + 1) % state.players.length];
       if (moves[i] != null) { giveCards(toP, [moves[i]]); ev.moved[p.id] = moves[i]; }
     });
+    ev.movers = Object.keys(ev.moved); // v0.72: wer einen Schein geschoben hat (öffentlich, ohne Werte)
   } else if (n.kind === 'hektik') {
     state.hektik = (state.hektik || 0) + HEKTIK_COUNT;
   } else fail('Unbekannte Börsen-News.');
