@@ -2953,7 +2953,7 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .stage .auslage.shelf .slabel { font-size: 10px; line-height: 1.3; padding: 0 5px; bottom: -8px; border-width: 1.5px; }
 /* ===== v0.60 Börsen-Chaos: News-Karte, Kurszettel ===== */
 .turbotag.boersetag { background: #1F7A4D; }
-.newsreveal { position: absolute; left: 50%; top: 50%; z-index: 40; transform: translate(-50%, -54%); pointer-events: none; animation: nwin 3.4s ease-in-out both; }
+.newsreveal { position: absolute; left: 50%; top: 50%; z-index: 40; transform: translate(-50%, -54%); pointer-events: none; animation: nwin var(--nwd, 3.4s) ease-in-out both; }
 .newsreveal .nwcard { width: 250px; padding: 12px 16px 14px; border-radius: 18px; background: linear-gradient(160deg, #10203f, #0b1530); color: #fff; border: 3px solid var(--gold, #FFD34E);
   box-shadow: 0 0 0 4px rgba(0,0,0,.25), 0 18px 40px rgba(0,0,0,.5); display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-family: var(--font-head); }
 .newsreveal.k-crash .nwcard, .newsreveal.k-steuer .nwcard { border-color: #E5484D; }
@@ -3790,6 +3790,10 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @keyframes qsgallop { 0% { transform: translateX(0) translateY(0); } 25% { transform: translateX(32vw) translateY(-14px); } 50% { transform: translateX(64vw) translateY(0); } 75% { transform: translateX(96vw) translateY(-14px); } 100% { transform: translateX(128vw); } }
 .qs-a.m-gallop .lg { animation-duration: .14s; }
 @media (max-height: 380px) { .qs-shout { font-size: 36px; } .qs-a { width: 100px; height: 76px; } .qs-badge { font-size: 18px; } .qs-who { font-size: 16px; } }
+/* v0.78: längere Show (5,5 s) – Tiere, Requisiten und Ruf spielen ihre Szene --qrep-mal (2×) */
+.qshow .qs-p, .qshow .qs-shout, .qs-a.m-fly, .qs-a.m-fence, .qs-a.m-climb, .qs-a.m-dive, .qs-a.m-moon, .qs-a.m-gallop { animation-iteration-count: var(--qrep, 1); }
+.qs-a.m-crow { animation-iteration-count: calc(6 * var(--qrep, 1)); } .qs-a.m-pounce { animation-iteration-count: calc(3 * var(--qrep, 1)); }
+.qs-a.m-spin, .qs-a.m-kick { animation-iteration-count: calc(5 * var(--qrep, 1)); }
 @media (prefers-reduced-motion: reduce) { .qs-a, .qs-p { animation-duration: 1ms !important; } }
 .qs-who, .qs-title small { background: rgba(10,16,34,.62); padding: 4px 12px; border-radius: 999px; }
 .qs-title small { padding: 2px 10px; }
@@ -3799,3 +3803,58 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .stage .tduel.respond .tbtn[data-a="accept"] { line-height: 1.1; white-space: nowrap; }
 .stage .tduel.respond .tbtn[data-a="accept"] em { display: block; font-size: 10px; line-height: 1.1; white-space: normal; }
 .stage .tduel.respond .tpanel .tline.big { margin-block: 0; }
+
+/* v0.78 Tempo im Warteraum */
+.tempo-seg { display: flex; align-items: center; width: 100%; border: 2px solid rgba(255,255,255,.35); border-radius: 12px; overflow: hidden; margin-top: 2px; }
+.tempo-seg span { padding: 0 10px; font-weight: 900; font-size: 12px; }
+.tempo-seg button { flex: 1; border: 0; border-left: 2px solid rgba(255,255,255,.25); padding: 6px 4px; font: 800 12px/1.1 inherit; background: transparent; color: inherit; cursor: pointer; }
+.tempo-seg button.on { background: #FFD34E; color: #2B2B2B; }
+
+/* ===== v0.78 Modus-Fenster (Vorschlag A): Eckdaten, Schalter-Kacheln, Tempo-Leiste ===== */
+.mp-hd { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-right: 34px; }
+.mp-hd b { font: 900 21px/1 var(--font-head); }
+.mp-hd span { font-size: 12px; font-weight: 700; opacity: .6; }
+.mp-facts { display: flex; gap: 5px; flex-wrap: wrap; }
+.mp-facts i { font-style: normal; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 999px; background: #EEF6F0; border: 1.5px solid #CFE6D6; }
+.m-turbo .mp-facts i { background: #FFF1E4; border-color: #F8D2AE; } .m-boerse .mp-facts i { background: #FFF7D6; border-color: #EBD88A; }
+.mp-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mp-tile { position: relative; display: flex; flex-direction: column; border: 2.5px solid #D9D4C7; border-radius: 14px; background: #FAF8F2; overflow: hidden; }
+.mp-tile.on { border-color: #2E9E57; background: #E8F6EC; }
+.mp-tbtn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; min-height: 48px; }
+.mp-tbtn .ic { font-size: 21px; flex: none; }
+.mp-tbtn .tx { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.15; }
+.mp-tbtn .tx b { font-size: 13px; } .mp-tbtn .tx small { font-size: 10.5px; font-weight: 600; opacity: .65; }
+.mp-tbtn .sw { flex: none; width: 36px; height: 21px; border-radius: 999px; background: #CFC9BA; position: relative; transition: background .15s; }
+.mp-tbtn .sw::after { content: ""; position: absolute; left: 2px; top: 2px; width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: left .15s; }
+.mp-tile.on .sw { background: #2E9E57; } .mp-tile.on .sw::after { left: 17px; }
+.mp-edit { border: 0; border-top: 1.5px dashed #9FD3B2; background: rgba(46,158,87,.1); padding: 4px 8px; font: 800 11px/1.2 inherit; color: #1F7A42; text-align: left; cursor: pointer; }
+.mpanel .tempo-seg { border-color: #2B2B2B; border-width: 2.5px; margin-top: 0; }
+.mpanel .tempo-seg button { border-left-color: #2B2B2B; color: #2B2B2B; padding: 7px 4px; }
+.mpanel .tempo-seg span { color: #2B2B2B; }
+.mp-msteps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.mp-msteps .mstep { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 2px; border-radius: 10px; background: #F4F1EA; border: 2px solid transparent; }
+.mp-msteps .mstep.on { border-color: #2E9E57; background: #E8F6EC; }
+.mp-msteps .mval { width: 34px; height: 46px; border-radius: 6px; border: 2px solid #2B2B2B; background: var(--m); display: grid; place-items: center; font: 900 13px/1 var(--font-head); color: #2B2B2B; }
+.mp-msteps .mctl { display: flex; align-items: center; gap: 2px; }
+.mp-msteps .mctl button { width: 24px; height: 24px; border-radius: 7px; border: 2px solid #2B2B2B; background: #fff; font: 900 15px/1 system-ui; color: #2B2B2B; padding: 0; cursor: pointer; }
+.mp-msteps .mctl button:disabled { opacity: .3; cursor: default; }
+.mp-msteps .mctl b { min-width: 14px; text-align: center; font-size: 14px; }
+@media (max-height: 380px) { .mp-tbtn { min-height: 42px; padding: 4px 7px; } .mp-tbtn .tx small { font-size: 10px; } .mp-facts i { font-size: 10px; padding: 2px 7px; } .mp-hd b { font-size: 18px; } }
+.mp-body > * { flex-shrink: 0; }
+.mpanel:not(.m-join) { grid-template-columns: 30% 1fr; width: min(800px, calc(100vw - 24px)); }
+.mpanel:not(.m-join) .mp-name b { font-size: 24px; }
+.mp-tbtn .tx b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-tbtn .tx small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-gorow { display: flex; gap: 6px; margin-top: auto; }
+.mp-gorow .mp-go { flex: 1; margin-top: 0; }
+.mp-tst { flex: none; min-height: 44px; padding: 0 12px; font-size: 14px; }
+.mp-msteps .mctl button { width: 20px; height: 22px; font-size: 13px; border-radius: 6px; border-width: 1.5px; }
+.mp-msteps .mval { width: 30px; height: 40px; }
+@media (max-width: 720px) { .mp-tbtn .ic { font-size: 18px; } .mp-tbtn { gap: 6px; } .mpanel .tempo-seg span { display: none; } }
+/* v0.78 Warteraum: Tempo-Leiste über die ganze Breite der Schalter, flach – passt auch auf kleine Handys */
+.room-settings .rs-extra .tempo-seg { grid-column: 1 / -1; margin-top: 0; border-color: #2B2B2B; color: #2B2B2B; }
+.room-settings .rs-extra .tempo-seg button { padding: 3px 4px; font-size: 11px; white-space: nowrap; border-left-color: #2B2B2B; }
+.room-settings .rs-extra .tempo-seg span { padding: 0 8px; font-size: 11px; }
+.room-settings .rs-extra { row-gap: 3px; }
+.room-settings .rs-extra .rs-chip { padding-block: 1px; }
+.room-settings .rs-extra .tempo-seg button { padding-block: 2px; }

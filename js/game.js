@@ -1,17 +1,17 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
 import { shopAvatar, shopAvatarFull } from './shopavatars.js';
 import {
-  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, CANTPAY_HOLD_MS, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
+  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
   viewFor, possibleTrades, scores, currentPlayer,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
-  isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
+  isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, isMoneyCard, playPfaendung, pfaendTargets,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
-  isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue,
+  isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue, tempoFactor,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
-import { quartetShow, QSHOW_MS, quartetSound } from './quartets.js';
+import { quartetShow, qshowMs, quartetSound } from './quartets.js';
 import { theaterFx, sceneScript, sceneHtml } from './theater.js';
 import { SHOP_EMOTES } from './shop.js';
 import { animalBody } from './beasts.js';
@@ -228,13 +228,18 @@ const DEMO_HANDTIP = typeof location !== 'undefined' && new URLSearchParams(loca
 const DEMO_JUB = typeof location !== 'undefined' && new URLSearchParams(location.search).has('mejub'); // Screenshot: deine Figur jubelt
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
-const EV_WAIT = { auction_won: 3000, special_won: 3500, trade: 4800, rat_taken: 3500 }; // Kuhhandel: inkl. ~1 s Aufdecken
+// v0.78 (Alp): Ergebnis-Fenster länger – ohne Spielverlauf ist es die einzige Stelle, an der man sieht, wer was bekommt/zahlt
+const EV_WAIT = { auction_won: 4500, special_won: 4500, trade: 5800, rat_taken: 4500 }; // Kuhhandel: inkl. ~1 s Aufdecken
+// Tempo der laufenden Partie (Gemütlich/Normal/Schnell) – wird bei jedem Zeichnen gesetzt.
+// INFO_F = Info-Fenster (Ergebnis, VS, News, Quartett-Show): folgen dem Tempo nur leicht (×1,3 / ×1 / ×0,85), damit man sie immer lesen kann
+let INFO_F = 1, CUR_STATE = null;
+export const setTempo = (stateOrSettings) => { INFO_F = infoFactor(stateOrSettings); CUR_STATE = stateOrSettings; };
 // Stapel leer (nur noch Kuhhandel): Ergebnis kürzer zeigen, damit es flott weitergeht
 // v0.72 Tempo: „umsonst“ (kein Geld fließt) – Fenster nur 2 s
 // v0.76 (Alp): schneller Kuhhandel – laufen die Einsätze noch in die Mitte, wartet das Ergebnis, bis sie dort sind (TRADE_PRE = Vorlauf in ms je Ereignis)
 const TRADE_PRE = new Map();
 const tradePre = (le) => (le && le.type === 'trade' ? TRADE_PRE.get(le.n) || 0 : 0);
-export const evWait = (type, deckLeft, le = null) => (type === 'trade' && deckLeft === 0 ? 3800 : type === 'auction_won' && le && !(le.amount > 0) ? 2000 : EV_WAIT[type]) + tradePre(le);
+export const evWait = (type, deckLeft, le = null) => (EV_WAIT[type] == null ? undefined : Math.round((type === 'trade' && deckLeft === 0 ? 4800 : type === 'auction_won' && le && !(le.amount > 0) ? 3000 : EV_WAIT[type]) * INFO_F)) + tradePre(le);
 // Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
 // Ablauf nach einem Ergebnis – EIN Plan, aus den echten Flügen berechnet (nicht geschätzt):
 //   Fenster steht (W) → Tier fliegt → Geld fliegt (Kuhhandel: erst Angebot hin, wenn gelandet Gegenangebot zurück)
@@ -279,12 +284,13 @@ export function quartetOf(le, state) {
   if (le.type === 'divided') return [le.first, le.second].filter(Boolean).map((x) => has4(x.to, x.card)).find(Boolean) || null;
   return null;
 }
-const Q_EXTRA = QSHOW_MS + 300; // so lange wartet das Spiel zusätzlich
+const newsMs = () => Math.round(3400 * INFO_F); // Börsen-News-Karte (3,4 s bei Normal)
+const qMs = () => qshowMs(INFO_F); // Dauer der Quartett-Show (5,5 s bei Normal)
+const qExtraMs = () => qMs() + 300; // so lange wartet das Spiel zusätzlich
 // Wann die laufende Quartett-Show sicher vorbei ist – solange darf niemand (auch kein Test-Spieler) weitermachen
 let showUntilAt = 0;
 export const showBusy = () => Date.now() < showUntilAt;
-export const calmFor = (le, deckLeft, state = null) => (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS) + (quartetOf(le, state) ? Q_EXTRA : 0);
-const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
+export const calmFor = (le, deckLeft, state = null) => (state && setTempo(state), 0) + (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS) + (quartetOf(le, state) ? qExtraMs() : 0);
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn', 'divided'];
 
 // Auslage passt nicht in ihre Breite (viele Tiere, große Schrift)? Dann nachmessen und kleiner machen – nie unter die Knöpfe
@@ -510,7 +516,8 @@ function seekFx(root) {
 // ---------- v0.63 Encounter-Intro („VS“): Farbflächen + Figuren sliden rein, VS-Knall, dann weiter ----------
 // Reine Anzeige (keine Spiellogik). parts: [{ fig, name, color, tag }], 2–n Teilnehmer; Aufteilung in schräge Bänder.
 // v0.63.1 (Alp): länger zum Anschauen – Kuhhandel 2 s, Spielstart 3 s; kurze Fassung ab dem 3. Duell desselben Paares
-export const INTRO_MS = 2000, INTRO_START_MS = 3000, INTRO_SHORT_MS = 900;
+// v0.78 (Alp): VS-Auftritte länger – man soll lesen können, wer gegen wen um welches Tier; skaliert mit dem Tempo der Runde
+export const INTRO_MS = 3200, INTRO_START_MS = 3200, INTRO_SHORT_MS = 2400;
 // „Test 1 will die Kuh von Test 2“ – Artikel/Plural je Tier (Akkusativ)
 const TIER_AKK = { hahn: ['den', 'deinen', 'Hahn', 'Hähne'], gans: ['die', 'deine', 'Gans', 'Gänse'], katze: ['die', 'deine', 'Katze', 'Katzen'], hund: ['den', 'deinen', 'Hund', 'Hunde'], schaf: ['das', 'dein', 'Schaf', 'Schafe'], ziege: ['die', 'deine', 'Ziege', 'Ziegen'], esel: ['den', 'deinen', 'Esel', 'Esel'], schwein: ['das', 'dein', 'Schwein', 'Schweine'], kuh: ['die', 'deine', 'Kuh', 'Kühe'], pferd: ['das', 'dein', 'Pferd', 'Pferde'], ratte: ['die', 'deine', 'Ratte', 'Ratten'] };
 export function wantText(who, whom, animal, count, meIsWho, meIsWhom) {
@@ -535,7 +542,7 @@ function encounterHtml({ parts, title, badge = '', center = '', vs = 'VS', sub =
     <div class="eivs">${rival ? '<i class="eiflame"></i>' : ''}<b>${esc(vs)}</b>${center}${sub ? `<small class="eisub">${esc(sub)}</small>` : ''}</div></div>`;
 }
 
-const introDur = (o) => (o.short ? INTRO_SHORT_MS : o.ms || INTRO_MS);
+const introDur = (o) => (o.fixed ? o.ms : Math.round((o.short ? INTRO_SHORT_MS : o.ms || INTRO_MS) * INFO_F)); // fixed: Spezialkarten-Takt bleibt immer gleich
 
 // ---------- v0.62 „Profilbild wird lebendig“ ----------
 // Standard-Körper für alle ohne Shop-Avatar: einfacher Körper in Platzfarbe, das runde Profilbild ist der Kopf
@@ -614,8 +621,8 @@ function newsReveal(e, meId, nameOf) {
   else if (e.kind === 'dividende') body = `<p>Alle bekommen <b>${e.amount ?? DIVIDENDE}</b> aus der Bank.</p>`;
   else if (e.kind === 'steuer') { body = '<p>Alle geben ihren <b>höchsten Schein</b> ab.</p>'; const l = e.lost && e.lost[meId]; mine = l != null ? `Du gibst <b>${l}</b> ab` : 'Du hattest keinen Schein'; }
   else if (e.kind === 'panik') { body = '<p>Jeder schiebt einen <b>zufälligen Schein</b> nach links.</p>'; const m = e.moved || {}; mine = `${m.gave != null ? `Du gibst <b>${m.gave}</b>` : 'Du gibst nichts'} · ${m.got != null ? `bekommst <b>${m.got}</b> von ${esc(nameOf(m.from))}` : 'bekommst nichts'}`; }
-  else if (e.kind === 'hektik') body = `<p>Die nächsten <b>${HEKTIK_COUNT}</b> Versteigerungen laufen nur <b>${HEKTIK_MS / 1000} s</b>.</p>`;
-  return `<div class="newsreveal k-${e.kind}" role="status"><div class="nwcard"><span class="nwtag">Börsen-News</span><i class="nwicon">${NEWS_ICON[e.kind] || '📰'}</i><b class="nwtitle">${esc(newsTitle(e))}</b>${body}${mine ? `<span class="nwmine">${mine}</span>` : ''}</div></div>`;
+  else if (e.kind === 'hektik') body = `<p>Die nächsten <b>${HEKTIK_COUNT}</b> Versteigerungen laufen nur <b>${String(Math.round(hektikMs(CUR_STATE) / 100) / 10).replace('.', ',')} s</b> (halb so lang).</p>`;
+  return `<div class="newsreveal k-${e.kind}" role="status" style="--nwd:${newsMs()}ms"><div class="nwcard"><span class="nwtag">Börsen-News</span><i class="nwicon">${NEWS_ICON[e.kind] || '📰'}</i><b class="nwtitle">${esc(newsTitle(e))}</b>${body}${mine ? `<span class="nwmine">${mine}</span>` : ''}</div></div>`;
 }
 function kursZettel(state) {
   if (!isBoerse(state) || !state.kurse) return '';
@@ -624,6 +631,7 @@ function kursZettel(state) {
 }
 
 export function renderGame(root, ctx) {
+  setTempo(ctx.state);
   const { state, meId, local } = ctx;
   KURSE = state.kurse || null;
   avatarLookup = ctx.avatarFor || (() => null);
@@ -714,7 +722,7 @@ export function renderGame(root, ctx) {
   if (evN != null) local.seenEvN = evN;
   if (evFresh && v.lastEvent?.type === 'trade' && local.potLand && local.potLand > Date.now()) { TRADE_PRE.set(v.lastEvent.n, local.potLand - Date.now() + 200); if (TRADE_PRE.size > 20) TRADE_PRE.delete(TRADE_PRE.keys().next().value); }
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
-  const qExtra = evFresh && quartetOf(v.lastEvent, state) ? Q_EXTRA : 0; // v0.77: Quartett-Show – das Spiel wartet, bis sie vorbei ist
+  const qExtra = evFresh && quartetOf(v.lastEvent, state) ? qExtraMs() : 0; // v0.77: Quartett-Show – das Spiel wartet, bis sie vorbei ist
   if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = qExtra + (EV_WAIT[v.lastEvent.type] ? choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).calm : CALM_MS); local.calmUntil = Date.now() + local.calmDur; }
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now(), showUntilAt - Date.now()) : 0;
   if (calmLeft && local.tradeOpen) local.tradeOpen = false; // v0.77: während Ruhe/Quartett-Show kein offenes Kuhhandel-Fenster
@@ -883,7 +891,7 @@ export function renderGame(root, ctx) {
     const total = a.high ? auctionBidMs(state) : auctionStartMs(state);
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
     // v0.65 Zwangsversteigerung: Karte wird nicht umgedreht, sondern bekommt das Siegel „GEPFÄNDET“ (bleibt während der Versteigerung drauf)
-    const seal = a.forced ? `<span class="aucseal" style="animation-delay:${revealing ? Math.max(0, 1150 - (PFAEND_SHOW_MS - (a.opensAt - nowR))) : -999}ms" aria-label="gepfändet"><b>⚖</b><small>GEPFÄNDET</small></span>` : '';
+    const seal = a.forced ? `<span class="aucseal" style="animation-delay:${revealing ? Math.max(0, 1150 - (pfaendShowMs(state) - (a.opensAt - nowR))) : -999}ms" aria-label="gepfändet"><b>⚖</b><small>GEPFÄNDET</small></span>` : '';
     const card = revealing
       ? (a.forced ? `<div class="revealcard forced">${playCard(a.animal)}${seal}</div>` : `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`)
       : `<div class="aucard center ringwrap ${infoFresh ? 'settle' : ''} ${running ? (secs <= 3 ? 'low' : '') : 'over'}" ${a.endsAt != null ? `data-ends="${a.endsAt}" data-total="${total}" data-fmt="n"` : ''}>
@@ -1248,7 +1256,7 @@ export function renderGame(root, ctx) {
 
   if (state.phase === 'trade') {
     const t = v.trade;
-    const TT = (Number(state.settings?.tradeTimer) || 0) && (isTurbo(state) ? 12 : Number(state.settings.tradeTimer)); // Turbo: 12 s
+    const TT = tradeTimerSec(state); // Turbo 12 s, sonst 20 s – v0.78: folgt dem Tempo (Denkzeit)
     let ttHtml = '';
     if (TT) {
       const tkey = `${state.log.length}|${t.challenger}|${t.animal}`;
@@ -1712,7 +1720,7 @@ export function renderGame(root, ctx) {
     // v0.77 (Alp): erst wenn die Tiere angekommen sind (Lauf startet evDelay − WALK_OVERLAP und dauert FLY_MS)
     // v0.77 (Alp): Quartett-Show für alle – nach Tier und Geld (Ende des Ablaufs), danach geht es weiter
     const qd = evNew ? choreo(le, v.deck).end + 200 : le && le.type === 'divided' ? 250 + 450 + FLY_MS + 200 : 500;
-    if (added.length && qa !== RAT) { local.poloNext = { pid: qp, animal: qa, delay: qd }; if (qp) moodMark(qp, 'love', Date.now() + qd + QSHOW_MS, 2600); }
+    if (added.length && qa !== RAT) { local.poloNext = { pid: qp, animal: qa, delay: qd }; if (qp) moodMark(qp, 'love', Date.now() + qd + qMs(), 2600); }
     else if (added.length) {
       const [pid, animal] = added[0].split('|');
       const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
@@ -1784,7 +1792,7 @@ export function renderGame(root, ctx) {
   // Geräusche zu den Ereignissen
   if (entered && (state.phase === 'rat' || state.phase === 'special')) sounds.push('flip');
   // Ratte aufgedeckt: Quieken, eine kleine Ratte huscht über den Tisch
-  if (entered && state.phase === 'rat') { later.push(['quiek', 500]); keepFx([0, 1, 2].map((k) => `<div class="ratrun r${k}" aria-hidden="true">${art(RAT)}</div>`).join(''), 2600); } // ein ganzes Rattenrudel flitzt über den Tisch
+  if (entered && state.phase === 'rat') later.push(['quiek', 500]); // v0.78 (Alp): kein Rattenrudel mehr – nur die eine Ratte aus der Karte knabbert reihum am Geld
   if (fresh && state.phase === 'rat' && !entered) sounds.push('bid');
   // Geldschein aus dem Stapel: Karte groß für alle zeigen, dann fliegt sie zum Spieler
   const lem = v.lastEvent;
@@ -1799,13 +1807,13 @@ export function renderGame(root, ctx) {
   const newsSig = lem?.type === 'news' ? `${lem.n}|${lem.kind}` : null;
   if (newsSig && evFresh && local.newsSig !== newsSig) {
     local.newsSig = newsSig;
-    keepFx(newsReveal(lem, meId, nameOf), 3400);
+    keepFx(newsReveal(lem, meId, nameOf), newsMs());
     sounds.push('flip'); later.push([lem.kind === 'crash' || lem.kind === 'blase' || lem.kind === 'steuer' ? 'boo' : lem.kind === 'hektik' ? 'tick' : 'coins', 600]);
     // v0.69 Kurssprung: alle Karten dieses Tiers (Auslagen, Mitspieler, Kurszettel) blinken ▲/▼, Börsenglocke
-    if (KURS_UP[lem.kind] != null && lem.from !== lem.to) { local.kursFx = { animal: lem.animal, up: KURS_UP[lem.kind], at: Date.now() + 3400 }; later.push(['bell', 3400]); }
+    if (KURS_UP[lem.kind] != null && lem.from !== lem.to) { local.kursFx = { animal: lem.animal, up: KURS_UP[lem.kind], at: Date.now() + newsMs() }; later.push(['bell', newsMs()]); }
     // v0.72 (Alp): jede Geldbewegung sichtbar – nach der News-Karte fliegen die Scheine
     //   Dividende: aus der Mitte (Bank) zu jedem Geld · Steuerprüfung: von jedem Geld in die Mitte · Marktpanik: verdeckt zum linken Nachbarn
-    const NF = 3450; const ids = v.players.map((p) => p.id);
+    const NF = newsMs() + 50; const ids = v.players.map((p) => p.id);
     const mine = (pid, val) => (pid === meId && val != null ? val : null);
     let nfx = '';
     if (lem.kind === 'dividende') nfx = ids.map((pid, k) => moneyFly('@card', pid, 1, NF + k * 140, pid === meId ? [lem.amount ?? DIVIDENDE] : null)).join('');
@@ -2049,7 +2057,7 @@ export function renderGame(root, ctx) {
   if (state.phase === 'special' && v.special && specialStage(v, Date.now()) === 'rps') {
     const vals = Object.values(v.special.buzzes || {}); const mx = vals.length ? Math.max(...vals) : 0;
     const who = Object.keys(v.special.buzzes || {}).filter((id) => v.special.buzzes[id] === mx);
-    if (who.length > 1) playIntro(`rps|${v.special.revealer}|${v.special.startsAt}|${who.join(',')}`, { parts: who.map(partOf), title: 'GLEICHSTAND!', vs: 'SCHNICK! SCHNACK! SCHNUCK!', ms: 1500, center: `<span class="eium">bei ${mx}</span>` });
+    if (who.length > 1) playIntro(`rps|${v.special.revealer}|${v.special.startsAt}|${who.join(',')}`, { parts: who.map(partOf), title: 'GLEICHSTAND!', vs: 'SCHNICK! SCHNACK! SCHNUCK!', ms: 1500, fixed: true, center: `<span class="eium">bei ${mx}</span>` });
   }
   // Spielstart: alle Spieler, „Die Börse ist eröffnet!“
   if (state.phase === 'turn' && !v.lastEvent && state.log.length <= 2 && v.players.length >= 2) {
@@ -2091,8 +2099,8 @@ export function renderGame(root, ctx) {
     // v0.77 (Alp): eigene Szene je Tier für alle (Hähne krähen, Kühe springen über den Mond …) – nicht wegtippbar
     void pt;
     const qi = idxOf(pid);
-    keepFx(quartetShow(animal, esc(pid === meId ? 'Du' : nameOf(pid)), qi >= 0 ? SEAT_COLORS[qi] : '#FFD34E', delay, pid === meId), delay + QSHOW_MS + 100, 'qshow');
-    showUntilAt = Math.max(showUntilAt, Date.now() + delay + QSHOW_MS + 250);
+    keepFx(quartetShow(animal, esc(pid === meId ? 'Du' : nameOf(pid)), qi >= 0 ? SEAT_COLORS[qi] : '#FFD34E', delay, pid === meId, qMs()), delay + qMs() + 100, 'qshow');
+    showUntilAt = Math.max(showUntilAt, Date.now() + delay + qMs() + 250);
     local.calmUntil = Math.max(local.calmUntil || 0, showUntilAt); // deine Knöpfe warten auch
     later.push([quartetSound(animal), delay + 1100]); later.push(['fanfare', delay + 150]);
   }
@@ -2254,7 +2262,7 @@ export function renderGame(root, ctx) {
   if (cpSig && local.cpSig !== cpSig) { local.cpSig = cpSig; if (evFresh || ctx.demoPop) local.cp = { ev: JSON.parse(JSON.stringify(cpe)), at: Date.now() }; }
   if (local.cp) {
     const el = Date.now() - local.cp.at;
-    if (el < CANTPAY_MS) {
+    if (el < cantpayMs(state)) {
       const e = local.cp.ev;
       const mine = e.player === meId;
       const bills = [...e.revealed].sort((x, y) => x - y);
@@ -2264,14 +2272,14 @@ export function renderGame(root, ctx) {
       const w = Math.max(30, Math.min(58, Math.floor(400 / Math.max(1, bills.length)) - 6));
       // v0.62 „Pleite!“: die Figur springt aus ihrem Profilbild, stülpt die leeren Hosentaschen raus, Motten flattern
       if (el < 3400) effects += aliveGag(e.player, 'pleite', el, 3400);
-      effects += `<div class="cantpop" data-a="cpClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${CANTPAY_MS}ms;--bw:${w}px">
+      effects += `<div class="cantpop" data-a="cpClose" role="button" aria-live="polite" style="--el:-${el}ms;--dur:${cantpayMs(state)}ms;--bw:${w}px">
         <small>Kann nicht zahlen</small>
         <b>${esc(mine ? 'Du' : nameOf(e.player))} ${mine ? 'kannst' : 'kann'} ${need} nicht zahlen</b>
         <div class="cpbills">${bills.map((m) => moneyCard(m)).join('') || '<span class="cpnone">keine Scheine</span>'}</div>
         <p><b>${bills.length}</b> Schein${bills.length === 1 ? '' : 'e'} · zusammen <b>${sum}</b> Taler</p>
         <em>${after}</em>
         <i class="rtimer"></i></div>`;
-      wakeLocal(local.cp.at + CANTPAY_MS + 50);
+      wakeLocal(local.cp.at + cantpayMs(state) + 50);
     } else local.cp = null;
   }
   H.cpClose = () => { local.cp = null; ctx.rerender(); };

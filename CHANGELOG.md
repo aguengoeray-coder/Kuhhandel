@@ -1,5 +1,19 @@
 # Änderungsprotokoll
 
+## v0.78.0 – Mehr Ruhe
+
+- [x] **Ergebnisse länger sichtbar:** Ohne Spielverlauf ist das Ergebnis-Fenster die einzige Stelle, an der man sieht, wer was bekommt und zahlt – es bleibt jetzt 4,5 s (Kuhhandel 5,8 s, „umsonst“ 3 s) statt 3 s. Für dich selbst weiter wegtippbar.
+- [x] **Karte in Ruhe ansehen:** Nach dem Aufdecken bleiben 3 s (statt 1,5 s), bevor die Versteigerungsuhr läuft.
+- [x] **Tempo pro Runde:** Im Warteraum „Tempo: 🐢 Gemütlich / Normal / ⚡ Schnell“. Drei Gruppen:
+  - **Denkzeiten folgen voll** (×1,5 / ×1 / ×0,7): Versteigerung 15 / 10 / 7 s, Aufteilen zu zweit 15 / 10 / 7 s, Kuhhandel-Zeit 30 / 20 / 14 s.
+  - **Info-Fenster folgen nur leicht** (×1,3 / ×1 / ×0,85), damit man sie auch bei „Schnell“ lesen kann: Karte ansehen 3,9 / 3 / 2,6 s, Ergebnisse, VS-Auftritte, Börsen-News-Karte, Quartett-Show, Gerichtsvollzieher. „Kann nicht zahlen“ 6,5 / 5 / 5 s – nie kürzer.
+  - **Bleibt immer gleich:** Spezialkarte (Zeig Batzen 3 s, Achtung, Countdown 1 s pro Zahl, Schnick-Schnack-Schnuck) und alle Bewegungen (Tiere laufen, Geld fliegt).
+  - **Hektik** (Börsen-Chaos) halbiert die Versteigerungszeit der Runde: 7,5 / 5 / 3,5 s statt immer 5 s.
+- [x] **Quartett-Show länger:** 5,5 s statt 3,8 s – Tiere, Requisiten und Ruf spielen ihre Szene zweimal.
+- [x] **VS-Auftritte länger:** Kuhhandel-VS 3,2 s (Wiederholung 2,4 s statt 0,9 s), Spielstart 3,2 s – man sieht in Ruhe, wer gegen wen um welches Tier spielt. Läuft mit dem Tempo der Runde mit.
+- [x] **Neues Modus-Fenster:** Oben Name, Untertitel und Eckdaten (z. B. „10 Tierarten · Versteigerung 10 s · Kuhhandel“), darunter die Einstellungen als Kacheln mit Symbol, kurzer Erklärung und Schiebeschalter (an = grün), Tempo als Leiste. Bei „Geld im Stapel“ führt „Scheine anpassen ›“ zu den Scheinen (0 bis 500 einzeln mit − / +).
+- [x] **Ratte:** Kein Rattenrudel mehr über den Tisch – nur noch die eine Ratte aus der Karte, die reihum am Geld knabbert.
+
 ## v0.77.0 – Zu zweit
 
 - [x] **Neuer Modus „Zu zweit“** (nach der offiziellen 2-Spieler-Variante von Kuhhandel Master): im Klassisch-Fenster „👥 Zu zweit“ anhaken oder im Warteraum einschalten – genau 2 Spieler.
