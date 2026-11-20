@@ -895,3 +895,17 @@ test('v0.69 Hype ×2 und Blase platzt ÷2: multiplikativ, höchstens ×4, Rallye
   const old = boerseWithTop('news-hype-esel'); old.kurse = { esel: 50 };
   assert.equal(kursValue('esel', drawForAuction(old, 'a', 0).kurse), 1500);
 });
+
+test('v0.72 Steuer/Marktpanik: wer abgibt, sehen alle (payers/movers) – die Werte bleiben verdeckt', async () => {
+  const { viewFor } = await import('../src/engine.js');
+  let g = drawForAuction(boerseWithTop('news-steuer'), 'a', 0);
+  const ids = g.players.filter((p) => p.money.length >= 0).map((p) => p.id);
+  assert.deepEqual([...g.lastEvent.payers].sort(), ids.sort());
+  const other = g.players.find((p) => p.id !== 'a').id;
+  const v = viewFor(g, other);
+  assert.equal(v.lastEvent.payers.length, ids.length);
+  assert.deepEqual(Object.keys(v.lastEvent.lost), [other]);
+  let h = drawForAuction(boerseWithTop('news-panik'), 'a', 0);
+  assert.equal(h.lastEvent.movers.length, h.players.length);
+  assert.equal(typeof viewFor(h, other).lastEvent.moved.gave, 'number');
+});

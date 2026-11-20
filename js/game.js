@@ -216,7 +216,8 @@ export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
 const EV_WAIT = { auction_won: 3000, special_won: 3500, trade: 4800, rat_taken: 3500 }; // Kuhhandel: inkl. ~1 s Aufdecken
 // Stapel leer (nur noch Kuhhandel): Ergebnis kürzer zeigen, damit es flott weitergeht
-export const evWait = (type, deckLeft) => (type === 'trade' && deckLeft === 0 ? 3800 : EV_WAIT[type]);
+// v0.72 Tempo: „umsonst“ (kein Geld fließt) – Fenster nur 2 s
+export const evWait = (type, deckLeft, le = null) => (type === 'trade' && deckLeft === 0 ? 3800 : type === 'auction_won' && le && !(le.amount > 0) ? 2000 : EV_WAIT[type]);
 // Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
 // Ablauf nach einem Ergebnis – EIN Plan, aus den echten Flügen berechnet (nicht geschätzt):
 //   Fenster steht (W) → Tier fliegt → Geld fliegt (Kuhhandel: erst Angebot hin, wenn gelandet Gegenangebot zurück)
@@ -227,19 +228,24 @@ const POT_WALK_MS = 1300; // Kuhhandel-Start: Tiere laufen in die Mitte
 const FLY_MS = WALK_MS + CARD_MS; // Tier ist angekommen (danach fliegt Geld)
 const MFLY_MS = 1000; // ein Geldschein (.mfly)
 const MSTEP = 70; // Abstand zwischen zwei Scheinen
-const HALO_PAUSE = 700; // Ruhe nach dem letzten Schein
+const HALO_PAUSE = 500; // Ruhe nach dem letzten Schein (v0.72: 700 → 500)
+export const WALK_OVERLAP = 350; // v0.72: das Tier läuft schon los, während das Ergebnis-Fenster ausblendet
 const OFFER_FLY = 1350; // Kuhhandel: Angebot fliegt los, wenn der „KUHHANDEL!“-Auftritt ausblendet
 const OFFER_LAND = OFFER_FLY + MFLY_MS - 150; // … und liegt dann in der Mitte
 const HALO_MS = 900; // Rahmen wandert
 const cntOf = (x) => (Array.isArray(x) ? x.length : x || 0);
 const streamMs = (c) => (Math.min(c, 15) - 1) * MSTEP + MFLY_MS;
-export function choreo(le, deckLeft, W = evWait(le.type, deckLeft) || 0, piles = null) {
+export function choreo(le, deckLeft, W = evWait(le.type, deckLeft, le) || 0, piles = null) {
   const n = le.type === 'trade' ? le.count || 1 : 1;
-  const payAt = W + FLY_MS + (n - 1) * 120; // Tier ist gelandet
+  const payAt = Math.max(0, W - WALK_OVERLAP) + FLY_MS + (n - 1) * 120; // Tier ist gelandet
   const streams = [];
   if (le.type === 'auction_won' && le.amount > 0 && le.payer && le.payee) streams.push({ from: le.payer, to: le.payee, count: le.cardCount || 1, at: payAt });
   if (le.type === 'special_won' && le.count > 0 && le.payer && le.payee) streams.push({ from: le.payer, to: le.payee, count: le.count, at: payAt });
-  // Kuhhandel: das Geld wird schon im Ergebnisfenster getauscht (Stapel rutschen auf die andere Seite) – danach fliegt nur das Tier
+  // v0.72 Kuhhandel: nach den Tieren fliegt jedes Angebot aus der Mitte zu dem, der es bekommt (Angebot → Herausgeforderter, Gegenangebot → Herausforderer)
+  if (le.type === 'trade') {
+    if (cntOf(le.offer)) streams.push({ from: '@card', to: le.target, count: cntOf(le.offer), at: payAt });
+    if (cntOf(le.counter)) streams.push({ from: '@card', to: le.challenger, count: cntOf(le.counter), at: payAt + 250 });
+  }
   if (le.type === 'rat_taken') {
     // v0.52.1: der Topf liegt in der Mitte – von dort fliegt das ganze Geld zum Nehmer (nicht aus den Händen der anderen)
     if (le.count) streams.push({ from: '@pot', to: le.player, count: le.count, at: payAt });
@@ -559,14 +565,14 @@ const KURS_UP = { rallye: true, hype: true, crash: false, blase: false };
 function newsTitle(e) {
   if (e.kind === 'rallye') return `Kursrallye ${aname(e.animal)}`;
   if (e.kind === 'crash') return `Kurssturz ${aname(e.animal)}`;
-  if (e.kind === 'hype') return `Hype! ${aname(e.animal)} ×2`;
-  if (e.kind === 'blase') return `Blase platzt! ${aname(e.animal)} ÷2`;
+  if (e.kind === 'hype') return 'Hype!'; // v0.72: Tier und Wert stehen darunter
+  if (e.kind === 'blase') return 'Blase platzt!';
   return ({ dividende: 'Dividende', steuer: 'Steuerprüfung', panik: 'Marktpanik', hektik: 'Hektik' })[e.kind] || 'Börsen-News';
 }
 function newsReveal(e, meId, nameOf) {
   let body = '';
   let mine = '';
-  if (KURS_UP[e.kind] != null) { const up = KURS_UP[e.kind]; const cap = up && e.to === e.from; body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${up ? 'up' : 'down'}">${e.to} ${up ? '▲' : '▼'}</b></div><small>${cap ? `schon am Höchstkurs (×${KURS_MAX_FACTOR})` : e.kind === 'hype' ? 'Wert verdoppelt' : e.kind === 'blase' ? 'Wert halbiert' : `${up ? '+' : '−'}${e.pct || KURS_STEP} %`} bis Spielende</small>`; }
+  if (KURS_UP[e.kind] != null) { const up = KURS_UP[e.kind]; const cap = up && e.to === e.from; body = `<div class="nwkurs">${miniCard(e.animal)}<s>${e.from}</s><b class="${up ? 'up' : 'down'}">${e.to} ${up ? '▲' : '▼'}</b></div><small>${cap ? `schon am Höchstkurs (×${KURS_MAX_FACTOR})` : e.kind === 'hype' ? `${aname(e.animal)}: Wert verdoppelt` : e.kind === 'blase' ? `${aname(e.animal)}: Wert halbiert` : `${up ? '+' : '−'}${e.pct || KURS_STEP} %`} bis Spielende</small>`; }
   else if (e.kind === 'dividende') body = `<p>Alle bekommen <b>${e.amount ?? DIVIDENDE}</b> aus der Bank.</p>`;
   else if (e.kind === 'steuer') { body = '<p>Alle geben ihren <b>höchsten Schein</b> ab.</p>'; const l = e.lost && e.lost[meId]; mine = l != null ? `Du gibst <b>${l}</b> ab` : 'Du hattest keinen Schein'; }
   else if (e.kind === 'panik') { body = '<p>Jeder schiebt einen <b>zufälligen Schein</b> nach links.</p>'; const m = e.moved || {}; mine = `${m.gave != null ? `Du gibst <b>${m.gave}</b>` : 'Du gibst nichts'} · ${m.got != null ? `bekommst <b>${m.got}</b> von ${esc(nameOf(m.from))}` : 'bekommst nichts'}`; }
@@ -1287,7 +1293,7 @@ export function renderGame(root, ctx) {
   const topCls = topMoney ? 'moneytop' : topNews ? 'newstop' : '';
   const lastLog = v.log[v.log.length - 1] || '';
   // Infozeile: leuchtet kurz auf, wenn etwas Neues drinsteht (läuft beim Neuzeichnen weiter)
-  if (fresh && state.phase === 'turn') local.stripAt = Date.now() + (evFresh && EV_WAIT[v.lastEvent?.type] ? evWait(v.lastEvent.type, v.deck) : 0);
+  if (fresh && state.phase === 'turn') local.stripAt = Date.now() + (evFresh && EV_WAIT[v.lastEvent?.type] ? evWait(v.lastEvent.type, v.deck, v.lastEvent) : 0);
   const stripNew = state.phase === 'turn' && local.stripAt && Date.now() - local.stripAt < 1400 ? 'flash' : '';
   // Letzte Aktion als kleine Bildzeile (wer → was), sonst Textzeile
   // Spieler mit Bild; du = „Du“ / nach „von“ „dir“ / nach „an“ „dich“
@@ -1504,7 +1510,7 @@ export function renderGame(root, ctx) {
   // v0.63 (Alp): Spielende gemeinsam anschauen – nichts überspringen. Die Abrechnung startet erst,
   // wenn der letzte Zug (Ergebnis-Fenster, Flüge, Gags) fertig gezeigt ist.
   if (entered && state.phase === 'ended') {
-    const lastWait = v.lastEvent && EV_WAIT[v.lastEvent.type] ? evWait(v.lastEvent.type, v.deck) + 2600 : 900;
+    const lastWait = v.lastEvent && EV_WAIT[v.lastEvent.type] ? evWait(v.lastEvent.type, v.deck, v.lastEvent) + 2600 : 900;
     local.tallyAt = ctx.demoPodium ? Date.now() - 600000 : Date.now() + (fresh ? lastWait : 0); local.tallySkip = false; local.podiumShown = false;
   }
   const tallyTotal = TALLY_START + v.players.length * TALLY_STEP + 900;
@@ -1612,7 +1618,7 @@ export function renderGame(root, ctx) {
   const evSig = le && EV_DUR[le.type] ? `${le.type}|${le.n}` : null;
   let evNew = false;
   if (evSig && local.resSig !== evSig) { local.resSig = evSig; evNew = !!(evFresh || ctx.demoPop); }
-  const evDelay = evNew ? evWait(le.type, v.deck) : 0;
+  const evDelay = evNew ? evWait(le.type, v.deck, le) : 0;
   const quartets = [];
   v.players.forEach((p) => Object.entries(p.animals).forEach(([id, n]) => { if (n === 4) quartets.push(`${p.id}|${id}`); }));
   if (local.prevQuartets) {
@@ -1636,11 +1642,12 @@ export function renderGame(root, ctx) {
   if (evFresh && (state.phase === 'turn' || state.phase === 'ended') && le && (le.type === 'auction_won' || le.type === 'trade' || le.type === 'special_won' || le.type === 'rat_taken')) {
     const to = le.type === 'trade' ? receiverOf(le) : le.type === 'rat_taken' ? le.player : le.buyer;
     const an = le.type === 'rat_taken' ? RAT : le.animal;
+    const wd = Math.max(0, evDelay - WALK_OVERLAP); // v0.72: los, sobald das Fenster ausblendet
     if (idxOf(to) >= 0) {
-      const walkers = le.type === 'trade' ? [0, 1].map((k) => homeWalk(an, '@card', `@stall:${to}:${an}`, evDelay + k * 220, { count: le.count || 1, koffer: true })) : [homeWalk(an, '@card', `@stall:${to}:${an}`, evDelay, { star: le.type === 'special_won' })];
-      keepFx(walkers.join(''), evDelay + FLY_MS + 400, evDelay ? 'ev' : null);
-      later.push(['trade', evDelay + 100]);
-      later.push(['flipcard', evDelay + WALK_MS]);
+      const walkers = le.type === 'trade' ? [0, 1].map((k) => homeWalk(an, '@card', `@stall:${to}:${an}`, wd + k * 220, { count: le.count || 1, koffer: true })) : [homeWalk(an, '@card', `@stall:${to}:${an}`, wd, { star: le.type === 'special_won' })];
+      keepFx(walkers.join(''), wd + FLY_MS + 400, evDelay ? 'ev' : null);
+      later.push(['trade', wd + 100]);
+      later.push(['flipcard', wd + WALK_MS]);
     }
   }
   // Der Zug wandert sichtbar im Uhrzeigersinn: ein goldener Schein gleitet vom alten zum neuen Platz
@@ -1650,7 +1657,7 @@ export function renderGame(root, ctx) {
 
   // Geld fliegt (verdeckt) vom Platz des Zahlers zum Platz des Empfängers (Start und Ziel werden gemessen)
   const moneyFly = (from, to, count, delay = 0, vals = null) => {
-    if (!count || (from !== '@pot' && idxOf(from) < 0) || idxOf(to) < 0) return '';
+    if (!count || (!from.startsWith('@') && idxOf(from) < 0) || (!to.startsWith('@') && idxOf(to) < 0)) return '';
     const n = Math.min(count, 15);
     // deine eigenen Scheine fliegen offen: beim Bezahlen kurz hochgeschoben aus dem Fächer, beim Bekommen in den Fächer hinein
     const mine = (from === meId || to === meId) && vals && vals.length >= n ? (from === meId ? 'out' : 'in') : '';
@@ -1710,6 +1717,20 @@ export function renderGame(root, ctx) {
     sounds.push('flip'); later.push([lem.kind === 'crash' || lem.kind === 'blase' || lem.kind === 'steuer' ? 'boo' : lem.kind === 'hektik' ? 'tick' : 'coins', 600]);
     // v0.69 Kurssprung: alle Karten dieses Tiers (Auslagen, Mitspieler, Kurszettel) blinken ▲/▼, Börsenglocke
     if (KURS_UP[lem.kind] != null && lem.from !== lem.to) { local.kursFx = { animal: lem.animal, up: KURS_UP[lem.kind], at: Date.now() + 3400 }; later.push(['bell', 3400]); }
+    // v0.72 (Alp): jede Geldbewegung sichtbar – nach der News-Karte fliegen die Scheine
+    //   Dividende: aus der Mitte (Bank) zu jedem Geld · Steuerprüfung: von jedem Geld in die Mitte · Marktpanik: verdeckt zum linken Nachbarn
+    const NF = 3450; const ids = v.players.map((p) => p.id);
+    const mine = (pid, val) => (pid === meId && val != null ? val : null);
+    let nfx = '';
+    if (lem.kind === 'dividende') nfx = ids.map((pid, k) => moneyFly('@card', pid, 1, NF + k * 140, pid === meId ? [lem.amount ?? DIVIDENDE] : null)).join('');
+    else if (lem.kind === 'steuer') nfx = (lem.payers || Object.keys(lem.lost || {})).map((pid, k) => moneyFly(pid, '@card', 1, NF + k * 140, mine(pid, lem.lost?.[pid]) != null ? [lem.lost[pid]] : null)).join('');
+    else if (lem.kind === 'panik') {
+      const movers = lem.movers || [];
+      nfx = movers.map((pid, k) => { const i = idxOf(pid); const to = ids[(i + 1) % ids.length];
+        const vals = pid === meId && lem.moved?.gave != null ? [lem.moved.gave] : to === meId && lem.moved?.got != null ? [lem.moved.got] : null;
+        return moneyFly(pid, to, 1, NF + k * 120, vals); }).join('');
+    }
+    if (nfx) { keepFx(nfx, NF + ids.length * 140 + MFLY_MS + 200); later.push(['coins', NF + 200]); }
   }
   // v0.61 Admin-Fähigkeit „Verprügeln“: Figur läuft hin, Prügelwolke, läuft zurück (bei allen)
   for (const pu of ctx.punches || []) {
@@ -1865,7 +1886,7 @@ export function renderGame(root, ctx) {
   // Ergebnis-Fenster: bleibt eine feste Zeit stehen (auch wenn es weitergeht), Tipp schließt.
   // Beim Schließen fliegen Karte und Geld los (siehe oben: Effekte mit Merker „ev“).
   if (evNew) {
-    local.res = { ev: JSON.parse(JSON.stringify(le)), at: Date.now(), dur: evWait(le.type, v.deck), quartet: local.qBadge === evSig };
+    local.res = { ev: JSON.parse(JSON.stringify(le)), at: Date.now(), dur: evWait(le.type, v.deck, le), quartet: local.qBadge === evSig };
     // „Tippen zum Schließen“: nur bei den ersten Ergebnis-Fenstern auf diesem Gerät
     let seen = 0; try { seen = Number(localStorage.getItem('kh_evseen')) || 0; localStorage.setItem('kh_evseen', String(seen + 1)); } catch { /* egal */ }
     local.res.hint = seen < 8;

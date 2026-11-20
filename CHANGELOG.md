@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.72.0 – Jeder Schein fliegt
+
+- [x] **Börsen-News bewegen Geld sichtbar:** Dividende – aus der Bank fliegt jedem ein Schein ins Geld (deiner offen). Steuerprüfung – von jedem Geld fliegt ein Schein in die Bank (nur deiner offen). Marktpanik – jeder Schein fliegt verdeckt zum linken Nachbarn (deinen gegebenen und bekommenen siehst du).
+- [x] **Kuhhandel-Geld landet beim Spieler:** Nachdem die Tiere gelaufen sind, fliegt das Angebot aus der Mitte zum Herausgeforderten und das Gegenangebot zum Herausforderer.
+- [x] **Flotter:** Wird ein Tier umsonst vergeben, bleibt das Ergebnis nur 2 s stehen (statt 3 s); das Tier läuft schon los, während das Fenster ausblendet; kürzere Ruhe vor dem nächsten Zug. Spart rund 1,5 s pro Versteigerung.
+- [x] **News-Titel passen in eine Zeile:** „Hype!“ / „Blase platzt!“ – Tier und neuer Wert stehen darunter.
+
 ## v0.71.0 – Merken statt anzeigen
 
 - [x] **Kein Zwischenstand mehr:** Der Schalter „📊 Zwischenstand“ im Warteraum und der Knopf im Menü sind weg – wer vorne liegt, muss man sich merken (wie bei Krone und 💸).
