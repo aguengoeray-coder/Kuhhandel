@@ -337,8 +337,8 @@ function renderStart() {
   const nav = items.length > 1 ? `<button type="button" class="hb-nav l" data-hb="prev" aria-label="Vorheriges Spiel" ${ui.homeIdx ? '' : 'disabled'}>‹</button>
     <button type="button" class="hb-nav r" data-hb="next" aria-label="Nächstes Spiel" ${ui.homeIdx < items.length - 1 ? '' : 'disabled'}>›</button>
     <span class="hb-count">${ui.homeIdx + 1} / ${items.length}</span>` : '';
-  const dock = [['play', '▶️', 'Spielen'], ['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
-    .map(([k, i, l]) => `<button type="button" class="hb-dk ${k === 'play' ? 'on' : ''}" data-dock="${k}"><i>${i}</i>${l}</button>`).join('');
+  const dock = [['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
+    .map(([k, i, l]) => `<button type="button" class="hb-dk" data-dock="${k}"><i>${i}</i>${l}</button>`).join('');
   // v0.73 (Alp): große Modus-Kacheln wie bei einem Konsolen-Spiel; erst nach dem Antippen kommen die Einstellungen
   const openN = (ui.games || []).length;
   const tiles = MODES.map((m) => `<button type="button" class="mode-tile m-${m.id}" data-mode="${m.id}" ${m.id !== 'join' && !me.name ? 'disabled' : ''}>
