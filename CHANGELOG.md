@@ -6,6 +6,7 @@
 - [x] **Aufteilen statt Versteigern:** Wer dran ist, tippt „Karte ansehen“ und sieht die oberste Karte als Einziger. Behalten → der andere bekommt die nächste; Abgeben → man bekommt selbst die nächste. Die Rückseite der nächsten Karte zeigt, ob ein Tier oder 💰 Geld kommt. 10 s Bedenkzeit, dann wird automatisch behalten. Der andere sieht „… schaut sich die Karte an“ mit wackelnder Karte.
 - [x] **Danach:** Tiere laufen zu ihrem Stapel, Geld fliegt (fremdes verdeckt) ins Geld.
 - [x] **Regeln zu zweit:** Geldscheine (ohne 0er) liegen im Stapel – aus „Geld im Stapel“, sonst der Standard-Satz; kein Esel-Bonus; Ratten und Spezialkarten werden einfach mit aufgeteilt; statt aufzuteilen darf man kuhhandeln. Ist der Stapel leer, gibt es nur noch Kuhhandel – verzichten beide nacheinander („Verzichten“), ist das Spiel vorbei. Wertung wie immer.
+- [x] **Quartett ohne Ehrenrunde:** Ist ein Quartett voll, laufen die Tiere nicht mehr eine Runde über den Tisch. Sobald sie auf dem Stapel angekommen sind, springen die 4 Tiere kurz in einer Reihe auf ihrem Platz, darüber „QUARTETT!“.
 - [x] **💬-Fenster scrollt flüssig:** Passiert im Hintergrund etwas, wird das Fenster nicht mehr neu aufgebaut – Wischen und Scrollen brechen nicht mehr ab, nur geänderte Abschnitte werden still ausgetauscht.
 - [x] Startseite: Der Knopf „Spielen“ unten ist weg – gespielt wird über die Modus-Kacheln.
 - [x] Nur Klassisch (kein Turbo/Börsen-Chaos zu zweit). Spielstart-Auftritt „DUELL ZU ZWEIT!“. Debug: Testspiel zu zweit über das Klassisch-Fenster.

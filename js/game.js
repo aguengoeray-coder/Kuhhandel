@@ -1693,7 +1693,9 @@ export function renderGame(root, ctx) {
     const [qp, qa] = added.length ? added[0].split('|') : [];
     if (added.length) { local.qSound = true; if (qp === meId) local.qMine = true; }
     if (added.length && evNew && receiverOf(le) === qp && le.animal === qa) local.qBadge = `${evSig}`; // Quartett steht als Abzeichen im Ergebnis-Fenster
-    if (added.length) { local.poloNext = { pid: qp, animal: qa, delay: evNew ? evDelay + 600 : 500 }; if (qp) moodMark(qp, 'love', Date.now() + (evNew ? evDelay + 600 : 500), 3400); }
+    // v0.77 (Alp): erst wenn die Tiere angekommen sind (Lauf startet evDelay − WALK_OVERLAP und dauert FLY_MS)
+    const qd = evNew ? Math.max(0, evDelay - WALK_OVERLAP) + FLY_MS + 150 : 500;
+    if (added.length) { local.poloNext = { pid: qp, animal: qa, delay: qd }; if (qp) moodMark(qp, 'love', Date.now() + qd, 3000); }
     else if (added.length) {
       const [pid, animal] = added[0].split('|');
       const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
@@ -2069,7 +2071,9 @@ export function renderGame(root, ctx) {
   if (local.poloNext) {
     const { pid, animal, delay } = local.poloNext; local.poloNext = null;
     const pt = `@stall:${pid}:${animal}`; // v0.70: vom eigenen Stapel los und wieder zurück
-    keepFx([0, 1, 2, 3].map((k) => `<div class="polo" data-route="${esc(pt)};@cl;@cr;${esc(pt)}" data-offs="0,.3,.7,1" data-dur="3000" data-delay="${delay + k * 190}">${beast(animal, 'dance')}</div>`).join(''), delay + 3800);
+    // v0.77 (Alp): keine Runde mehr über den Tisch – die 4 Tiere springen kurz in einer Reihe auf ihrem Stapel und jubeln
+    keepFx([0, 1, 2, 3].map((k) => `<div class="polo qhop" data-route="${esc(pt)};${esc(pt)}" data-dur="1800" data-delay="${delay}" style="--k:${k};--qd:${delay + k * 110}ms">${beast(animal, 'dance')}</div>`).join('')
+      + `<div class="qbadge" data-aim-from="${esc(pt)}" data-aim-to="${esc(pt)}" style="--tx:0px;--ty:0px;animation-delay:${delay + 200}ms" aria-hidden="true">QUARTETT!</div>`, delay + 2200);
   }
 
   const closeRes = () => {

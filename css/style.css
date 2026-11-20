@@ -3715,3 +3715,10 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .divstrip { position: absolute; z-index: 40; left: 50%; top: 34%; translate: -50% -50%; padding: 6px 16px; border-radius: 999px; background: rgba(0,0,0,.72); color: #fff; font-family: var(--font-head); font-size: 17px; white-space: nowrap; pointer-events: none; animation: divstrip 1.5s ease-out both; }
 @keyframes divstrip { 0% { opacity: 0; scale: .8; } 15%, 75% { opacity: 1; scale: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .divcard.wobble .deck, .divcard.flip > *, .divstrip { animation: none; } }
+
+/* v0.77 Quartett: die 4 Tiere springen in einer Reihe auf ihrem Stapel (statt einer Runde über den Tisch) */
+.polo.qhop > .beast { translate: calc((var(--k) - 1.5) * 24px) 0; scale: .62; opacity: 0; animation: qhop 1.8s cubic-bezier(.3,1.4,.5,1) var(--qd, 0ms) 1 both; }
+@keyframes qhop { 0% { opacity: 0; transform: translateY(10px) scale(.6); } 12% { opacity: 1; transform: none; } 25% { transform: translateY(-16px); } 38% { transform: none; } 52% { transform: translateY(-12px); } 65% { transform: none; } 88% { opacity: 1; } 100% { opacity: 0; transform: translateY(-4px); } }
+.qbadge { position: absolute; z-index: 38; translate: -50% -50%; margin-top: -46px; padding: 3px 10px; border-radius: 999px; background: #FFD34E; color: #2B2B2B; border: 2.5px solid #2B2B2B; font: 900 13px/1 var(--font-head); letter-spacing: .04em; pointer-events: none; opacity: 0; animation: qbadge 1.6s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes qbadge { 0% { opacity: 0; scale: .4; } 18% { opacity: 1; scale: 1.15; } 30%, 80% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: .9; } }
+@media (prefers-reduced-motion: reduce) { .polo.qhop > .beast, .qbadge { animation-duration: 1ms; } }
