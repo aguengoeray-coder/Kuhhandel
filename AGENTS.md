@@ -46,7 +46,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `css/style.css` | Gestaltung |
 | `js/shop.js`, `css/shop.css` | Shop (Reiter Avatare/Sprüche, Kaufen/Auswählen) |
 | `js/shopavatars.js` | 14 Shop-Avatare als SVG: runder Kopf (Tisch) + Ganzkörper `shopAvatarFull` (Shop, Startseite) |
-| `js/quartets.js` | Quartett-Show: eigene Szene je Tier für alle (`quartetShow`, `QSHOW_MS`) |
+| `js/quartets.js` | Quartett-Show: eigene Szene je Tier für alle (`quartetShow`, `QSHOW_MS`); Rattenkönig-Show + Rattenmütze (`ratKingShow`, `ratHat`) |
 | `js/modes.js` | Startbildschirm: Spielmodus-Kacheln (Klassisch, Turbo, Börsen-Chaos, Beitreten) mit eigenen Bildern |
 | `js/whatsnew.js` | „Was ist neu?“ für Spieler – oberster Eintrag = `APP_VERSION` (Check prüft das) |
 | `e2e/` | Browser-Tests (Playwright): alle Ansichten × 4 Handygrößen, einheitliche Größen, komplette Partien |
@@ -72,6 +72,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 - Startgeld: 2× 0, 3× 10, 1× 20, 1× 50 = 100 Taler. Fremdes Geld ist verdeckt (nur Kartenanzahl sichtbar).
 - Esel-Bonus beim Aufdecken für alle: 50 / 100 / 200 / 500.
 - Versteigerung auf Zeit: 3 s Karte ansehen, dann 10 s, nach jedem Gebot wieder 10 s (Tempo der Runde im Warteraum: Denkzeiten – Versteigerung, Aufteilen, Kuhhandel-Zeit – ×1,5 / ×1 / ×0,7; Info-Fenster – Ansehen, Ergebnisse, VS, News, Quartett-Show – ×1,3 / ×1 / ×0,85, „Kann nicht zahlen“ nie unter 5 s; Spezialkarte und Bewegungen immer gleich). Gebotsknöpfe +10/+20/+50/+100 (mehr bieten = mehrmals tippen).
+  **„Warte, warte, warte!“:** jeder Bieter einmal pro Versteigerung → Uhr + Versteigerungszeit der Runde (ab dem zweiten Drücken halbe Zeit); ebenso einmal pro Kuhhandel (Herausgeforderter, nur mit Kuhhandel-Zeit) und einmal pro Karte beim Aufteilen zu zweit.
   Erst nach Ablauf entscheidet der Auktionator: Zuschlag an den Höchstbietenden oder selbst zum Höchstgebot kaufen.
 - **Kein Wechselgeld.** Wer nicht zahlen kann, zeigt alle Scheine offen; Auktion startet neu, er darf höchstens altes Gebot − 10 bieten.
 - Kuhhandel: verdecktes Angebot; annehmen (Geld nehmen, Tier abgeben) oder Gegenangebot.
