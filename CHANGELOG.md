@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.82.0 – Geheimaufträge
+
+- [x] **🎯 Geheimaufträge** (Schalter im Warteraum und im Modus-Fenster, mit allen Spielarten): Jeder bekommt zu Beginn verdeckt einen eigenen Auftrag – z. B. „Sammle das Esel-Quartett“ (+400), „Habe am Ende mindestens 3 Quartette“ (+500), „Gewinne mindestens 3 Kuhhandel“ (+400), „Ersteigere mindestens 4 Tiere“, „Kaufe ein Tier für mindestens 300“, „Habe am Ende mindestens 300 Taler“, „Hole dir eine Spezialkarte“, „Nimm 2× die Ratte“ (je +300/+400). Zu zweit gibt es nur passende Aufträge.
+- [x] Am Anfang zeigt ein Zettel deinen Auftrag, danach jederzeit über 🎯 oben links – mit Fortschrittsbalken. Die anderen siehst du nicht.
+- [x] Am Ende: Bonus in der Wertung (🎯 in der Abrechnung), beim Treppchen steht bei jedem Spieler sein Auftrag und ob er ihn geschafft hat.
+
 ## v0.81.0 – Börsen-Chaos: Kurse sofort + Blindmarkt
 
 - [x] **Kurse wirken sofort:** Auf allen Tierkarten im Börsen-Chaos (Versteigerung, Auslage, Kuhhandel, Mitspieler) steht der aktuelle Kurs – alter Wert durchgestrichen, neuer Wert grün (gestiegen) oder rot (gefallen).

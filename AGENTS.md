@@ -95,6 +95,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   Hektik (nächste 3 Versteigerungen halbe Zeit, bei Normal 5 s), **Blindmarkt** (nächste 3 Versteigerungen verdeckt, auch für den Auktionator; Aufdecken beim Zuschlag, Esel-Bonus erst dann), **Zwangsversteigerung** (2×, Handkarte, verdeckt; aufgedeckt → auf die Hand + nochmal aufdecken; später *statt* des Zuges ausspielen: Tier eines Mitspielers wird versteigert, Besitzer muss verkaufen und bekommt das Geld, ohne Gebot behält er es; geschützt: fertige Quartette, Ratten, Spieler ohne Geld; kein Mindestgebot; mehrfach pfändbar), **Einspruch** (Handkarte, wehrt eine Pfändung automatisch ab). Wertung mit aktuellen Kursen; Spezialkarte (250) und Esel-Bonus unverändert.
 - Wertung: (Summe der Quartettwerte + 250 je passender Spezialkarte) × Anzahl der Quartette, danach + 250 je Spezialkarte
   ohne zählendes Quartett.
+- **Geheimaufträge** (Schalter `missions`, alle Spielarten): jeder bekommt zu Beginn verdeckt einen Auftrag (`MISSIONS` in `src/engine.js`, je Spieler verschieden, zu zweit ohne Versteigerungs-Aufträge); nur der eigene ist sichtbar, am Ende alle; erfüllt → +300 … +500 Punkte zur Wertung.
 
 ## Design
 

@@ -2,7 +2,7 @@
 import { shopAvatar, shopAvatarFull } from './shopavatars.js';
 import {
   ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
-  viewFor, possibleTrades, scores, currentPlayer,
+  viewFor, possibleTrades, scores, currentPlayer, missionStatus,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
@@ -132,7 +132,7 @@ function playerChips(p, tradeable = new Set(), max = CHIP_MAX) {
 }
 
 // Rechnung für die Wertung, z. B. „(800 + 250★ + 1000) × 2 + 250★ = 4350“
-export function scoreFormula(p, blocked = null, withMoney = false) {
+export function scoreFormula(p, blocked = null, withMoney = false, mission = null) {
   const specials = p.specials || [];
   const quartets = ANIMALS.filter((a) => p.animals[a.id] === 4 && a.id !== blocked);
   const parts = [];
@@ -142,6 +142,7 @@ export function scoreFormula(p, blocked = null, withMoney = false) {
   let text = quartets.length ? `(${parts.join(' + ')}) × ${quartets.length}` : '';
   if (loose) text += `${text ? ' + ' : ''}${loose > 1 ? `${loose} × ` : ''}${SPECIAL_VALUE}★`;
   if (withMoney && r.money) text += `${text ? ' + ' : ''}${r.money} Geld`;
+  if (mission && mission.done) return `${text || 'keine Quartette'} + ${mission.bonus}🎯 = ${total + mission.bonus}`; // v0.82 Geheimauftrag
   return `${text || 'keine Quartette'} = ${total}`;
 }
 
@@ -742,6 +743,14 @@ export function renderGame(root, ctx) {
   // Kennung aus Nummer und Art: zwei Ereignisse mit derselben Nummer (z. B. „umsonst“ und danach Geldschein) gelten trotzdem beide als neu
   const evN = v.lastEvent ? `${v.lastEvent.n}|${v.lastEvent.type}` : null;
   const evFresh = fresh && evN != null && local.seenEvN !== evN;
+  // v0.82 Geheimauftrag: 🎯 oben links, am Anfang einmal von selbst offen (6 s), Antippen zeigt Auftrag und Stand
+  const myMission = v.missions && v.missions[meId] ? missionStatus(v, meId) : null;
+  if (myMission && local.missAuto === undefined) { local.missAuto = v.log.length <= 4 ? Date.now() + 6500 : 0; if (local.missAuto) { local.missOpen = true; later.push(['bell', 600]); } }
+  if (local.missAuto && Date.now() > local.missAuto && local.missOpen === true) { local.missOpen = false; local.missAuto = 0; }
+  const missPop = myMission && local.missOpen ? `<div class="misspop" role="dialog" aria-label="Dein Geheimauftrag"><span class="mptag">🎯 Dein Geheimauftrag <small>nur du siehst ihn</small></span>
+    <b>${esc(myMission.text)}</b>
+    <div class="mpbar"><i style="width:${Math.round(Math.min(1, myMission.got / myMission.need) * 100)}%"></i></div>
+    <span class="mpstate">${myMission.done ? '✓ Schon erfüllt' : myMission.need > 4 ? `Stand: ${myMission.got}` : `Stand: ${myMission.got} von ${myMission.need}`} · Bonus <b>+${myMission.bonus}</b> Punkte am Ende</span></div>` : '';
   // v0.81 Blindmarkt: beim Zuschlag dreht sich die verdeckte Karte für alle um
   { const br = v.blindReveal; const bsig = br ? `${br.n}|${br.animal}` : null;
     if (bsig && local.blindSig !== bsig) { const first = local.blindSig === undefined && !fresh; local.blindSig = bsig;
@@ -1563,7 +1572,8 @@ export function renderGame(root, ctx) {
       <button type="button" class="round" data-a="menu" aria-label="Menü">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
       </button>
-      <button type="button" class="round rinfo" data-a="modal" data-v="rules:${isDuo(state) ? 'duo' : isBoerse(state) ? 'boerse' : isTurbo(state) ? 'turbo' : 'classic'}" aria-label="Regeln dieser Spielart">i</button>
+      ${v.missions && v.missions[meId] ? `<button type="button" class="round rmiss ${local.missOpen ? 'on' : ''}" data-a="missOpen" aria-label="Dein Geheimauftrag">🎯</button>` : ''}
+      <button type="button" class="round rinfo" data-a="modal" data-v="rules:${isDuo(state) ? 'duo' : isBoerse(state) ? 'boerse' : isTurbo(state) ? 'turbo' : 'classic'}" aria-label="Regeln dieser Spielart">i</button>${missPop}
     </div>
     ${local.menu ? `<div class="menu">
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="sound">🔊 Ton: ${ctx.soundName || (ctx.sound ? 'an' : 'aus')}</button>
@@ -1623,7 +1633,7 @@ export function renderGame(root, ctx) {
 
   // Blockieren läuft jetzt auf dem Tisch (siehe oben)
 
-  const iconsOf = (r) => `${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}${r.money ? `<span class="cimoney" title="übriges Geld zählt mit">+${r.money}</span>` : ''}`;
+  const iconsOf = (r) => `${r.mission && r.mission.done ? '<span class="ci mi" title="Geheimauftrag erfüllt">🎯</span>' : ''}${r.quartets.map((id) => `<span class="ci" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}">${art(id)}</span>`).join('')}${r.blocked ? `<span class="ci blocked" style="--a:${ANIMAL_COLORS[r.blocked]}" title="${aname(r.blocked)} – blockiert">${art(r.blocked)}</span>` : ''}${(r.specials || []).map((id) => `<span class="ci sp" style="--a:${ANIMAL_COLORS[id]}" title="${aname(id)}-Spezialkarte">${art(id)}${STAR}</span>`).join('')}${r.rats ? `<span class="ci" style="--a:${ANIMAL_COLORS[RAT]}" title="${r.rats}× Ratte">${art(RAT)}</span>` : ''}${r.money ? `<span class="cimoney" title="übriges Geld zählt mit">+${r.money}</span>` : ''}`;
   // Börsenbericht: die Momente des Spiels im Stil eines Kurszettels (auch zum Teilen in der Gruppe)
   const reportList = () => {
     const list = awards(state);
@@ -1730,7 +1740,7 @@ export function renderGame(root, ctx) {
         return ctx.myRewards.length ? `<div class="pdubs">${ctx.myRewards.map((x) => `<span>+${x.amount} ${lbl[x.kind] || ''}</span>`).join('')}<b>= +${tot} <i class="dub" aria-label="Dublonen"></i></b></div>`
           : '<div class="pdubs none" title="Zählt erst ab 3 Spielern, 6 Minuten und 25 Zügen; höchstens 60 am Tag">Keine Dublonen<small>Partie zu kurz/klein oder Tageslimit</small></div>';
       })() : ''}
-      <div class="sform2">${openRow ? `${esc(openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(state.players[idxOf(openRow.id)], openRow.blocked, !!state.settings?.moneyCounts)}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}` : ''}</div>
+      <div class="sform2">${openRow ? `${esc(openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(state.players[idxOf(openRow.id)], openRow.blocked, !!state.settings?.moneyCounts, openRow.mission)}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}${openRow.mission ? `<span class="sfmiss">🎯 ${esc(openRow.mission.text)} – ${openRow.mission.done ? `erfüllt, +${openRow.mission.bonus}` : `nicht geschafft${openRow.mission.need <= 4 ? ` (${openRow.mission.got}/${openRow.mission.need})` : ''}`}</span>` : ''}` : ''}</div>
       <div class="endbtns">
         <button type="button" class="pill pill-white" data-a="recap">📈 Börsenbericht</button>
         <button type="button" class="pill pill-red ${ctx.rematchId ? 'pulse' : ''}" data-a="rematch">${ctx.rematchId ? 'Revanche läuft – mitmachen' : 'Revanche'}</button>
@@ -1741,6 +1751,7 @@ export function renderGame(root, ctx) {
 
   H.rematch = () => ctx.onRematch();
   H.recap = () => { local.recap = !local.recap; ctx.rerender(); };
+  H.missOpen = () => { local.missOpen = !local.missOpen; local.missAuto = 0; ctx.rerender(); };
   H.tallySkip = () => { local.tallySkip = true; ctx.rerender(); };
   H.scoreOpen = (id) => { local.scoreOpen = local.scoreOpen === id ? null : id; ctx.rerender(); };
 
@@ -1751,6 +1762,7 @@ export function renderGame(root, ctx) {
   const keepFx = (html, dur, tag = null) => { if (html) local.fx.push({ html, at: Date.now(), until: Date.now() + dur, tag }); if (local.fx.length > 14) local.fx.splice(0, local.fx.length - 14); };
   if (local.waitQ) { keepFx(local.waitQ, WAITPOP_MS, 'waitpop'); local.waitQ = null; }
   if (local.kingQ) { keepFx(local.kingQ.html, local.kingQ.dur, 'qshow'); local.kingQ = null; }
+  if (local.missAuto && local.missOpen) wakeLocal(local.missAuto + 20); // v0.82 Geheimauftrag schließt sich am Anfang von selbst
   if (local.blindQ) { keepFx(local.blindQ, Math.round(2600 * INFO_F), 'blindrev'); local.blindQ = null; } // v0.79 „Warte, warte, warte!“
   const le = v.lastEvent;
   // Ergebnis-Fenster (ein Design für alles): Versteigerung, Spezialkarte, Kuhhandel.

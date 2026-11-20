@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.81.0';
+export const APP_VERSION = '0.82.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -370,7 +370,7 @@ function renderStart() {
     if (k === 'moneyEdit') { ui.mpMoney = true; return render(); }
     if (k === 'info') return openModal(`rules:${(ui.modeOpts || {}).duo ? 'duo' : ui.mode}`); // v0.80: ⓘ erklärt die Spielart
     if (k === 'moneyDone') { ui.mpMoney = false; return render(); }
-    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }
+    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}) }); }
     if (k === 'pin') { ui.mode = null; return openModal('rejoin'); }
     ui.modeOpts = { ...(ui.modeOpts || {}), [k]: !(ui.modeOpts || {})[k] }; render();
   }));
@@ -392,7 +392,7 @@ function renderStart() {
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-mptest]').forEach((b) => b.addEventListener('click', () => { // v0.74 Debug: Testspiel mit diesem Modus und diesen Einstellungen
     const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null;
-    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }));
+    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}) }); }));
   app.querySelectorAll('[data-hb]').forEach((b) => b.addEventListener('click', () => { ui.homeIdx = (ui.homeIdx || 0) + (b.dataset.hb === 'next' ? 1 : -1); render(); }));
   app.querySelectorAll('[data-dock]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.dock;
@@ -446,6 +446,7 @@ function modePanel(id) {
       ['money', '💵', 'Geld im Stapel', o.money ? `${mcnt} Scheine · ${msum} Taler` : 'Extra-Scheine zwischen den Tieren'],
       ['tradeTimer', '⏱', 'Kuhhandel-Zeit', `${tradeTimerSec({ settings: { ...m.settings, tradeTimer: 20, tempo: o.tempo } })} s pro Angebot`],
       ['moneyCounts', '💰', 'Geld zählt', 'Taler am Ende mitwerten'],
+      ['missions', '🎯', 'Geheimaufträge', 'Jeder bekommt einen Auftrag – Bonus am Ende'],
     ];
     right = `<div class="mp-hd"><b>${esc(m.name)}</b><span>${esc(m.tag)} · ${o.duo ? '2 Spieler' : esc(m.players || '3–4 Spieler')}</span><button type="button" class="mp-info" data-mp="info" aria-label="Regeln dieser Spielart">i</button></div>
       <div class="mp-facts">${(m.facts || []).slice(0, 3).map((f) => `<i>${esc(f)}</i>`).join('')}</div>
@@ -515,7 +516,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (14 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (14 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt am Ende'], ['missions', '🎯 Geheimaufträge']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
       ${tempoSeg(g.state?.settings?.tempo, isHost, 'data-tempo')}
     </div>
@@ -1880,7 +1881,7 @@ function rulesBody(tab = 'classic') {
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
   <b>👑 Rattenkönig:</b> Am Ende hat einer alle 4 Ratten – er bekommt die Rattenmütze und wählt eines seiner Quartette, das nicht zählt.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Erst 3 s „Zeig Batzen!“ (jeder darf drücken – dann liegen alle Geldstapel mit Anzahl kurz offen), dann zählt für alle außer dem Aufdecker ein Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
-  <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.</p>
+  <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.<br><b>🎯 Geheimaufträge:</b> Jeder bekommt zu Beginn verdeckt einen Auftrag (z. B. „Gewinne mindestens 3 Kuhhandel“ oder „Sammle das Esel-Quartett“) – nur du siehst deinen (🎯 oben links, mit Stand). Am Ende werden alle aufgedeckt; wer seinen erfüllt, bekommt 300–500 Punkte dazu.</p>
   <h3>Knöpfe</h3><p class="rlegend"><span class="rl rl-get">Grün</span> du bekommst etwas (+ ⬇) · <span class="rl rl-pay">Orange</span> du zahlst (− ⬆) · <span class="rl rl-move">Rot</span> Karte aufdecken · <span class="rl rl-trade">Lila</span> Kuhhandel · <span class="rl rl-neutral">Weiß</span> neutral / zurück. Gestrichelt = gerade gesperrt. Der Knopf, der gerade erwartet wird, leuchtet nach ein paar Sekunden sanft.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
   return `<h2>Spielregeln</h2>${tabs}<div class="rules">${body}</div>`;
