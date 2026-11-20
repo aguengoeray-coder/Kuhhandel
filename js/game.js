@@ -217,7 +217,10 @@ export const CALM_MS = 2500;
 const EV_WAIT = { auction_won: 3000, special_won: 3500, trade: 4800, rat_taken: 3500 }; // Kuhhandel: inkl. ~1 s Aufdecken
 // Stapel leer (nur noch Kuhhandel): Ergebnis kürzer zeigen, damit es flott weitergeht
 // v0.72 Tempo: „umsonst“ (kein Geld fließt) – Fenster nur 2 s
-export const evWait = (type, deckLeft, le = null) => (type === 'trade' && deckLeft === 0 ? 3800 : type === 'auction_won' && le && !(le.amount > 0) ? 2000 : EV_WAIT[type]);
+// v0.76 (Alp): schneller Kuhhandel – laufen die Einsätze noch in die Mitte, wartet das Ergebnis, bis sie dort sind (TRADE_PRE = Vorlauf in ms je Ereignis)
+const TRADE_PRE = new Map();
+const tradePre = (le) => (le && le.type === 'trade' ? TRADE_PRE.get(le.n) || 0 : 0);
+export const evWait = (type, deckLeft, le = null) => (type === 'trade' && deckLeft === 0 ? 3800 : type === 'auction_won' && le && !(le.amount > 0) ? 2000 : EV_WAIT[type]) + tradePre(le);
 // Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
 // Ablauf nach einem Ergebnis – EIN Plan, aus den echten Flügen berechnet (nicht geschätzt):
 //   Fenster steht (W) → Tier fliegt → Geld fliegt (Kuhhandel: erst Angebot hin, wenn gelandet Gegenangebot zurück)
@@ -499,7 +502,7 @@ function encounterHtml({ parts, title, badge = '', center = '', vs = 'VS', sub =
     return `<div class="eiband d-${dirs[i]}" style="--c:${p.color};clip-path:${poly};--k:${i}"><i class="eilines"></i></div>
       <div class="eiwho d-${dirs[i]}" style="left:${cx}%;--k:${i};--c:${p.color}"><div class="eifig">${p.fig}</div><b class="einame">${esc(p.name)}</b>${p.tag ? `<small class="eitag">„${esc(p.tag)}“</small>` : ''}</div>`;
   }).join('');
-  return `<div class="eintro n${n} ${vs.length > 5 ? 'longvs' : ''} ${short ? 'short' : ''} ${dark ? 'dark' : ''} ${rival ? 'rival' : ''}" data-a="introSkip" role="button" aria-label="${esc(title)} – Tippen überspringt" style="--dur:${introDur({ short, ms })}ms">
+  return `<div class="eintro n${n} ${vs.length > 5 ? 'longvs' : ''} ${short ? 'short' : ''} ${dark ? 'dark' : ''} ${rival ? 'rival' : ''}" role="img" aria-label="${esc(title)}" style="--dur:${introDur({ short, ms })}ms">
     ${bands}<i class="eiflash"></i>
     <div class="eititle"><b>${esc(title)}</b>${badge ? `<span class="eibadge">${esc(badge)}</span>` : ''}</div>
     <div class="eivs">${rival ? '<i class="eiflame"></i>' : ''}<b>${esc(vs)}</b>${center}${sub ? `<small class="eisub">${esc(sub)}</small>` : ''}</div></div>`;
@@ -682,6 +685,7 @@ export function renderGame(root, ctx) {
   const evN = v.lastEvent ? `${v.lastEvent.n}|${v.lastEvent.type}` : null;
   const evFresh = fresh && evN != null && local.seenEvN !== evN;
   if (evN != null) local.seenEvN = evN;
+  if (evFresh && v.lastEvent?.type === 'trade' && local.potLand && local.potLand > Date.now()) { TRADE_PRE.set(v.lastEvent.n, local.potLand - Date.now() + 200); if (TRADE_PRE.size > 20) TRADE_PRE.delete(TRADE_PRE.keys().next().value); }
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
   if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = EV_WAIT[v.lastEvent.type] ? choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).calm : CALM_MS; local.calmUntil = Date.now() + local.calmDur; }
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
@@ -1628,7 +1632,7 @@ export function renderGame(root, ctx) {
   if (evSig && local.resSig !== evSig) { local.resSig = evSig; evNew = !!(evFresh || ctx.demoPop); }
   // v0.75 (Alp): schneller Kuhhandel – laufen die Einsätze noch in die Mitte, verschwinden sie jetzt dort (kein Hin und Her);
   // aus der Mitte laufen danach alle zum Gewinner
-  if (evNew && le.type === 'trade' && local.fx.some((f) => f.tag === 'potin')) { local.fx = local.fx.filter((f) => f.tag !== 'potin'); local.potLand = 0; }
+  // (v0.76: die Einsätze laufen fertig in die Mitte; das Ergebnis wartet so lange – siehe TRADE_PRE)
   const evDelay = evNew ? evWait(le.type, v.deck, le) : 0;
   const quartets = [];
   v.players.forEach((p) => Object.entries(p.animals).forEach(([id, n]) => { if (n === 4) quartets.push(`${p.id}|${id}`); }));
@@ -1903,7 +1907,8 @@ export function renderGame(root, ctx) {
   // Ergebnis-Fenster: bleibt eine feste Zeit stehen (auch wenn es weitergeht), Tipp schließt.
   // Beim Schließen fliegen Karte und Geld los (siehe oben: Effekte mit Merker „ev“).
   if (evNew) {
-    local.res = { ev: JSON.parse(JSON.stringify(le)), at: Date.now(), dur: evWait(le.type, v.deck, le), quartet: local.qBadge === evSig };
+    const pre = tradePre(le);
+    local.res = { ev: JSON.parse(JSON.stringify(le)), at: Date.now() + pre, dur: evWait(le.type, v.deck, le) - pre, quartet: local.qBadge === evSig };
     // „Tippen zum Schließen“: nur bei den ersten Ergebnis-Fenstern auf diesem Gerät
     let seen = 0; try { seen = Number(localStorage.getItem('kh_evseen')) || 0; localStorage.setItem('kh_evseen', String(seen + 1)); } catch { /* egal */ }
     local.res.hint = seen < 8;
@@ -1923,7 +1928,7 @@ export function renderGame(root, ctx) {
     if (sfx) { sounds.push('flip'); later.push(['flip', 140]); later.push(['gavel', opts.short ? 320 : 700]); if (!opts.short) feel('heavy'); }
     return dur;
   };
-  H.introSkip = () => { local.fx = local.fx.filter((f) => f.tag !== 'intro'); ctx.rerender(); };
+  H.introSkip = () => {}; // v0.76 (Alp): VS-Auftritte lassen sich nicht mehr wegtippen
   // Kuhhandel/Rattenhandel startet
   if (state.phase === 'trade' && v.trade && entered) {
     const t = v.trade; const pk = pairKey(t.challenger, t.target);
@@ -2012,7 +2017,8 @@ export function renderGame(root, ctx) {
   };
   // Neue Runde beginnt (aufdecken, Kuhhandel …): Fenster macht Platz
   if (local.res && !evNew && entered && ['auction', 'special', 'rat', 'trade', 'payment', 'block'].includes(state.phase)) closeRes();
-  if (local.res) {
+  if (local.res && Date.now() < local.res.at) wakeLocal(local.res.at); // v0.76: Ergebnis kommt erst, wenn die Tiere in der Mitte stehen
+  if (local.res && Date.now() >= local.res.at) {
     const el = Date.now() - local.res.at;
     if (el < local.res.dur) {
       const e = local.res.ev;
