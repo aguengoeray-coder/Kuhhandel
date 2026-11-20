@@ -9,13 +9,13 @@ import { audio, playSound, setVolume } from './sounds.js';
 import { art } from './animals.js';
 import { MODES, modeArt } from './modes.js';
 import { haptic } from './haptics.js';
-import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM, SCENE_ITEM } from './shop.js';
+import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM, SCENE_ITEM, SHOP_EMOTES } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.79.0';
+export const APP_VERSION = '0.80.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1281,6 +1281,19 @@ async function openShop() {
   });
 }
 
+// v0.80: Shop-Figur wechseln oder ablegen (id = null → zurück zum Gratis-Tier)
+async function setMyAvatar(id, animal = null) {
+  if (modal) modal.pfErr = '';
+  if (!DEMO) {
+    const { error } = await sb.rpc('shop_set_avatar', { p_avatar_id: id });
+    if (error) { if (modal) modal.pfErr = id ? 'Die Figur konnte nicht gewählt werden.' : 'Ablegen klappt erst nach dem nächsten Datenbank-Update – gleich ist es da.'; return render(); }
+  }
+  shopMe.active = id;
+  if (id) shopAvatars.set(me.id, id); else shopAvatars.delete(me.id);
+  if (animal) return saveProfile({ animal });
+  render();
+}
+
 async function saveProfile(change) {
   if (!profiles.has(me.id) && sb && !DEMO) {
     const { data } = await sb.from('profiles').select('id, name, animal, color').eq('id', me.id).maybeSingle();
@@ -1748,6 +1761,61 @@ async function onRematch() {
 
 // ---------- Fenster: Regeln, Installieren, Wiedereinstieg ----------
 
+// v0.80 (Alp) „Mein Profil“: Figur, alles Gekaufte, Kurz-Statistik und Konto an einem Ort
+function profileBody() {
+  const pr = profiles.get(me.id) || {};
+  const shopOk = shopMe.state === 'ok';
+  const active = shopOk ? shopMe.active : shopAvatars.get(me.id) || null;
+  const activeItem = SHOP_AVATARS.find((a) => a.id === active);
+  const tab = modal.tab || 'figur';
+  const rows = modal.mine;
+  const games = rows ? rows.length : null; const wins = rows ? rows.filter((r) => r.won).length : null; const best = rows && rows.length ? Math.max(...rows.map((r) => r.score)) : null;
+  const big = activeItem ? `<div class="pf-big shop">${shopAvatarFull(activeItem.id)}</div>` : `<div class="pf-big">${avatarHtml(me.id, me.name)}</div>`;
+  const ownedAv = SHOP_AVATARS.filter((a) => shopMe.owned.has(a.id));
+  const ownedSay = SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id));
+  const ownedEmo = SHOP_EMOTES.filter((x) => shopMe.owned.has(x.id) || ui.isAdmin);
+  const custom = shopMe.owned.has(SHOP_CUSTOM.id) ? (shopMe.custom || '(noch kein Text)') : null;
+  const tabs = [['figur', '🧍 Figur'], ['sachen', '💬 Sprüche & Emotes'], ['konto', '🔑 Konto']];
+  let main = '';
+  if (tab === 'figur') {
+    main = `<h3 class="ph">Meine Figuren <small>${ownedAv.length} gekauft</small></h3>
+      ${ownedAv.length ? `<div class="pf-avs">${ownedAv.map((a) => `<button type="button" class="pf-av ${a.id === active ? 'on' : ''}" data-m="pfAv" data-v="${esc(a.id)}" aria-pressed="${a.id === active}"><span class="pf-avart">${shopAvatarFull(a.id)}</span><b>${esc(a.name)}</b>${a.id === active ? '<em>✓ trägst du</em>' : ''}</button>`).join('')}</div>` : '<p class="mtext">Noch keine – im Shop gibt es 14 Figuren.</p>'}
+      <h3 class="ph">Gratis-Tiere ${active ? '<small>antippen = Shop-Figur ablegen</small>' : ''}</h3>
+      <div class="pick-animals">${ANIMALS.map((a) => `<button type="button" class="pa ${!active && pr.animal === a.id ? 'on' : ''}" data-m="animal" data-v="${a.id}" aria-label="${a.name}" style="--bg:${esc(pr.color || '#7FA88A')}">${art(a.id)}</button>`).join('')}</div>
+      ${!active ? `<h3 class="ph">Farbe</h3>
+      <div class="pick-colors">${PROFILE_COLORS.map((c) => `<button type="button" class="pc ${pr.color === c ? 'on' : ''}" data-m="color" data-v="${c}" aria-label="Farbe" style="background:${c}"></button>`).join('')}</div>` : ''}`;
+  } else if (tab === 'sachen') {
+    main = `<h3 class="ph">Sprüche <small>${ownedSay.length + (custom ? 1 : 0)} gekauft</small></h3>
+      ${custom || ownedSay.length ? `<div class="pf-says">${custom ? `<span class="pf-say own">✏️ ${esc(custom)}</span>` : ''}${ownedSay.map((x) => `<span class="pf-say">${esc(x.text)}</span>`).join('')}</div>` : '<p class="mtext">Noch keine Sprüche – zwei gibt es im Shop gratis.</p>'}
+      <h3 class="ph">Emotes <small>${ui.isAdmin ? 'als Admin alle' : `${ownedEmo.length} gekauft`}</small></h3>
+      ${ownedEmo.length ? `<div class="pf-emos">${ownedEmo.map((x) => `<div class="pf-emo"><i>${x.icon}</i><b>${esc(x.name)}</b><small>${esc(x.text)}</small></div>`).join('')}</div>` : '<p class="mtext">Noch keine Emotes.</p>'}
+      <p class="mtext pf-hint">Sprüche und Emotes setzt du im Spiel ein: deine Figur antippen (💬).</p>`;
+  } else {
+    main = `<h3 class="ph">Passwort ändern</h3>
+      <form id="pw-form" class="pwform">
+        <input name="pw" type="password" minlength="6" autocomplete="new-password" placeholder="Neues Passwort (mind. 6 Zeichen)" required>
+        <button type="submit" class="pill pill-white pill-small">Speichern</button>
+      </form>
+      ${modal.pwMsg ? `<div class="${modal.pwOk ? 'okmsg' : 'error'}" role="status">${esc(modal.pwMsg)}</div>` : ''}`;
+  }
+  return `<h2>Mein Profil</h2>
+    <div class="prof2">
+      <aside class="pf-side">
+        ${big}
+        <strong class="pf-name">${esc(me.name)}</strong>
+        <span class="pf-title">${activeItem ? esc(activeItem.name) : `Gratis-Tier · ${esc(ANIMAL_BY_ID[pr.animal]?.name || '–')}`}</span>
+        ${shopOk ? `<span class="pf-dub"><i class="dub" aria-hidden="true"></i> ${shopMe.balance} Dublonen</span>` : ''}
+        <div class="pf-stats"><span><b>${games ?? '…'}</b>Spiele</span><span><b>${wins ?? '…'}</b>Siege</span><span><b>${best ?? '–'}</b>Rekord</span></div>
+        <div class="pf-links"><button type="button" class="pill pill-white pill-small" data-m="pfStats">📊 Statistik</button><button type="button" class="pill pill-white pill-small" data-m="pfShop">🛒 Shop</button></div>
+      </aside>
+      <div class="pf-main">
+        <div class="pf-tabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" aria-selected="${tab === k}" class="${tab === k ? 'on' : ''}" data-m="pfTab" data-v="${k}">${l}</button>`).join('')}</div>
+        ${modal.pfErr ? `<div class="error" role="status">${esc(modal.pfErr)}</div>` : ''}
+        ${main}
+      </div>
+    </div>`;
+}
+
 let modal = null; // { kind, pin, error }
 function openModal(kind) {
   modal = { kind };
@@ -1755,6 +1823,7 @@ function openModal(kind) {
   if (kind === 'pin') loadPin();
   if (kind === 'stats') loadStats();
   if (kind === 'mystats') loadMyStats();
+  if (kind === 'profile') { modal.tab = 'figur'; loadMyStats(); loadShop(); } // v0.80 Mein Profil
   if (kind === 'admin') { modal.tab = 'users'; loadAdmin(); }
   render();
 }
@@ -1807,21 +1876,7 @@ function renderModal() {
       <div class="pinbox"><div><small>Spiel-Code</small><b>${esc(ui.game?.code || '—')}</b></div><div><small>Deine PIN</small><b>${modal.pin === undefined ? '…' : esc(modal.pin || '—')}</b></div></div>
       ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
   }
-  if (modal.kind === 'profile') {
-    const pr = profiles.get(me.id) || {};
-    body = `<h2>Dein Spielerbild</h2>
-      <div class="prof-preview">${avatarHtml(me.id, me.name)}<strong>${esc(me.name)}</strong></div>
-      <h3 class="ph">Tier</h3>
-      <div class="pick-animals">${ANIMALS.map((a) => `<button type="button" class="pa ${pr.animal === a.id ? 'on' : ''}" data-m="animal" data-v="${a.id}" aria-label="${a.name}" style="--bg:${esc(pr.color || '#7FA88A')}">${art(a.id)}</button>`).join('')}</div>
-      <h3 class="ph">Farbe</h3>
-      <div class="pick-colors">${PROFILE_COLORS.map((c) => `<button type="button" class="pc ${pr.color === c ? 'on' : ''}" data-m="color" data-v="${c}" aria-label="Farbe" style="background:${c}"></button>`).join('')}</div>
-      <h3 class="ph">Passwort ändern</h3>
-      <form id="pw-form" class="pwform">
-        <input name="pw" type="password" minlength="6" autocomplete="new-password" placeholder="Neues Passwort (mind. 6 Zeichen)" required>
-        <button type="submit" class="pill pill-white pill-small">Speichern</button>
-      </form>
-      ${modal.pwMsg ? `<div class="${modal.pwOk ? 'okmsg' : 'error'}" role="status">${esc(modal.pwMsg)}</div>` : ''}`;
-  }
+  if (modal.kind === 'profile') body = profileBody();
   if (modal.kind === 'admin') body = adminBody();
   if (modal.kind === 'mystats') body = `<h2>Meine Statistik</h2>${myStatsBody(modal.mine)}`;
   if (modal.kind === 'stats') {
@@ -1882,7 +1937,7 @@ function renderModal() {
     if (b.dataset.m === 'push') { await togglePush(); return render(); }
     if (b.dataset.m === 'logout') { modal = null; render(); return doLogout(); }
     if (b.dataset.m === 'doInstall' && installPrompt) { installPrompt.prompt(); installPrompt = null; modal = null; return render(); }
-    if (b.dataset.m === 'animal') return saveProfile({ animal: b.dataset.v });
+    if (b.dataset.m === 'animal') { if (shopMe.active || shopAvatars.get(me.id)) return setMyAvatar(null, b.dataset.v); return saveProfile({ animal: b.dataset.v }); }
     if (b.dataset.m === 'theme' || b.dataset.m === 'themePreset' || b.dataset.m === 'themeReset') {
       if (b.dataset.m === 'theme') theme = { ...theme, [b.dataset.k]: b.dataset.v };
       if (b.dataset.m === 'themePreset') theme = { ...PRESETS[b.dataset.v].v, bigText: theme.bigText };
@@ -1912,6 +1967,10 @@ function renderModal() {
       if (b.dataset.m === 'clearErrors') return adminAction('admin_clear_errors', {}, 'Fehlerberichte gelöscht.');
     }
     if (b.dataset.m === 'color') return saveProfile({ color: b.dataset.v });
+    if (b.dataset.m === 'pfTab') { modal.tab = b.dataset.v; modal.pfErr = ''; return render(); }
+    if (b.dataset.m === 'pfStats') return openModal('mystats');
+    if (b.dataset.m === 'pfShop') { modal = null; render(); return openShop(); }
+    if (b.dataset.m === 'pfAv') return setMyAvatar(b.dataset.v);
   };
   el.querySelectorAll('form.apw').forEach((f) => { f.onsubmit = (e) => {
     e.preventDefault();
