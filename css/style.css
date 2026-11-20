@@ -3688,3 +3688,114 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .mfly.mine.in { animation-timing-function: cubic-bezier(.25, .7, .3, 1); }
 @keyframes newcard { 0% { box-shadow: 0 0 0 3px var(--gold), 0 0 18px 6px rgba(255,211,78,.75); } 100% { box-shadow: -3px 3px 8px rgba(0,0,0,.25), 0 0 0 0 rgba(255,211,78,0); } }
 .eintro { cursor: default; }
+
+/* ===== v0.77 Zu zweit: Aufteilen ===== */
+.divpanel { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-radius: 20px; background: rgba(0,0,0,.28); border: 2px solid rgba(255,255,255,.18); color: #fff; max-width: 440px; }
+.divpanel.pop { animation: divpop .35s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes divpop { from { opacity: 0; scale: .85; } to { opacity: 1; scale: 1; } }
+.divcard { flex: none; width: 92px; display: grid; place-items: center; perspective: 600px; }
+.divcard .pcard { width: 92px; }
+.divcard .money.big { width: 70px; height: 100px; font-size: 26px; }
+.divcard.flip > * { animation: divflip .55s cubic-bezier(.3,1.2,.5,1) both; }
+@keyframes divflip { 0% { transform: rotateY(90deg) scale(.9); } 100% { transform: none; } }
+.divcard.wobble .deck { width: 72px; height: 100px; animation: divwob 1.4s ease-in-out infinite; }
+@keyframes divwob { 0%, 100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(4deg) translateY(-4px); } }
+.divinfo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.divinfo b { font-family: var(--font-head); font-size: 18px; line-height: 1.15; }
+.divinfo small { font-size: 12px; font-weight: 700; opacity: .8; }
+.divnextrow { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800; padding: 4px 8px 4px 4px; border-radius: 10px; background: rgba(255,255,255,.12); width: fit-content; }
+.divnext { width: 26px; height: 36px; border-radius: 5px; border: 2px solid #fff; background: var(--back-pat), var(--back); display: grid; place-items: center; font-size: 16px; }
+.divnext .deckcow { width: 22px; height: 22px; display: block; } .divnext .deckcow svg { width: 100%; height: 100%; }
+.divnext.money { background: #3E9B5E; }
+.divtimer { position: static; align-self: flex-start; }
+.divbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; line-height: 1.05; }
+.divbtn small { font-family: var(--font-head); font-size: 17px; letter-spacing: .03em; }
+.divbtn span { font-size: 10px; font-weight: 700; opacity: .85; }
+.duopass { margin-top: 2px; }
+.divstrip { position: absolute; z-index: 40; left: 50%; top: 34%; translate: -50% -50%; padding: 6px 16px; border-radius: 999px; background: rgba(0,0,0,.72); color: #fff; font-family: var(--font-head); font-size: 17px; white-space: nowrap; pointer-events: none; animation: divstrip 1.5s ease-out both; }
+@keyframes divstrip { 0% { opacity: 0; scale: .8; } 15%, 75% { opacity: 1; scale: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .divcard.wobble .deck, .divcard.flip > *, .divstrip { animation: none; } }
+
+/* v0.77 Quartett: die 4 Tiere springen in einer Reihe auf ihrem Stapel (statt einer Runde über den Tisch) */
+.polo.qhop > .beast { translate: calc((var(--k) - 1.5) * 24px) 0; scale: .62; opacity: 0; animation: qhop 1.8s cubic-bezier(.3,1.4,.5,1) var(--qd, 0ms) 1 both; }
+@keyframes qhop { 0% { opacity: 0; transform: translateY(10px) scale(.6); } 12% { opacity: 1; transform: none; } 25% { transform: translateY(-16px); } 38% { transform: none; } 52% { transform: translateY(-12px); } 65% { transform: none; } 88% { opacity: 1; } 100% { opacity: 0; transform: translateY(-4px); } }
+.qbadge { position: absolute; z-index: 38; translate: -50% -50%; margin-top: -46px; padding: 3px 10px; border-radius: 999px; background: #FFD34E; color: #2B2B2B; border: 2.5px solid #2B2B2B; font: 900 13px/1 var(--font-head); letter-spacing: .04em; pointer-events: none; opacity: 0; animation: qbadge 1.6s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes qbadge { 0% { opacity: 0; scale: .4; } 18% { opacity: 1; scale: 1.15; } 30%, 80% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: .9; } }
+@media (prefers-reduced-motion: reduce) { .polo.qhop > .beast, .qbadge { animation-duration: 1ms; } }
+
+/* ===== v0.77 Quartett-Show: jedes Tier hat seine eigene Szene, alle sehen sie, danach geht es weiter ===== */
+.qshow { position: absolute; inset: 0; z-index: 70; overflow: hidden; pointer-events: none; opacity: 0; animation: qsin var(--qms) linear var(--qd) 1 both; }
+@keyframes qsin { 0% { opacity: 0; } 6% { opacity: 1; } 92% { opacity: 1; } 100% { opacity: 0; } }
+.qs-bg { position: absolute; inset: 0; background: var(--qbg); }
+.qshow::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 6px var(--qc), inset 0 0 60px rgba(0,0,0,.35); pointer-events: none; }
+.qs-title { position: absolute; left: 50%; top: 9%; translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; text-align: center; text-shadow: 0 2px 0 rgba(0,0,0,.45); z-index: 3;
+  animation: qstitle .6s cubic-bezier(.3,1.5,.5,1) calc(var(--qd) + .15s) both; }
+@keyframes qstitle { from { opacity: 0; scale: .5; } to { opacity: 1; scale: 1; } }
+.qs-badge { padding: 4px 16px; border-radius: 999px; background: #FFD34E; color: #2B2B2B; border: 3px solid #2B2B2B; font: 900 22px/1 var(--font-head); letter-spacing: .06em; text-shadow: none; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.qs-who { display: flex; align-items: center; gap: 8px; font: 800 20px/1.1 var(--font-head); }
+.qs-icon { width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 3px solid var(--qc); display: grid; place-items: center; overflow: hidden; }
+.qs-icon svg { width: 30px; height: 30px; }
+.qs-title small { font-weight: 800; font-size: 13px; opacity: .95; }
+.qs-shout { position: absolute; left: 50%; top: 44%; translate: -50% -50%; z-index: 4; font: 900 46px/1 var(--font-head); color: #fff; letter-spacing: .02em; white-space: nowrap;
+  -webkit-text-stroke: 3px #2B2B2B; paint-order: stroke fill; text-shadow: 0 5px 0 rgba(0,0,0,.35); opacity: 0; animation: qsshout 1.6s cubic-bezier(.3,1.6,.5,1) calc(var(--qd) + 1.1s) both; }
+@keyframes qsshout { 0% { opacity: 0; scale: .3 ; rotate: -8deg; } 25% { opacity: 1; scale: 1.15; rotate: 4deg; } 40% { scale: 1; rotate: -2deg; } 80% { opacity: 1; scale: 1; rotate: 0deg; } 100% { opacity: 0; scale: 1.1; } }
+.qs-stage { position: absolute; left: 0; right: 0; bottom: 6%; height: 46%; z-index: 2; }
+.qs-a { position: absolute; bottom: 0; left: calc(16% + var(--k) * 17%); width: 120px; height: 92px; translate: -50% 0; }
+.qs-a .bbody { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); }
+.qs-a .lg { animation: lgstep .26s ease-in-out infinite alternate; } .qs-a .lg.b { animation-direction: alternate-reverse; }
+.qs-a .tail { animation: twag .3s ease-in-out infinite alternate; } .qs-a .wing { animation: wflap .16s ease-in-out infinite alternate; }
+.qs-props { position: absolute; inset: 0; z-index: 1; }
+.qs-p { position: absolute; left: var(--x); top: -10%; font-style: normal; font-size: 26px; opacity: 0; }
+.qs-p.fall { animation: qsfall 2.4s ease-in calc(var(--qd) + .4s + var(--i) * .12s) both; }
+.qs-p.float { top: 105%; animation: qsfloat 2.8s ease-out calc(var(--qd) + .3s + var(--i) * .12s) both; }
+.qs-p.roll { top: auto; bottom: 8%; left: -10%; animation: qsroll 2.6s ease-out calc(var(--qd) + .2s + var(--i) * .1s) both; }
+.qs-p.splash { top: 72%; left: 50%; animation: qssplash 1.4s cubic-bezier(.2,.8,.4,1) calc(var(--qd) + 1.3s + var(--i) * .03s) both; }
+@keyframes qsfall { 0% { opacity: 0; transform: translateY(0) rotate(0); } 10% { opacity: 1; } 100% { opacity: 1; transform: translateY(460px) rotate(var(--r)); } }
+@keyframes qsfloat { 0% { opacity: 0; transform: translateY(0) scale(.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-420px) scale(1.1) rotate(var(--r)); } }
+@keyframes qsroll { 0% { opacity: 0; transform: translateX(0) rotate(0); } 10% { opacity: 1; } 100% { opacity: 1; transform: translateX(calc(30px + var(--x) * 9)) rotate(720deg); } }
+@keyframes qssplash { 0% { opacity: 0; transform: translate(0, 0) scale(.5); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(calc((var(--i) - 7) * 34px), calc(-120px - var(--i) % 4 * 30px)) scale(1.2) rotate(var(--r)); } }
+/* Bühnenbild */
+.qshow .qs-sun { position: absolute; left: 50%; bottom: 20%; width: 120px; height: 120px; margin-left: -60px; border-radius: 50%; background: radial-gradient(circle, #FFF3A6, #FFC93C 60%, #F28C28); box-shadow: 0 0 60px 20px rgba(255,211,78,.6); z-index: 1; animation: qssun 3s ease-out var(--qd) both; }
+@keyframes qssun { from { transform: translateY(160px); } to { transform: translateY(-40px); } }
+.qshow .qs-fence { position: absolute; left: 0; right: 0; bottom: 6%; height: 34px; z-index: 1; background: repeating-linear-gradient(90deg, #8B5A2B 0 10px, transparent 10px 40px), linear-gradient(transparent 8px, #8B5A2B 8px 14px, transparent 14px 22px, #8B5A2B 22px 28px, transparent 28px); }
+.qshow .qs-fence.mid { left: 44%; right: 44%; height: 50px; bottom: 6%; background: repeating-linear-gradient(90deg, #E9DDC7 0 8px, transparent 8px 22px), linear-gradient(transparent 10px, #E9DDC7 10px 16px, transparent 16px 30px, #E9DDC7 30px 36px, transparent 36px); }
+.qshow .qs-moon { position: absolute; right: 12%; top: 12%; width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #FFFBE0, #F2E2A0); box-shadow: 0 0 40px rgba(255,248,200,.6); z-index: 1; }
+.qshow .qs-moon.big { right: auto; left: 50%; top: 22%; width: 110px; height: 110px; margin-left: -55px; }
+.qshow .qs-cloud { position: absolute; width: 120px; height: 40px; border-radius: 40px; background: #fff; opacity: .9; z-index: 1; animation: qscloud 4s linear var(--qd) both; }
+.qshow .qs-cloud.c1 { top: 18%; left: 10%; } .qshow .qs-cloud.c2 { top: 34%; left: 60%; width: 90px; }
+@keyframes qscloud { from { transform: translateX(0); } to { transform: translateX(-120px); } }
+.qshow .qs-peak { position: absolute; left: 50%; bottom: 0; width: 0; height: 0; margin-left: -260px; border-left: 260px solid transparent; border-right: 260px solid transparent; border-bottom: 300px solid #7B8794; z-index: 1; }
+.qshow .qs-mud { position: absolute; left: 50%; bottom: 8%; width: 360px; height: 60px; margin-left: -180px; border-radius: 50%; background: radial-gradient(ellipse, #6B3E1F, #4A2810); z-index: 1; }
+.qshow .qs-track { position: absolute; left: 0; right: 0; bottom: 14%; height: 6px; background: repeating-linear-gradient(90deg, #fff 0 30px, transparent 30px 60px); z-index: 1; }
+/* Bewegungen der 4 Tiere */
+.qs-a.m-crow { animation: qscrow .5s ease-in-out calc(var(--qd) + var(--k) * .12s) 6 alternate both; }
+@keyframes qscrow { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-34px) rotate(6deg) scale(1.08); } }
+.qs-a.m-fly { bottom: 30%; left: -20%; animation: qsfly 3.2s cubic-bezier(.4,.1,.5,1) calc(var(--qd) + var(--k) * .15s) both; }
+@keyframes qsfly { from { transform: translate(0, calc(var(--k) * 26px)); } to { transform: translate(140vw, calc(var(--k) * 26px - 160px)); } }
+.qs-a.m-pounce { animation: qspounce .9s cubic-bezier(.3,.7,.4,1) calc(var(--qd) + var(--k) * .2s) 3 both; }
+@keyframes qspounce { 0% { transform: translate(0, 0); } 40% { transform: translate(30px, -90px) rotate(-12deg); } 70% { transform: translate(60px, 0) rotate(4deg); } 100% { transform: translate(0, 0); } }
+.qs-a.m-spin { animation: qsspin .7s linear calc(var(--qd) + var(--k) * .1s) 5 both; }
+@keyframes qsspin { from { transform: rotateY(0) rotate(0); } 50% { transform: rotateY(180deg) translateY(-10px); } to { transform: rotateY(360deg); } }
+.qs-a.m-fence { left: 6%; animation: qsfence 1.5s ease-in-out calc(var(--qd) + .2s + var(--k) * .55s) both; }
+@keyframes qsfence { 0% { transform: translate(0, 0); opacity: 1; } 45% { transform: translate(38vw, -120px) rotate(-10deg); } 75% { transform: translate(70vw, 0); } 100% { transform: translate(84vw, 0); opacity: 0; } }
+.qs-a.m-climb { bottom: 0; animation: qsclimb 2.6s ease-out calc(var(--qd) + var(--k) * .15s) both; }
+@keyframes qsclimb { 0% { transform: translate(0, 0); } 100% { transform: translate(calc((1.5 - var(--k)) * 60px), calc(-150px + (var(--k) - 1.5) * (var(--k) - 1.5) * 18px)); } }
+.qs-a.m-kick { animation: qskick .55s ease-in-out calc(var(--qd) + var(--k) * .14s) 5 alternate both; transform-origin: 30% 90%; }
+@keyframes qskick { from { transform: rotate(0); } to { transform: rotate(-24deg) translateY(-12px); } }
+.qs-a.m-dive { animation: qsdive 1.5s cubic-bezier(.3,.6,.4,1) calc(var(--qd) + .1s + var(--k) * .25s) both; }
+@keyframes qsdive { 0% { transform: translate(0, -120px) rotate(0); } 50% { transform: translate(calc((1.5 - var(--k)) * 50px), -200px) rotate(160deg); } 100% { transform: translate(calc((1.5 - var(--k)) * 100px), 10px) rotate(360deg) scaleY(.85); } }
+.qs-a.m-moon { left: 4%; animation: qsmoon 2.2s ease-in-out calc(var(--qd) + .2s + var(--k) * .35s) both; }
+@keyframes qsmoon { 0% { transform: translate(0, 0); opacity: 1; } 50% { transform: translate(44vw, -200px) rotate(-12deg); } 100% { transform: translate(92vw, 0); opacity: 0; } }
+.qs-a.m-gallop { left: -15%; animation: qsgallop 2.4s linear calc(var(--qd) + var(--k) * .22s) both; }
+@keyframes qsgallop { 0% { transform: translateX(0) translateY(0); } 25% { transform: translateX(32vw) translateY(-14px); } 50% { transform: translateX(64vw) translateY(0); } 75% { transform: translateX(96vw) translateY(-14px); } 100% { transform: translateX(128vw); } }
+.qs-a.m-gallop .lg { animation-duration: .14s; }
+@media (max-height: 380px) { .qs-shout { font-size: 36px; } .qs-a { width: 100px; height: 76px; } .qs-badge { font-size: 18px; } .qs-who { font-size: 16px; } }
+@media (prefers-reduced-motion: reduce) { .qs-a, .qs-p { animation-duration: 1ms !important; } }
+.qs-who, .qs-title small { background: rgba(10,16,34,.62); padding: 4px 12px; border-radius: 999px; }
+.qs-title small { padding: 2px 10px; }
+/* v0.77: sehr viele verdeckte Scheine im Angebot – stärker überlappen, damit es in einer Reihe bleibt */
+.tpanel .kslots.many:has(> :nth-child(9)) > * + * { margin-left: -18px; }
+/* v0.77: Annehmen-Knopf im Kuhhandel kompakter (Text in einer Zeile, Hinweis klein) – das Feld ragte sonst ins Geld */
+.stage .tduel.respond .tbtn[data-a="accept"] { line-height: 1.1; white-space: nowrap; }
+.stage .tduel.respond .tbtn[data-a="accept"] em { display: block; font-size: 10px; line-height: 1.1; white-space: normal; }
+.stage .tduel.respond .tpanel .tline.big { margin-block: 0; }

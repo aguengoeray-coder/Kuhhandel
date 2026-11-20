@@ -909,3 +909,95 @@ test('v0.72 Steuer/Marktpanik: wer abgibt, sehen alle (payers/movers) – die We
   assert.equal(h.lastEvent.movers.length, h.players.length);
   assert.equal(typeof viewFor(h, other).lastEvent.moved.gave, 'number');
 });
+
+// ---------- v0.77 Zu zweit (Aufteilen) ----------
+test('Zu zweit: genau 2 Spieler, Geld ohne 0er im Stapel, kein Turbo/Börse', async () => {
+  const { isDuo } = await import('../src/engine.js');
+  assert.throws(() => createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] }), /3 bis 4/);
+  assert.throws(() => createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }], settings: { duo: true } }), /genau 2/);
+  const g = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], seed: 5, settings: { duo: true, boerse: true, money: { 0: 3, 10: 2, 500: 1 } } });
+  assert.ok(isDuo(g));
+  assert.equal(g.settings.boerse, null);
+  const money = g.deck.filter((c) => c.startsWith('geld-'));
+  assert.deepEqual(money.sort(), ['geld-10', 'geld-10', 'geld-500']);
+  assert.equal(g.deck.filter((c) => c.startsWith('news-')).length, 0);
+  // ohne Geld-Einstellung: Standard-Satz ohne 0er
+  const h = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], seed: 5, settings: { duo: true } });
+  assert.equal(h.deck.filter((c) => c === 'geld-0').length, 0);
+  assert.ok(h.deck.filter((c) => c.startsWith('geld-')).length > 0);
+});
+
+test('Zu zweit: Aufteilen – behalten / abgeben, Sicht, kein Esel-Bonus, keine Versteigerung', async () => {
+  const { divideLook, divideChoose, viewFor } = await import('../src/engine.js');
+  let g = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], seed: 9, settings: { duo: true } });
+  g.deck = ['esel', 'geld-200', 'kuh', 'ratte', 'sp-kuh', 'hahn', ...g.deck.slice(6)];
+  assert.throws(() => drawForAuction(g, 'a', 0), /aufgeteilt/);
+  g = divideLook(g, 'a');
+  assert.equal(g.phase, 'divide');
+  assert.equal(viewFor(g, 'a').divide.card, 'esel');
+  assert.equal(viewFor(g, 'b').divide.card, null);
+  assert.throws(() => divideChoose(g, 'b', true), /teilst gerade nicht/);
+  const moneyB = g.players[1].money.length;
+  g = divideChoose(g, 'a', true); // A behält den Esel, B bekommt den 200er
+  assert.equal(g.players[0].animals.esel, 1);
+  assert.equal(g.players[1].money.length, moneyB + 1);
+  assert.ok(g.players[1].money.includes(200));
+  assert.equal(g.players[0].money.length, 7); // kein Esel-Bonus
+  assert.equal(g.donkeysDrawn, 0);
+  assert.equal(viewFor(g, 'a').lastEvent.second.card, 'geld-?'); // fremdes Geld verdeckt
+  assert.equal(viewFor(g, 'b').lastEvent.second.card, 'geld-200');
+  assert.equal(g.turn, 1); assert.equal(g.phase, 'turn');
+  g = divideChoose(divideLook(g, 'b'), 'b', false); // B gibt die Kuh ab, bekommt die Ratte
+  assert.equal(g.players[0].animals.kuh, 1);
+  assert.equal(g.players[1].animals.ratte, 1);
+  g = divideChoose(divideLook(g, 'a'), 'a', true); // Spezialkarte + Hahn
+  assert.deepEqual(g.players[0].specials, ['kuh']);
+  assert.equal(g.players[1].animals.hahn, 1);
+});
+
+test('Zu zweit: komplette Partie endet (aufteilen, danach Kuhhandel)', async () => {
+  const { divideLook, divideChoose, possibleTrades, startTrade, acceptTrade, counterTrade, chooseBlock } = await import('../src/engine.js');
+  for (const seed of [1, 2, 3, 4, 5]) {
+    let g = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], seed, settings: { duo: true } });
+    let r = seed * 7919; const rnd = () => ((r = (r * 1103515245 + 12345) % 2147483648) / 2147483648);
+    let steps = 0;
+    while (g.phase !== 'ended' && steps++ < 3000) {
+      const cur = g.players[g.turn].id;
+      if (g.phase === 'turn') {
+        const trades = possibleTrades(g, cur);
+        if (g.deck.length && (!trades.length || rnd() < 0.7)) { g = divideChoose(divideLook(g, cur), cur, rnd() < 0.5); continue; }
+        if (!trades.length) break;
+        const t = trades[Math.floor(rnd() * trades.length)];
+        const me = g.players.find((p) => p.id === cur);
+        g = startTrade(g, cur, t.target, t.animal, me.money.length ? [0] : []);
+        const tg = g.players.find((p) => p.id === t.target);
+        g = rnd() < 0.5 || !tg.money.length ? acceptTrade(g, t.target) : counterTrade(g, t.target, [0]);
+      } else if (g.phase === 'block') {
+        const p = g.players.find((x) => x.id === g.block.player);
+        const a = Object.keys(p.animals).find((k) => p.animals[k] === 4 && k !== 'ratte');
+        g = chooseBlock(g, p.id, a);
+      } else break;
+    }
+    assert.equal(g.phase, 'ended', `Seed ${seed}: endet nicht (${g.phase}, Stapel ${g.deck.length})`);
+  }
+});
+
+test('Zu zweit: Bedenzeit 10 s → automatisch behalten; beide verzichten → Spielende', async () => {
+  const { divideLook, divideTimeout, duoPass, DIVIDE_MS } = await import('../src/engine.js');
+  let g = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], seed: 3, settings: { duo: true } });
+  g.deck = ['kuh', 'hund', 'pferd'];
+  g = divideLook(g, 'a', 1000);
+  assert.throws(() => divideTimeout(g, 1000 + DIVIDE_MS - 1), /läuft noch/);
+  g = divideTimeout(g, 1000 + DIVIDE_MS);
+  assert.equal(g.players[0].animals.kuh, 1); assert.equal(g.players[1].animals.hund, 1); assert.equal(g.lastEvent.auto, true);
+  assert.throws(() => duoPass(g, 'b'), /aufgeteilt/);
+  g = divideTimeout(divideLook(g, 'b', 0), DIVIDE_MS); // letzte Karte (nur eine)
+  assert.equal(g.players[1].animals.pferd, 1); assert.equal(g.deck.length, 0);
+  // Stapel leer, keiner kann handeln → Spiel endet regulär (kein „ended ohne Sieger“)
+  assert.equal(g.phase, 'ended'); assert.ok(Array.isArray(g.winner) && g.winner.length > 0);
+  // mit möglichem Handel: beide verzichten → Ende
+  let h = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], seed: 3, settings: { duo: true } });
+  h.deck = []; h.players[0].animals.kuh = 2; h.players[1].animals.kuh = 2;
+  h = duoPass(h, 'a'); assert.equal(h.phase, 'turn'); assert.equal(h.turn, 1);
+  h = duoPass(h, 'b'); assert.equal(h.phase, 'ended');
+});

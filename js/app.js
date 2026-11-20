@@ -1,7 +1,7 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
 import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf } from '../src/engine.js';
-import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor } from './game.js';
+import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor, showBusy } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
 import { debugChips, debugPanel } from './debug.js';
@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.76.0';
+export const APP_VERSION = '0.77.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -337,8 +337,8 @@ function renderStart() {
   const nav = items.length > 1 ? `<button type="button" class="hb-nav l" data-hb="prev" aria-label="Vorheriges Spiel" ${ui.homeIdx ? '' : 'disabled'}>‹</button>
     <button type="button" class="hb-nav r" data-hb="next" aria-label="Nächstes Spiel" ${ui.homeIdx < items.length - 1 ? '' : 'disabled'}>›</button>
     <span class="hb-count">${ui.homeIdx + 1} / ${items.length}</span>` : '';
-  const dock = [['play', '▶️', 'Spielen'], ['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
-    .map(([k, i, l]) => `<button type="button" class="hb-dk ${k === 'play' ? 'on' : ''}" data-dock="${k}"><i>${i}</i>${l}</button>`).join('');
+  const dock = [['shop', '🛒', 'Shop'], ['stats', '🏆', 'Bestenliste'], ['mystats', '📊', 'Statistik'], ['rules', '📖', 'Regeln'], ['settings', '⚙️', 'Einstellungen']]
+    .map(([k, i, l]) => `<button type="button" class="hb-dk" data-dock="${k}"><i>${i}</i>${l}</button>`).join('');
   // v0.73 (Alp): große Modus-Kacheln wie bei einem Konsolen-Spiel; erst nach dem Antippen kommen die Einstellungen
   const openN = (ui.games || []).length;
   const tiles = MODES.map((m) => `<button type="button" class="mode-tile m-${m.id}" data-mode="${m.id}" ${m.id !== 'join' && !me.name ? 'disabled' : ''}>
@@ -367,7 +367,7 @@ function renderStart() {
   app.querySelectorAll('[data-mp]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.mp;
     if (k === 'close') { ui.mode = null; return render(); }
-    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.money ? { money: { ...DEFAULT_MONEY } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }
+    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.money ? { money: { ...DEFAULT_MONEY } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }
     if (k === 'pin') { ui.mode = null; return openModal('rejoin'); }
     ui.modeOpts = { ...(ui.modeOpts || {}), [k]: !(ui.modeOpts || {})[k] }; render();
   }));
@@ -383,7 +383,7 @@ function renderStart() {
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-mptest]').forEach((b) => b.addEventListener('click', () => { // v0.74 Debug: Testspiel mit diesem Modus und diesen Einstellungen
     const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null;
-    startLocalGame(Number(b.dataset.mptest), { ...m.settings, ...(o.money ? { money: { ...DEFAULT_MONEY } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }));
+    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.money ? { money: { ...DEFAULT_MONEY } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}) }); }));
   app.querySelectorAll('[data-hb]').forEach((b) => b.addEventListener('click', () => { ui.homeIdx = (ui.homeIdx || 0) + (b.dataset.hb === 'next' ? 1 : -1); render(); }));
   app.querySelectorAll('[data-dock]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.dock;
@@ -414,7 +414,7 @@ function modePanel(id) {
         return `<button type="button" class="mp-room" data-joinid="${esc(g.id)}" ${full ? 'disabled' : ''}><b>${esc(host)}</b><span>${g.players.length}/${MAX_PLAYERS} · ${esc(g.code)}</span></button>`; }).join('')}</div>` : ''}
       <button type="button" class="mp-link" data-mp="pin">Schon im Spiel gewesen? Mit Code + PIN zurück auf deinen Platz</button>`;
   } else {
-    const opts = [['money', '💵 Geldscheine im Stapel', 'Extra-Scheine zwischen den Tieren'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${m.settings.turbo ? 12 : 20} s`, 'Angebote mit Zeitlimit'], ['moneyCounts', '💰 Geld zählt am Ende', 'Taler werden mitgewertet']];
+    const opts = [...(id === 'classic' ? [['duo', '👥 Zu zweit', 'Aufteilen statt Versteigern – genau 2 Spieler']] : []), ['money', '💵 Geldscheine im Stapel', 'Extra-Scheine zwischen den Tieren'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${m.settings.turbo ? 12 : 20} s`, 'Angebote mit Zeitlimit'], ['moneyCounts', '💰 Geld zählt am Ende', 'Taler werden mitgewertet']];
     right = `<div class="mp-opts">${opts.map(([k, l, s]) => `<button type="button" class="mp-opt ${o[k] ? 'on' : ''}" data-mp="${k}" aria-pressed="${!!o[k]}"><i class="mp-check">${o[k] ? '✓' : ''}</i><span><b>${l}</b><small>${s}</small></span></button>`).join('')}</div>
       ${DEBUG ? '' : '<small class="mp-hint">Alles lässt sich im Warteraum noch ändern.</small>'}
       ${DEBUG ? `<div class="mp-test"><span>🧪 Testspiel <small>nur hier</small></span><button type="button" class="pill pill-white pill-small" data-mptest="3">3 Spieler</button><button type="button" class="pill pill-white pill-small" data-mptest="4">4 Spieler</button></div>` : ''}
@@ -464,7 +464,8 @@ function renderRoom() {
       ${p.id === g.host ? '<span class="host-badge">Gastgeber</span>' : ''}
     </div>`;
   }).join('');
-  const enough = g.players.length >= MIN_PLAYERS;
+  const duo = !!g.state?.settings?.duo; // v0.77 Zu zweit: genau 2 Spieler
+  const enough = duo ? g.players.length === 2 : g.players.length >= MIN_PLAYERS;
   const outdated = g.players.filter((p) => { const v = versions[p.seat || p.id]; return v && v !== APP_VERSION && olderThan(v, APP_VERSION); });
   const money = g.state?.settings?.money || null;
   const moneyCount = money ? Object.values(money).reduce((a, b) => a + b, 0) : 0;
@@ -481,7 +482,7 @@ function renderRoom() {
       ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
       <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
       <div class="rs-extra">
-      ${[['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (13 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
+      ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (13 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
     </div>
     </div>
@@ -490,7 +491,7 @@ function renderRoom() {
   const hint = outdated.length
     ? `${outdated.map((p) => esc(p.name)).join(', ')} ${outdated.length > 1 ? 'haben' : 'hat'} eine alte Version – bitte App neu laden.`
     : isHost
-    ? (enough ? 'Alle da? Dann los!' : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
+    ? (enough ? 'Alle da? Dann los!' : duo ? (g.players.length > 2 ? 'Zu zweit heißt genau 2 – „Zu zweit“ ausschalten oder jemand geht.' : 'Warte auf deinen Gegner – zu zweit.') : `Warte auf Mitspieler – mindestens ${MIN_PLAYERS} nötig.`)
     : `Warte, bis ${esc((g.players.find((p) => p.id === g.host) || g.players[0])?.name || 'der Gastgeber')} das Spiel startet.`;
 
   app.innerHTML = `
@@ -518,7 +519,7 @@ function renderRoom() {
   }));
   document.getElementById('start')?.addEventListener('click', onStart);
   document.getElementById('moneyToggle')?.addEventListener('click', () => saveSettings({ money: money ? null : { ...DEFAULT_MONEY } }));
-  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true), ...(!cur && k === 'turbo' ? { boerse: null } : {}), ...(!cur && k === 'boerse' ? { turbo: null } : {}) }); })); // Turbo und Börsen-Chaos schließen sich aus
+  app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true), ...(!cur && k === 'turbo' ? { boerse: null, duo: null } : {}), ...(!cur && k === 'boerse' ? { turbo: null, duo: null } : {}), ...(!cur && k === 'duo' ? { turbo: null, boerse: null } : {}) }); })); // Turbo, Börsen-Chaos und Zu zweit schließen sich aus
   app.querySelectorAll('[data-money]').forEach((b) => b.addEventListener('click', () => {
     const v = b.dataset.money;
     const next = { ...money, [v]: Math.max(0, (money[v] || 0) + Number(b.dataset.d)) };
@@ -778,7 +779,8 @@ let calmLog = -1;
 let calmAt = 0;
 function botCalm(s) {
   if (s.log.length !== calmLog) { calmLog = s.log.length; calmAt = Date.now(); }
-  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < calmFor(s.lastEvent, s.deck.length) + 300;
+  if (showBusy()) return true; // v0.77: Quartett-Show läuft – erst danach geht es weiter
+  return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < calmFor(s.lastEvent, s.deck.length, s) + 300;
 }
 // Wer lässt die Test-Spieler laufen? Der erste Spieler am Tisch, der online ist und selbst spielt.
 function botRunner() {
@@ -1742,6 +1744,7 @@ const RULES = `
   <h3>Ratte</h3><p>Wird eine Ratte aufgedeckt, geht es reihum (links vom Aufdecker, er selbst macht mit): Jeder legt eine Karte verdeckt in die Mitte (auch ein 0er) – oder nimmt die Ratte und bekommt alle gelegten Karten. Wer keine Karten mehr hat, muss sie nehmen. Danach deckt der Aufdecker noch eine Karte auf (ist der Stapel leer: Kuhhandel).<br>
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>
   Am Ende hat einer alle 4 Ratten – er wählt eines seiner Quartette, das nicht zählt.</p>
+  <h3>👥 Zu zweit (Kuhhandel-Master-Variante)</h3><p>Genau 2 Spieler. Statt zu versteigern wird <b>aufgeteilt</b>: Wer dran ist, schaut sich die oberste Karte heimlich an und <b>behält</b> sie – dann bekommt der andere die nächste Karte – oder <b>gibt sie ab</b> und bekommt selbst die nächste. 10 s Bedenkzeit, danach wird automatisch behalten. Die Rückseite der nächsten Karte zeigt, ob ein Tier oder 💰 Geld kommt. Geldscheine (ohne 0er) liegen im Stapel, es gibt keinen Esel-Bonus, Ratten und Spezialkarten werden einfach mit aufgeteilt. Statt aufzuteilen darf man auch einen Kuhhandel starten. Ist der Stapel leer, gibt es nur noch Kuhhandel; verzichten beide nacheinander, ist das Spiel vorbei. Wertung wie immer.</p>
   <h3>📈 Börsen-Chaos (eigene Spielart)</h3><p>Wie Klassisch, dazu 13 Börsen-News im Stapel. Wird eine aufgedeckt, passiert sie sofort für alle, danach deckt der Aufdecker nochmal auf. <b>Kursrallye</b> (2×): ein Tier +30 bis +100 % (zufällig) bis Spielende · <b>Kurssturz</b> (2×): ein Tier −30 bis −100 % (zufällig, meist kräftig) · <b>🚀 Hype</b>: ein Tier ×2 · <b>🫧 Blase platzt</b>: ein Tier ÷2 · Kurse rechnen sich wie an der Börse mal (×2 und dann ÷2 = wieder normal), höchstens ×4, nie unter 0 · <b>Dividende</b>: alle +50 · <b>Steuerprüfung</b>: jeder gibt seinen höchsten Schein ab · <b>Marktpanik</b>: jeder schiebt einen zufälligen Schein verdeckt nach links · <b>Hektik</b>: die nächsten 3 Versteigerungen nur 5 s · <b>⚖️ Zwangsversteigerung</b> (2×, Handkarte): kommt verdeckt auf die Hand, du deckst gleich nochmal auf. Später spielst du sie <i>statt</i> deines Zuges: Ein Tier eines Mitspielers wird versteigert – er muss verkaufen und bekommt das Geld; bietet niemand, behält er es. Geschützt: fertige Quartette, Ratten, Spieler ohne Geld · <b>🛡️ Einspruch</b> (Handkarte): wehrt eine Pfändung gegen dich automatisch ab. Die Wertung rechnet mit den aktuellen Kursen (Kurszettel neben dem Stapel). Nicht zusammen mit Turbo.</p>
   <h3>Spezialkarte</h3><p>Nicht handelbar, Wert 250. Alle außer dem Aufdecker sehen einen Countdown von 10 abwärts. Wer zuerst „Buzz“ drückt, bietet so viele verdeckte Karten, wie die Zahl zeigt. Gleichstand: Schnick-Schnack-Schnuck. Der Aufdecker entscheidet: selbst kaufen (er zahlt dem Buzzer so viele Karten) oder verkaufen (der Buzzer zahlt ihm). Der Zahler sucht die Karten selbst aus. Drückt niemand, bekommt der Aufdecker sie umsonst. Wer nicht genug Karten hat, zeigt alle offen und darf danach erst bei seiner Kartenanzahl drücken.</p>
   <h3>Geldscheine im Stapel</h3><p>Kann der Gastgeber im Warteraum einschalten (bis zu 20 Scheine, Werte frei wählbar). Liegt ein Geldschein oben, ist die Rückseite <b>grün mit Taler</b>. Wird er aufgedeckt, bekommt ihn der Aufdecker – alle sehen den Betrag – und sein Zug ist vorbei.</p>
@@ -2023,6 +2026,7 @@ function demo(kind) {
   const demoProfiles = { u1: ['Alp', 'pferd', '#1D5FC2'], u2: ['Nico', 'schwein', '#B8285F'], u3: ['Bennet', 'esel', '#0B7A68'], u4: ['Mo', 'hahn', '#B58A00'] };
   Object.entries(demoProfiles).forEach(([id, [name, animal, color]]) => profiles.set(id, { id, name, animal, color }));
   if (kind === 'testspiel' || kind === 'testspiel3') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(kind === 'testspiel3' ? 3 : 4); }
+  if (kind === 'testspiel2') { me = { id: 'u1', name: 'Alp' }; return startLocalGame(2, { duo: true }); } // v0.77 Zu zweit
   me = { id: 'u1', name: 'Alp' };
   if (params.get('scene')) setTimeout(() => showScene({ kind: params.get('scene'), from: params.get('sfrom') || 'u1', to: params.get('sto') || null, partner: params.get('spartner') || null, seed: Number(params.get('seed')) || 0 }), Number(params.get('sdelay')) || 300); // Screenshots: Figuren-Theater
   if (params.get('punch')) { ui.isAdmin = true; setTimeout(() => showPunch(params.get('pfrom') || 'u1', params.get('punch')), 300); } // Screenshots: Prügel-Animation

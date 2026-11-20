@@ -2,6 +2,7 @@
 import { pay,
   createGame, drawForAuction, bid, closeAuction, startTrade, counterTrade, acceptTrade, ANIMALS,
   RAT, ratLay, buzz, scores, specialDecide, rpsPick, SPECIAL_DELAY_MS, showBatzen, playPfaendung,
+  divideLook, divideChoose,
 } from '../src/engine.js';
 
 const PLAYERS = [
@@ -32,8 +33,27 @@ function base() {
   return g;
 }
 
+// v0.77 Zu zweit: ?demo=duo (du bist dran) · divide (du schaust die Karte an; &other=1: Nico schaut) · divided (gerade aufgeteilt, &pop=1)
+function duoBase() {
+  const g = createGame({ players: PLAYERS.slice(0, 2), seed: 11, settings: { duo: true } });
+  Object.assign(g.players[0].animals, { hund: 2, kuh: 1, ziege: 1, katze: 1 });
+  Object.assign(g.players[1].animals, { kuh: 2, pferd: 1, katze: 1, schaf: 2 });
+  g.players[1].specials = ['pferd'];
+  g.players[0].money = [0, 0, 10, 10, 10, 20, 50, 100];
+  g.deck = ['kuh', 'geld-200', 'hund', 'esel', ...g.deck.filter((c) => !['kuh', 'hund', 'esel'].includes(c)).slice(0, 26)];
+  return g;
+}
 export function buildDemoState(kind, local) {
   let g;
+  const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+  if (kind === 'duo') return duoBase();
+  if (kind === 'duotrade') { g = duoBase(); g.turn = 1; if (qs.get('rat')) { g.players[0].animals.ratte = 1; g.players[1].animals.ratte = 1; } g.players[0].money = [0, 0, 10, 10, 10, 20, 50, 100, 100, 200, 500]; g.players[1].money = [0, 0, 10, 10, 10, 20, 50, 100, 10, 10, 50, 200]; return startTrade(g, 'u2', 'u1', qs.get('rat') ? 'ratte' : 'kuh', qs.get('many') ? Array.from({ length: Number(qs.get('many')) }, (_, i) => i) : [0, 1]); } // v0.77: Kuhhandel zu zweit (du antwortest)
+  if (kind === 'divide') { g = duoBase(); if (qs.get('other')) g.turn = 1; return divideLook(g, g.players[g.turn].id, Date.now()); }
+  if (kind === 'divided') {
+    g = divideChoose(divideLook(duoBase(), 'u1', Date.now()), 'u1', qs.get('give') ? false : true);
+    if (qs.get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'divide' };
+    return g;
+  }
   switch (kind) {
     case 'turn': { // &geldtop=1: oberste Stapelkarte ist ein Geldschein (grüne Rückseite)
       g = base();
@@ -114,6 +134,7 @@ export function buildDemoState(kind, local) {
     case 'quartet':
       g = base();
       local.prevQuartets = []; // Mos Hahn-Quartett gilt als neu
+      { const qa = qs.get('qa'); if (qa) { g.players[3].animals.hahn = 3; g.players.forEach((p) => { p.animals[qa] = 0; }); g.players[qs.get('me') ? 0 : 3].animals[qa] = 4; } } // v0.77: ?demo=quartet&qa=kuh(&me=1)
       return g;
     case 'menu':
       g = base();
@@ -375,6 +396,7 @@ export function buildDemoState(kind, local) {
     case 'won': { // v0.62: Versteigerung gerade gewonnen (mit ?pop=1) → Gewinner jubelt
       const wb = new URLSearchParams(location.search).get('who') || 'u4';
       g = base(); g.turn = 1; g.deck[0] = 'schwein';
+      if (qs.get('q4')) g.players.find((x) => x.id === wb).animals.schwein = 3; // v0.77: ?demo=won&pop=1&q4=1 → Quartett-Show
       g = drawForAuction(g, 'u2');
       g = bid(g, wb, 50);
       g = closeAuction(g, 'u2', 'sell');
@@ -382,6 +404,7 @@ export function buildDemoState(kind, local) {
       [...pl.money.keys()].sort((a, b) => pl.money[b] - pl.money[a]).forEach((i) => { if (sum < 50) { idx.push(i); sum += pl.money[i]; } });
       g = pay(g, wb, idx);
       local.prev = { logLen: g.log.length - 1, phase: 'auction' };
+      if (qs.get('q4')) { local.prevQuartets = []; g.players.forEach((p) => Object.entries(p.animals).forEach(([id, n]) => { if (n === 4 && !(p.id === wb && id === 'schwein')) local.prevQuartets.push(`${p.id}|${id}`); })); }
       return g;
     }
     case 'moneydrawn': {

@@ -99,6 +99,12 @@ function newsCards(seed) {
 export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
 export const DONKEY_PAYOUTS = [50, 100, 200, 500]; // 1. bis 4. Esel: jeder Spieler bekommt so viel von der Bank
 export const MIN_PLAYERS = 3;
+// v0.77 Zu zweit (Kuhhandel-Master-Variante, Alp 20.11.): Aufteilen statt Versteigern, Geldscheine (ohne 0er) im Stapel,
+// kein Esel-Bonus, Ratten und Spezialkarten werden einfach mit aufgeteilt, nur Klassisch (kein Turbo/Börsen-Chaos)
+export const DUO_PLAYERS = 2;
+export const DUO_MONEY = { 10: 2, 50: 2, 100: 1, 200: 1, 500: 1 }; // wie „Geld im Stapel“ (Standard) ohne 0er
+export const DIVIDE_MS = 10000; // Bedenkzeit beim Aufteilen – danach wird automatisch behalten
+export function isDuo(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.duo); }
 export const MAX_PLAYERS = 4;
 export const BID_STEP = 10;
 export const AUCTION_START_MS = 10000; // so lange läuft eine Versteigerung ohne Gebot
@@ -147,6 +153,7 @@ export function cardName(card) {
   if (card === RAT) return 'Ratte';
   if (isSpecialCard(card)) return `${animalName(specialAnimal(card))}-Spezialkarte`;
   if (isNewsCard(card)) return 'Börsen-News';
+  if (isMoneyCard(card)) return 'einen Geldschein'; // Betrag bleibt verdeckt
   return animalName(card);
 }
 
@@ -234,7 +241,12 @@ function moveAnimals(from, to, animal, count) {
 // ---------- Spielstart ----------
 
 export function createGame({ players, seed = Date.now(), settings = null }) {
-  if (!Array.isArray(players) || players.length < MIN_PLAYERS || players.length > MAX_PLAYERS) {
+  if (isDuo(settings)) {
+    if (!Array.isArray(players) || players.length !== DUO_PLAYERS) fail('Zu zweit heißt: genau 2 Spieler.');
+    // nur Klassisch; Geldscheine ohne 0er gehören dazu (aus „Geld im Stapel“, sonst der Standard-Satz)
+    const m = Object.fromEntries(Object.entries((settings.money && Object.keys(settings.money).length ? settings.money : DUO_MONEY)).filter(([k, n]) => Number(k) !== 0 && n > 0));
+    settings = { ...settings, turbo: null, boerse: null, money: Object.keys(m).length ? m : { ...DUO_MONEY } };
+  } else if (!Array.isArray(players) || players.length < MIN_PLAYERS || players.length > MAX_PLAYERS) {
     fail(`Es braucht ${MIN_PLAYERS} bis ${MAX_PLAYERS} Spieler.`);
   }
   const ids = new Set(players.map((p) => p.id));
@@ -268,6 +280,7 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
     mustDraw: false,
     block: null,
     blocked: null,
+    divide: null,
     lastEvent: null,
     log: [],
     winner: null,
@@ -380,6 +393,7 @@ export function chooseBlock(prev, playerId, animal) {
 
 // Nächster Zug. Ist der Stapel leer und kann ein Spieler nicht handeln, wird er übersprungen.
 function nextTurn(state) {
+  state.divide = null;
   state.auction = null;
   state.payment = null;
   state.trade = null;
@@ -398,7 +412,9 @@ function nextTurn(state) {
       return;
     }
     log(state, `${p.name} kann nicht handeln und setzt aus.`);
+    if (isDuo(state)) state.duoPasses = (state.duoPasses || 0) + 1;
   }
+  if (isDuo(state)) { duoEnd(state); return; }
   // Niemand kann handeln, obwohl nicht alles fertig ist – kann bei korrekten Regeln nicht passieren
   state.phase = 'ended';
   state.winner = [];
@@ -478,6 +494,7 @@ function applyNews(state, me, card) {
 // ---------- Versteigerung ----------
 
 export function drawForAuction(prev, playerId, now) {
+  if (isDuo(prev)) fail('Zu zweit wird aufgeteilt, nicht versteigert.');
   const state = clone(prev);
   requireTurn(state, playerId);
   if (state.deck.length === 0) fail('Der Stapel ist leer – nur noch Kuhhandel ist möglich.');
@@ -547,6 +564,74 @@ export function drawForAuction(prev, playerId, now) {
 }
 
 // v0.65 Zwangsversteigerung ausspielen (ersetzt den Zug)
+// ---------- Zu zweit: Aufteilen (statt Versteigern) ----------
+// 1) Wer dran ist, schaut sich die oberste Karte heimlich an (divideLook).
+// 2) Er behält sie – dann bekommt der andere die nächste Karte (die er vorher nicht kennt) – oder gibt sie ab
+//    und bekommt selbst die nächste (divideChoose). Tiere, Ratten, Spezialkarten liegen offen, Geld kommt auf die Hand.
+function receiveCard(state, p, card) {
+  if (isMoneyCard(card)) { const v = moneyValue(card); giveCards(p, [v]); stat(state, p.id).moneyDrawn += v; return; }
+  if (isSpecialCard(card)) { p.specials.push(specialAnimal(card)); return; }
+  p.animals[card] = (p.animals[card] || 0) + 1; // Tier oder Ratte – kein Esel-Bonus zu zweit
+}
+export function divideLook(prev, playerId, now) {
+  const state = clone(prev);
+  if (!isDuo(state)) fail('Aufteilen gibt es nur zu zweit.');
+  requireTurn(state, playerId);
+  if (state.deck.length === 0) fail('Der Stapel ist leer – nur noch Kuhhandel ist möglich.');
+  state.divide = { by: playerId, card: state.deck[0], endsAt: now != null ? now + DIVIDE_MS : null };
+  state.phase = 'divide';
+  state.lastEvent = { n: state.log.length, type: 'divide_look', player: playerId };
+  log(state, `${player(state, playerId).name} schaut sich die oberste Karte an.`);
+  return state;
+}
+export function divideChoose(prev, playerId, keep) {
+  const state = clone(prev);
+  if (state.phase !== 'divide' || !state.divide || state.divide.by !== playerId) fail('Du teilst gerade nicht auf.');
+  const me = player(state, playerId);
+  const other = state.players.find((p) => p.id !== playerId);
+  const first = state.deck.shift();
+  const second = state.deck.length ? state.deck.shift() : null;
+  const firstTo = keep ? me : other;
+  const secondTo = keep ? other : me;
+  receiveCard(state, firstTo, first);
+  if (second != null) receiveCard(state, secondTo, second);
+  state.lastEvent = { n: state.log.length, type: 'divided', by: playerId, keep: !!keep,
+    first: { to: firstTo.id, card: first }, second: second != null ? { to: secondTo.id, card: second } : null };
+  log(state, `${me.name} ${keep ? 'behält' : 'gibt ab'}: ${cardName(first)} an ${firstTo.name}${second != null ? `, ${cardName(second)} an ${secondTo.name}` : ''}.`);
+  nextTurn(state);
+  return state;
+}
+
+// Bedenkzeit vorbei: jeder darf auslösen – die Karte wird automatisch behalten
+export function divideTimeout(prev, now) {
+  if (prev.phase !== 'divide' || !prev.divide || prev.divide.endsAt == null || now < prev.divide.endsAt) fail('Die Bedenkzeit läuft noch.');
+  const s = divideChoose(prev, prev.divide.by, true);
+  s.lastEvent.auto = true;
+  return s;
+}
+// Stapel leer: wer keinen Kuhhandel starten will, verzichtet. Verzichten beide nacheinander, ist das Spiel vorbei.
+export function duoPass(prev, playerId) {
+  const state = clone(prev);
+  if (!isDuo(state)) fail('Verzichten gibt es nur zu zweit.');
+  requireTurn(state, playerId);
+  if (state.deck.length > 0) fail('Erst wird der Stapel aufgeteilt.');
+  state.duoPasses = (state.duoPasses || 0) + 1;
+  state.lastEvent = { n: state.log.length, type: 'duo_pass', player: playerId, passes: state.duoPasses };
+  log(state, `${player(state, playerId).name} verzichtet auf einen Kuhhandel.`);
+  if (state.duoPasses >= 2) { duoEnd(state); return state; }
+  nextTurn(state);
+  return state;
+}
+function duoEnd(state) {
+  // Spielende zu zweit: Ratten-Block nur, wenn einer alle Ratten hat
+  const rats = state.players.reduce((n, p) => n + (p.animals[RAT] || 0), 0);
+  const owner = rats ? state.players.find((p) => (p.animals[RAT] || 0) === rats) : null;
+  log(state, 'Beide verzichten – das Spiel ist vorbei.');
+  state.trade = null; state.divide = null;
+  if (owner && ANIMALS.some((a) => owner.animals[a.id] === 4)) { state.phase = 'block'; state.block = { player: owner.id }; return; }
+  finishGame(state);
+}
+
 export function playPfaendung(prev, playerId, targetId, animal, now) {
   const state = clone(prev);
   requireTurn(state, playerId);
@@ -709,6 +794,7 @@ export function startTrade(prev, playerId, targetId, animal, cardIndices) {
   const count = me.animals[animal] === 2 && target.animals[animal] === 2 ? 2 : 1;
   const offer = takeCards(me, cardIndices);
   state.trade = { challenger: me.id, target: target.id, animal, count, offer };
+  if (state.duoPasses) state.duoPasses = 0; // zu zweit: ein Kuhhandel setzt das Verzichten zurück
   state.phase = 'trade';
   log(state, `${me.name} fordert ${target.name} zum Kuhhandel um ${count}× ${animalName(animal)} heraus (${offer.length} Karte(n)).`);
   return state;
@@ -1053,6 +1139,10 @@ export function viewFor(state, playerId) {
   }
   if (v.trade && v.trade.challenger !== playerId) v.trade.offer = v.trade.offer.length;
   if (v.rat) v.rat.pot = v.rat.pot.length; // gelegte Karten liegen verdeckt
+  if (v.divide && v.divide.by !== playerId) v.divide.card = null; // nur wer aufteilt, sieht die Karte
+  if (v.lastEvent && v.lastEvent.type === 'divided') {
+    for (const k of ['first', 'second']) { const x = v.lastEvent[k]; if (x && x.to !== playerId && isMoneyCard(x.card)) x.card = 'geld-?'; } // fremdes Geld bleibt verdeckt
+  }
   // Handkarten: eigene offen, fremde nur als Anzahl (Bluff!)
   if (v.hands) for (const id of Object.keys(v.hands)) if (id !== playerId) v.hands[id] = v.hands[id].length;
   if (v.lastEvent && v.lastEvent.type === 'hand' && v.lastEvent.player !== playerId) delete v.lastEvent.kind;

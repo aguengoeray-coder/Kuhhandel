@@ -46,6 +46,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `css/style.css` | Gestaltung |
 | `js/shop.js`, `css/shop.css` | Shop (Reiter Avatare/Sprüche, Kaufen/Auswählen) |
 | `js/shopavatars.js` | 14 Shop-Avatare als SVG: runder Kopf (Tisch) + Ganzkörper `shopAvatarFull` (Shop, Startseite) |
+| `js/quartets.js` | Quartett-Show: eigene Szene je Tier für alle (`quartetShow`, `QSHOW_MS`) |
 | `js/modes.js` | Startbildschirm: Spielmodus-Kacheln (Klassisch, Turbo, Börsen-Chaos, Beitreten) mit eigenen Bildern |
 | `js/whatsnew.js` | „Was ist neu?“ für Spieler – oberster Eintrag = `APP_VERSION` (Check prüft das) |
 | `e2e/` | Browser-Tests (Playwright): alle Ansichten × 4 Handygrößen, einheitliche Größen, komplette Partien |
@@ -86,6 +87,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   (jeder wählt selbst). Aufdecker entscheidet: kaufen (er zahlt dem Buzzer die Karten) oder verkaufen (Buzzer zahlt ihm).
   Der Zahler wählt die Karten selbst. Niemand buzzert → Aufdecker bekommt sie umsonst. Buzzer kann nicht zahlen → Karten offen,
   Countdown neu, er darf erst ab seiner Kartenanzahl drücken. Aufdecker mit zu wenig Karten muss verkaufen.
+- **Zu zweit** (Spielart `duo`, nur Klassisch, nach Kuhhandel Master): genau 2 Spieler; Aufteilen statt Versteigern – oberste Karte heimlich ansehen, behalten (der andere bekommt die nächste) oder abgeben (man bekommt selbst die nächste), 10 s Bedenkzeit, dann automatisch behalten; Geldscheine ohne 0er im Stapel (aus „Geld im Stapel“, sonst Standard-Satz); kein Esel-Bonus; Ratten/Spezialkarten werden mit aufgeteilt; statt aufzuteilen Kuhhandel möglich; Stapel leer → nur Kuhhandel, verzichten beide nacheinander → Spielende.
 - **Börsen-Chaos** (Spielart, nie mit Turbo): + 13 Börsen-News im Stapel; aufgedeckt → Wirkung sofort, Aufdecker deckt nochmal auf.
   Kursrallye 2× (zufällig +30 … +100 %, meist klein), Kurssturz 2× (zufällig −30 … −100 %, meist groß), **Hype** (Tier ×2), **Blase platzt** (Tier ÷2) – Kurse werden multipliziert (wie an der Börse), höchstens ×4, nie unter 0; Tier beim Mischen ausgelost, Dividende (alle +50),
   Steuerprüfung (jeder gibt seinen höchsten Schein ab, nur eigener sichtbar), Marktpanik (jeder schiebt einen zufälligen Schein verdeckt nach links),

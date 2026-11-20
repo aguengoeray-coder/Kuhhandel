@@ -3,6 +3,7 @@ import {
   ANIMAL_BY_ID, possibleTrades, drawForAuction, bid, passAuction, closeAuction, buyPrice,
   pay, startTrade, acceptTrade, counterTrade, ANIMALS, RAT, scoreFor, kursValue,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, RPS, specialDecide, specialStage, specialNumber, specialResult, chooseBlock,
+  isDuo, divideLook, divideChoose, divideTimeout, duoPass, isMoneyCard, isSpecialCard, specialAnimal, moneyValue,
 } from '../src/engine.js';
 
 const sum = (a) => a.reduce((x, y) => x + y, 0);
@@ -18,6 +19,24 @@ export function botStep(s, bots, now, rand = Math.random) {
   const isBot = (id) => bots.includes(id);
   const P = (id) => s.players.find((p) => p.id === id);
 
+  // v0.77 Zu zweit: Aufteilen – behalten, was zur eigenen Sammlung passt (oder viel Geld ist), sonst abgeben
+  if (s.phase === 'divide') {
+    if (s.divide.endsAt != null && now >= s.divide.endsAt) return divideTimeout(s, now);
+    if (!isBot(s.divide.by)) return null;
+    const c = s.divide.card; const me = P(s.divide.by);
+    const an = isSpecialCard(c) ? specialAnimal(c) : c;
+    const want = isMoneyCard(c) ? moneyValue(c) >= 100 : c === RAT ? false : (me.animals[an] || 0) > 0 || (ANIMAL_BY_ID[an]?.value || 0) >= 500;
+    return divideChoose(s, me.id, rand() < (want ? 0.85 : 0.3));
+  }
+  if (s.phase === 'turn' && isDuo(s)) {
+    const cur = s.players[s.turn];
+    if (!isBot(cur.id)) return null;
+    const trades = possibleTrades(s, cur.id);
+    if (s.deck.length > 0 && (trades.length === 0 || rand() < 0.75)) return divideLook(s, cur.id, now);
+    if (!trades.length || (s.deck.length === 0 && rand() < 0.2)) return s.deck.length === 0 ? duoPass(s, cur.id) : null;
+    const t = pick(trades, rand);
+    return startTrade(s, cur.id, t.target, t.animal, randomCards(cur.money, 1 + Math.floor(rand() * 3), rand));
+  }
   if (s.phase === 'turn') {
     const cur = s.players[s.turn];
     if (!isBot(cur.id)) return null;
@@ -135,6 +154,7 @@ export function whoMustAct(s, now) {
   }
   if (s.phase === 'rat') return ratCurrent(s);
   if (s.phase === 'block') return s.block.player;
+  if (s.phase === 'divide') return s.divide.by;
   if (s.phase === 'special') {
     const st = specialStage(s, now);
     if (st === 'decide') return s.special.revealer;

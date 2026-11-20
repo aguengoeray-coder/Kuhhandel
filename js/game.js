@@ -8,8 +8,10 @@ import {
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
   isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
+  isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
+import { quartetShow, QSHOW_MS, quartetSound } from './quartets.js';
 import { theaterFx, sceneScript, sceneHtml } from './theater.js';
 import { SHOP_EMOTES } from './shop.js';
 import { animalBody } from './beasts.js';
@@ -184,6 +186,18 @@ function playCard(id, kind = 'animal') {
   </div>`;
 }
 
+// v0.77 Zu zweit: eine Stapelkarte groß zeigen (Tier, Ratte, Spezialkarte oder Geldschein)
+function cardFace(card) {
+  if (isMoneyCard(card)) { const v = moneyValue(card); return `<div class="money big divmoney" style="--m:${MONEY_COLORS[v] || '#eee'}">${mIn(v)}</div>`; }
+  if (isSpecialCard(card)) return playCard(specialAnimal(card), 'special');
+  if (card === RAT) return playCard(RAT, 'rat');
+  return playCard(card);
+}
+function cardLabel(card) {
+  if (isMoneyCard(card)) return `${moneyValue(card)} Taler`;
+  if (isSpecialCard(card)) return `${aname(specialAnimal(card))}-Spezialkarte`;
+  return aname(card);
+}
 function bigAnimalCard(id, extraRows = '', cls = '') {
   return `<div class="bigcard ${cls}">${playCard(id)}
     <div class="bcinfo"><div class="bctitle">${esc(aname(id))}<small>Quartettwert ${ANIMAL_BY_ID[id].value}</small></div>${extraRows}</div>
@@ -256,9 +270,22 @@ export function choreo(le, deckLeft, W = evWait(le.type, deckLeft, le) || 0, pil
   const end = Math.max(payAt, ...streams.map((x) => x.at + streamMs(x.count)));
   return { W, payAt, streams, end, haloAt: end + HALO_PAUSE, calm: end + HALO_PAUSE + HALO_MS };
 }
-export const calmFor = (le, deckLeft) => (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS);
+// v0.77 Quartett-Show: Hat dieses Ereignis ein Quartett vollgemacht? (Der Empfänger hat danach genau 4 – vorher waren es weniger.)
+export function quartetOf(le, state) {
+  if (!le || !state) return null;
+  const has4 = (pid, an) => an && an !== RAT && state.players.find((p) => p.id === pid)?.animals?.[an] === 4 ? { pid, animal: an } : null;
+  if (le.type === 'auction_won') return has4(le.buyer, le.animal);
+  if (le.type === 'trade' && le.animal !== RAT) return has4(le.winner, le.animal);
+  if (le.type === 'divided') return [le.first, le.second].filter(Boolean).map((x) => has4(x.to, x.card)).find(Boolean) || null;
+  return null;
+}
+const Q_EXTRA = QSHOW_MS + 300; // so lange wartet das Spiel zusätzlich
+// Wann die laufende Quartett-Show sicher vorbei ist – solange darf niemand (auch kein Test-Spieler) weitermachen
+let showUntilAt = 0;
+export const showBusy = () => Date.now() < showUntilAt;
+export const calmFor = (le, deckLeft, state = null) => (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS) + (quartetOf(le, state) ? Q_EXTRA : 0);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
-export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn'];
+export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn', 'divided'];
 
 // Auslage passt nicht in ihre Breite (viele Tiere, große Schrift)? Dann nachmessen und kleiner machen – nie unter die Knöpfe
 function fitAuslage(root) {
@@ -687,9 +714,11 @@ export function renderGame(root, ctx) {
   if (evN != null) local.seenEvN = evN;
   if (evFresh && v.lastEvent?.type === 'trade' && local.potLand && local.potLand > Date.now()) { TRADE_PRE.set(v.lastEvent.n, local.potLand - Date.now() + 200); if (TRADE_PRE.size > 20) TRADE_PRE.delete(TRADE_PRE.keys().next().value); }
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
-  if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = EV_WAIT[v.lastEvent.type] ? choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).calm : CALM_MS; local.calmUntil = Date.now() + local.calmDur; }
-  const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
-  if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).haloAt }; // Rahmen wandert erst nach Tier + Geld + Ruhe
+  const qExtra = evFresh && quartetOf(v.lastEvent, state) ? Q_EXTRA : 0; // v0.77: Quartett-Show – das Spiel wartet, bis sie vorbei ist
+  if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = qExtra + (EV_WAIT[v.lastEvent.type] ? choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).calm : CALM_MS); local.calmUntil = Date.now() + local.calmDur; }
+  const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now(), showUntilAt - Date.now()) : 0;
+  if (calmLeft && local.tradeOpen) local.tradeOpen = false; // v0.77: während Ruhe/Quartett-Show kein offenes Kuhhandel-Fenster
+  if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + qExtra + choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).haloAt }; // Rahmen wandert erst nach Tier + Geld + Ruhe
   if (local.turnHold && (Date.now() >= local.turnHold.until || state.phase !== 'turn')) local.turnHold = null;
   // Dein Geld kommt und geht sichtbar aus deiner Hand: bezahlte Scheine bleiben im Fächer, bis sie losfliegen;
   // bekommene erscheinen erst, wenn sie gelandet sind (und leuchten kurz).
@@ -708,6 +737,10 @@ export function renderGame(root, ctx) {
       loseAt: outS ? t0 + outS.at : le0.type === 'trade' ? t0 + ch0.W : t0,
       gainAt: inS.length ? t0 + Math.min(...inS.map((x) => x.at)) + MFLY_MS - 20 : le0.type === 'trade' ? t0 + ch0.W : t0,
     } : null;
+  }
+  // v0.77 Zu zweit: dein aufgeteilter Geldschein erscheint erst, wenn er gelandet ist
+  if (evFresh && v.lastEvent?.type === 'divided') {
+    [v.lastEvent.first, v.lastEvent.second].forEach((x, k) => { if (x && x.to === meId && /^geld-\d+$/.test(x.card)) local.handFx = { gain: [Number(x.card.slice(5))], lose: [], gainAt: Date.now() + 250 + k * 450 + 300 + MFLY_MS - 20, loseAt: Date.now() }; });
   }
   if (Array.isArray(me.money)) local.prevMoney = me.money.slice();
   if (local.handFx && Date.now() > Math.max(local.handFx.loseAt, local.handFx.gainAt) + 1000) local.handFx = null;
@@ -1210,7 +1243,7 @@ export function renderGame(root, ctx) {
     H.tAnimal = (id) => { local.tradeAnimal = id; local.tradePicked = true; local.pickedNow = true; ctx.rerender(); };
     H.tradeRepick = () => { local.tradePicked = false; ctx.rerender(); };
     H.tradeClose = () => { local.tradeOpen = false; local.tradePicked = false; local.sel = []; ctx.rerender(); };
-    H.tradeGo = () => ctx.act((s) => startTrade(s, meId, local.tradeTarget, local.tradeAnimal, local.sel));
+    H.tradeGo = () => { if (showBusy() || calmLeft) return; ctx.act((s) => startTrade(s, meId, local.tradeTarget, local.tradeAnimal, local.sel)); }; // v0.77: nicht während Ruhe/Quartett-Show
   }
 
   if (state.phase === 'trade') {
@@ -1237,7 +1270,7 @@ export function renderGame(root, ctx) {
     aucBanner = `${isRat ? 'Rattenhandel' : 'Kuhhandel'}: ${esc(nameOf(t.challenger))} gegen ${esc(nameOf(t.target))}`;
     const challengerPanel = (extra = '') => `<div class="tpanel">
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
-        <div class="kslots${arr}">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
+        <div class="kslots${offerCount > 5 ? ' many' : ''}${arr}">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
         <div class="tline big"><b>${karten(offerCount)}${Array.isArray(t.offer) ? ` · ${sum(t.offer)}` : ''}</b><small>${Array.isArray(t.offer) ? 'dein Angebot' : 'verdeckt geboten'}</small></div>
         ${stakeOf(t.challenger, t.animal, t.count, t.target)}
         ${extra}
@@ -1290,6 +1323,40 @@ export function renderGame(root, ctx) {
     } else {
       aucCenter = `<div class="auc">${ratCard('', 'compact')}<div class="aucinfo">${esc(bp.name)} wählt, welches Quartett nicht zählt …</div></div>`;
       aucLeft = `<div class="ldecide">Gleich ist das Spiel vorbei.</div>`;
+    }
+  }
+
+  // ----- v0.77 Zu zweit: Aufteilen -----
+  if (state.phase === 'divide' && v.divide) {
+    const by = v.divide.by; const mine = by === meId; const other = v.players.find((p) => p.id !== by);
+    const leftMs = v.divide.endsAt != null ? Math.max(0, v.divide.endsAt - ctx.now()) : DIVIDE_MS;
+    const left = Math.ceil(leftMs / 1000);
+    if (leftMs > 0) wakeLocal(Date.now() + (leftMs % 1000 || 1000) + 20);
+    // Zeit um: der Aufteiler (oder nach 2,5 s der andere) behält automatisch
+    const due = v.divide.endsAt != null ? v.divide.endsAt + (mine ? 0 : 2500) : null;
+    if (due != null && ctx.now() >= due && local.divTO !== v.divide.endsAt) { local.divTO = v.divide.endsAt; ctx.act((s) => divideTimeout(s, ctx.now())); }
+    else if (due != null) wakeLocal(Date.now() + Math.max(0, due - ctx.now()) + 30);
+    const nxt = Array.isArray(state.deck) ? state.deck[1] : null;
+    const nextTxt = nxt == null ? 'Danach: keine Karte mehr' : isMoneyCard(nxt) ? 'Danach: 💰 ein Geldschein' : 'Danach: 🐄 eine Tierkarte';
+    const nextBack = nxt == null ? '' : `<span class="divnext ${isMoneyCard(nxt) ? 'money' : ''}" aria-hidden="true">${isMoneyCard(nxt) ? '💰' : `<span class="deckcow">${art('kuh')}</span>`}</span>`;
+    const timer = `<span class="ttimer divtimer ${left <= 3 ? 'low' : ''}">⏱ ${left} s</span>`;
+    aucBanner = mine ? 'Behalten oder abgeben?' : `${esc(nameOf(by))} teilt auf`;
+    if (mine) {
+      const c = v.divide.card;
+      aucCenter = `<div class="divpanel ${entered ? 'pop' : ''}">
+        <div class="divcard flip">${cardFace(c)}</div>
+        <div class="divinfo"><b>${esc(cardLabel(c))}</b><small>Nur du siehst diese Karte.</small>
+          <div class="divnextrow">${nextBack}<span>${nextTxt}</span></div>${timer}</div></div>`;
+      aucLeft = `<button type="button" class="pill pill-red divbtn" data-a="divKeep"><small>BEHALTEN</small><span>${esc(nameOf(other.id))} bekommt die nächste</span></button>
+        <button type="button" class="pill pill-white divbtn" data-a="divGive"><small>ABGEBEN</small><span>du bekommst die nächste</span></button>`;
+      H.divKeep = () => ctx.act((s) => divideChoose(s, meId, true));
+      H.divGive = () => ctx.act((s) => divideChoose(s, meId, false));
+    } else {
+      aucCenter = `<div class="divpanel other ${entered ? 'pop' : ''}">
+        <div class="divcard wobble"><div class="deck">${`<span class="deckcow">${art('kuh')}</span>`}</div></div>
+        <div class="divinfo"><b>${esc(nameOf(by))} schaut sich die Karte an …</b><small>Behält er sie, bekommst du die nächste.</small>
+          <div class="divnextrow">${nextBack}<span>${nextTxt}</span></div>${timer}</div></div>`;
+      aucLeft = `<div class="ldecide">${esc(nameOf(by))} entscheidet …</div>`;
     }
   }
 
@@ -1404,13 +1471,13 @@ export function renderGame(root, ctx) {
   if (local.pfOpen && !pfTargets.length) local.pfOpen = false;
   H.pfOpen = () => { local.pfOpen = true; ctx.rerender(); };
   H.pfClose = () => { local.pfOpen = false; ctx.rerender(); };
-  H.pfGo = (val) => { const [tid, an] = String(val).split('|'); local.pfOpen = false; ctx.act((s) => playPfaendung(s, meId, tid, an, ctx.now())); };
+  H.pfGo = (val) => { if (showBusy() || calmLeft) return; const [tid, an] = String(val).split('|'); local.pfOpen = false; ctx.act((s) => playPfaendung(s, meId, tid, an, ctx.now())); };
   let leftActionsHtml = aucLeft;
   // Nicht dran: unten links bleibt frei (wer dran ist, steht oben im Schild und an der Sanduhr)
   if (state.phase === 'turn' && myTurn && !local.tradeOpen) {
     leftActionsHtml = `
-      <button type="button" class="pill pill-red ${calmLeft ? 'calm' : 'hintme'}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>KARTE<br>AUFDECKEN</button>
-      <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>${pfaendBtn}`;
+      <button type="button" class="pill pill-red ${calmLeft ? 'calm' : 'hintme'}" data-a="auction" ${v.deck > 0 && !calmLeft ? '' : 'disabled'} ${calmLeft ? `style="--el:-${(local.calmDur || CALM_MS) - calmLeft}ms;--calm:${local.calmDur || CALM_MS}ms"` : ''}>${isDuo(state) ? 'KARTE<br>ANSEHEN' : 'KARTE<br>AUFDECKEN'}</button>
+      <button type="button" class="pill pill-white" data-a="tradeOpen" ${trades.length && !v.mustDraw && !calmLeft ? '' : 'disabled'}>Kuhhandel</button>${pfaendBtn}${isDuo(state) && v.deck === 0 ? `<button type="button" class="pill pill-white pill-small duopass" data-a="duoPass" ${calmLeft ? 'disabled' : ''} title="Verzichten beide nacheinander, ist das Spiel vorbei">Verzichten${state.duoPasses ? ' · dann Ende' : ''}</button>` : ''}`;
   }
   const askMe = local.urgeNow || (state.phase === 'turn' && myTurn && !local.tradeOpen) || (state.phase === 'payment' && v.payment.payer === meId)
     || (state.phase === 'trade' && v.trade.target === meId) || (state.phase === 'rat' && ratCurrent(v) === meId) || (state.phase === 'block' && v.block.player === meId);
@@ -1423,7 +1490,7 @@ export function renderGame(root, ctx) {
     ${shownHolder === meId && realHolder === meId && state.phase === 'turn' ? `<div class="myglow ${flashing ? 'in' : ''}" style="--fl:-${Math.min(flashEl, 99999)}ms" aria-hidden="true"></div>` : ''}
     <div class="tcenter">${aucCenter || `
     <div class="deck-wrap">
-      ${canDraw ? `<button type="button" class="deck go ${topCls}" data-a="auction" aria-label="${topMoney ? 'Geldschein aufdecken' : topNews ? 'Börsen-News aufdecken' : 'Karte aufdecken'}">${deckFace}<span class="deckgo">Tippen</span></button>`
+      ${canDraw ? `<button type="button" class="deck go ${topCls}" data-a="auction" aria-label="${isDuo(state) ? 'Karte ansehen' : topMoney ? 'Geldschein aufdecken' : topNews ? 'Börsen-News aufdecken' : 'Karte aufdecken'}">${deckFace}<span class="deckgo">Tippen</span></button>`
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''} ${topCls}">${v.deck > 0 ? deckFace : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
@@ -1482,8 +1549,9 @@ export function renderGame(root, ctx) {
   H.intros = () => ctx.toggleIntros && ctx.toggleIntros();
   H.push = () => ctx.togglePush && ctx.togglePush();
   H.modal = (kind) => ctx.openModal(kind);
-  H.auction = () => ctx.act((s) => drawForAuction(s, meId, ctx.now()));
-  H.tradeOpen = () => { local.tradeOpen = true; local.tradePicked = false; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
+  H.auction = () => (showBusy() || calmLeft) ? undefined : ctx.act((s) => (isDuo(s) ? divideLook(s, meId, ctx.now()) : drawForAuction(s, meId, ctx.now())));
+  H.duoPass = () => ctx.act((s) => duoPass(s, meId));
+  H.tradeOpen = () => { if (showBusy() || calmLeft) return; local.tradeOpen = true; local.tradePicked = false; local.sel = []; local.tradeTarget = null; local.tradeAnimal = null; ctx.rerender(); };
   H.tradeWith = (val) => { const [pid, animal] = String(val).split('|'); local.tradeOpen = true; local.tradePicked = true; local.sel = []; local.tradeTarget = pid; local.tradeAnimal = animal; ctx.rerender(); };
 
   // ----- Überlagerung je nach Phase -----
@@ -1641,7 +1709,10 @@ export function renderGame(root, ctx) {
     const [qp, qa] = added.length ? added[0].split('|') : [];
     if (added.length) { local.qSound = true; if (qp === meId) local.qMine = true; }
     if (added.length && evNew && receiverOf(le) === qp && le.animal === qa) local.qBadge = `${evSig}`; // Quartett steht als Abzeichen im Ergebnis-Fenster
-    if (added.length) { local.poloNext = { pid: qp, animal: qa, delay: evNew ? evDelay + 600 : 500 }; if (qp) moodMark(qp, 'love', Date.now() + (evNew ? evDelay + 600 : 500), 3400); }
+    // v0.77 (Alp): erst wenn die Tiere angekommen sind (Lauf startet evDelay − WALK_OVERLAP und dauert FLY_MS)
+    // v0.77 (Alp): Quartett-Show für alle – nach Tier und Geld (Ende des Ablaufs), danach geht es weiter
+    const qd = evNew ? choreo(le, v.deck).end + 200 : le && le.type === 'divided' ? 250 + 450 + FLY_MS + 200 : 500;
+    if (added.length && qa !== RAT) { local.poloNext = { pid: qp, animal: qa, delay: qd }; if (qp) moodMark(qp, 'love', Date.now() + qd + QSHOW_MS, 2600); }
     else if (added.length) {
       const [pid, animal] = added[0].split('|');
       const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
@@ -1753,6 +1824,24 @@ export function renderGame(root, ctx) {
       const mi = Math.max(0, (lem.movers || []).indexOf(meId)); const gi = lem.kind === 'panik' ? Math.max(0, (lem.movers || []).indexOf(lem.moved?.from)) : k;
       if (gain.length || lose.length) local.handFx = { gain, lose, gainAt: t0 + NF + gi * (lem.kind === 'panik' ? 120 : 140) + MFLY_MS - 20, loseAt: t0 + NF + (lem.kind === 'panik' ? mi * 120 : k * 140) }; }
   }
+  // v0.77 Zu zweit: aufgeteilt – beide Karten laufen/fliegen aus der Mitte zu ihrem Platz (Tier zum Stapel, Geld ins Geld)
+  if (evFresh && le && le.type === 'divided') {
+    const parts = [le.first, le.second].filter(Boolean);
+    let fx = `<div class="divstrip" aria-live="polite">${esc(nameOf(le.by))} ${le.by === meId ? (le.keep ? 'behältst' : 'gibst ab') : le.keep ? 'behält' : 'gibt ab'}${le.auto ? ' (Zeit um)' : ''}</div>`;
+    parts.forEach((x, k) => {
+      const d = 250 + k * 450;
+      if (String(x.card).startsWith('geld-')) {
+        const val = x.card === 'geld-?' ? null : moneyValue(x.card);
+        fx += moneyFly('@card', x.to, 1, d + 300, x.to === meId && val != null ? [val] : null);
+      } else {
+        const an = isSpecialCard(x.card) ? specialAnimal(x.card) : x.card;
+        fx += homeWalk(an, '@card', `@stall:${x.to}:${an}`, d, { star: isSpecialCard(x.card) });
+      }
+    });
+    keepFx(fx, 250 + parts.length * 450 + FLY_MS + 400);
+    sounds.push('flip'); later.push(['trade', 300]);
+  }
+  if (entered && state.phase === 'divide') sounds.push('flip');
   // v0.61 Admin-Fähigkeit „Verprügeln“: Figur läuft hin, Prügelwolke, läuft zurück (bei allen)
   for (const pu of ctx.punches || []) {
     const sig = `${pu.from}|${pu.to}|${pu.at}`;
@@ -1965,7 +2054,7 @@ export function renderGame(root, ctx) {
   // Spielstart: alle Spieler, „Die Börse ist eröffnet!“
   if (state.phase === 'turn' && !v.lastEvent && state.log.length <= 2 && v.players.length >= 2) {
     playIntro(`start|${v.players.map((p) => p.id).join(',')}|${state.log[0] || ''}`, {
-      parts: v.players.map((p) => partOf(p.id)), title: 'DIE BÖRSE IST ERÖFFNET!', vs: 'LOS!', ms: INTRO_START_MS,
+      parts: v.players.map((p) => partOf(p.id)), title: isDuo(state) ? 'DUELL ZU ZWEIT!' : 'DIE BÖRSE IST ERÖFFNET!', vs: isDuo(state) ? 'VS' : 'LOS!', ms: INTRO_START_MS,
       badge: isTurbo(state) ? '⚡ Turbo' : isBoerse(state) ? '📈 Börsen-Chaos' : '',
     });
   }
@@ -1999,7 +2088,13 @@ export function renderGame(root, ctx) {
   if (local.poloNext) {
     const { pid, animal, delay } = local.poloNext; local.poloNext = null;
     const pt = `@stall:${pid}:${animal}`; // v0.70: vom eigenen Stapel los und wieder zurück
-    keepFx([0, 1, 2, 3].map((k) => `<div class="polo" data-route="${esc(pt)};@cl;@cr;${esc(pt)}" data-offs="0,.3,.7,1" data-dur="3000" data-delay="${delay + k * 190}">${beast(animal, 'dance')}</div>`).join(''), delay + 3800);
+    // v0.77 (Alp): eigene Szene je Tier für alle (Hähne krähen, Kühe springen über den Mond …) – nicht wegtippbar
+    void pt;
+    const qi = idxOf(pid);
+    keepFx(quartetShow(animal, esc(pid === meId ? 'Du' : nameOf(pid)), qi >= 0 ? SEAT_COLORS[qi] : '#FFD34E', delay, pid === meId), delay + QSHOW_MS + 100, 'qshow');
+    showUntilAt = Math.max(showUntilAt, Date.now() + delay + QSHOW_MS + 250);
+    local.calmUntil = Math.max(local.calmUntil || 0, showUntilAt); // deine Knöpfe warten auch
+    later.push([quartetSound(animal), delay + 1100]); later.push(['fanfare', delay + 150]);
   }
 
   const closeRes = () => {
@@ -2294,6 +2389,10 @@ export function renderGame(root, ctx) {
   // v0.68: Scroll-Stand offener Fenster (💬-Menü, Menü, Pfänden-Auswahl, Abrechnung) beim Neuzeichnen behalten
   const KEEP_SCROLL = ['.reactpick', '.menu', '.pfpick', '.ending.recap ul'];
   const keptScroll = KEEP_SCROLL.map((sel) => { const el = root.querySelector(sel); return el ? el.scrollTop : 0; });
+  // v0.77 (Alp): das 💬-Fenster bleibt beim Neuzeichnen dasselbe Element (sonst bricht Wischen/Scrollen auf dem Handy ab) –
+  // nur geänderte Abschnitte darin werden ausgetauscht
+  const oldPick = root.querySelector('.reactpick');
+  if (oldPick) oldPick.remove();
   root.dataset.me = meId;
   root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
@@ -2334,6 +2433,11 @@ export function renderGame(root, ctx) {
   aimFly(root);
   aimFx(root);
   routeFx(root);
+  { const np = root.querySelector('.reactpick');
+    if (np && oldPick && np.className === oldPick.className && np.children.length === oldPick.children.length) {
+      [...np.children].forEach((c, i) => { const o = oldPick.children[i]; if (o.outerHTML !== c.outerHTML) o.replaceWith(c.cloneNode(true)); });
+      np.replaceWith(oldPick);
+    } else if (np && oldPick && np.className === oldPick.className) { np.replaceWith(oldPick); oldPick.innerHTML = np.innerHTML; } }
   KEEP_SCROLL.forEach((sel, i) => { const el = root.querySelector(sel); if (el && keptScroll[i]) el.scrollTop = keptScroll[i]; });
   // v0.69 Kurssprung-Blinken (nach der News-Karte, 2,4 s; negative Verzögerung, damit Neuzeichnen es nicht neu startet)
   { const kf = local.kursFx; const el = kf ? Date.now() - kf.at : -1;
