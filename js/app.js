@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.77.0';
+export const APP_VERSION = '0.78.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -397,6 +397,14 @@ function renderStart() {
   }));
 }
 
+// v0.78 Tempo der Runde (Alp): Gemütlich / Normal / Schnell
+const TEMPO_OPTS = [['gemuetlich', '🐢 Gemütlich', 'alle Zeiten ×1,5'], ['normal', 'Normal', ''], ['schnell', '⚡ Schnell', 'alle Zeiten ×0,7']];
+function tempoSeg(cur, canEdit, attr) {
+  const c = cur || 'normal';
+  if (!canEdit) return c === 'normal' ? '' : `<span class="rs-chip on">✓ Tempo: ${TEMPO_OPTS.find((x) => x[0] === c)[1]}</span>`;
+  return `<div class="tempo-seg" role="radiogroup" aria-label="Tempo"><span>Tempo</span>${TEMPO_OPTS.map(([k, l]) => `<button type="button" role="radio" aria-checked="${c === k}" class="${c === k ? 'on' : ''}" ${attr}="${k}">${l}</button>`).join('')}</div>`;
+}
+
 // v0.73: Modus angetippt → großes Fenster mit Bild links, Einstellungen der Runde rechts
 function modePanel(id) {
   const m = MODES.find((x) => x.id === id);
@@ -484,6 +492,7 @@ function renderRoom() {
       <div class="rs-extra">
       ${[['duo', '👥 Zu zweit (Aufteilen)'], ['turbo', '⚡ Turbo (7 Tiere, 6 s)'], ['boerse', '📈 Börsen-Chaos (13 News)'], ['tradeTimer', `⏱ Kuhhandel-Zeit ${g.state?.settings?.turbo ? 12 : 20} s`], ['moneyCounts', '💰 Geld zählt am Ende']].map(([k, label]) => { const on = !!g.state?.settings?.[k];
         return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
+      ${tempoSeg(g.state?.settings?.tempo, isHost, 'data-tempo')}
     </div>
     </div>
     ${money ? `<div class="msteps">${steppers}</div>` : ''}
@@ -519,6 +528,7 @@ function renderRoom() {
   }));
   document.getElementById('start')?.addEventListener('click', onStart);
   document.getElementById('moneyToggle')?.addEventListener('click', () => saveSettings({ money: money ? null : { ...DEFAULT_MONEY } }));
+  app.querySelectorAll('[data-tempo]').forEach((b) => b.addEventListener('click', () => saveSettings({ tempo: b.dataset.tempo === 'normal' ? null : b.dataset.tempo })));
   app.querySelectorAll('[data-setting]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.setting; const cur = !!ui.game.state?.settings?.[k]; saveSettings({ [k]: cur ? null : (k === 'tradeTimer' ? 20 : true), ...(!cur && k === 'turbo' ? { boerse: null, duo: null } : {}), ...(!cur && k === 'boerse' ? { turbo: null, duo: null } : {}), ...(!cur && k === 'duo' ? { turbo: null, boerse: null } : {}) }); })); // Turbo, Börsen-Chaos und Zu zweit schließen sich aus
   app.querySelectorAll('[data-money]').forEach((b) => b.addEventListener('click', () => {
     const v = b.dataset.money;

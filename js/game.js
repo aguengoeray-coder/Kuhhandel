@@ -8,7 +8,7 @@ import {
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
   isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, HEKTIK_MS, isMoneyCard, playPfaendung, pfaendTargets, PFAEND_SHOW_MS,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, batzenStage, showBatzen,
-  isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue,
+  isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue, tempoFactor,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
 import { quartetShow, QSHOW_MS, quartetSound } from './quartets.js';
@@ -228,13 +228,16 @@ const DEMO_HANDTIP = typeof location !== 'undefined' && new URLSearchParams(loca
 const DEMO_JUB = typeof location !== 'undefined' && new URLSearchParams(location.search).has('mejub'); // Screenshot: deine Figur jubelt
 export const CALM_MS = 2500;
 // Ergebnis-Fenster: so lange bleibt es stehen
-const EV_WAIT = { auction_won: 3000, special_won: 3500, trade: 4800, rat_taken: 3500 }; // Kuhhandel: inkl. ~1 s Aufdecken
+// v0.78 (Alp): Ergebnis-Fenster länger – ohne Spielverlauf ist es die einzige Stelle, an der man sieht, wer was bekommt/zahlt
+const EV_WAIT = { auction_won: 4500, special_won: 4500, trade: 5800, rat_taken: 4500 }; // Kuhhandel: inkl. ~1 s Aufdecken
+let TEMPO_F = 1; // Tempo der laufenden Partie (Gemütlich/Normal/Schnell) – wird bei jedem Zeichnen gesetzt
+export const setTempo = (stateOrSettings) => { TEMPO_F = tempoFactor(stateOrSettings); };
 // Stapel leer (nur noch Kuhhandel): Ergebnis kürzer zeigen, damit es flott weitergeht
 // v0.72 Tempo: „umsonst“ (kein Geld fließt) – Fenster nur 2 s
 // v0.76 (Alp): schneller Kuhhandel – laufen die Einsätze noch in die Mitte, wartet das Ergebnis, bis sie dort sind (TRADE_PRE = Vorlauf in ms je Ereignis)
 const TRADE_PRE = new Map();
 const tradePre = (le) => (le && le.type === 'trade' ? TRADE_PRE.get(le.n) || 0 : 0);
-export const evWait = (type, deckLeft, le = null) => (type === 'trade' && deckLeft === 0 ? 3800 : type === 'auction_won' && le && !(le.amount > 0) ? 2000 : EV_WAIT[type]) + tradePre(le);
+export const evWait = (type, deckLeft, le = null) => (EV_WAIT[type] == null ? undefined : Math.round((type === 'trade' && deckLeft === 0 ? 4800 : type === 'auction_won' && le && !(le.amount > 0) ? 3000 : EV_WAIT[type]) * TEMPO_F)) + tradePre(le);
 // Verschnaufpause nach einem Ergebnis: so lange wie das Ergebnis-Fenster steht (+0,5 s für langsamere Handys)
 // Ablauf nach einem Ergebnis – EIN Plan, aus den echten Flügen berechnet (nicht geschätzt):
 //   Fenster steht (W) → Tier fliegt → Geld fliegt (Kuhhandel: erst Angebot hin, wenn gelandet Gegenangebot zurück)
@@ -283,7 +286,7 @@ const Q_EXTRA = QSHOW_MS + 300; // so lange wartet das Spiel zusätzlich
 // Wann die laufende Quartett-Show sicher vorbei ist – solange darf niemand (auch kein Test-Spieler) weitermachen
 let showUntilAt = 0;
 export const showBusy = () => Date.now() < showUntilAt;
-export const calmFor = (le, deckLeft, state = null) => (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS) + (quartetOf(le, state) ? Q_EXTRA : 0);
+export const calmFor = (le, deckLeft, state = null) => (state && setTempo(state), 0) + (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS) + (quartetOf(le, state) ? Q_EXTRA : 0);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn', 'divided'];
 
@@ -624,6 +627,7 @@ function kursZettel(state) {
 }
 
 export function renderGame(root, ctx) {
+  setTempo(ctx.state);
   const { state, meId, local } = ctx;
   KURSE = state.kurse || null;
   avatarLookup = ctx.avatarFor || (() => null);
@@ -1784,7 +1788,7 @@ export function renderGame(root, ctx) {
   // Geräusche zu den Ereignissen
   if (entered && (state.phase === 'rat' || state.phase === 'special')) sounds.push('flip');
   // Ratte aufgedeckt: Quieken, eine kleine Ratte huscht über den Tisch
-  if (entered && state.phase === 'rat') { later.push(['quiek', 500]); keepFx([0, 1, 2].map((k) => `<div class="ratrun r${k}" aria-hidden="true">${art(RAT)}</div>`).join(''), 2600); } // ein ganzes Rattenrudel flitzt über den Tisch
+  if (entered && state.phase === 'rat') later.push(['quiek', 500]); // v0.78 (Alp): kein Rattenrudel mehr – nur die eine Ratte aus der Karte knabbert reihum am Geld
   if (fresh && state.phase === 'rat' && !entered) sounds.push('bid');
   // Geldschein aus dem Stapel: Karte groß für alle zeigen, dann fliegt sie zum Spieler
   const lem = v.lastEvent;

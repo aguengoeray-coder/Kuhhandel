@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.78.0 – Mehr Ruhe
+
+- [x] **Ergebnisse länger sichtbar:** Ohne Spielverlauf ist das Ergebnis-Fenster die einzige Stelle, an der man sieht, wer was bekommt und zahlt – es bleibt jetzt 4,5 s (Kuhhandel 5,8 s, „umsonst“ 3 s) statt 3 s. Für dich selbst weiter wegtippbar.
+- [x] **Karte in Ruhe ansehen:** Nach dem Aufdecken bleiben 3 s (statt 1,5 s), bevor die Versteigerungsuhr läuft.
+- [x] **Tempo pro Runde:** Im Warteraum „Tempo: 🐢 Gemütlich / Normal / ⚡ Schnell“ – Gemütlich macht Versteigerung, Anschauen, Aufteilen und Ergebnisse 1,5× so lang, Schnell 0,7×.
+- [x] **Ratte:** Kein Rattenrudel mehr über den Tisch – nur noch die eine Ratte aus der Karte, die reihum am Geld knabbert.
+
 ## v0.77.0 – Zu zweit
 
 - [x] **Neuer Modus „Zu zweit“** (nach der offiziellen 2-Spieler-Variante von Kuhhandel Master): im Klassisch-Fenster „👥 Zu zweit“ anhaken oder im Warteraum einschalten – genau 2 Spieler.

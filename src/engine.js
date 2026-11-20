@@ -21,8 +21,12 @@ export const TURBO_AUCTION_MS = 6000;
 export function isTurbo(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return !!(st && st.turbo); }
 // Tierarten dieser Partie
 export function animalsOf(stateOrSettings) { return isTurbo(stateOrSettings) ? ANIMALS.filter((a) => !TURBO_DROP.includes(a.id)) : ANIMALS; }
-export function auctionStartMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_START_MS; }
-export function auctionBidMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_BID_MS; }
+// v0.78 Tempo (Alp): pro Runde im Warteraum wählbar – Gemütlich ×1,5 · Normal ×1 · Schnell ×0,7 (Versteigerung, Anschauen, Aufteilen, Ergebnisse)
+export const TEMPOS = { gemuetlich: 1.5, normal: 1, schnell: 0.7 };
+export function tempoFactor(stateOrSettings) { const st = stateOrSettings && (stateOrSettings.settings !== undefined ? stateOrSettings.settings : stateOrSettings); return (st && TEMPOS[st.tempo]) || 1; }
+export function auctionStartMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return Math.round((isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_START_MS) * tempoFactor(state)); }
+export function auctionBidMs(state) { if (state && state.auction && state.auction.fast) return HEKTIK_MS; return Math.round((isTurbo(state) ? TURBO_AUCTION_MS : AUCTION_BID_MS) * tempoFactor(state)); }
+export function revealMs(state) { return Math.round(REVEAL_MS * tempoFactor(state)); }
 
 // ---------- Börsen-Chaos (eigene Spielart, nie zusammen mit Turbo) ----------
 // 13 Börsen-News im Stapel: 2× Kursrallye, 2× Kurssturz, Hype (×2), Blase platzt (÷2) (je ein Tier, beim Mischen ausgelost),
@@ -108,7 +112,7 @@ export function isDuo(stateOrSettings) { const st = stateOrSettings && (stateOrS
 export const MAX_PLAYERS = 4;
 export const BID_STEP = 10;
 export const AUCTION_START_MS = 10000; // so lange läuft eine Versteigerung ohne Gebot
-export const REVEAL_MS = 1500;          // Aufdeck-Animation: erst danach läuft die Zeit und man kann bieten
+export const REVEAL_MS = 3000;          // Karte in Ruhe anschauen (v0.78: 1,5 → 3 s, Alp): erst danach läuft die Zeit und man kann bieten
 export const AUCTION_BID_MS = 10000;   // nach jedem Gebot startet der Countdown neu
 const GRACE_MS = 800;                  // kleine Toleranz für Handys mit leicht abweichender Uhr
 
@@ -558,7 +562,7 @@ export function drawForAuction(prev, playerId, now) {
   }
   const fast = (state.hektik || 0) > 0; // Börsen-Chaos „Hektik“: diese Versteigerung nur 5 s
   if (fast) state.hektik -= 1;
-  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + REVEAL_MS : null, endsAt: now != null ? now + REVEAL_MS + (fast ? HEKTIK_MS : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
+  state.auction = { animal, auctioneer: playerId, high: null, caps: {}, passed: [], opensAt: now != null ? now + revealMs(state) : null, endsAt: now != null ? now + revealMs(state) + (fast ? HEKTIK_MS : auctionStartMs(state)) : null, ...(fast ? { fast: true } : {}) };
   state.phase = 'auction';
   return state;
 }
@@ -578,7 +582,7 @@ export function divideLook(prev, playerId, now) {
   if (!isDuo(state)) fail('Aufteilen gibt es nur zu zweit.');
   requireTurn(state, playerId);
   if (state.deck.length === 0) fail('Der Stapel ist leer – nur noch Kuhhandel ist möglich.');
-  state.divide = { by: playerId, card: state.deck[0], endsAt: now != null ? now + DIVIDE_MS : null };
+  state.divide = { by: playerId, card: state.deck[0], endsAt: now != null ? now + Math.round(DIVIDE_MS * tempoFactor(state)) : null };
   state.phase = 'divide';
   state.lastEvent = { n: state.log.length, type: 'divide_look', player: playerId };
   log(state, `${player(state, playerId).name} schaut sich die oberste Karte an.`);

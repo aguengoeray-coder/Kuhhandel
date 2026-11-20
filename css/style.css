@@ -3799,3 +3799,9 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 .stage .tduel.respond .tbtn[data-a="accept"] { line-height: 1.1; white-space: nowrap; }
 .stage .tduel.respond .tbtn[data-a="accept"] em { display: block; font-size: 10px; line-height: 1.1; white-space: normal; }
 .stage .tduel.respond .tpanel .tline.big { margin-block: 0; }
+
+/* v0.78 Tempo im Warteraum */
+.tempo-seg { display: flex; align-items: center; width: 100%; border: 2px solid rgba(255,255,255,.35); border-radius: 12px; overflow: hidden; margin-top: 2px; }
+.tempo-seg span { padding: 0 10px; font-weight: 900; font-size: 12px; }
+.tempo-seg button { flex: 1; border: 0; border-left: 2px solid rgba(255,255,255,.25); padding: 6px 4px; font: 800 12px/1.1 inherit; background: transparent; color: inherit; cursor: pointer; }
+.tempo-seg button.on { background: #FFD34E; color: #2B2B2B; }
