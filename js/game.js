@@ -11,6 +11,7 @@ import {
   isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
+import { quartetShow, QSHOW_MS, quartetSound } from './quartets.js';
 import { theaterFx, sceneScript, sceneHtml } from './theater.js';
 import { SHOP_EMOTES } from './shop.js';
 import { animalBody } from './beasts.js';
@@ -269,7 +270,17 @@ export function choreo(le, deckLeft, W = evWait(le.type, deckLeft, le) || 0, pil
   const end = Math.max(payAt, ...streams.map((x) => x.at + streamMs(x.count)));
   return { W, payAt, streams, end, haloAt: end + HALO_PAUSE, calm: end + HALO_PAUSE + HALO_MS };
 }
-export const calmFor = (le, deckLeft) => (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS);
+// v0.77 Quartett-Show: Hat dieses Ereignis ein Quartett vollgemacht? (Der Empfänger hat danach genau 4 – vorher waren es weniger.)
+export function quartetOf(le, state) {
+  if (!le || !state) return null;
+  const has4 = (pid, an) => an && an !== RAT && state.players.find((p) => p.id === pid)?.animals?.[an] === 4 ? { pid, animal: an } : null;
+  if (le.type === 'auction_won') return has4(le.buyer, le.animal);
+  if (le.type === 'trade' && le.animal !== RAT) return has4(le.winner, le.animal);
+  if (le.type === 'divided') return [le.first, le.second].filter(Boolean).map((x) => has4(x.to, x.card)).find(Boolean) || null;
+  return null;
+}
+const Q_EXTRA = QSHOW_MS + 300; // so lange wartet das Spiel zusätzlich
+export const calmFor = (le, deckLeft, state = null) => (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS) + (quartetOf(le, state) ? Q_EXTRA : 0);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn', 'divided'];
 
@@ -700,9 +711,10 @@ export function renderGame(root, ctx) {
   if (evN != null) local.seenEvN = evN;
   if (evFresh && v.lastEvent?.type === 'trade' && local.potLand && local.potLand > Date.now()) { TRADE_PRE.set(v.lastEvent.n, local.potLand - Date.now() + 200); if (TRADE_PRE.size > 20) TRADE_PRE.delete(TRADE_PRE.keys().next().value); }
   // Verschnaufpause: nach einem Ergebnis kurz nicht weiter aufdecken, damit alle sehen, was passiert ist
-  if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = EV_WAIT[v.lastEvent.type] ? choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).calm : CALM_MS; local.calmUntil = Date.now() + local.calmDur; }
+  const qExtra = evFresh && quartetOf(v.lastEvent, state) ? Q_EXTRA : 0; // v0.77: Quartett-Show – das Spiel wartet, bis sie vorbei ist
+  if (evFresh && state.phase === 'turn' && CALM_TYPES.includes(v.lastEvent?.type)) { local.calmDur = qExtra + (EV_WAIT[v.lastEvent.type] ? choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).calm : CALM_MS); local.calmUntil = Date.now() + local.calmDur; }
   const calmLeft = state.phase === 'turn' ? Math.max(0, (local.calmUntil || 0) - Date.now()) : 0;
-  if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).haloAt }; // Rahmen wandert erst nach Tier + Geld + Ruhe
+  if (evFresh && state.phase === 'turn' && EV_WAIT[v.lastEvent?.type] && local.holder) local.turnHold = { id: local.holder, until: Date.now() + qExtra + choreo(v.lastEvent, v.deck, undefined, v.lastEvent.type === 'rat_taken' ? local.ratLaid : null).haloAt }; // Rahmen wandert erst nach Tier + Geld + Ruhe
   if (local.turnHold && (Date.now() >= local.turnHold.until || state.phase !== 'turn')) local.turnHold = null;
   // Dein Geld kommt und geht sichtbar aus deiner Hand: bezahlte Scheine bleiben im Fächer, bis sie losfliegen;
   // bekommene erscheinen erst, wenn sie gelandet sind (und leuchten kurz).
@@ -1694,8 +1706,9 @@ export function renderGame(root, ctx) {
     if (added.length) { local.qSound = true; if (qp === meId) local.qMine = true; }
     if (added.length && evNew && receiverOf(le) === qp && le.animal === qa) local.qBadge = `${evSig}`; // Quartett steht als Abzeichen im Ergebnis-Fenster
     // v0.77 (Alp): erst wenn die Tiere angekommen sind (Lauf startet evDelay − WALK_OVERLAP und dauert FLY_MS)
-    const qd = evNew ? Math.max(0, evDelay - WALK_OVERLAP) + FLY_MS + 150 : 500;
-    if (added.length) { local.poloNext = { pid: qp, animal: qa, delay: qd }; if (qp) moodMark(qp, 'love', Date.now() + qd, 3000); }
+    // v0.77 (Alp): Quartett-Show für alle – nach Tier und Geld (Ende des Ablaufs), danach geht es weiter
+    const qd = evNew ? choreo(le, v.deck).end + 200 : le && le.type === 'divided' ? 250 + 450 + FLY_MS + 200 : 500;
+    if (added.length && qa !== RAT) { local.poloNext = { pid: qp, animal: qa, delay: qd }; if (qp) moodMark(qp, 'love', Date.now() + qd + QSHOW_MS, 2600); }
     else if (added.length) {
       const [pid, animal] = added[0].split('|');
       const who = pid === meId ? 'Du hast' : `${esc(nameOf(pid))} hat`;
@@ -2071,9 +2084,11 @@ export function renderGame(root, ctx) {
   if (local.poloNext) {
     const { pid, animal, delay } = local.poloNext; local.poloNext = null;
     const pt = `@stall:${pid}:${animal}`; // v0.70: vom eigenen Stapel los und wieder zurück
-    // v0.77 (Alp): keine Runde mehr über den Tisch – die 4 Tiere springen kurz in einer Reihe auf ihrem Stapel und jubeln
-    keepFx([0, 1, 2, 3].map((k) => `<div class="polo qhop" data-route="${esc(pt)};${esc(pt)}" data-dur="1800" data-delay="${delay}" style="--k:${k};--qd:${delay + k * 110}ms">${beast(animal, 'dance')}</div>`).join('')
-      + `<div class="qbadge" data-aim-from="${esc(pt)}" data-aim-to="${esc(pt)}" style="--tx:0px;--ty:0px;animation-delay:${delay + 200}ms" aria-hidden="true">QUARTETT!</div>`, delay + 2200);
+    // v0.77 (Alp): eigene Szene je Tier für alle (Hähne krähen, Kühe springen über den Mond …) – nicht wegtippbar
+    void pt;
+    const qi = idxOf(pid);
+    keepFx(quartetShow(animal, esc(pid === meId ? 'Du' : nameOf(pid)), qi >= 0 ? SEAT_COLORS[qi] : '#FFD34E', delay, pid === meId), delay + QSHOW_MS + 100, 'qshow');
+    later.push([quartetSound(animal), delay + 1100]); later.push(['fanfare', delay + 150]);
   }
 
   const closeRes = () => {

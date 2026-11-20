@@ -133,6 +133,7 @@ export function buildDemoState(kind, local) {
     case 'quartet':
       g = base();
       local.prevQuartets = []; // Mos Hahn-Quartett gilt als neu
+      { const qa = qs.get('qa'); if (qa) { g.players[3].animals.hahn = 3; g.players.forEach((p) => { p.animals[qa] = 0; }); g.players[qs.get('me') ? 0 : 3].animals[qa] = 4; } } // v0.77: ?demo=quartet&qa=kuh(&me=1)
       return g;
     case 'menu':
       g = base();
