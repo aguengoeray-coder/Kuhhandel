@@ -3793,3 +3793,5 @@ body:has(.stage) #appver { right: auto; left: max(6px, env(safe-area-inset-left)
 @media (prefers-reduced-motion: reduce) { .qs-a, .qs-p { animation-duration: 1ms !important; } }
 .qs-who, .qs-title small { background: rgba(10,16,34,.62); padding: 4px 12px; border-radius: 999px; }
 .qs-title small { padding: 2px 10px; }
+/* v0.77: sehr viele verdeckte Scheine im Angebot – stärker überlappen, damit es in einer Reihe bleibt */
+.tpanel .kslots.many:has(> :nth-child(9)) > * + * { margin-left: -18px; }

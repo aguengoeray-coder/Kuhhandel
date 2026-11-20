@@ -280,6 +280,9 @@ export function quartetOf(le, state) {
   return null;
 }
 const Q_EXTRA = QSHOW_MS + 300; // so lange wartet das Spiel zusätzlich
+// Wann die laufende Quartett-Show sicher vorbei ist – solange darf niemand (auch kein Test-Spieler) weitermachen
+let showUntilAt = 0;
+export const showBusy = () => Date.now() < showUntilAt;
 export const calmFor = (le, deckLeft, state = null) => (le && EV_WAIT[le.type] ? choreo(le, deckLeft).calm : CALM_MS) + (quartetOf(le, state) ? Q_EXTRA : 0);
 const CANTPAY_MS = CANTPAY_HOLD_MS; // „Kann nicht zahlen“: so lange sehen alle die Scheine groß (Spiel wartet so lange)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn', 'divided'];
@@ -1266,7 +1269,7 @@ export function renderGame(root, ctx) {
     aucBanner = `${isRat ? 'Rattenhandel' : 'Kuhhandel'}: ${esc(nameOf(t.challenger))} gegen ${esc(nameOf(t.target))}`;
     const challengerPanel = (extra = '') => `<div class="tpanel">
         ${who(t.challenger, t.challenger === meId ? 'Du' : null)}
-        <div class="kslots${arr}">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
+        <div class="kslots${offerCount > 5 ? ' many' : ''}${arr}">${offerCards || '<span class="tnone">keine Karten</span>'}</div>
         <div class="tline big"><b>${karten(offerCount)}${Array.isArray(t.offer) ? ` · ${sum(t.offer)}` : ''}</b><small>${Array.isArray(t.offer) ? 'dein Angebot' : 'verdeckt geboten'}</small></div>
         ${stakeOf(t.challenger, t.animal, t.count, t.target)}
         ${extra}
@@ -2088,6 +2091,8 @@ export function renderGame(root, ctx) {
     void pt;
     const qi = idxOf(pid);
     keepFx(quartetShow(animal, esc(pid === meId ? 'Du' : nameOf(pid)), qi >= 0 ? SEAT_COLORS[qi] : '#FFD34E', delay, pid === meId), delay + QSHOW_MS + 100, 'qshow');
+    showUntilAt = Math.max(showUntilAt, Date.now() + delay + QSHOW_MS + 250);
+    local.calmUntil = Math.max(local.calmUntil || 0, showUntilAt); // deine Knöpfe warten auch
     later.push([quartetSound(animal), delay + 1100]); later.push(['fanfare', delay + 150]);
   }
 
