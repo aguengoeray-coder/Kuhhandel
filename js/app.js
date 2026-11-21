@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.87.0';
+export const APP_VERSION = '0.88.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -86,7 +86,7 @@ const PROFILE_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0', '#0B7A68', '
 // EHRLICH: euer Insider – kommt als großer Spruch mit eigenem Ton
 const EHRLICH = 'Ehrliches, männliches Angebot! 💪';
 const UNEHRLICH = 'Unehrliches, unmännliches Angebot! 👎';
-const REACT_EMOJI = ['😂', '👍', '👎', '😱', '🤑', '🙄', '🔥', '🐮'];
+const REACT_EMOJI = ['😂', '👍', '👎', '😱', '🤑', '🙄', '🔥', '🐮', '😡', '😭', '🥳', '🤔', '😎', '🙏', '💀', '🤡']; // v0.88: mehr Emojis im 💬-Fenster
 const REACTIONS = [EHRLICH, UNEHRLICH, 'Komm schon, da geht noch mehr!', 'Bluff!', 'Niemals!', 'Gut gespielt!', 'Zu teuer!'];
 let roomChannel = null;
 let versions = {}; // Platz → App-Version (aus der Live-Verbindung)
@@ -742,7 +742,7 @@ function renderPlaying() {
     reactions: activeReactions(),
     reactionList: myReactions(),
     reactionEmoji: 0,
-    quickEmoji: ['😱', '🔥', '🤑', '😂'], // v0.86 Schnell-Emojis rechts (alle in REACT_EMOJI, damit die anderen sie annehmen)
+    emojiList: REACT_EMOJI, // v0.88: Emojis im 💬-Fenster (Schnell-Emojis am Rand sind wieder weg)
     reactionBase: REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
     demoPodium: DEMO && params.get('podium') === '1', // Screenshots/Tests: gleich das Siegertreppchen (im echten Spiel nicht überspringbar)
@@ -773,8 +773,9 @@ function renderPlaying() {
 // Spielzug ausführen: Regeln lokal prüfen, dann neuen Stand speichern (nur wenn niemand schneller war).
 // War jemand schneller, wird der Zug automatisch auf dem neuen Stand nochmal geprüft und gespeichert.
 let buzzHint = null; // v0.86: schneller Buzzer-Hinweis über die Live-Verbindung
+let queuedAct = null; // v0.88: Tipp während noch gespeichert wird → danach ausführen statt verschlucken
 async function act(fn, { silent = false } = {}) {
-  if (busy) return;
+  if (busy) { if (!silent) queuedAct = fn; return; }
   if (tooOld()) return toast('Bitte zuerst neu laden – dieses Spiel braucht die neue Version.');
   const attempt = () => {
     try {
@@ -810,6 +811,7 @@ async function act(fn, { silent = false } = {}) {
     toast('Gerade ist viel los – bitte nochmal tippen.');
   } finally {
     busy = false;
+    if (queuedAct) { const q = queuedAct; queuedAct = null; setTimeout(() => act(q), 0); }
   }
 }
 

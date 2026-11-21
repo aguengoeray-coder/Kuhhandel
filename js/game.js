@@ -1,7 +1,7 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
 import { shopAvatar, shopAvatarFull } from './shopavatars.js';
 import {
-  logNo, ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, revealMs, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
+  logNo, GameError, ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, revealMs, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
   viewFor, possibleTrades, scores, currentPlayer, missionStatus, animalsOf, isTeams, partnerOf, teamOf, teamPool,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
@@ -339,6 +339,7 @@ function fitTop(root) {
 }
 
 // Eigene neue Karte: genau auf den passenden Stapel in deiner Auslage fliegen lassen (Ziel erst nach dem Zeichnen bekannt)
+const tapState = { down: null, fired: null, H: {} }; // v0.88 sichere Tipps über Neuzeichnen hinweg
 function aimFly(root) {
   const stage = root.querySelector('#stage');
   if (!stage) return;
@@ -928,14 +929,13 @@ export function renderGame(root, ctx) {
     const nowR = ctx.now();
     const held = a.holdUntil != null && nowR < a.holdUntil; // nach „kann nicht zahlen“: alle schauen erst die Scheine an
     if (held && (!wake || wake > a.holdUntil)) wake = a.holdUntil;
-    // v0.87 (Nico): Schutz vor Fehlgeboten – bietet jemand anderes, sind die Gebotsknöpfe kurz gesperrt und blinken,
-    // damit man nicht aus Versehen auf den schon neuen (höheren) Betrag tippt
+    // v0.88 (Alp): keine Gebotssperre mehr (machte die Knöpfe träge). Schutz vor Fehlgeboten: jeder Knopf bietet einen festen Betrag –
+    // war jemand schneller, wird dein Gebot abgelehnt („… war schneller“) statt höher zu bieten. Neue Beträge blinken kurz auf.
     { const hk = a.high ? `${a.opensAt}|${a.high.player}|${a.high.amount}` : `${a.opensAt}|-`;
-      if (local.bidLockKey !== undefined && local.bidLockKey !== hk && a.high && a.high.player !== meId) local.bidLockUntil = Date.now() + 800;
-      local.bidLockKey = hk; }
-    const bidLocked = local.bidLockUntil && Date.now() < local.bidLockUntil;
-    if (bidLocked) wakeLocal(local.bidLockUntil + 20);
-    const canBid = (amt) => !held && !bidLocked && (cap == null || amt <= cap);
+      if (local.bidFlashKey !== undefined && local.bidFlashKey !== hk && a.high && a.high.player !== meId) local.bidFlashAt = Date.now();
+      local.bidFlashKey = hk; }
+    const bidFlash = local.bidFlashAt && Date.now() - local.bidFlashAt < 600;
+    const canBid = (amt) => !held && (cap == null || amt <= cap);
     const revealing = a.opensAt != null && nowR < a.opensAt;
     if (revealing) wake = a.opensAt; // nach der Animation neu zeichnen
     // Kleiner, dezenter Infokasten – erscheint erst nach dem Aufdecken
@@ -1023,7 +1023,7 @@ export function renderGame(root, ctx) {
         <div class="bidgrid" ${(local.bidSel || []).length ? 'hidden' : ''}>${steps.map((st) => {
           const amt = high + st;
           const over = amt > mine;
-          return `<button type="button" class="bidbtn ${st === 10 ? 'main' : ''} ${over ? 'over' : ''} ${bidLocked ? 'locked' : ''}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten${over ? ', mehr als du hast' : ''}"><b>${amt}</b><small>${over ? '⚠ zu viel' : `+${st}`}</small></button>`;
+          return `<button type="button" class="bidbtn ${st === 10 ? 'main' : ''} ${over ? 'over' : ''} ${bidFlash ? 'newamt' : ''}" style="--bfl:-${bidFlash ? Date.now() - local.bidFlashAt : 0}ms" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten${over ? ', mehr als du hast' : ''}"><b>${amt}</b><small>${over ? '⚠ zu viel' : `+${st}`}</small></button>`;
         }).join('')}</div>
         ${(() => { // v0.87 (Nico): wie bei Balatro – Scheine im Fächer antippen (sie springen hoch), dann zusammen als Gebot abschicken
           const bs = local.bidSel || []; const bsum = bs.reduce((x, y) => x + y, 0);
@@ -1038,12 +1038,20 @@ export function renderGame(root, ctx) {
     }
 
     const tick = () => haptic('tap', ctx.vibe !== false);
-  H.bid = (amt) => { tick(); ctx.act((s) => bid(s, meId, Number(amt), ctx.now())); };
+  // v0.88: war jemand schneller, gibt es eine klare Meldung statt eines höheren Gebots
+  // Führst du schon selbst (z. B. zweimal schnell „+10“), legt jeder weitere Tipp einfach seinen Schritt auf dein Gebot drauf
+  const bidSafe = (s, amt, step = 0) => { const hi = s.auction?.high;
+    if (hi && hi.player !== meId && hi.amount >= amt) throw new GameError(`${nameOf(hi.player)} war schneller (${hi.amount}) – tippe nochmal, wenn du mehr willst.`);
+    if (hi && hi.player === meId && amt <= hi.amount && step > 0) amt = hi.amount + step;
+    return bid(s, meId, amt, ctx.now()); };
+  const bidStep0 = state.phase === 'auction' && state.auction?.high ? state.auction.high.amount : 0;
+  H.bid = (amt) => { tick(); const a0 = Number(amt); ctx.act((s) => bidSafe(s, a0, a0 - bidStep0)); };
   // v0.87 Balatro-Bieten: Schein antippen = einer mehr hoch; sind alle dieses Werts oben, gehen sie wieder runter
-  H.bidTog = (val) => { const m = Number(val); const bs = local.bidSel || (local.bidSel = []); const have = me.money.filter((x) => x === m).length; const n = bs.filter((x) => x === m).length;
-    if (n < have) bs.push(m); else local.bidSel = bs.filter((x) => x !== m); tick(); ctx.rerender(); };
+  // v0.88: angehobenen Schein antippen = wieder runter, sonst einen dieses Werts hoch
+  H.bidTog = (val) => { const [mv, off] = String(val).split(':'); const m = Number(mv); const bs = local.bidSel || (local.bidSel = []); const have = me.money.filter((x) => x === m).length; const n = bs.filter((x) => x === m).length;
+    if (off === 'x') bs.splice(bs.indexOf(m), 1); else if (n < have) bs.push(m); tick(); ctx.rerender(); };
   H.bidClear = () => { local.bidSel = []; ctx.rerender(); };
-  H.bidSel = () => { const amt = (local.bidSel || []).reduce((x, y) => x + y, 0); if (!amt) return; tick(); local.bidSel = []; ctx.act((s) => bid(s, meId, amt, ctx.now())); };
+  H.bidSel = () => { const amt = (local.bidSel || []).reduce((x, y) => x + y, 0); if (!amt) return; tick(); local.bidSel = []; ctx.act((s) => bidSafe(s, amt)); };
     H.pass = () => ctx.act((s) => passAuction(s, meId, ctx.now()));
     H.aWait = () => { haptic('tap', ctx.vibe !== false); ctx.act((s) => waitAuction(s, meId, ctx.now())); };
     const lw = a.lastWait; const wsig = lw ? `${lw.player}|${lw.at}` : null;
@@ -1496,6 +1504,8 @@ export function renderGame(root, ctx) {
   if (le0 && state.phase === 'turn') {
     const hat = (id) => (id === meId ? 'hast' : 'hat');
     const ea = (t) => `<span class="eva">${t}</span>`;
+    // v0.88 (Alp): beim Kuhhandel auch die Differenz der Gebote (sehen alle, die Beträge selbst bleiben verdeckt)
+    const tdiff = (e) => (e.accepted ? ea('· angenommen') : e.diff != null ? ea(`· Differenz <b>${e.diff}</b>`) : '');
     const karten = (n) => `<b>${n}</b> Karte${n === 1 ? '' : 'n'}`;
     if (le0.type === 'auction_won') {
       // „Nico hat Kuh [Bild] von Alp für 90 gekauft“ · Vorkaufsrecht: „Alp hat Kuh [Bild] selbst gekauft – für 90 an Nico“
@@ -1509,10 +1519,10 @@ export function renderGame(root, ctx) {
       else evStrip = `${who2(le0.buyer)}${ea(le0.buyer === meId ? 'behältst' : 'behält')}${ea(`die ${aname(le0.animal)}-Spezialkarte`)}${sp}${ea(`und ${le0.buyer === meId ? 'zahlst' : 'zahlt'} ${karten(le0.count)} an`)}${who2(le0.payee, 'dich')}`;
     } else if (le0.type === 'trade' && le0.animal === RAT) {
       const loser = le0.winner === le0.challenger ? le0.target : le0.challenger;
-      evStrip = `${who2(loser)}${ea(hat(loser))}${ea(`<b>${le0.count}×</b> Ratte`)}${miniCard(RAT)}${ea('von')}${who2(le0.winner, 'dir')}${ea('bekommen')}`;
+      evStrip = `${who2(loser)}${ea(hat(loser))}${ea(`<b>${le0.count}×</b> Ratte`)}${miniCard(RAT)}${ea('von')}${who2(le0.winner, 'dir')}${ea('bekommen')}${tdiff(le0)}`;
     } else if (le0.type === 'trade') {
       const loser = le0.winner === le0.challenger ? le0.target : le0.challenger;
-      evStrip = `${who2(le0.winner)}${ea(hat(le0.winner))}${ea(`<b>${le0.count}×</b> ${aname(le0.animal)}`)}${miniCard(le0.animal)}${ea('von')}${who2(loser, 'dir')}${ea('ertauscht')}`;
+      evStrip = `${who2(le0.winner)}${ea(hat(le0.winner))}${ea(`<b>${le0.count}×</b> ${aname(le0.animal)}`)}${miniCard(le0.animal)}${ea('von')}${who2(loser, 'dir')}${ea('ertauscht')}${tdiff(le0)}`;
     } else if (le0.type === 'money_drawn') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} einen Geldschein gezogen`)}${moneyCard(le0.value)}`;
 
     else if (le0.type === 'hand') evStrip = `${who2(le0.player)}${ea(`${hat(le0.player)} eine Börsen-Karte auf die Hand genommen${le0.kind ? `: <b>${le0.kind === 'pfaendung' ? '⚖️ Zwangsversteigerung' : '🛡️ Einspruch'}</b>` : ''}`)}`;
@@ -1562,22 +1572,26 @@ export function renderGame(root, ctx) {
   }
   // v0.59 „Dein Platz“: Geld als Hand mit festen Fächern – jeder Wert hat immer denselben Platz (0 … 500),
   // fehlende Werte bleiben als blasser Platzhalter stehen, damit beim Zahlen/Bekommen nichts verrutscht
+  // v0.88 (Alp): Handgeld wieder vollständig – jeder Schein einzeln (sortiert), nicht mehr „×3“ gestapelt;
+  // viele Scheine rücken enger zusammen (überlappen), damit alle in die Hand passen
   const SLOTS = Object.keys(MONEY_COLORS).map(Number).sort((x, y) => x - y);
-  const fanCards = SLOTS.map((val) => [val, handMoney.filter((m) => m === val).length]);
-  const mid = (SLOTS.length - 1) / 2;
-  let lifted = false;
-  const fan = fanCards.map(([m, cnt], i) => {
+  const handCards = [...handMoney].sort((x, y) => x - y);
+  const nH = handCards.length;
+  const fanOv = nH > 9 ? Math.min(30, Math.round((nH * 44 - 400) / Math.max(1, nH - 1))) : 0;
+  const mid = (nH - 1) / 2;
+  const liftLeft = {}; // pro Wert: wie viele Scheine noch angehoben werden
+  if (pickMode === 'rat' && local.ratSel != null) liftLeft[local.ratSel] = 1;
+  if (pickMode === 'bid') (local.bidSel || []).forEach((x) => { liftLeft[x] = (liftLeft[x] || 0) + 1; });
+  let glowLeft = [...glowVals];
+  const fan = handCards.map((m, i) => {
     const off = i - mid;
-    const style = `--m:${MONEY_COLORS[m]};--rot:${(off * 2.5).toFixed(1)}deg;--dy:${Math.round(Math.abs(off) * 2.5)}px`;
-    if (!cnt) return `<span class="mghost" data-v="${m}" style="${style}" aria-hidden="true"><i>${m}</i></span>`;
-    const nSel = pickMode === 'bid' ? (local.bidSel || []).filter((x) => x === m).length : 0;
-    const lift = (pickMode === 'rat' && local.ratSel === m && !lifted) || nSel > 0;
-    if (lift && pickMode === 'rat') lifted = true;
-    const inner = `${mIn(m)}${cnt > 1 ? `<span class="mcount">×${cnt}</span>` : ''}${nSel ? `<span class="msel">${cnt > 1 ? `${nSel}/${cnt}` : '✓'}</span>` : ''}`;
-    const gi = glowVals.indexOf(m); const glow = gi >= 0; if (glow) glowVals.splice(0, glowVals.length);
-    if (!pickMode) return `<div class="money fan ${cnt > 1 ? 'multi' : ''} ${glow ? 'newcard' : ''}" data-v="${m}" style="${style}">${inner}</div>`;
+    const style = `--m:${MONEY_COLORS[m]};--rot:${(off * (nH > 9 ? 1.6 : 2.5)).toFixed(1)}deg;--dy:${Math.round(Math.abs(off) * (nH > 9 ? 1.4 : 2.5))}px`;
+    const lift = (liftLeft[m] || 0) > 0; if (lift) liftLeft[m] -= 1;
+    const inner = `${mIn(m)}${lift && pickMode === 'bid' ? '<span class="msel">✓</span>' : ''}`;
+    const gi = glowLeft.indexOf(m); const glow = gi >= 0; if (glow) glowLeft.splice(gi, 1);
+    if (!pickMode) return `<div class="money fan ${glow ? 'newcard' : ''}" data-v="${m}" style="${style}">${inner}</div>`;
     const label = pickMode === 'rat' ? `${m} zum Legen wählen` : pickMode === 'bid' ? `${m} fürs Gebot wählen` : `${m} ins Feld legen`;
-    return `<button type="button" class="money fan pick ${cnt > 1 ? 'multi' : ''} ${lift ? 'lift' : ''}" style="${style}" data-a="${pickMode === 'rat' ? 'ratPick' : pickMode === 'bid' ? 'bidTog' : 'addv'}" data-v="${m}" aria-label="${label}"${lift ? ' aria-pressed="true"' : ''}>${inner}</button>`;
+    return `<button type="button" class="money fan pick ${lift ? 'lift' : ''}" style="${style}" data-a="${pickMode === 'rat' ? 'ratPick' : pickMode === 'bid' ? 'bidTog' : 'addv'}" data-v="${pickMode === 'bid' && lift ? `${m}:x` : m}" aria-label="${label}"${lift ? ' aria-pressed="true"' : ''}>${inner}</button>`;
   }).join('');
 
   const trades = possibleTrades(state, meId);
@@ -1615,7 +1629,7 @@ export function renderGame(root, ctx) {
     <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 36)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
     ${state.phase === 'trade' || (local.tradeOpen && local.tradePicked) ? mySetsStrip() : ''}
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
-    <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum" aria-hidden="true">${sum(handMoney)}<i class="taler"></i></span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
+    <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" style="--ov:${fanOv}px" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum" aria-hidden="true">${sum(handMoney)}<i class="taler"></i></span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
 
   // ----- Menü oben links in der Tischecke -----
@@ -2553,35 +2567,34 @@ export function renderGame(root, ctx) {
     const kinds = ['punch', 'laugh', 'schleim', 'torte', ...(v.players.length >= 3 ? ['verschwoerung'] : [])];
     return `<div class="rp-lbl">Aktion mit ${esc(nameOf(to))}</div><div class="rp-tiles">${kinds.map((k) => k === 'punch' ? tile('punch', 'punch', to, !!ctx.canPunch) : tile(k, 'scene', `${k}|${to}`, ok.includes(k))).join('')}</div>${kinds.some((k) => k === 'punch' ? !ctx.canPunch : !ok.includes(k)) ? '<p class="rp-tip">🔒 Gesperrte Aktionen gibt’s im Shop unter „Emotes“.</p>' : ''}`;
   }
+  // v0.88 (Alp): 💬-Fenster neu – Reiter statt langer Liste: Emojis (ein Tipp = weg), Sprüche, Aktionen, Karten
   function reactPicker() {
     const list = ctx.reactionList, nE = ctx.reactionEmoji || 0, base = ctx.reactionBase ?? list.length;
     const to = local.reactTo, self = to === meId;
+    const EMO = ctx.emojiList || [];
+    const tabs = [['emo', '😀', 'Emojis'], ['say', '💬', 'Sprüche'], ...(ctx.scene ? [['act', '🎭', 'Aktionen']] : []), ['cards', '🃏', 'Karten']];
+    const tab = tabs.some((t) => t[0] === local.rpTab) ? local.rpTab : 'emo';
     const btn = (r, i, cls = '') => `<button type="button" class="${cls}${r.length > 18 ? ' long' : ''}" data-a="react" data-v="${i}">${esc(r)}</button>`;
-    const emo = list.slice(0, nE).map((r, i) => btn(r, i, 'rp-emo')).join('');
     const std = list.slice(nE, base).map((r, k) => btn(r, nE + k, 'rp-say')).join('');
     const own = list.slice(base).map((r, k) => btn(r, base + k, 'rp-say bought')).join('');
-    // v0.54.1: „Zuletzt passiert“ steht nicht mehr auf dem Tisch, sondern hier – wer es wissen will, schaut nach (nur das letzte Ereignis, kein Verlauf)
-    const last = evStrip ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="evstrip in">${evStrip}</div></div>` : lastLog ? `<div class="rp-last"><small>Zuletzt passiert</small><div class="tlog in">${esc(lastLog)}</div></div>` : '';
-    return `<div class="reactpick v2 ${self ? 'self' : ''}">
+    const body = tab === 'emo' ? `<div class="rp-emogrid">${EMO.map((e, i) => `<button type="button" class="rp-e" data-a="emoji" data-v="${i}" aria-label="${e} senden">${e}</button>`).join('')}</div>`
+      : tab === 'say' ? `${own ? `<div class="rp-says own">${own}</div>` : ''}<div class="rp-says">${std}</div>`
+      : tab === 'act' ? emoteTiles(to, self)
+      : playerDetail(v.players[idxOf(to)], self);
+    return `<div class="reactpick v3 ${self ? 'self' : ''}" role="dialog" aria-label="${self ? 'Reaktion an alle' : `Reaktion an ${esc(nameOf(to))}`}">
       <div class="rphead"><span>${self ? '💬 An alle' : `💬 An ${esc(nameOf(to))}`}</span><button type="button" data-a="reactClose" aria-label="Schließen">✕</button></div>
-      ${emoteTiles(to, self)}
-      ${last}
-      ${emo ? `<div class="rp-emos">${emo}</div>` : ''}
-      ${own ? `<div class="rp-lbl">Deine Sprüche</div><div class="rp-says">${own}</div>` : ''}
-      <div class="rp-lbl">Sprüche</div><div class="rp-says">${std}</div>
-      <div class="rp-lbl">${self ? 'Deine Karten' : `Karten von ${esc(nameOf(to))}`}</div>
-      ${playerDetail(v.players[idxOf(to)], self)}
+      <div class="rp-tabs" role="tablist">${tabs.map(([k, ic, nm]) => `<button type="button" role="tab" class="rp-tab ${k === tab ? 'on' : ''}" aria-selected="${k === tab}" data-a="rpTab" data-v="${k}"><i>${ic}</i>${nm}</button>`).join('')}</div>
+      <div class="rp-body">${body}</div>
     </div>`;
   }
+  H.rpTab = (k) => { local.rpTab = k; ctx.rerender(); };
+  H.emoji = (i) => { const e = (ctx.emojiList || [])[Number(i)]; const to = local.reactTo; local.reactTo = null; if (e) ctx.react(e, to === meId ? null : to); else ctx.rerender(); };
   // v0.68: Scroll-Stand offener Fenster (💬-Menü, Menü, Pfänden-Auswahl, Abrechnung) beim Neuzeichnen behalten
   const KEEP_SCROLL = ['.reactpick', '.menu', '.pfpick', '.ending.recap ul'];
   const keptScroll = KEEP_SCROLL.map((sel) => { const el = root.querySelector(sel); return el ? el.scrollTop : 0; });
   // v0.77 (Alp): das 💬-Fenster bleibt beim Neuzeichnen dasselbe Element (sonst bricht Wischen/Scrollen auf dem Handy ab) –
   // nur geänderte Abschnitte darin werden ausgetauscht
-  const oldPick = root.querySelector('.reactpick');
-  if (oldPick) oldPick.remove();
-  root.dataset.me = meId;
-  root.innerHTML = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
+  const stageHtml = `<div class="stage-wrap"><div class="stage p${v.players.length}" id="stage">
     ${left}
     ${table}
     ${(() => { // v0.56: dein Platz unten rechts – deine Figur (Shop-Avatar ganz, sonst dein Bild), 💬 als Sprechblase über dem Kopf
@@ -2606,13 +2619,55 @@ export function renderGame(root, ctx) {
     </div>` : ''}
     ${ctx.toastMsg ? `<div class="toast" role="alert">${esc(ctx.toastMsg)}</div>` : ''}
   </div></div>`;
+  // v0.88 (Alp) gegen Flackern und verschluckte Tipps: Hat sich am Bild nichts geändert (nur Zeitangaben für Animationen),
+  // bleibt der Tisch einfach stehen – laufende Animationen und Fenster werden nicht neu aufgebaut.
+  const wakeAttr = /data-wake="([^"]*)"/.exec(stageHtml);
+  const normHtml = stageHtml.replace(/(--[a-z]+|animation-delay)\s*:\s*-?\d+(?:\.\d+)?m?s/g, '$1').replace(/<i hidden data-wake="[^"]*"><\/i>/, '');
+  const unchanged = local.lastNorm === normHtml && root.dataset.me === meId && !!root.querySelector('#stage');
+  let oldPick = null;
+  if (!unchanged) {
+    local.lastNorm = normHtml;
+    oldPick = root.querySelector('.reactpick');
+    if (oldPick) oldPick.remove();
+    root.dataset.me = meId;
+    root.innerHTML = stageHtml;
+  } else {
+    const st = root.querySelector('#stage'); let w = st.querySelector(':scope > [data-wake]');
+    if (wakeAttr) { if (!w) { w = document.createElement('i'); w.hidden = true; st.appendChild(w); } w.dataset.wake = wakeAttr[1]; } else if (w) w.remove();
+  }
 
+  // v0.88 (Alp): Knöpfe reagieren schon beim Loslassen des Fingers – auch wenn der Tisch genau in dem Moment neu gezeichnet wurde
+  // (vorher ging der Klick dann verloren und man musste mehrmals tippen). Der danach kommende „click“ wird ignoriert.
+  root.onpointerdown = (e) => {
+    const b = e.target.closest('[data-a]');
+    tapState.down = b && !b.disabled && e.isPrimary ? { a: b.dataset.a, v: b.dataset.v, x: e.clientX, y: e.clientY, t: Date.now(), el: b } : null;
+  };
+  root.onpointerup = (e) => {
+    const d = tapState.down; tapState.down = null;
+    if (!d || !e.isPrimary || Date.now() - d.t > 900 || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 14) return;
+    const b = e.target.closest('[data-a]');
+    const same = b && b.dataset.a === d.a && b.dataset.v === d.v;
+    if (!same || b.disabled) return; // Finger woanders losgelassen / Knopf inzwischen aus
+    if (b === d.el) return; // nichts neu gezeichnet: der normale Klick reicht
+    tapState.fired = { a: d.a, v: d.v, t: Date.now() };
+    const fn = tapState.H[d.a];
+    if (fn) fn(d.v);
+  };
+  tapState.H = H;
   root.onclick = (e) => {
     const b = e.target.closest('[data-a]');
     if (!b || b.disabled) return;
+    const f = tapState.fired;
+    if (f && f.a === b.dataset.a && f.v === b.dataset.v && Date.now() - f.t < 700) { tapState.fired = null; return; }
     const fn = H[b.dataset.a];
     if (fn) fn(b.dataset.v);
   };
+  if (unchanged) {
+    local.justAdded = null;
+    fitStage();
+    if (ctx.playSound) { [...new Set(sounds)].forEach((k, i) => setTimeout(() => ctx.playSound(k), i * 180)); later.forEach(([k, ms]) => setTimeout(() => ctx.playSound(k), ms)); }
+    return;
+  }
   local.justAdded = null;
   fitStage();
   fitTop(root);
