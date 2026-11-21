@@ -75,7 +75,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
   **„Warte, warte, warte!“:** jeder Bieter einmal pro Versteigerung → Uhr + Versteigerungszeit der Runde (ab dem zweiten Drücken halbe Zeit); ebenso einmal pro Kuhhandel (Herausgeforderter, nur mit Kuhhandel-Zeit) und einmal pro Karte beim Aufteilen zu zweit.
   Erst nach Ablauf entscheidet der Auktionator: Zuschlag an den Höchstbietenden oder selbst zum Höchstgebot kaufen.
 - **Kein Wechselgeld.** Wer nicht zahlen kann, zeigt alle Scheine offen (bleiben bis zum Ende dieser Versteigerung an seinem Platz sichtbar); Auktion startet neu, er darf höchstens altes Gebot − 10 bieten. Bietet danach niemand, gibt es das Tier **nicht umsonst** – die Versteigerung beginnt von vorn (höchstens 2× ohne Gebot, dann bekommt der Auktionator es, damit nichts hängt).
-  Haben alle anderen Bieter gepasst, sieht der letzte Bieter „Alle anderen haben gepasst“ und kann mit „Beenden“ abschließen. Nach einem fremden Gebot sind die Gebotsknöpfe 0,8 s gesperrt (blinken), damit man nicht versehentlich den neuen Betrag tippt. Bieten geht auch wie bei Balatro: Scheine im Fächer antippen und gemeinsam als Gebot abschicken.
+  Haben alle anderen Bieter gepasst, sieht der letzte Bieter „Alle anderen haben gepasst“ und kann mit „Beenden“ abschließen. Gebotsknöpfe bieten feste Beträge; war jemand schneller, wird das Gebot abgelehnt („… war schneller“) – führt man selbst, legt jeder weitere Tipp seinen Schritt drauf (v0.88, keine Sperre mehr). Bieten geht auch wie bei Balatro: Scheine im Fächer antippen und gemeinsam als Gebot abschicken.
 - Kuhhandel: verdecktes Angebot; annehmen (Geld nehmen, Tier abgeben) oder Gegenangebot.
   Gebote werden **immer getauscht**, höheres gewinnt, **Gleichstand → Herausforderer gewinnt**. Haben beide 2, geht es um 2.
 - Kein Spielverlauf im Spiel – nur die **letzte Runde** steht klein auf dem Tisch („Letzte Runde“), alles davor muss man sich merken. Kein Zug-Überspringen.
@@ -105,7 +105,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 Querformat, angelehnt an die Bedienung der Monopoly-App (eigene Gestaltung, keine fremden Grafiken/Figuren).
 Ein durchgehendes Spielfeld (Standard: Nachtblau mit Filz, frei wählbar unter „Aussehen“). Sitzordnung wie am echten Tisch:
-Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten (deine Figur unten links, Antippen öffnet 💬; Schnell-Emojis links daneben), Geld und Tiere in der Mitte; Reihenfolge im Uhrzeigersinn.
+Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten (deine Figur unten links, Antippen öffnet 💬 mit Reitern Emojis/Sprüche/Aktionen/Karten), Geld (jeder Schein einzeln) und Tiere in der Mitte; Reihenfolge im Uhrzeigersinn.
 Eigenes Geld als Fächer unten, deine Knöpfe unten rechts (v0.87, „+10“ groß und rot), Menü oben links, 💬 durch Antippen deiner Figur. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
 dem Zeichnen gemessen (`data-aim-to` / `data-aim-from`, `aimFx` in `js/game.js`), nicht fest eingebaut.
 Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …), nicht fest einbauen.

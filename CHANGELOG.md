@@ -1,5 +1,15 @@
 # Änderungsprotokoll
 
+## v0.88.0 – Bieten und Knöpfe flüssiger (Rückmeldung vom Testabend, 23:27)
+
+- [x] **Keine Gebotssperre mehr.** Schutz vor Fehlgeboten jetzt so: Jeder Knopf bietet einen festen Betrag – war jemand schneller, kommt „Lea war schneller (130)“ statt eines höheren Gebots. Neue Beträge blinken kurz auf.
+- [x] **Selbst überbieten:** Führst du schon, legt jeder weitere Tipp seinen Schritt einfach drauf (2× „+10“ = 20 mehr). Tipps während des Speicherns gehen nicht mehr verloren, sondern werden danach ausgeführt.
+- [x] **Knöpfe reagieren zuverlässig:** Tippen zählt schon beim Loslassen, auch wenn der Tisch genau dann neu gezeichnet wird. Hat sich am Bild nichts geändert, wird gar nicht neu gezeichnet – weniger Flackern bei Fenstern und Animationen.
+- [x] **💬-Fenster neu:** Antippen deiner Figur öffnet Reiter – Emojis (16 Stück, ein Tipp = gesendet), Sprüche, Aktionen, Karten. Die Schnell-Emojis am Rand sind wieder weg.
+- [x] **Deine Emojis/Sprüche** erscheinen wieder direkt über deiner Figur.
+- [x] **Letzte Runde** weiter links und dezenter, beim Kuhhandel mit der Differenz der Gebote.
+- [x] **Handgeld wieder vollständig:** jeder Schein einzeln statt „×3“-Stapel.
+
 ## v0.87.0 – Wünsche vom Testabend (Alps Go 21.11. 21:17)
 
 - [x] **Plätze getauscht:** deine Figur unten links (Schnell-Emojis daneben), deine Knöpfe unten rechts.

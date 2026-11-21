@@ -4245,3 +4245,45 @@ html:has(.stage) { background: var(--tbl-3, #1E2A44); }
 .pods.grow .pod.p1 .picons .ci { width: 22px; height: 22px; }
 .pods.grow .pod .pblock { padding-top: 2px; }
 @media (max-height: 440px) { .endbtns .pill { min-height: 38px; } .pods.grow .pod .pplinth { --pbr: 16px; } }
+/* v0.88 💬-Fenster: Reiter (Emojis · Sprüche · Aktionen · Karten), breit statt lang */
+.reactpick.v3 { left: 50% !important; right: auto !important; top: 44px; translate: -50% 0; width: 470px; max-width: calc(100% - 24px); max-height: calc(100% - 56px); display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 12px; overflow: hidden; }
+.reactpick.v3 .rphead { display: flex; align-items: center; justify-content: space-between; font: 800 15px var(--font-head); color: var(--ink); }
+.reactpick.v3 .rphead button { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #F1EEE6; font-size: 16px; cursor: pointer; }
+.reactpick.v3 .rp-tabs { display: flex; gap: 6px; }
+.reactpick.v3 .rp-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; min-height: 38px; border: 0; border-radius: 12px; background: #F1EEE6; color: #555; font: 800 13px var(--font-head); cursor: pointer; }
+.reactpick.v3 .rp-tab i { font-style: normal; font-size: 17px; }
+.reactpick.v3 .rp-tab.on { background: var(--ink); color: #fff; }
+.reactpick.v3 .rp-body { overflow-y: auto; min-height: 0; flex: 1; -webkit-overflow-scrolling: touch; }
+.reactpick.v3 .rp-emogrid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.reactpick.v3 .rp-e { aspect-ratio: 1; min-height: 44px; border: 0; border-radius: 14px; background: #FFF3D6; font-size: 26px; line-height: 1; cursor: pointer; box-shadow: 0 3px 0 #E2C98E; display: grid; place-items: center; }
+.reactpick.v3 .rp-e:active { transform: translateY(2px) scale(.94); box-shadow: 0 1px 0 #E2C98E; }
+.reactpick.v3 .rp-says { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.reactpick.v3 .rp-says.own { margin-bottom: 6px; }
+.reactpick.v3 .rp-says button { min-height: 40px; }
+.reactpick.v3 .rp-tiles { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+/* v0.88 Gebotsknöpfe: neue Beträge blinken kurz (keine Sperre mehr) */
+.bidbtn.newamt b { animation: newamt .6s ease-out both; animation-delay: var(--bfl, 0ms); }
+@keyframes newamt { 0% { color: var(--gold); scale: 1.25; } 100% { scale: 1; } }
+/* v0.88 (Alp): deine Sprechblase/Emojis wieder direkt über deiner Figur (Figur steht seit v0.87 unten links) */
+.stage .mebubble, .stage .mebubble.up { left: 30px !important; right: auto !important; top: auto !important; bottom: 112px !important; z-index: 8; }
+.stage .mebubble .rbubble { transform-origin: 20% 100%; white-space: normal; width: max-content; max-width: 220px; text-align: center; line-height: 1.15; }
+.stage .mebubble .rbubble::after { left: 34px; right: auto; top: 100%; bottom: auto; margin: 0; transform: none; border: 0; border-top: 9px solid var(--ink); border-left: 7px solid transparent; border-right: 7px solid transparent; }
+/* v0.88 (Alp): letzte Runde weiter links und dezenter */
+.lastround { left: 12px; top: 210px; width: 200px; align-items: flex-start; opacity: .82; }
+.lastround > small { font-size: 8.5px; color: rgba(255,255,255,.5); }
+.lastround .evstrip { max-width: 200px; font-size: 10.5px; font-weight: 600; background: rgba(0,0,0,.22); box-shadow: none; padding: 3px 8px; }
+.lastround .evstrip b { font-weight: 800; }
+.stage.p3 .lastround { top: 120px; }
+.lastround { top: 204px; width: 290px; }
+.lastround .evstrip { max-width: 290px; line-height: 1.15; padding: 2px 8px; gap: 1px 3px; }
+.lastround .evstrip .avatar { width: 16px; height: 16px; }
+.lastround .evstrip .mcard { width: 15px; height: 20px; }
+/* v0.88 Handgeld vollständig: jeder Schein einzeln, bei vielen enger */
+.stage .fan-wrap.slots { gap: 4px; }
+.stage .fan-wrap.slots > .money.fan + .money.fan { margin-left: calc(-1 * var(--ov, 0px)); }
+.stage .fan-wrap.slots > .money.fan.lift { z-index: 2; }
+.lastround { left: 150px; top: 200px; width: 222px; }
+.lastround .evstrip { max-width: 222px; }
+.stage.p3 .lastround { left: 12px; top: 120px; width: 260px; }
+.stage.p3 .lastround .evstrip { max-width: 260px; }
+.lastround { left: 160px; }
