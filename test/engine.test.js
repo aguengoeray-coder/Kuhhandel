@@ -1168,3 +1168,26 @@ test('v0.86: logNo zählt weiter, auch wenn das Protokoll bei 200 abgeschnitten 
   assert.ok(E.logNo(g) > 200, `lange Partie (logNo ${E.logNo(g)})`);
   assert.ok(lastN > 200, 'Ereignisse nach Eintrag 200 haben weiter neue Nummern');
 });
+
+test('v0.87: nach „kann nicht zahlen“ gibt es das Tier nicht umsonst – Versteigerung neu (höchstens 2×), Scheine bleiben offen', () => {
+  let g = gameWithDeck(['schwein', 'hahn']);
+  g = drawForAuction(g, 'a');
+  g = bid(g, 'b', 200);
+  g = closeAuction(g, 'a', 'sell');
+  assert.deepEqual(g.auction.openMoney.b, [0, 0, 10, 10, 10, 20, 50]);
+  g = closeAuction(g, 'a', 'sell'); // niemand bietet
+  assert.equal(g.phase, 'auction');
+  assert.equal(g.lastEvent.type, 'auction_restart');
+  assert.equal(g.players[0].animals.schwein, 0);
+  assert.ok(g.auction.openMoney.b, 'Scheine bleiben offen');
+  g = closeAuction(g, 'a', 'sell');
+  assert.equal(g.phase, 'auction');
+  g = closeAuction(g, 'a', 'sell'); // dritter leerer Durchgang: damit nichts hängt, bekommt der Auktionator es doch
+  assert.equal(g.phase, 'turn');
+  assert.equal(g.players[0].animals.schwein, 1);
+  // ohne „kann nicht zahlen“ bleibt alles wie bisher
+  let h = gameWithDeck(['schwein', 'hahn']);
+  h = drawForAuction(h, 'a');
+  h = closeAuction(h, 'a', 'sell');
+  assert.equal(h.phase, 'turn');
+});

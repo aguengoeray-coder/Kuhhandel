@@ -892,6 +892,16 @@ export function closeAuction(prev, playerId, mode, now) {
     state.blindReveal = rev;
   }
 
+  // v0.87 (Alp): Hat jemand nicht zahlen können und danach bietet keiner, gibt es das Tier nicht umsonst –
+  // die Versteigerung beginnt von vorn (höchstens 2× hintereinander ohne Gebot, damit das Spiel nicht hängen bleibt)
+  if (!a.high && a.cantPay && (a.emptyRestarts || 0) < 2) {
+    a.emptyRestarts = (a.emptyRestarts || 0) + 1;
+    a.passed = [];
+    if (a.endsAt != null && now != null) a.endsAt = now + auctionStartMs(state);
+    state.lastEvent = { n: logNo(state), type: 'auction_restart', animal: a.animal, auctioneer: a.auctioneer };
+    log(state, `Niemand bietet – ${animalName(a.animal)} gibt es nicht umsonst, die Versteigerung beginnt von vorn.`);
+    return state;
+  }
   if (!a.high) {
     auctioneer.animals[a.animal] += 1;
     state.lastEvent = { n: logNo(state), type: 'auction_won', animal: a.animal, buyer: auctioneer.id, amount: 0, ...(a.forced ? { forced: true } : {}) };
@@ -916,6 +926,8 @@ export function closeAuction(prev, playerId, mode, now) {
     const failed = a.high.amount;
     state.lastEvent = { n: logNo(state), type: 'cant_pay', player: bidder.id, amount: failed, revealed: bidder.money.slice() };
     a.caps[bidder.id] = failed - BID_STEP;
+    a.cantPay = true; a.emptyRestarts = 0;
+    a.openMoney = { ...(a.openMoney || {}), [bidder.id]: bidder.money.slice().sort((x, y) => x - y) }; // v0.87: Scheine bleiben bis zum Ende dieser Versteigerung offen
     a.high = null;
     a.passed = [];
     if (a.endsAt != null && now != null) {

@@ -1,5 +1,20 @@
 # Änderungsprotokoll
 
+## v0.87.0 – Wünsche vom Testabend (Alps Go 21.11. 21:17)
+
+- [x] **Plätze getauscht:** deine Figur unten links (Schnell-Emojis daneben), deine Knöpfe unten rechts.
+- [x] **„+10“ groß und rot**, +20/+50/+100 klein darunter.
+- [x] **Bieten wie bei Balatro:** Scheine im Fächer antippen (springen hoch), dann „… bieten“ – alle zusammen als Gebot.
+- [x] **Schutz vor Fehlgeboten:** Bietet ein anderer, sind die Gebotsknöpfe 0,8 s gesperrt und blinken.
+- [x] **Überboten!** jetzt groß: roter Rand-Blitz und Schild mit Wer und Wie viel.
+- [x] **Kann nicht zahlen:** Scheine bleiben bis zum Ende der Versteigerung am Platz offen. Bietet danach keiner, gibt es das Tier nicht umsonst – die Versteigerung beginnt von vorn.
+- [x] **Alle anderen haben gepasst:** der letzte Bieter sieht das und kann mit „Beenden“ abschließen.
+- [x] **Letzte Runde** steht klein auf dem Tisch (nur die letzte, kein Verlauf).
+- [x] **Rattenrunde:** Knopf „🤖 Auto-0 legen“.
+- [x] **Kuhhandel Schritt 1:** zeigt alle Tiere des gewählten Gegners („Lea hat 14 Tiere: …“).
+- [x] **Geld der Mitspieler als kleiner Fächer** verdeckter Scheine.
+- [x] **Podest wächst** nach Punkten – der Letzte zuerst, der Sieger zuletzt.
+
 ## v0.86.0 – Wichtige Fehler aus dem Testabend + Feinschliff
 
 - [x] **Ergebnis-Fenster und Animationen fehlten später im Spiel:** Das Protokoll ist auf 200 Einträge begrenzt – ab da hat die App keine Neuigkeiten mehr erkannt (keine Fenster nach Versteigerung/Kuhhandel/Spezialkarte, keine fliegenden Tiere und Scheine). Jetzt zählt ein fortlaufender Zähler (`logNo`). Gilt auch für laufende Partien.

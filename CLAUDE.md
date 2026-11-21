@@ -74,10 +74,12 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 - Versteigerung auf Zeit: 3 s Karte ansehen, dann 10 s, nach jedem Gebot wieder 10 s (Tempo der Runde im Warteraum: Denkzeiten – Versteigerung, Aufteilen, Kuhhandel-Zeit – ×1,5 / ×1 / ×0,7; Info-Fenster – Ansehen, Ergebnisse, VS, News, Quartett-Show – ×1,3 / ×1 / ×0,85, „Kann nicht zahlen“ nie unter 5 s; Spezialkarte und Bewegungen immer gleich). Gebotsknöpfe +10/+20/+50/+100 (mehr bieten = mehrmals tippen).
   **„Warte, warte, warte!“:** jeder Bieter einmal pro Versteigerung → Uhr + Versteigerungszeit der Runde (ab dem zweiten Drücken halbe Zeit); ebenso einmal pro Kuhhandel (Herausgeforderter, nur mit Kuhhandel-Zeit) und einmal pro Karte beim Aufteilen zu zweit.
   Erst nach Ablauf entscheidet der Auktionator: Zuschlag an den Höchstbietenden oder selbst zum Höchstgebot kaufen.
-- **Kein Wechselgeld.** Wer nicht zahlen kann, zeigt alle Scheine offen; Auktion startet neu, er darf höchstens altes Gebot − 10 bieten.
+- **Kein Wechselgeld.** Wer nicht zahlen kann, zeigt alle Scheine offen (bleiben bis zum Ende dieser Versteigerung an seinem Platz sichtbar); Auktion startet neu, er darf höchstens altes Gebot − 10 bieten. Bietet danach niemand, gibt es das Tier **nicht umsonst** – die Versteigerung beginnt von vorn (höchstens 2× ohne Gebot, dann bekommt der Auktionator es, damit nichts hängt).
+  Haben alle anderen Bieter gepasst, sieht der letzte Bieter „Alle anderen haben gepasst“ und kann mit „Beenden“ abschließen. Nach einem fremden Gebot sind die Gebotsknöpfe 0,8 s gesperrt (blinken), damit man nicht versehentlich den neuen Betrag tippt. Bieten geht auch wie bei Balatro: Scheine im Fächer antippen und gemeinsam als Gebot abschicken.
 - Kuhhandel: verdecktes Angebot; annehmen (Geld nehmen, Tier abgeben) oder Gegenangebot.
   Gebote werden **immer getauscht**, höheres gewinnt, **Gleichstand → Herausforderer gewinnt**. Haben beide 2, geht es um 2.
-- Kein Spielverlauf im Spiel (man muss sich merken, was passiert ist). Kein Zug-Überspringen.
+- Kein Spielverlauf im Spiel – nur die **letzte Runde** steht klein auf dem Tisch („Letzte Runde“), alles davor muss man sich merken. Kein Zug-Überspringen.
+- **Rattenrunde:** Knopf „🤖 Auto-0 legen“ legt für dich reihum eine 0, solange du eine hast (gilt nur für die laufende Rattenrunde).
 - **Ratte:** Aufgedeckt → reihum ab links vom Aufdecker (Aufdecker macht mit, mehrere Runden): eine Geldkarte verdeckt legen
   (0er erlaubt) oder Ratte nehmen und alle gelegten Karten bekommen; ohne Karten muss man nehmen. Danach muss der Aufdecker
   nochmal aufdecken (Stapel leer → Kuhhandel). Rattenhandel nur, wenn beide Ratten haben; umgekehrt: wer mehr bietet,
@@ -103,8 +105,8 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 
 Querformat, angelehnt an die Bedienung der Monopoly-App (eigene Gestaltung, keine fremden Grafiken/Figuren).
 Ein durchgehendes Spielfeld (Standard: Nachtblau mit Filz, frei wählbar unter „Aussehen“). Sitzordnung wie am echten Tisch:
-Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten in der Mitte (deine Figur, gegenüber dem Platz oben; Antippen öffnet 💬), Geld links davon, Tiere rechts davon; Reihenfolge im Uhrzeigersinn.
-Eigenes Geld als Fächer unten, deine Knöpfe unten links (Daumen), Menü oben links, 💬 durch Antippen deiner Figur. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
+Mitspieler links, oben, rechts (3 Spieler: oben links/oben rechts), du unten (deine Figur unten links, Antippen öffnet 💬; Schnell-Emojis links daneben), Geld und Tiere in der Mitte; Reihenfolge im Uhrzeigersinn.
+Eigenes Geld als Fächer unten, deine Knöpfe unten rechts (v0.87, „+10“ groß und rot), Menü oben links, 💬 durch Antippen deiner Figur. Ergebnisse (Versteigerung, Spezialkarte, Kuhhandel, Kann nicht zahlen) immer im selben Ergebnis-Fenster (`.evcard`); Bezahlen/Angebote direkt im Geld-Fächer. Flugziele (Karten, Geld) werden nach
 dem Zeichnen gemessen (`data-aim-to` / `data-aim-from`, `aimFx` in `js/game.js`), nicht fest eingebaut.
 Farben nur über die CSS-Variablen aus `js/theme.js` (--tbl-*, --bg, --back …), nicht fest einbauen.
 
