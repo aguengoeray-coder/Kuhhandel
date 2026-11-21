@@ -4287,3 +4287,8 @@ html:has(.stage) { background: var(--tbl-3, #1E2A44); }
 .stage.p3 .lastround { left: 12px; top: 120px; width: 260px; }
 .stage.p3 .lastround .evstrip { max-width: 260px; }
 .lastround { left: 160px; }
+/* v0.88.1: „Deine Sets“ beim Antworten im Kuhhandel nicht mehr über dem Geld-Fächer (bei vielen Scheinen ließen sich die rechten nicht antippen) */
+.stage:has(.tduel.respond) .mysets { bottom: 118px; right: 8px; }
+.lastround { width: 192px; }
+.lastround .evstrip { max-width: 192px; }
+.stage .dchips { top: 4px !important; bottom: auto !important; left: 112px !important; right: auto !important; z-index: 20; } /* v0.88.1: Debug-Knöpfe nicht mehr über dem Geld-Fächer (Figur steht jetzt unten links) */

@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.88.1', date: '22.11.', items: ['🧹 Kleinkram am Tisch aufgeräumt'] },
   { v: '0.88.0', date: '21.11.', items: ['👆 Knöpfe reagieren zuverlässiger, weniger Flackern', '💸 Bieten ohne Sperre – „… war schneller“ statt Fehlgebot, selbst überbieten geht', '💬 Neues Emoji-/Sprüche-Fenster beim Antippen deiner Figur', '📜 Letzte Runde mit Differenz', '💰 Handgeld wieder Schein für Schein'] },
   { v: '0.87.0', date: '21.11.', items: ['🔁 Figur links, Knöpfe rechts – „+10“ groß und rot', '🃏 Bieten wie bei Balatro: Scheine antippen und zusammen bieten', '🛑 Kurze Sperre nach fremden Geboten – kein Versehen mehr', '💥 Überboten! jetzt groß', '💸 Kann nicht zahlen: Scheine bleiben offen, nichts umsonst', '🙋 Alle anderen haben gepasst → du kannst beenden', '📜 Letzte Runde steht auf dem Tisch', '🐀 Auto-0 in der Rattenrunde', '🏆 Podest wächst nach Punkten'] },
   { v: '0.86.0', date: '21.11.', items: ['🛠️ Ergebnis-Fenster und Animationen kommen wieder bis zum Spielende', '🔔 Buzzer: alle sehen sofort, wer gedrückt hat', '😱 Schnell-Emojis rechts am Rand, wenn es spannend wird', '💸 Kuhhandel für höchstens 50 gewonnen: „Sehr günstig!“', '🐀 Rattenhandel: „will die Ratte loswerden“', '🔠 Einheitliche Knöpfe und Überschriften'] },

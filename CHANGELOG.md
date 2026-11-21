@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v0.88.1 – Kleinkram
+
+- [x] „Letzte Runde“ etwas schmaler (stieß an den Stapel).
+- [x] Debug-Knöpfe (nur Testmodus) liegen nicht mehr über dem Geld-Fächer; „Deine Sets“ beim Kuhhandel-Antworten weiter oben.
+
 ## v0.88.0 – Bieten und Knöpfe flüssiger (Rückmeldung vom Testabend, 23:27)
 
 - [x] **Keine Gebotssperre mehr.** Schutz vor Fehlgeboten jetzt so: Jeder Knopf bietet einen festen Betrag – war jemand schneller, kommt „Lea war schneller (130)“ statt eines höheren Gebots. Neue Beträge blinken kurz auf.
