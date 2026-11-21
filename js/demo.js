@@ -217,6 +217,14 @@ export function buildDemoState(kind, local) {
       if (new URLSearchParams(location.search).get('fast')) local.potLand = Date.now() + 1500; // v0.76: schneller Kuhhandel – Einsätze laufen noch in die Mitte
       return g;
     }
+    case 'tradecheap': { // v0.86: Nico gewinnt den Kuhhandel für 20 → „Sehr günstig!“, Nico jubelt, du bist traurig
+      g = base(); g.turn = 1;
+      const ni = g.players[1]; const iz = ni.money.indexOf(20) >= 0 ? ni.money.indexOf(20) : ni.money.findIndex((m) => m > 0 && m <= 50);
+      g = startTrade(g, 'u2', 'u1', 'hund', [iz]);
+      const me = g.players[0]; g = counterTrade(g, 'u1', [me.money.indexOf(0)]);
+      if (new URLSearchParams(location.search).get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'trade' };
+      return g;
+    }
     case 'tradeseen': { // Kuhhandel zwischen zwei anderen: Zuschauer sehen nur Rückseiten
       g = base(); g.turn = 1;
       g = startTrade(g, 'u2', 'u3', 'kuh', [0, 2, 6]);

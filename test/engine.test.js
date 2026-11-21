@@ -1151,3 +1151,20 @@ test('v0.83 Team-Wahl: teamPick ordnet die Plätze so, dass Partner gegenüber s
   const u = createGame({ players: P, seed: 3, settings: { teams: true, teamPick: { [P[0].id]: 0, [P[1].id]: 0, [P[2].id]: 0 } } }); // ungleich → Reihenfolge bleibt
   assert.equal(E.partnerOf(u, P[0].id), P[2].id);
 });
+
+test('v0.86: logNo zählt weiter, auch wenn das Protokoll bei 200 abgeschnitten wird (sonst fehlen später alle Ergebnis-Fenster)', async () => {
+  const E = await import('../src/engine.js');
+  let g = createGame({ players: P.slice(0, 4), seed: 7 });
+  let r = 7 * 7919; const rand = () => { r = (r * 16807) % 2147483647; return r / 2147483647; };
+  let lastN = -1, lastSig = null, newEvents = 0, steps = 0;
+  while (g.phase !== 'ended' && steps++ < 60000) {
+    const before = E.logNo(g);
+    g = botStep(g, rand);
+    assert.ok(E.logNo(g) >= before, 'logNo darf nie kleiner werden');
+    const e = g.lastEvent; const sig = e ? `${e.n}|${e.type}` : null;
+    if (sig && sig !== lastSig) { assert.ok(e.n >= lastN, 'Ereignis-Nummern steigen'); lastN = e.n; lastSig = sig; newEvents += 1; }
+  }
+  assert.ok(g.log.length <= 200, 'Protokoll bleibt begrenzt');
+  assert.ok(E.logNo(g) > 200, `lange Partie (logNo ${E.logNo(g)})`);
+  assert.ok(lastN > 200, 'Ereignisse nach Eintrag 200 haben weiter neue Nummern');
+});

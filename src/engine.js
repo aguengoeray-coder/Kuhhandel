@@ -215,7 +215,11 @@ function player(state, id) {
   return state.players.find((p) => p.id === id) || fail('Unbekannter Spieler.');
 }
 
+// v0.86 Fix: Das Protokoll behält nur die letzten 200 Einträge – seine Länge bleibt dann stehen.
+// logNo zählt dagegen immer weiter (für „ist das neu?“ in der App und Ereignis-Nummern).
+export function logNo(state) { return state.logTotal ?? state.log.length; }
 function log(state, text) {
+  state.logTotal = logNo(state) + 1;
   state.log.push(text);
   if (state.log.length > 200) state.log.shift();
 }
@@ -562,7 +566,7 @@ const NEWS_TEXT = {
 function applyNews(state, me, card) {
   const n = newsOf(card);
   if (!state.kurse) state.kurse = {};
-  const ev = { n: state.log.length, type: 'news', kind: n.kind, player: me.id };
+  const ev = { n: logNo(state), type: 'news', kind: n.kind, player: me.id };
   if (KURS_KINDS.includes(n.kind)) {
     const before = kursValue(n.animal, state.kurse);
     applyKurs(state.kurse, n.animal, KURS_FACTOR[n.kind](n.pct));
@@ -581,7 +585,7 @@ function applyNews(state, me, card) {
     ev.payers = Object.keys(ev.lost); // v0.72: wer etwas abgegeben hat, sehen alle (für die Animation) – die Werte nicht
   } else if (n.kind === 'panik') {
     // gleichzeitig: jeder schiebt eine zufällige Karte an seinen linken Nachbarn (nächster in Spielrichtung)
-    const r = rng(state.deck.length * 7919 + state.log.length * 104729 + 17);
+    const r = rng(state.deck.length * 7919 + logNo(state) * 104729 + 17);
     const moves = state.players.map((p) => (p.money.length ? p.money.splice(Math.floor(r() * p.money.length), 1)[0] : null));
     ev.moved = {};
     state.players.forEach((p, i) => {
@@ -614,7 +618,7 @@ export function drawForAuction(prev, playerId, now) {
     const order = Array.from({ length: n }, (_, k) => state.players[(state.turn + 1 + k) % n].id);
     state.rat = { revealer: playerId, order, idx: 0, pot: [], laid: {} };
     state.phase = 'rat';
-    state.lastEvent = { n: state.log.length, type: 'rat_drawn', player: playerId };
+    state.lastEvent = { n: logNo(state), type: 'rat_drawn', player: playerId };
     log(state, `${me.name} deckt eine Ratte auf.`);
     return state;
   }
@@ -622,7 +626,7 @@ export function drawForAuction(prev, playerId, now) {
     // Handkarte: verdeckt auf die Hand (die anderen sehen nur, DASS du eine Karte hast), dann nochmal aufdecken
     if (!state.hands) state.hands = {};
     (state.hands[playerId] = state.hands[playerId] || []).push(newsOf(animal).kind);
-    state.lastEvent = { n: state.log.length, type: 'hand', player: playerId, kind: newsOf(animal).kind };
+    state.lastEvent = { n: logNo(state), type: 'hand', player: playerId, kind: newsOf(animal).kind };
     log(state, `${me.name} nimmt eine Börsen-Karte auf die Hand.`);
     afterRat(state);
     return state;
@@ -637,7 +641,7 @@ export function drawForAuction(prev, playerId, now) {
     const value = moneyValue(animal);
     giveCards(me, [value]);
     stat(state, playerId).moneyDrawn += value;
-    state.lastEvent = { n: state.log.length, type: 'money_drawn', player: playerId, value };
+    state.lastEvent = { n: logNo(state), type: 'money_drawn', player: playerId, value };
     log(state, `${me.name} zieht einen Geldschein: ${value}.`);
     nextTurn(state);
     return state;
@@ -649,7 +653,7 @@ export function drawForAuction(prev, playerId, now) {
     state.special = { animal: sp, revealer: playerId, startsAt: t + BATZEN_WAIT_MS + SPECIAL_DELAY_MS, buzzes: {}, caps: {}, rps: null, winner: null,
       batzen: { until: t + BATZEN_WAIT_MS, by: null, at: null, counts: null } };
     state.phase = 'special';
-    state.lastEvent = { n: state.log.length, type: 'special_drawn', animal: sp, player: playerId };
+    state.lastEvent = { n: logNo(state), type: 'special_drawn', animal: sp, player: playerId };
     log(state, `${me.name} deckt die ${animalName(sp)}-Spezialkarte auf.`);
     return state;
   }
@@ -658,16 +662,16 @@ export function drawForAuction(prev, playerId, now) {
   if (blind) {
     state.blind -= 1;
     log(state, `${me.name} versteigert verdeckt eine Karte (Blindmarkt).`);
-    state.lastEvent = { n: state.log.length, type: 'draw', blind: true };
+    state.lastEvent = { n: logNo(state), type: 'draw', blind: true };
   } else log(state, `${me.name} versteigert: ${animalName(animal)}.`);
   if (blind) { /* Esel-Bonus erst beim Aufdecken (closeAuction) */ } else if (animal === 'esel') {
     const payout = DONKEY_PAYOUTS[state.donkeysDrawn];
     state.donkeysDrawn += 1;
     for (const p of state.players) giveCards(p, bankCards(payout));
     log(state, `${state.donkeysDrawn}. Esel – alle bekommen ${payout} Taler von der Bank.`);
-    state.lastEvent = { n: state.log.length, type: 'donkey', number: state.donkeysDrawn, payout };
+    state.lastEvent = { n: logNo(state), type: 'donkey', number: state.donkeysDrawn, payout };
   } else {
-    state.lastEvent = { n: state.log.length, type: 'draw', animal };
+    state.lastEvent = { n: logNo(state), type: 'draw', animal };
   }
   const fast = (state.hektik || 0) > 0; // Börsen-Chaos „Hektik“: diese Versteigerung nur 5 s
   if (fast) state.hektik -= 1;
@@ -702,7 +706,7 @@ export function divideLook(prev, playerId, now) {
   if (state.deck.length === 0) fail('Der Stapel ist leer – nur noch Kuhhandel ist möglich.');
   state.divide = { by: playerId, card: state.deck[0], endsAt: now != null ? now + Math.round(DIVIDE_MS * tempoFactor(state)) : null };
   state.phase = 'divide';
-  state.lastEvent = { n: state.log.length, type: 'divide_look', player: playerId };
+  state.lastEvent = { n: logNo(state), type: 'divide_look', player: playerId };
   log(state, `${player(state, playerId).name} schaut sich die oberste Karte an.`);
   return state;
 }
@@ -718,7 +722,7 @@ export function divideChoose(prev, playerId, keep) {
   const e1 = receiveCard(state, firstTo, first);
   const e2 = second != null ? receiveCard(state, secondTo, second) : null;
   const esel = [e1, e2].filter(Boolean);
-  state.lastEvent = { n: state.log.length, type: 'divided', by: playerId, keep: !!keep,
+  state.lastEvent = { n: logNo(state), type: 'divided', by: playerId, keep: !!keep,
     first: { to: firstTo.id, card: first }, second: second != null ? { to: secondTo.id, card: second } : null, ...(esel.length ? { esel } : {}) };
   log(state, `${me.name} ${keep ? 'behält' : 'gibt ab'}: ${cardName(first)} an ${firstTo.name}${second != null ? `, ${cardName(second)} an ${secondTo.name}` : ''}.`);
   nextTurn(state);
@@ -751,7 +755,7 @@ export function duoPass(prev, playerId) {
   requireTurn(state, playerId);
   if (state.deck.length > 0) fail('Erst wird der Stapel aufgeteilt.');
   state.duoPasses = (state.duoPasses || 0) + 1;
-  state.lastEvent = { n: state.log.length, type: 'duo_pass', player: playerId, passes: state.duoPasses };
+  state.lastEvent = { n: logNo(state), type: 'duo_pass', player: playerId, passes: state.duoPasses };
   log(state, `${player(state, playerId).name} verzichtet auf einen Kuhhandel.`);
   if (state.duoPasses >= 2) { duoEnd(state); return state; }
   nextTurn(state);
@@ -778,14 +782,14 @@ export function playPfaendung(prev, playerId, targetId, animal, now) {
   stat(state, playerId).pfaendungen = (stat(state, playerId).pfaendungen || 0) + 1;
   if (th.includes('einspruch')) {
     th.splice(th.indexOf('einspruch'), 1);
-    state.lastEvent = { n: state.log.length, type: 'einspruch', by: playerId, target: targetId, animal };
+    state.lastEvent = { n: logNo(state), type: 'einspruch', by: playerId, target: targetId, animal };
     log(state, `${me.name} will ${t.name} ${animalName(animal)} pfänden – aber ${t.name} legt Einspruch ein!`);
     nextTurn(state);
     return state;
   }
   t.animals[animal] -= 1;
   stat(state, targetId).gepfaendet = (stat(state, targetId).gepfaendet || 0) + 1;
-  state.lastEvent = { n: state.log.length, type: 'pfaendung', by: playerId, target: targetId, animal };
+  state.lastEvent = { n: logNo(state), type: 'pfaendung', by: playerId, target: targetId, animal };
   log(state, `Zwangsversteigerung! ${me.name} lässt ${t.name}s ${animalName(animal)} versteigern.`);
   const fast = (state.hektik || 0) > 0;
   if (fast) state.hektik -= 1;
@@ -877,7 +881,7 @@ export function closeAuction(prev, playerId, mode, now) {
   const auctioneer = player(state, a.auctioneer);
   if (a.blind) { // v0.81 Blindmarkt: jetzt wird aufgedeckt (Esel-Bonus erst jetzt)
     a.blind = false;
-    const rev = { n: state.log.length + 1, animal: a.animal };
+    const rev = { n: logNo(state) + 1, animal: a.animal };
     if (a.animal === 'esel') {
       const payout = DONKEY_PAYOUTS[state.donkeysDrawn];
       state.donkeysDrawn += 1;
@@ -890,7 +894,7 @@ export function closeAuction(prev, playerId, mode, now) {
 
   if (!a.high) {
     auctioneer.animals[a.animal] += 1;
-    state.lastEvent = { n: state.log.length, type: 'auction_won', animal: a.animal, buyer: auctioneer.id, amount: 0, ...(a.forced ? { forced: true } : {}) };
+    state.lastEvent = { n: logNo(state), type: 'auction_won', animal: a.animal, buyer: auctioneer.id, amount: 0, ...(a.forced ? { forced: true } : {}) };
     log(state, a.forced ? `Niemand bietet – ${auctioneer.name} behält ${animalName(a.animal)}.` : `Niemand bietet – ${auctioneer.name} bekommt ${animalName(a.animal)} umsonst.`);
     nextTurn(state);
     return state;
@@ -910,7 +914,7 @@ export function closeAuction(prev, playerId, mode, now) {
   // Kann der Höchstbietende überhaupt zahlen? Sonst: Karten offenlegen, Versteigerung neu
   if (sum(bidder.money) < a.high.amount) {
     const failed = a.high.amount;
-    state.lastEvent = { n: state.log.length, type: 'cant_pay', player: bidder.id, amount: failed, revealed: bidder.money.slice() };
+    state.lastEvent = { n: logNo(state), type: 'cant_pay', player: bidder.id, amount: failed, revealed: bidder.money.slice() };
     a.caps[bidder.id] = failed - BID_STEP;
     a.high = null;
     a.passed = [];
@@ -944,7 +948,7 @@ export function pay(prev, playerId, cardIndices) {
     buyer.specials.push(pm.special);
     stat(state, buyer.id).specialsWon += 1;
     log(state, `${payer.name} zahlt ${cards.length} Karte(n). ${buyer.name} bekommt die ${animalName(pm.special)}-Spezialkarte.`);
-    state.lastEvent = { n: state.log.length, type: 'special_won', animal: pm.special, buyer: buyer.id, count: cards.length, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self };
+    state.lastEvent = { n: logNo(state), type: 'special_won', animal: pm.special, buyer: buyer.id, count: cards.length, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self };
     nextTurn(state);
     return state;
   }
@@ -958,7 +962,7 @@ export function pay(prev, playerId, cardIndices) {
   st.buys += 1;
   if (!st.maxBuy || pm.amount > st.maxBuy.amount) st.maxBuy = { amount: pm.amount, animal: pm.animal };
   log(state, `${payer.name} zahlt mit ${cards.length} Karte(n). ${buyer.name} bekommt ${animalName(pm.animal)}.`);
-  state.lastEvent = { n: state.log.length, type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self, ...(pm.forced ? { forced: true } : {}) };
+  state.lastEvent = { n: logNo(state), type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self, ...(pm.forced ? { forced: true } : {}) };
   nextTurn(state);
   return state;
 }
@@ -1005,7 +1009,7 @@ export function acceptTrade(prev, playerId) {
   stat(state, ch.id).tradesWon += 1;
   stat(state, tg.id).tradesLost += 1;
   bluff(state, ch.id, t.offer);
-  state.lastEvent = { n: state.log.length, type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
+  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
   nextTurn(state);
   return state;
 }
@@ -1041,7 +1045,7 @@ export function counterTrade(prev, playerId, cardIndices) {
   stat(state, loser.id).tradesLost += 1;
   bluff(state, winner.id, challengerWins ? t.offer : counter);
   if (Math.abs(offerSum - counterSum) <= 10) { const ls = stat(state, loser.id); ls.closeLosses = (ls.closeLosses || 0) + 1; }
-  state.lastEvent = { n: state.log.length, type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
+  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
   nextTurn(state);
   return state;
 }
@@ -1080,7 +1084,7 @@ export function ratTake(prev, playerId) {
   stat(state, playerId).ratsTaken += 1;
   stat(state, playerId).ratCards += pot.length;
   log(state, `${me.name} nimmt die Ratte und bekommt ${pot.length} Karte(n).`);
-  state.lastEvent = { n: state.log.length, type: 'rat_taken', player: playerId, count: pot.length, cards: pot.slice(), laid: { ...state.rat.laid } };
+  state.lastEvent = { n: logNo(state), type: 'rat_taken', player: playerId, count: pot.length, cards: pot.slice(), laid: { ...state.rat.laid } };
   afterRat(state);
   return state;
 }
@@ -1130,7 +1134,7 @@ export function showBatzen(prev, playerId, now) {
   for (const p of state.players) counts[p.id] = p.money.length;
   sp.batzen = { ...sp.batzen, by: playerId, at: now, counts };
   sp.startsAt = now + BATZEN_SHOW_MS + SPECIAL_DELAY_MS;
-  state.lastEvent = { n: state.log.length, type: 'batzen', player: playerId };
+  state.lastEvent = { n: logNo(state), type: 'batzen', player: playerId };
   log(state, `${player(state, playerId).name}: „Zeig Batzen!“`);
   return state;
 }
@@ -1198,7 +1202,7 @@ export function rpsPick(prev, playerId, choice, now) {
     else { r.players = winners; r.round += 1; }
   }
   r.picks = {};
-  state.lastEvent = { n: state.log.length, type: 'rps', ...r.last };
+  state.lastEvent = { n: logNo(state), type: 'rps', ...r.last };
   return state;
 }
 
@@ -1215,7 +1219,7 @@ export function specialDecide(prev, playerId, mode, now) {
   if (!res) {
     rev.specials.push(sp.animal);
     stat(state, rev.id).specialsWon += 1;
-    state.lastEvent = { n: state.log.length, type: 'special_won', animal: sp.animal, buyer: rev.id, count: 0 };
+    state.lastEvent = { n: logNo(state), type: 'special_won', animal: sp.animal, buyer: rev.id, count: 0 };
     log(state, `Niemand buzzert – ${rev.name} bekommt die ${animalName(sp.animal)}-Spezialkarte umsonst.`);
     nextTurn(state);
     return state;
@@ -1231,7 +1235,7 @@ export function specialDecide(prev, playerId, mode, now) {
   if (mode !== 'sell') fail('Unbekannte Entscheidung.');
   if (other.money.length < res.count) {
     // Zahlungsunfähig: Karten offen, Countdown neu, darf höchstens bei seiner Kartenanzahl drücken
-    state.lastEvent = { n: state.log.length, type: 'cant_pay', player: other.id, count: res.count, revealed: other.money.slice(), special: true };
+    state.lastEvent = { n: logNo(state), type: 'cant_pay', player: other.id, count: res.count, revealed: other.money.slice(), special: true };
     sp.caps[other.id] = other.money.length;
     sp.buzzes = {};
     sp.rps = null;
