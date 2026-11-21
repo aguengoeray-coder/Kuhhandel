@@ -4090,8 +4090,7 @@ button.stake-badge.ask { cursor: pointer; background: #FFD34E; color: #2B2B2B; b
 .msc i { width: 20px; height: 20px; display: block; } .msc i .art { width: 20px; height: 20px; }
 .msc b { font: 900 12px/1 var(--font-head); color: #2B2B2B; }
 .msc.done { background: #FFF3C4; border-color: #F2C230; } .msc.done b::after { content: ' ✓'; color: #1F8A3F; }
-.stage:has(.mysets) .tduel:not(.respond) { margin-top: -8px; }
-.stage:has(.tduel.respond) .mysets { left: 8px; translate: 0 0; bottom: 64px; flex-wrap: wrap; max-width: 160px; border-radius: 14px; padding: 5px 8px; }
+.stage:has(.tduel.respond) .mysets { left: 8px; translate: 0 0; bottom: 64px; flex-wrap: wrap; max-width: 150px; border-radius: 14px; padding: 5px 7px; }
 .stage:has(.tduel.respond) .mysets small { width: 100%; margin-bottom: 1px; }
 /* v0.85 Sets eines Mitspielers (Antippen seiner Tiere) */
 .setspop { position: absolute; inset: 0; z-index: 70; display: grid; place-items: center; background: rgba(5,10,25,.55); animation: fadein .2s ease both; }
