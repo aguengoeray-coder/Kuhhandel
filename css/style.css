@@ -4146,3 +4146,6 @@ button.stake-badge.ask { cursor: pointer; background: #FFD34E; color: #2B2B2B; b
 .room-actions .pill { letter-spacing: .2px; padding: 0 16px; }
 .room-actions .pill-small { font-size: 14px; }
 @media (max-width: 700px) { .room-actions { gap: 8px; } .room-actions .pill-small { padding: 0 12px; } }
+/* v0.86 iPad: unter dem Spielfeld blitzte die weiße Seitenfarbe durch (z. B. wenn die Leiste verschwindet) */
+html { background: var(--bg, #1E2A44); }
+html:has(.stage) { background: var(--tbl-3, #1E2A44); }

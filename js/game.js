@@ -1,7 +1,7 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
 import { shopAvatar, shopAvatarFull } from './shopavatars.js';
 import {
-  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, revealMs, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
+  logNo, ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, revealMs, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
   viewFor, possibleTrades, scores, currentPlayer, missionStatus, animalsOf, isTeams, partnerOf, teamOf, teamPool,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
@@ -676,7 +676,7 @@ export function renderGame(root, ctx) {
   const outMark = (pid, from, until) => { local.out = local.out || {}; const o = local.out[pid]; local.out[pid] = { from: o && o.until > Date.now() ? Math.min(o.from, from) : from, until: Math.max(o && o.until > Date.now() ? o.until : 0, until) }; wakeLocal(from); wakeLocal(until + 20); };
   // v0.63.1 „Aua“: Getroffener hält sich kurz den Kopf (Profilbild bzw. deine Figur bekommt Klasse .ouch)
   const ouchMark = (pid, from, until) => { local.ouch = local.ouch || {}; const o = local.ouch[pid]; if (o && o.from === from) return; local.ouch[pid] = { from, until }; wakeLocal(from); wakeLocal(until + 20); };
-  { const hk = `${state.phase}|${state.log.length}|${state.turn}`; if (local.hintKey !== hk) { local.hintKey = hk; local.hintAt = Date.now(); } } // seit wann wartet der Zug
+  { const hk = `${state.phase}|${logNo(state)}|${state.turn}`; if (local.hintKey !== hk) { local.hintKey = hk; local.hintAt = Date.now(); } } // seit wann wartet der Zug
   // v0.68 Mimik über dem Kopf: kurz (💢 Wunschtier weg, 😍 Quartett) oder dauerhaft (💸 kein Geld, 💦 lange am Zug)
   const moodMark = (pid, kind, from, ms) => { local.mood = local.mood || {}; const m = local.mood[pid]; if (m && m.from === from && m.kind === kind) return; local.mood[pid] = { kind, from, until: from + ms }; wakeLocal(from); wakeLocal(from + ms + 20); }; // erst nach der Sitzplatz-Zeichnung aufrufen
   const MOOD = { sweat: '💦', angry: '💢', love: '😍', happy: '😄', sad: '😢' }; // v0.69: kein 💸 – wer kein Geld hat, muss man sich merken
@@ -728,7 +728,7 @@ export function renderGame(root, ctx) {
   const myTurn = cur.id === meId;
 
   // Auswahl zurücksetzen, sobald sich im Spiel etwas getan hat
-  const key = `${state.phase}|${state.turn}|${state.log.length}`;
+  const key = `${state.phase}|${state.turn}|${logNo(state)}`;
   if (local.key !== key) {
     local.key = key;
     local.sel = [];
@@ -739,7 +739,7 @@ export function renderGame(root, ctx) {
 
   // Animationen nur bei echten Neuigkeiten abspielen, nicht bei jedem Neuzeichnen
   const prev = local.prev || {};
-  const fresh = prev.logLen !== undefined && state.log.length !== prev.logLen;
+  const fresh = prev.logLen !== undefined && logNo(state) !== prev.logLen;
   const entered = prev.phase !== state.phase;
   // Ist das letzte Ereignis wirklich neu? (Gebote, Herausforderungen usw. schreiben ins Protokoll, ändern es aber nicht)
   // Kennung aus Nummer und Art: zwei Ereignisse mit derselben Nummer (z. B. „umsonst“ und danach Geldschein) gelten trotzdem beide als neu
@@ -747,17 +747,18 @@ export function renderGame(root, ctx) {
   const evFresh = fresh && evN != null && local.seenEvN !== evN;
   // v0.82 Geheimauftrag: 🎯 oben links, am Anfang einmal von selbst offen (6 s), Antippen zeigt Auftrag und Stand
   const myMission = v.missions && v.missions[meId] ? missionStatus(v, meId) : null;
-  if (myMission && local.missAuto === undefined) { local.missAuto = v.log.length <= 4 ? Date.now() + 6500 : 0; if (local.missAuto) { local.missOpen = true; later.push(['bell', 600]); } }
+  if (myMission && local.missAuto === undefined) { local.missAuto = logNo(v) <= 4 ? Date.now() + 6500 : 0; if (local.missAuto) { local.missOpen = true; later.push(['bell', 600]); } }
   if (local.missAuto && Date.now() > local.missAuto && local.missOpen === true) { local.missOpen = false; local.missAuto = 0; }
   const myPartner = isTeams(state) ? partnerOf(state, meId) : null; // v0.83 Teams
-  const missPop = myMission && local.missOpen ? `<div class="misspop" role="dialog" aria-label="Dein Geheimauftrag"><span class="mptag">🎯 Dein Geheimauftrag <small>nur du siehst ihn</small></span>
+  if (local.missOpen && !local.missOpenedAt) local.missOpenedAt = Date.now(); else if (!local.missOpen) local.missOpenedAt = 0;
+  const missPop = myMission && local.missOpen ? `<div class="misspop" role="dialog" aria-label="Dein Geheimauftrag" style="animation-delay:-${Math.min(2000, Date.now() - local.missOpenedAt)}ms"><span class="mptag">🎯 Dein Geheimauftrag <small>nur du siehst ihn</small></span>
     <b>${esc(myMission.text)}</b>
     <div class="mpbar"><i style="width:${Math.round(Math.min(1, myMission.got / myMission.need) * 100)}%"></i></div>
     <span class="mpstate">${myMission.done ? '✓ Schon erfüllt' : myMission.need > 4 ? `Stand: ${myMission.got}` : `Stand: ${myMission.got} von ${myMission.need}`} · Bonus <b>+${myMission.bonus}</b> Punkte am Ende</span></div>` : '';
   // v0.81 Blindmarkt: beim Zuschlag dreht sich die verdeckte Karte für alle um
   { const br = v.blindReveal; const bsig = br ? `${br.n}|${br.animal}` : null;
     if (bsig && local.blindSig !== bsig) { const first = local.blindSig === undefined && !fresh; local.blindSig = bsig;
-      if (!first && v.log.length - br.n < 3) { local.blindQ = `<div class="blindrev" role="status" style="--bd:${Math.round(2600 * INFO_F)}ms"><span class="brtag">🙈 Aufgedeckt!</span><div class="brcard">${playCard(br.animal)}</div><b>${esc(aname(br.animal))}${aval(br.animal) != null ? ` · ${aval(br.animal)}` : ''}</b>${br.eselBonus ? `<small>${br.eselNr}. Esel – alle +${br.eselBonus}</small>` : ''}</div>`; later.push(['flip', 0]); if (br.eselBonus) later.push(['iah', 500]); } } }
+      if (!first && logNo(v) - br.n < 3) { local.blindQ = `<div class="blindrev" role="status" style="--bd:${Math.round(2600 * INFO_F)}ms"><span class="brtag">🙈 Aufgedeckt!</span><div class="brcard">${playCard(br.animal)}</div><b>${esc(aname(br.animal))}${aval(br.animal) != null ? ` · ${aval(br.animal)}` : ''}</b>${br.eselBonus ? `<small>${br.eselNr}. Esel – alle +${br.eselBonus}</small>` : ''}</div>`; later.push(['flip', 0]); if (br.eselBonus) later.push(['iah', 500]); } } }
   // v0.79 Rattenkönig: wer am Ende alle Ratten hat, wird vor allen zur Ratte gekrönt (Show, danach Mütze am Tisch und auf dem Treppchen)
   const king = ratKingOf(state);
   let kingExtra = 0;
@@ -813,7 +814,7 @@ export function renderGame(root, ctx) {
   const flashing = flashEl < 1600;
   // Überboten: du lagst vorne, jetzt jemand anderes – das Schild erscheint über dem neuen Höchstgebot
   if (state.phase === 'auction' && prev.phase === 'auction' && prev.highMe && state.auction?.high && state.auction.high.player !== meId) local.outbidAt = Date.now();
-  local.prev = { logLen: state.log.length, phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? state.log.length : null };
+  local.prev = { logLen: logNo(state), phase: state.phase, highMe: state.phase === 'auction' && state.auction?.high?.player === meId, aucId: state.phase === 'auction' ? logNo(state) : null };
 
   const H = {}; // Klick-Aktionen dieser Darstellung
   H.addv = (val) => {
@@ -859,10 +860,7 @@ export function renderGame(root, ctx) {
       else if (auction.passed.includes(p.id)) status = 'gepasst';
       else if (auction.caps[p.id] != null) status = `max. ${auction.caps[p.id]}`;
     }
-    if (state.phase === 'rat') {
-      const laid = v.rat.laid[p.id] || 0;
-      if (laid) status = `${laid} gelegt`;
-    }
+    // v0.86 (Alp): in der Rattenrunde bleibt am Platz die Kartenzahl stehen – wie viel gelegt wurde, zeigt der Stapel daneben
     if (state.phase === 'special') {
       const sp = v.special;
       if (p.id === sp.revealer) status = 'Aufdecker';
@@ -887,7 +885,9 @@ export function renderGame(root, ctx) {
  const isEhrlich = said?.text?.startsWith('Ehrliches, männliches');
     const isUnehrlich = said?.text?.startsWith('Unehrliches');
     const isEmo = said && /^\p{Extended_Pictographic}[\p{Extended_Pictographic}\u200d\ufe0f]*$/u.test(said.text);
-    const bubble = said ? `<div class="rbubble ${isEmo ? 'emo' : ''} ${from ? 'to' : ''} ${isEhrlich ? 'ehrlich' : ''} ${isUnehrlich ? 'ehrlich unehrlich' : ''}" ${fromIdx >= 0 ? `style="--c:${SEAT_COLORS[fromIdx]}"` : ''}>${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
+    // v0.86: Sprechblase läuft beim Neuzeichnen zeitlich weiter statt neu zu starten (sonst „laggt“ sie, wenn im Hintergrund etwas passiert)
+    const rbEl = said ? Math.max(0, Math.min(3200, 3200 - (said.until - Date.now()))) : 0;
+    const bubble = said ? `<div class="rbubble ${isEmo ? 'emo' : ''} ${from ? 'to' : ''} ${isEhrlich ? 'ehrlich' : ''} ${isUnehrlich ? 'ehrlich unehrlich' : ''}" style="animation-delay:-${rbEl}ms;${fromIdx >= 0 ? `--c:${SEAT_COLORS[fromIdx]}` : ''}">${fromIdx >= 0 ? `<small>${esc(nameOf(from))} →</small>` : ''}${esc(said.text)}</div>` : '';
     let nudge = ctx.nudgeWho === p.id && !isMe ? `<button type="button" class="nudge" data-a="nudge" data-v="${esc(p.id)}" aria-label="${esc(p.name)} anstupsen">👉 Anstupsen</button>` : '';
     if (ctx.canTakeover && ctx.canTakeover(p.id)) nudge = `<button type="button" class="nudge takeover" data-a="takeover" data-v="${esc(p.id)}" aria-label="Test-Spieler übernimmt für ${esc(p.name)}">🤖 Für ${esc(p.name)} übernehmen</button>`;
     // du sitzt unten: kein eigener Platz – nur Sprechblasen erscheinen über deinem Geld
@@ -1068,8 +1068,11 @@ export function renderGame(root, ctx) {
     const num = specialNumber(v, now);
     const iRevealed = sp.revealer === meId;
     const res = specialResult(v);
-    const top = Object.values(sp.buzzes).length ? Math.max(...Object.values(sp.buzzes)) : null;
-    const buzzed = Object.keys(sp.buzzes).filter((id) => sp.buzzes[id] === top);
+    // v0.86: Ist ein Buzz schon per Live-Verbindung angekündigt, aber noch nicht gespeichert, gilt er für die Anzeige schon
+    const hint = ctx.buzzHint ? ctx.buzzHint() : null;
+    const hintOn = hint && stage === 'countdown' && hint.startsAt === sp.startsAt && !Object.keys(sp.buzzes).length;
+    const top = Object.values(sp.buzzes).length ? Math.max(...Object.values(sp.buzzes)) : hintOn ? hint.n : null;
+    const buzzed = hintOn ? [hint.seat] : Object.keys(sp.buzzes).filter((id) => sp.buzzes[id] === top);
     const bz = batzenStage(v, now);
     if (bz === 'ask') wake = sp.batzen.until;
     else if (bz === 'show') wake = sp.batzen.at + BATZEN_SHOW_MS;
@@ -1151,7 +1154,7 @@ export function renderGame(root, ctx) {
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(sp.revealer))} entscheidet …</div>`;
     }
-    H.buzz = () => { const t = ctx.now(); haptic('buzz', ctx.vibe !== false); ctx.act((s) => buzz(s, meId, t)); };
+    H.buzz = () => { const t = ctx.now(); haptic('buzz', ctx.vibe !== false); const n = specialNumber(v, t); if (n > 0 && !(top != null && n < top) && ctx.sendBuzz) ctx.sendBuzz(n); ctx.act((s) => buzz(s, meId, t)); };
     H.rps = (c) => ctx.act((s) => rpsPick(s, meId, c, ctx.now()));
     H.spSell = () => ctx.act((s) => specialDecide(s, meId, 'sell', ctx.now()));
     H.spBuy = () => ctx.act((s) => specialDecide(s, meId, 'buy', ctx.now()));
@@ -1318,7 +1321,7 @@ export function renderGame(root, ctx) {
     const TT = tradeTimerSec(state); // Turbo 12 s, sonst 20 s – v0.78: folgt dem Tempo (Denkzeit)
     let ttHtml = '';
     if (TT) {
-      const tkey = `${state.log.length}|${t.challenger}|${t.animal}`;
+      const tkey = `${logNo(state)}|${t.challenger}|${t.animal}`;
       if (local.ttKey !== tkey) { local.ttKey = tkey; local.ttAt = Date.now() + (local.ttDelay || 0); local.ttDelay = 0; local.ttBuzzed = false; }
       const left = Math.max(0, Math.ceil((local.ttAt + (TT + (t.extraSec || 0)) * 1000 - Date.now()) / 1000));
       if (t.waited && local.ttWaitSig !== tkey) { local.ttWaitSig = tkey; if (local.ttBuzzed && left > 0) local.ttBuzzed = false; if (!entered) { local.waitQ = waitPop(t.target, t.extraSec); later.push(['warte', 0]); } }
@@ -1331,7 +1334,7 @@ export function renderGame(root, ctx) {
     const offerCards = Array.isArray(t.offer) ? t.offer.map((m) => moneyCard(m, { size: 'xs' })).join('') : Array.from({ length: offerCount }, () => '<div class="money xs back"></div>').join('');
     const isRat = t.animal === RAT;
     // v0.52.1: das Angebot fliegt nach dem „KUHHANDEL!“-Auftritt vom Platz in die Mitte – erst dann liegen die Scheine dort
-    const okey = `${state.log.length}|${t.challenger}|${t.target}|${t.animal}`;
+    const okey = `${logNo(state)}|${t.challenger}|${t.target}|${t.animal}`;
     if (local.offerKey !== okey) { local.offerKey = okey; local.offerAt = entered ? Date.now() : 0; }
     const oel = local.offerAt ? Date.now() - local.offerAt : 1e9;
     const arr = oel < OFFER_LAND + 400 ? ` arr" style="--ad:${OFFER_LAND - oel}ms` : '';
@@ -1409,7 +1412,7 @@ export function renderGame(root, ctx) {
     const nxt = Array.isArray(state.deck) ? state.deck[1] : null;
     const nextTxt = nxt == null ? 'Danach: keine Karte mehr' : isMoneyCard(nxt) ? 'Danach: 💰 ein Geldschein' : 'Danach: 🐄 eine Tierkarte';
     const nextBack = nxt == null ? '' : `<span class="divnext ${isMoneyCard(nxt) ? 'money' : ''}" aria-hidden="true">${isMoneyCard(nxt) ? '💰' : `<span class="deckcow">${art('kuh')}</span>`}</span>`;
-    const dsig = v.divide.waited ? `${by}|${v.divide.card ?? ''}|${state.log.length}` : null;
+    const dsig = v.divide.waited ? `${by}|${v.divide.card ?? ''}|${logNo(state)}` : null;
     if (dsig && local.dWaitSig !== dsig) { local.dWaitSig = dsig; if (!entered) { local.waitQ = waitPop(by, Math.round(DIVIDE_MS * tempoFactor(state) / 1000)); later.push(['warte', 0]); } }
     const timer = `<span class="ttimer divtimer ${left <= 3 ? 'low' : ''}">⏱ ${left} s</span>`;
     aucBanner = mine ? 'Behalten oder abgeben?' : `${esc(nameOf(by))} teilt auf`;
@@ -2150,7 +2153,7 @@ export function renderGame(root, ctx) {
   // Kuhhandel/Rattenhandel startet
   if (state.phase === 'trade' && v.trade && entered) {
     const t = v.trade; const pk = pairKey(t.challenger, t.target);
-    const key = `trade|${state.log.length}|${t.challenger}|${t.target}`;
+    const key = `trade|${logNo(state)}|${t.challenger}|${t.target}`;
     if (local.introKey !== key) {
       local.duels[pk] = (local.duels[pk] || 0) + 1;
       const nth = local.duels[pk]; const w = local.duelWins[pk] || {};
@@ -2181,7 +2184,7 @@ export function renderGame(root, ctx) {
     if (who.length > 1) playIntro(`rps|${v.special.revealer}|${v.special.startsAt}|${who.join(',')}`, { parts: who.map(partOf), title: 'GLEICHSTAND!', vs: 'SCHNICK! SCHNACK! SCHNUCK!', ms: 1500, fixed: true, center: `<span class="eium">bei ${mx}</span>` });
   }
   // Spielstart: alle Spieler, „Die Börse ist eröffnet!“
-  if (state.phase === 'turn' && !v.lastEvent && state.log.length <= 2 && v.players.length >= 2) {
+  if (state.phase === 'turn' && !v.lastEvent && logNo(state) <= 2 && v.players.length >= 2) {
     playIntro(`start|${v.players.map((p) => p.id).join(',')}|${state.log[0] || ''}`, {
       parts: v.players.map((p) => partOf(p.id)), title: isDuo(state) ? 'DUELL ZU ZWEIT!' : 'DIE BÖRSE IST ERÖFFNET!', vs: isDuo(state) ? 'VS' : 'LOS!', ms: INTRO_START_MS,
       badge: isTurbo(state) ? '⚡ Turbo' : isBoerse(state) ? '📈 Börsen-Chaos' : '',
