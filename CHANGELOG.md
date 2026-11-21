@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.85.0 – Spannung am Ende, Sets immer im Blick
+
+- [x] **Spielende mit Highlights:** Nach dem letzten Zug (und ggf. dem Rattenkönig) kommen erst die Highlights der Partie, Karte für Karte – z. B. Kuhhandel-König, Teuerster Kauf, Rattenfänger, Sternsammler –, danach die Abrechnung, „Und der Sieger ist …“ und das Treppchen.
+- [x] **Kuhhandel:** Deine eigenen Sets bleiben sichtbar – als Leiste „Deine Sets“ mit Tier und Anzahl (✓ bei fertigem Quartett), das Kuhhandel-Fenster bleibt darüber.
+- [x] **Sets der Mitspieler ansehen:** Tiere eines Mitspielers antippen → Fenster mit all seinen Tieren (Anzahl, aktueller Wert, fertige Quartette, Spezialkarten, Ratten). Seine Figur antippen öffnet weiterhin die Reaktionen.
+- [x] Datenbank: `supabase/v0.85-kasse-rechte.sql` – die Kasse ist für Spieler nur noch lesbar (Schreiben nur über die Abrechnung).
+
 ## v0.84.0 – Einsatz & Kasse
 
 - [x] **💶 Einsatz** (in jeder Spielart, Warteraum „💶 Einsatz“ oder Modus-Fenster): 1 / 2 / 5 / 10 / 20 € pro Kopf. Jeder bestätigt am eigenen Platz mit „💶 Dabei?“ – gestartet wird erst, wenn alle ✓ haben. Am Tisch steht „💶 Topf 20 €“.

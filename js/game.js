@@ -2,7 +2,7 @@
 import { shopAvatar, shopAvatarFull } from './shopavatars.js';
 import {
   ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
-  viewFor, possibleTrades, scores, currentPlayer, missionStatus, isTeams, partnerOf, teamOf, teamPool,
+  viewFor, possibleTrades, scores, currentPlayer, missionStatus, animalsOf, isTeams, partnerOf, teamOf, teamPool,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
   RAT, RAT_COUNT, SPECIAL_VALUE, awards, SPECIAL_TICK_MS, SPECIAL_FROM, BATZEN_SHOW_MS, scoreFor,
@@ -898,7 +898,7 @@ export function renderGame(root, ctx) {
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${myPartner === p.id ? '<b class="teamb" title="Dein Partner">🤝</b>' : ''}${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}${myPartner === p.id && Array.isArray(p.money) ? `<b class="psum">${p.money.reduce((a, b) => a + b, 0)}</b>` : ''}</span>` : status}</span></div>
       </div>
-      <div class="chips" data-a="reactTo" data-v="${esc(p.id)}">${chips}</div>
+      <div class="chips" data-a="setsOf" data-v="${esc(p.id)}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
     </div>`;
   }).join('');
 
@@ -1494,6 +1494,9 @@ export function renderGame(root, ctx) {
     ctx.rerender();
   };
   const mySpecials = specialsOf(me);
+  // v0.85 (Alp): beim Kuhhandel bleiben deine Sets sichtbar – als Leiste über dem Geld (Tier, Anzahl, ✓ bei fertigem Quartett)
+  const mySetsStrip = () => { const ids = [...ANIMALS.map((a) => a.id), RAT].filter((id) => (me.animals[id] || 0) > 0);
+    return `<div class="mysets" aria-label="Deine Sets"><small>Deine Sets</small>${ids.length ? ids.map((id) => `<span class="msc ${me.animals[id] === 4 ? 'done' : ''}" style="--a:${ANIMAL_COLORS[id] || '#888'}"><i>${art(id)}</i><b>${me.animals[id]}×</b></span>`).join('') : '<em>noch keine Tiere</em>'}</div>`; };
   const myItems = [
     ...ANIMALS.filter((a) => me.animals[a.id] > 0).map((a) => stackHtml(a.id, me.animals[a.id], { special: mySpecials.includes(a.id), bump: bumpId === a.id, tap: setTap, trade: setTrade.has(a.id) })),
     ...mySpecials.filter((id) => !(me.animals[id] > 0)).map((id) => specialMini(id)),
@@ -1564,6 +1567,7 @@ export function renderGame(root, ctx) {
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}${state.blind ? ` · 🙈 Blind ${state.blind}` : ''}</b>` : ''}${state.settings?.stake ? `<b class="turbotag staketag" title="Einsatz: Platz 1 bekommt den Topf">💶 Topf ${state.settings.stake * v.players.length} €</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
     <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX, 510 / Math.max(1, myItems.length * 36)).toFixed(3)}" aria-label="Deine Karten">${myAnimals}</div>
+    ${state.phase === 'trade' || (local.tradeOpen && local.tradePicked) ? mySetsStrip() : ''}
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum" aria-hidden="true">${sum(handMoney)}<i class="taler"></i></span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
   </div>`;
@@ -1607,6 +1611,23 @@ export function renderGame(root, ctx) {
     local.menu = false;
     ctx.rerender();
   };
+  // v0.85 (Alp): Sets eines Mitspielers antippen → Fenster mit allen seinen Tieren (Anzahl, Wert, fertige Quartette, Spezialkarten)
+  H.setsOf = (id) => { local.setsOf = local.setsOf === id ? null : id; local.menu = false; local.reactTo = null; ctx.rerender(); };
+  const setsPop = (() => {
+    const pid = local.setsOf; const i = pid ? idxOf(pid) : -1; const p = i >= 0 ? v.players[i] : null;
+    if (!p) return '';
+    const ids = [...animalsOf(state).map((a) => a.id), RAT].filter((id) => (p.animals[id] || 0) > 0);
+    const specials = specialsOf(p);
+    const done = ids.filter((id) => id !== RAT && p.animals[id] === 4).length;
+    const cnt = Array.isArray(p.money) ? p.money.length : p.money;
+    return `<div class="setspop" data-a="setsOf" data-v="${esc(pid)}" role="dialog" aria-label="Sets von ${esc(p.name)}">
+      <div class="spbox" style="--c:${SEAT_COLORS[i]}">
+        <div class="sphd">${avatar(p, i)}<b>${esc(p.name)}</b><span>${done ? `${done} Quartett${done > 1 ? 'e' : ''} · ` : ''}${ids.filter((x) => x !== RAT).reduce((a, x) => a + p.animals[x], 0)} Tiere · ${cnt} Geldkarten</span><i class="spx" aria-hidden="true">✕</i></div>
+        <div class="spgrid">${ids.length ? ids.map((id) => `<div class="spc ${p.animals[id] === 4 && id !== RAT ? 'done' : ''}">${miniCard(id, 'big')}<b>${p.animals[id]}×</b>${id !== RAT ? `<small>${valHtml(id)}</small>` : '<small>Ratte</small>'}${specials.includes(id) ? `<em>${STAR} Spezial</em>` : ''}</div>`).join('') : '<p class="spnone">Noch keine Tiere</p>'}</div>
+        ${specials.filter((x) => !ids.includes(x)).length ? `<p class="spspec">${STAR} Spezialkarten: ${specials.filter((x) => !ids.includes(x)).map((x) => esc(aname(x))).join(', ')}</p>` : ''}
+        <small class="sthint">Antippen schließt</small>
+      </div></div>`;
+  })();
   H.nudge = (id) => ctx.nudge && ctx.nudge(id);
   H.takeover = (id) => ctx.takeover && ctx.takeover(id);
   H.selfPlay = () => ctx.selfPlay && ctx.selfPlay(meId);
@@ -1665,17 +1686,25 @@ export function renderGame(root, ctx) {
     local.tallyAt = ctx.demoPodium ? Date.now() - 600000 : Date.now() + (fresh ? Math.max(lastWait, kingExtra) : 0); local.tallySkip = false; local.podiumShown = false;
   }
   const tallyTotal = TALLY_START + v.players.length * TALLY_STEP + 900;
-  const tallyEl = local.tallyAt ? Date.now() - local.tallyAt : Infinity;
-  const endWait = state.phase === 'ended' && tallyEl < 0; // letzter Zug läuft noch
+  // v0.85 (Alp): Vor der Abrechnung werden die Highlights der Partie angeteasert (Kuhhandel-König, teuerster Kauf …) – erst danach erfährt man den Sieger
+  const AW_ORDER = ['trade', 'buy', 'rat', 'special', 'bluff', 'pech', 'geiz', 'money', 'ratcards', 'tip', 'rich', 'poor'];
+  const awList = state.phase === 'ended' ? reportList().filter((a) => a.who).sort((a, b) => (AW_ORDER.indexOf(a.key) + 99) % 99 - (AW_ORDER.indexOf(b.key) + 99) % 99).slice(0, 4) : [];
+  const AW_INTRO = 1300; const AW_STEP = Math.round(2600 * INFO_F);
+  const awMs = ctx.demoPodium || !awList.length ? 0 : AW_INTRO + awList.length * AW_STEP + 600;
+  const endEl = local.tallyAt ? Date.now() - local.tallyAt : Infinity;
+  const tallyEl = endEl - awMs;
+  const endWait = state.phase === 'ended' && endEl < 0; // letzter Zug (und Rattenkönig-Show) läuft noch
   if (endWait) wakeLocal(local.tallyAt + 10);
-  const tallyOn = state.phase === 'ended' && !endWait && !local.recap && tallyEl < tallyTotal;
-  if (tallyOn) wakeLocal(local.tallyAt + tallyTotal + 20);
+  const awardsOn = state.phase === 'ended' && !endWait && !local.recap && endEl < awMs;
+  if (awardsOn) { wakeLocal(local.tallyAt + awMs + 20); if (!local.awSound) { local.awSound = true; sounds.push('drum'); awList.forEach((a, k) => later.push(['bell', AW_INTRO + k * AW_STEP + 150 - endEl])); } }
+  const tallyOn = state.phase === 'ended' && !endWait && !awardsOn && !local.recap && tallyEl < tallyTotal;
+  if (tallyOn) wakeLocal(local.tallyAt + awMs + tallyTotal + 20);
   // v0.63 Finale „Und der Sieger ist …“ (Trommelwirbel, dann Rampenlicht) – zwischen Abrechnung und Treppchen
   const FINALE_MS = 3200;
-  const finaleOn = state.phase === 'ended' && !endWait && !local.recap && !tallyOn && tallyEl < tallyTotal + FINALE_MS && !ctx.demoPodium;
-  if (finaleOn) wakeLocal(local.tallyAt + tallyTotal + FINALE_MS + 20);
+  const finaleOn = state.phase === 'ended' && !endWait && !awardsOn && !local.recap && !tallyOn && tallyEl < tallyTotal + FINALE_MS && !ctx.demoPodium;
+  if (finaleOn) wakeLocal(local.tallyAt + awMs + tallyTotal + FINALE_MS + 20);
   if (finaleOn && !local.finaleSound) { local.finaleSound = true; sounds.push('drum'); later.push(['fanfare', 1700]); }
-  const podiumIn = state.phase === 'ended' && !endWait && !tallyOn && !finaleOn && !local.recap && !local.podiumShown;
+  const podiumIn = state.phase === 'ended' && !endWait && !awardsOn && !tallyOn && !finaleOn && !local.recap && !local.podiumShown;
   if (podiumIn) local.podiumShown = true;
   if (state.phase === 'ended' && local.recap) {
     const list = reportList();
@@ -1685,6 +1714,12 @@ export function renderGame(root, ctx) {
       <h2>📈 Börsenbericht</h2>
       <ul>${list.map((a) => { const i = idxOf(a.who); return `<li><span class="atitle"><i>${ICON[a.key] || '•'}</i>${esc(a.title)}</span>${i >= 0 ? avatar(v.players[i], i) : ''}<span class="awho">${esc(a.who === meId ? 'Du' : a.name)}</span><span class="atext">${esc(a.text)}</span></li>`; }).join('') || '<li>Keine besonderen Momente – ein ruhiges Spiel.</li>'}</ul>
       <div class="endbtns"><button type="button" class="pill pill-white" data-a="shareReport">${copied ? 'Kopiert ✓' : '📤 Teilen'}</button><button type="button" class="pill pill-red" data-a="recap">Zurück zur Wertung</button></div>
+    </div></div>`;
+  } else if (state.phase === 'ended' && awardsOn) {
+    overlay = `<div class="overlay endtable"><div class="ending awards" style="--el:${endEl}ms">
+      <h2>Die Highlights der Partie</h2><small class="awsub">… bevor wir den Sieger erfahren</small>
+      <div class="awcards">${awList.map((a, k) => { const i = idxOf(a.who); return `<div class="awcard" style="--d:${AW_INTRO + k * AW_STEP - endEl}ms;--c:${i >= 0 ? SEAT_COLORS[i] : '#888'}">
+        <i class="awicon">${ICON[a.key] || '🏅'}</i><b class="awtitle">${esc(a.title)}</b>${i >= 0 ? `<div class="awfig">${avatar(v.players[i], i)}</div>` : ''}<span class="awname">${esc(a.who === meId ? 'Du' : a.name)}</span><small>${esc(a.text)}</small></div>`; }).join('')}</div>
     </div></div>`;
   } else if (state.phase === 'ended' && tallyOn) {
     // Abrechnung: Punkte werden einzeln hochgezählt – vom letzten Platz bis zum Sieger, dann das Siegertreppchen
@@ -2484,7 +2519,7 @@ export function renderGame(root, ctx) {
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
-    ${standingsHtml}
+    ${standingsHtml}${setsPop}
     ${effects}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
