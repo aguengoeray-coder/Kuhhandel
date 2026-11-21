@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.85.0', date: '21.11.', items: ['🏅 Spielende: erst die Highlights (Kuhhandel-König, teuerster Kauf …), dann der Sieger', '🐄 Beim Kuhhandel siehst du deine Sets weiter unten', '👀 Tiere eines Mitspielers antippen zeigt alle seine Sets', '👥 Zu zweit: man sieht, wer welches Geld bekommt – und der Esel bringt beiden Geld', '🃏 Aufgedeckte Karte dreht sich wieder sauber'] },
   { v: '0.84.0', date: '20.11.', items: ['💶 Einsatz: um echtes Geld spielen – Platz 1 bekommt den Topf', '📒 Neue Kasse: wer schuldet wem, Bilanz, „Bezahlt ✓“ (die App bewegt kein Geld)'] },
   { v: '0.83.0', date: '20.11.', items: ['🤝 Teams 2 gegen 2: Partner gegenüber, Tiere zählen zusammen, das bessere Team gewinnt (Schalter im Warteraum, nur zu viert)'] },
   { v: '0.82.0', date: '20.11.', items: ['🎯 Geheimaufträge: jeder bekommt verdeckt einen Auftrag – erfüllt gibt es Bonuspunkte am Ende (Schalter im Warteraum)'] },

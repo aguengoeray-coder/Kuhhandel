@@ -4081,3 +4081,56 @@ button.stake-badge.ask { cursor: pointer; background: #FFD34E; color: #2B2B2B; b
 .podstake small { color: rgba(255,255,255,.7); font: 700 11px var(--font-body); }
 .mbox:has(.kbox) { width: min(760px, 95vw); }
 .kbal, .kopen, .kgame { white-space: nowrap; }
+/* v0.85 (Alp): beim Kuhhandel bleiben deine Sets sichtbar – als Leiste direkt über dem Geld, das Kuhhandel-Fenster darüber */
+.mysets { position: absolute; left: 50%; bottom: 55px; translate: -50% 0; z-index: 4; display: flex; align-items: center; gap: 4px; padding: 3px 8px 3px 10px; border-radius: 999px;
+  background: rgba(10, 20, 40, .72); box-shadow: 0 2px 0 rgba(0,0,0,.25); max-width: calc(100% - 340px); overflow: hidden; }
+.mysets small { font: 800 10.5px/1 var(--font-head); color: rgba(255,255,255,.75); margin-right: 2px; white-space: nowrap; }
+.mysets em { font-size: 11px; color: rgba(255,255,255,.7); font-style: normal; }
+.msc { display: inline-flex; align-items: center; gap: 1px; padding: 1px 6px 1px 2px; border-radius: 999px; background: #fff; border: 2px solid var(--a); flex: none; }
+.msc i { width: 20px; height: 20px; display: block; } .msc i .art { width: 20px; height: 20px; }
+.msc b { font: 900 12px/1 var(--font-head); color: #2B2B2B; }
+.msc.done { background: #FFF3C4; border-color: #F2C230; } .msc.done b::after { content: ' ✓'; color: #1F8A3F; }
+.stage:has(.tduel.respond) .mysets { left: 8px; translate: 0 0; bottom: 64px; flex-wrap: wrap; max-width: 150px; border-radius: 14px; padding: 5px 7px; }
+.stage:has(.tduel.respond) .mysets small { width: 100%; margin-bottom: 1px; }
+/* v0.85 Sets eines Mitspielers (Antippen seiner Tiere) */
+.setspop { position: absolute; inset: 0; z-index: 70; display: grid; place-items: center; background: rgba(5,10,25,.55); animation: fadein .2s ease both; }
+.spbox { width: min(560px, 92vw); max-height: 92%; overflow: auto; background: #fff; color: #2B2B2B; border-radius: 18px; border: 3px solid #2B2B2B; box-shadow: 0 0 0 4px var(--c), 0 8px 0 rgba(0,0,0,.35); padding: 10px 14px 8px; display: flex; flex-direction: column; gap: 8px; animation: misspop .35s cubic-bezier(.3,1.5,.5,1) both; }
+.sphd { display: flex; align-items: center; gap: 8px; }
+.sphd .avatar { width: 34px; height: 34px; flex: none; }
+.sphd b { font: 800 20px/1 var(--font-head); }
+.sphd span { font-size: 12px; font-weight: 700; color: #667; flex: 1; }
+.spx { font-style: normal; font-weight: 900; color: #889; }
+.spgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+.spc { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 12px; background: #F3F6FA; }
+.spc.done { background: #FFF3C4; box-shadow: inset 0 0 0 2px #F2C230; }
+.spc > b { font: 900 18px/1 var(--font-head); } .spc.done > b::after { content: ' ✓'; color: #1F8A3F; font-size: 14px; }
+.spc small { font-size: 11px; font-weight: 700; color: #556; display: flex; gap: 3px; align-items: baseline; } .spc small s { opacity: .6; }
+.spc em { font-style: normal; font-size: 10.5px; font-weight: 800; color: #B07A00; }
+.spnone, .spspec { margin: 0; font-size: 12.5px; color: #556; }
+.setspop .sthint { text-align: center; color: #889; font-size: 11px; }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+.spc em svg, .spspec svg { width: 12px; height: 12px; vertical-align: -1px; display: inline-block; }
+.spgrid { align-items: start; }
+/* v0.85 (Alp) Spielende: Highlights der Partie vor der Abrechnung – Karte für Karte */
+.ending.awards { gap: 6px; }
+.ending.awards h2 { margin-bottom: 0; color: #fff; text-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.ending.awards { justify-content: center; }
+.awsub { color: rgba(255,255,255,.75); font-weight: 700; font-size: 12px; margin-top: -4px; }
+.awcards { display: flex; justify-content: center; gap: 10px; flex-wrap: nowrap; width: 100%; }
+.awcard { flex: 0 1 170px; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 8px 10px; border-radius: 16px; background: #fff; color: #2B2B2B;
+  border: 3px solid var(--c); box-shadow: 0 6px 0 rgba(0,0,0,.3); opacity: 0; transform: translateY(30px) scale(.7) rotate(-4deg); animation: awin .6s cubic-bezier(.3,1.5,.5,1) both; animation-delay: var(--d); }
+.awicon { font-style: normal; font-size: 26px; line-height: 1; }
+.awtitle { font: 800 14px/1.1 var(--font-head); text-align: center; color: #172E55; }
+.awfig { margin: 4px 0 2px; } .awfig .avatar { width: 52px; height: 52px; font-size: 24px; box-shadow: 0 0 0 3px var(--c); }
+.awname { font: 800 15px/1 var(--font-head); color: var(--c); filter: brightness(.8); }
+.awcard small { font-size: 11.5px; font-weight: 600; text-align: center; color: #556; line-height: 1.25; }
+@keyframes awin { 0% { opacity: 0; transform: translateY(30px) scale(.7) rotate(-4deg); } 70% { opacity: 1; transform: translateY(-4px) scale(1.04) rotate(1deg); } 100% { opacity: 1; transform: none; } }
+.ending.awards .awsub { color: #FFE27A; }
+/* v0.85 Zu zweit: wer hat was bekommen (auch Geld) + Esel-Bonus */
+.divstrip { display: flex; align-items: center; gap: 8px; animation-duration: 3.4s; border-radius: 16px; padding: 6px 12px; }
+.divstrip b { font-weight: 600; }
+.dgot { font: 700 13px/1.2 var(--font-body); padding: 2px 8px; border-radius: 999px; background: #fff; color: #2B2B2B; border: 2px solid var(--c, #888); }
+.dgot em { font-style: normal; font-weight: 900; }
+.dgot.esel { background: #FFE27A; border-color: #2B2B2B; }
+/* v0.85: Aufdeck-Animation läuft beim Neuzeichnen weiter statt neu zu starten (--rd = schon vergangene Zeit, negativ) */
+.revealcard .pcard, .revealcard.big::after, .revealcard .glitz.burst { animation-delay: var(--rd, 0ms); }

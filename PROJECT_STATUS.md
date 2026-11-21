@@ -1,6 +1,6 @@
 # PROJECT_STATUS.md – gemeinsamer Projektstand
 
-Stand: 20.11.2026, 10:45 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
+Stand: 21.11.2026, 15:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live: https://kuhhandel.a-guengoeray.workers.dev
 
 > Maßgeblich sind GitHub (`main`, PRs, Workflow-Ergebnisse). Diese Datei wird nach jeder Arbeitseinheit aktualisiert.
 > Freigaben laufen nach der **Ampel** in `AGENTS.md` (🟢 KI mergt bei grünen Tests · 🟡 Alps Go · 🔴 nur Alp).
@@ -9,14 +9,22 @@ Stand: 20.11.2026, 10:45 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 
 | | |
 |---|---|
-| Live-Version (`main`) | **v0.77.0** (#52, Zu zweit + Quartett-Show); Cloudflare-Build erfolgreich |
-| In Arbeit | v0.78.0 (PR #53): Mehr Ruhe – Ergebnisse länger, Tempo (Denkzeiten voll, Info-Fenster leicht, Spezialkarte/Bewegungen fest), Modus-Fenster A, Quartett-Show 5,5 s |
+| Live-Version (`main`) | **v0.84.0** (#59, Einsatz & Kasse); Cloudflare-Build erfolgreich |
+| In Arbeit | v0.85.0 (PR #60): Spielende-Highlights, eigene Sets im Kuhhandel, Sets-Fenster, Zu zweit: Geld sichtbar + Esel-Bonus, Aufdeck-Animation ohne Zappeln; danach Layout-Abgleich (Schriften, Größen, Abstände) – Befund an Alp, Umsetzung nach Go; `supabase/v0.85-kasse-rechte.sql` (Schreibrechte formal entziehen) |
 | Nächste Versionen | Erste echte Partien spielen (noch kein einziges Spielergebnis in der DB) · Börsen-Chaos danach nachjustieren · Shop-Ideen (Preise = Alp) · Rückblick nach dem Spiel |
-| Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.67-emotes.sql` (Claude über Connector 14.11., Prüfabfrage + Advisors ✓); davor `v0.60-admin-nur-angemeldet.sql`, `v0.61-emote-pruegel.sql` (Claude) |
+| Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.84-kasse.sql` (Claude über Connector 20.11., Prüfabfrage + Advisors ✓); davor `v0.80-avatar-ablegen.sql` (20.11.), `v0.67-emotes.sql` (14.11.) |
 
 ### Zuletzt live gegangen
 | Version | Inhalt | PR |
 |---|---|---|
+| v0.84.0 | Einsatz (Platz 1 bekommt den Topf) + Kasse/Schuldenbuch | #59 |
+| v0.83.0 | Teams 2 gegen 2 mit Team-Wahl im Warteraum | #58 |
+| v0.82.0 | Geheimaufträge | #57 |
+| v0.81.0 | Börsen-Chaos: Kurse sofort auf den Karten, News Blindmarkt | #56 |
+| v0.80.0 | Mein Profil (Figuren wechseln/ablegen), Spielregeln mit Reitern, ⓘ je Spielart | #55 |
+| v0.79.0 | „Warte, warte, warte!“, Rattenkönig-Show | #54 |
+| v0.78.0 | Tempo (Denkzeiten/Info-Fenster/fest), Modus-Fenster, längere Ergebnisse + Quartett-Show | #53 |
+| v0.72–v0.77 | Startbildschirm mit Modus-Kacheln, Choreografie, Zu zweit, Quartett-Show | #48–#52 |
 | v0.71.0 | Kein Zwischenstand mehr (merken statt anzeigen), Verlierer-Pose 🌧️ auf dem Podest | – |
 | v0.70.0 | Choreografie: Tiere laufen bis auf den Stapel und werden zur Karte, Kuhhandel über die Mitte, Geld/Tiere nie mehr zum Avatar | #46 |
 | v0.69.0 | Börsen-News Hype ×2 / Blase ÷2, Kurse multiplikativ (max ×4), Kurssprung-Animation, Rückseiten für News/Geld, keine Krone/💸 | #45 |

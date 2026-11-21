@@ -928,7 +928,7 @@ test('Zu zweit: genau 2 Spieler, Geld ohne 0er im Stapel, kein Turbo/Börse', as
   assert.ok(h.deck.filter((c) => c.startsWith('geld-')).length > 0);
 });
 
-test('Zu zweit: Aufteilen – behalten / abgeben, Sicht, kein Esel-Bonus, keine Versteigerung', async () => {
+test('Zu zweit: Aufteilen – behalten / abgeben, Sicht, Esel-Bonus, keine Versteigerung', async () => {
   const { divideLook, divideChoose, viewFor } = await import('../src/engine.js');
   let g = createGame({ players: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], seed: 9, settings: { duo: true } });
   g.deck = ['esel', 'geld-200', 'kuh', 'ratte', 'sp-kuh', 'hahn', ...g.deck.slice(6)];
@@ -938,14 +938,15 @@ test('Zu zweit: Aufteilen – behalten / abgeben, Sicht, kein Esel-Bonus, keine 
   assert.equal(viewFor(g, 'a').divide.card, 'esel');
   assert.equal(viewFor(g, 'b').divide.card, null);
   assert.throws(() => divideChoose(g, 'b', true), /teilst gerade nicht/);
-  const moneyB = g.players[1].money.length;
+  const moneyB = g.players[1].money.length; const sumA0 = g.players[0].money.reduce((x, y) => x + y, 0);
   g = divideChoose(g, 'a', true); // A behält den Esel, B bekommt den 200er
   assert.equal(g.players[0].animals.esel, 1);
-  assert.equal(g.players[1].money.length, moneyB + 1);
+  assert.ok(g.players[1].money.length > moneyB + 1); // 200er + Esel-Bonus
   assert.ok(g.players[1].money.includes(200));
-  assert.equal(g.players[0].money.length, 7); // kein Esel-Bonus
-  assert.equal(g.donkeysDrawn, 0);
-  assert.equal(viewFor(g, 'a').lastEvent.second.card, 'geld-?'); // fremdes Geld verdeckt
+  assert.equal(g.players[0].money.reduce((x, y) => x + y, 0), sumA0 + 50); // v0.85: Esel-Bonus auch zu zweit (50 für jeden)
+  assert.equal(g.donkeysDrawn, 1);
+  assert.deepEqual(g.lastEvent.esel, [{ payout: 50, nr: 1 }]);
+  assert.equal(viewFor(g, 'a').lastEvent.second.card, 'geld-200'); // v0.85: beide sehen, wer welches Geld bekam
   assert.equal(viewFor(g, 'b').lastEvent.second.card, 'geld-200');
   assert.equal(g.turn, 1); assert.equal(g.phase, 'turn');
   g = divideChoose(divideLook(g, 'b'), 'b', false); // B gibt die Kuh ab, bekommt die Ratte
