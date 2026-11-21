@@ -1,6 +1,6 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
-import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf, tradeTimerSec } from '../src/engine.js';
+import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf, tradeTimerSec, logNo } from '../src/engine.js';
 import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor, showBusy } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.85.0';
+export const APP_VERSION = '0.86.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -742,11 +742,14 @@ function renderPlaying() {
     reactions: activeReactions(),
     reactionList: myReactions(),
     reactionEmoji: 0,
+    quickEmoji: ['😱', '🔥', '🤑', '😂'], // v0.86 Schnell-Emojis rechts (alle in REACT_EMOJI, damit die anderen sie annehmen)
     reactionBase: REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
     demoPodium: DEMO && params.get('podium') === '1', // Screenshots/Tests: gleich das Siegertreppchen (im echten Spiel nicht überspringbar)
     seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
+    buzzHint: () => buzzHint,
+    sendBuzz: (n) => { const sp = ui.game?.state?.special; const seat = seatIn(ui.game); if (!sp || !seat) return; buzzHint = { seat, n, startsAt: sp.startsAt }; if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'buzz', payload: { seat, n, startsAt: sp.startsAt } }); },
     canPunch: canPunch(), // Emote „Verprügeln“: gekauft oder Admin
     taglineOf: (seat) => customSayings.get(userOfSeat(seat)) || (ui.game?.local && seat === dbg.viewAs ? shopMe.custom : '') || '', // v0.63 VS-Intro: eigener Spruch
     punch: sendPunch,
@@ -769,6 +772,7 @@ function renderPlaying() {
 
 // Spielzug ausführen: Regeln lokal prüfen, dann neuen Stand speichern (nur wenn niemand schneller war).
 // War jemand schneller, wird der Zug automatisch auf dem neuen Stand nochmal geprüft und gespeichert.
+let buzzHint = null; // v0.86: schneller Buzzer-Hinweis über die Live-Verbindung
 async function act(fn, { silent = false } = {}) {
   if (busy) return;
   if (tooOld()) return toast('Bitte zuerst neu laden – dieses Spiel braucht die neue Version.');
@@ -819,6 +823,7 @@ function withAutoplay(prev, seat, on) {
   if (on === list.has(seat)) return null;
   if (on) list.add(seat); else list.delete(seat);
   s.autoplay = [...list];
+  if (s.logTotal != null) s.logTotal += 1;
   s.log.push(on ? `Ein Test-Spieler spielt jetzt für ${nameOfSeat(s, seat)}.` : `${nameOfSeat(s, seat)} spielt wieder selbst.`);
   return s;
 }
@@ -832,7 +837,7 @@ function canTakeover(seat) {
 let calmLog = -1;
 let calmAt = 0;
 function botCalm(s) {
-  if (s.log.length !== calmLog) { calmLog = s.log.length; calmAt = Date.now(); }
+  if (logNo(s) !== calmLog) { calmLog = logNo(s); calmAt = Date.now(); }
   if (showBusy()) return true; // v0.77: Quartett-Show läuft – erst danach geht es weiter
   return s.phase === 'turn' && CALM_TYPES.includes(s.lastEvent?.type) && Date.now() - calmAt < calmFor(s.lastEvent, s.deck.length, s) + 300;
 }
@@ -899,7 +904,7 @@ function checkSignal() {
     else if (st === 'rps' && (s.special.rps ? s.special.rps.players.includes(seat) : s.special.buzzes[seat] != null)) need = `rps${s.special.rps?.round || 1}`;
     else if (st === 'wait' && s.special.revealer !== seat) need = 'buzz';
   }
-  const key = need ? `${need}|${s.log.length}` : '';
+  const key = need ? `${need}|${logNo(s)}` : '';
   if (key && key !== lastNeed) beep();
   lastNeed = key;
   document.title = need ? '● Du bist dran – Tier Börse' : baseTitle;
@@ -1639,6 +1644,12 @@ function watchRoom(id) {
       if (!payload || !ids.includes(payload.from) || !ids.includes(payload.to) || payload.from === payload.to) return;
       showPunch(payload.from, payload.to);
     })
+    // v0.86 Buzzer: sofort allen zeigen, wer bei welcher Zahl gedrückt hat (schneller als der gespeicherte Spielstand)
+    .on('broadcast', { event: 'buzz' }, ({ payload }) => {
+      const sp = ui.game?.state?.special;
+      if (!payload || !sp || payload.startsAt !== sp.startsAt || !ui.game.state.players.some((p) => p.id === payload.seat) || !(payload.n >= 1 && payload.n <= 10)) return;
+      if (!buzzHint || buzzHint.startsAt !== sp.startsAt || payload.n > buzzHint.n) { buzzHint = { seat: payload.seat, n: payload.n, startsAt: sp.startsAt }; render(); }
+    })
     .on('broadcast', { event: 'react' }, ({ payload }) => {
       if (!payload?.seat || !(REACTIONS.includes(payload.text) || SAYING_TEXTS.includes(payload.text) || REACT_EMOJI.includes(payload.text) || (payload.text && customSayings.get(userOfSeat(payload.seat)) === payload.text))) return;
       const to = typeof payload.to === 'string' && ui.game?.state?.players?.some((p) => p.id === payload.to) ? payload.to : null;
@@ -1860,7 +1871,7 @@ function profileBody() {
       </form>
       ${modal.pwMsg ? `<div class="${modal.pwOk ? 'okmsg' : 'error'}" role="status">${esc(modal.pwMsg)}</div>` : ''}`;
   }
-  return `<h2>Mein Profil</h2>
+  return `<h2>🧍 Mein Profil</h2>
     <div class="prof2">
       <aside class="pf-side">
         ${big}
@@ -1945,7 +1956,7 @@ function rulesBody(tab = 'classic') {
   <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.<br><b>🎯 Geheimaufträge:</b> Jeder bekommt zu Beginn verdeckt einen Auftrag (z. B. „Gewinne mindestens 3 Kuhhandel“ oder „Sammle das Esel-Quartett“) – nur du siehst deinen (🎯 oben links, mit Stand). Am Ende werden alle aufgedeckt; wer seinen erfüllt, bekommt 300–500 Punkte dazu.<br><b>🤝 Teams 2 gegen 2</b> (nur zu viert): Platz 1 + 3 und 2 + 4 sind ein Team und sitzen sich gegenüber. Eure Tiere zählen zusammen – 2 + 2 Kühe sind euer Kuh-Quartett. Das Geld deines Partners siehst du offen (🤝), Kuhhandel im eigenen Team gibt es nicht. Gewertet wird pro Team wie ein Spieler (Quartette zusammen), plus erfüllte Geheimaufträge beider; das bessere Team gewinnt gemeinsam.<br><b>💶 Einsatz</b> (jede Spielart): Jeder setzt den gleichen Betrag (1–20 €), alle bestätigen im Warteraum mit „💶 Dabei“. Platz 1 bekommt den ganzen Topf (Gleichstand/Team: geteilt). Die App bewegt kein Geld – in der 💶 Kasse steht, wer wem was schuldet; abhaken kann nur, wer das Geld bekommt.</p>
   <h3>Knöpfe</h3><p class="rlegend"><span class="rl rl-get">Grün</span> du bekommst etwas (+ ⬇) · <span class="rl rl-pay">Orange</span> du zahlst (− ⬆) · <span class="rl rl-move">Rot</span> Karte aufdecken · <span class="rl rl-trade">Lila</span> Kuhhandel · <span class="rl rl-neutral">Weiß</span> neutral / zurück. Gestrichelt = gerade gesperrt. Der Knopf, der gerade erwartet wird, leuchtet nach ein paar Sekunden sanft.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
-  return `<h2>Spielregeln</h2>${tabs}<div class="rules">${body}</div>`;
+  return `<h2>📖 Spielregeln</h2>${tabs}<div class="rules">${body}</div>`;
 }
 
 function renderModal() {
@@ -1956,7 +1967,7 @@ function renderModal() {
   if (modal.kind === 'design') body = themeModal(theme);
   if (modal.kind === 'rules') body = rulesBody(modal.rtab);
   if (modal.kind === 'install') {
-    body = `<h2>Als App aufs Handy</h2>
+    body = `<h2>📲 Als App aufs Handy</h2>
       ${installPrompt ? '<button type="button" class="pill pill-red pill-small" data-m="doInstall">Jetzt installieren</button>' : ''}
       <div class="rules">
         <h3>iPhone (Safari)</h3><p>Unten auf das Teilen-Symbol (Quadrat mit Pfeil) tippen → „Zum Home-Bildschirm“ → „Hinzufügen“.</p>
@@ -1965,7 +1976,7 @@ function renderModal() {
       </div>`;
   }
   if (modal.kind === 'pin') {
-    body = `<h2>Wiedereinstieg</h2>
+    body = `<h2>🔁 Wiedereinstieg</h2>
       <p class="mtext">Damit kommst du auf einem anderen Gerät zurück auf deinen Platz. Nicht weitergeben!</p>
       <div class="pinbox"><div><small>Spiel-Code</small><b>${esc(ui.game?.code || '—')}</b></div><div><small>Deine PIN</small><b>${modal.pin === undefined ? '…' : esc(modal.pin || '—')}</b></div></div>
       ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
@@ -1977,10 +1988,10 @@ function renderModal() {
     <p class="mtext small">Die App bewegt kein Geld – sie merkt sich nur in der 💶 Kasse, wer wem was schuldet. Bezahlt wird unter euch.</p>`; }
   if (modal.kind === 'kasse') body = kasseBody();
   if (modal.kind === 'admin') body = adminBody();
-  if (modal.kind === 'mystats') body = `<h2>Meine Statistik</h2>${myStatsBody(modal.mine)}`;
+  if (modal.kind === 'mystats') body = `<h2>📊 Meine Statistik</h2>${myStatsBody(modal.mine)}`;
   if (modal.kind === 'stats') {
     const rows = modal.stats;
-    body = `<h2>Bestenliste</h2>
+    body = `<h2>🏆 Bestenliste</h2>
       ${!rows ? '<p class="mtext">Lädt …</p>' : !rows.length ? '<p class="mtext">Noch keine fertigen Spiele. Nach dem ersten Spielende steht hier, wer vorne liegt.</p>' : `
       <table class="stats">
         <thead><tr><th></th><th>Spieler</th><th>Siege</th><th>Spiele</th><th>Quote</th><th>Rekord</th><th>Ø Quartette</th></tr></thead>
@@ -2009,7 +2020,7 @@ function renderModal() {
     </div>`;
   }
   if (modal.kind === 'rejoin') {
-    body = `<h2>Mit Code zurück ins Spiel</h2>
+    body = `<h2>🔑 Mit Code zurück ins Spiel</h2>
       <p class="mtext">Code und PIN findest du auf deinem alten Gerät im Spiel unter Menü → „Wiedereinstieg-Code“.</p>
       <form id="rejoin-form" class="rejoin">
         <label>Spiel-Code<input name="code" maxlength="4" autocomplete="off" autocapitalize="characters" required></label>
@@ -2209,7 +2220,7 @@ function adminBody() {
       <code class="aerr">${esc(e.message)}</code>
     </li>`).join('')}</ul><div class="afoot">${confirmBtn('errall', 'Alle löschen', 'clearErrors', '')}</div>` : '<p class="mtext">Keine Fehler gemeldet. 🎉</p>');
   }
-  return `<h2>Admin</h2><div class="atabs">${tabs}</div>
+  return `<h2>⚙ Admin</h2><div class="atabs">${tabs}</div>
     ${modal.okMsg ? `<div class="okmsg">${esc(modal.okMsg)}</div>` : ''}${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}${list}`;
 }
 
