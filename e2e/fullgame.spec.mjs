@@ -10,8 +10,8 @@ import { known, writeReport, appendSummary, OUT } from './lib/report.mjs';
 
 // E2E_GAMES=duo-komplett: nur diese Partie(n) spielen. spaet=1: Partie startet kurz vor Schluss (volle Plätze, viel Geld) – schnell und anspruchsvoll fürs Layout
 const GAMES = (process.env.E2E_GAMES ? (x) => x.filter((g) => process.env.E2E_GAMES.split(',').includes(g.name)) : (x) => x)([
-  { name: 'spiel3-spaet', q: '?debug=1&demo=testspiel3&spaet=1', vp: [852, 393], seed: 11 },
-  { name: 'spiel4-spaet', q: '?debug=1&demo=testspiel&spaet=1', vp: [667, 375], seed: 23 },
+  { name: 'spiel3-spaet', q: '?debug=1&demo=testspiel3&spaet=1', vp: [852, 393], seed: 11, max: 660000 }, // v0.86: seit Ergebnis-Fenster auch spät im Spiel wieder kommen, dauert es länger
+  { name: 'spiel4-spaet', q: '?debug=1&demo=testspiel&spaet=1', vp: [667, 375], seed: 23, max: 660000 },
   // von Anfang an: eine ganze Partie dauert 10+ Minuten → hier nur 4 Minuten spielen (darf nicht hängen, keine Fehler)
   { name: 'spiel4-anfang', q: '?debug=1&demo=testspiel', vp: [932, 430], seed: 11, dauer: 240000 },
   { name: 'spiel3-anfang', q: '?debug=1&demo=testspiel3', vp: [800, 360], seed: 23, dauer: 240000 },
@@ -52,10 +52,10 @@ async function play(browser, url, g) {
         st.overlaps.set(m.ziel, { ...m, text: `${m.text} – bei „${phase}“`, shot });
       }
     }
-    const ph = await page.evaluate(() => ({ tally: !!document.querySelector('.tally'), podium: !!document.querySelector('.podium'), ev: [...document.querySelectorAll('.evcard:not(.evout .evcard) .ec-kind')].map((e) => e.textContent) })).catch(() => ({}));
+    const ph = await page.evaluate(() => ({ tally: !!document.querySelector('.tally'), podium: !!document.querySelector('.podium'), endshow: !!document.querySelector('.overlay.endtable, .ratking, .qshow'), ev: [...document.querySelectorAll('.evcard:not(.evout .evcard) .ec-kind')].map((e) => e.textContent) })).catch(() => ({}));
     (ph.ev || []).forEach((x) => { st.events[x] = (st.events[x] || 0) + 1; });
     if (ph.podium) { st.ended = true; st.endS = Math.round((Date.now() - t0) / 1000); await page.waitForTimeout(1500); await tap('[data-a="recap"]'); await page.waitForTimeout(700); break; }
-    if (ph.tally) continue;
+    if (ph.tally || ph.endshow) { sigAt = Date.now(); continue; } // v0.86: Spielende-Show (Highlights, Abrechnung, Finale) ist Fortschritt, kein Hänger
     // hängt? (Banner, Stapel, Höchstgebot und Geldanzahl 40 s unverändert) – ein langes Bietgefecht
     // der Test-Spieler (jedes Gebot startet die Uhr neu) ist Fortschritt, kein Hänger
     const sig = await page.evaluate(() => [(document.querySelector('.tbanner') || {}).textContent, (document.querySelector('.deck-count') || {}).textContent, (document.querySelector('.bidbox b') || {}).textContent, [...document.querySelectorAll('.prow .mcount, .prow b')].map((e) => e.textContent).join(',')].join('|')).catch(() => lastSig);
