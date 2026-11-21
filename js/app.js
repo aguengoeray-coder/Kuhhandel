@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.86.0';
+export const APP_VERSION = '0.87.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1947,7 +1947,7 @@ function rulesBody(tab = 'classic') {
   <b>✋ Warte, warte, warte!</b> Jeder Bieter darf einmal pro Versteigerung drücken: Die Uhr bekommt die Versteigerungszeit obendrauf (ab dem zweiten Drücken nur die halbe).<br>
   <b>Esel:</b> Wird ein Esel aufgedeckt, bekommen alle Geld von der Bank (50, 100, 200, 500).<br>
   <b>Kein Wechselgeld:</b> Wer zahlt, wählt seine Scheine selbst. Zu viel gezahlt ist weg.<br>
-  <b>Kann nicht zahlen?</b> Dann alle Scheine offen zeigen, die Auktion startet neu – du darfst höchstens dein altes Gebot minus 10 bieten.</p>
+  <b>Kann nicht zahlen?</b> Dann alle Scheine offen zeigen (sie bleiben bis zum Ende der Versteigerung sichtbar), die Auktion startet neu – du darfst höchstens dein altes Gebot minus 10 bieten. Bietet dann keiner, gibt es das Tier nicht umsonst: es wird nochmal von vorn versteigert.</p>
   <h3>Kuhhandel</h3><p>Fordere jemanden heraus, der dieselbe Tierart hat. Du bietest verdeckt. Er nimmt dein Geld und gibt das Tier ab – oder bietet verdeckt dagegen. Die Gebote werden immer getauscht, das höhere gewinnt die Tiere, bei Gleichstand der Herausforderer. Haben beide 2 Karten, geht es um 2. Mit „Kuhhandel-Zeit“ (Warteraum) hat der Herausgeforderte 20 s – einmal darf er „Warte, warte, warte!“ drücken.</p>
   <h3>Ratte</h3><p>Wird eine Ratte aufgedeckt, geht es reihum (links vom Aufdecker, er selbst macht mit): Jeder legt eine Karte verdeckt in die Mitte (auch ein 0er) – oder nimmt die Ratte und bekommt alle gelegten Karten. Wer keine Karten mehr hat, muss sie nehmen. Danach deckt der Aufdecker noch eine Karte auf (ist der Stapel leer: Kuhhandel).<br>
   <b>Rattenhandel:</b> Nur wenn beide eine Ratte haben. Wie Kuhhandel, aber umgekehrt: Wer mehr bietet, wird die Ratte los. Gleichstand: Herausforderer.<br>

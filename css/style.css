@@ -4149,3 +4149,99 @@ button.stake-badge.ask { cursor: pointer; background: #FFD34E; color: #2B2B2B; b
 /* v0.86 iPad: unter dem Spielfeld blitzte die weiße Seitenfarbe durch (z. B. wenn die Leiste verschwindet) */
 html { background: var(--bg, #1E2A44); }
 html:has(.stage) { background: var(--tbl-3, #1E2A44); }
+/* v0.87 (Alp): deine Figur und deine Knöpfe tauschen die Plätze – Figur unten links, Knöpfe unten rechts */
+.stage .meplate, .stage .meplate.full { left: 8px !important; right: auto !important; }
+.stage .dock { left: auto; right: 8px; }
+.stage .meplate .mechat { left: auto; right: -18px; }
+/* v0.87 (Alp): „+10 bieten“ groß und rot, die anderen drei klein darunter */
+.dock .bidgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.dock .bidgrid .bidbtn { height: 40px; }
+.dock .bidgrid .bidbtn b { font-size: 16px; }
+.dock .bidgrid .bidbtn small { font-size: 9px; }
+.dock .bidgrid .bidbtn.main { grid-column: 1 / -1; height: 58px; background: var(--red); color: #fff; border-color: var(--red-dark); box-shadow: 0 5px 0 var(--red-dark); }
+.dock .bidgrid .bidbtn.main b { font-size: 26px; }
+.dock .bidgrid .bidbtn.main small { font-size: 11px; color: #FFE3E8; letter-spacing: .5px; }
+.dock .bidgrid .bidbtn.main.over { background: #F1ECE2; color: var(--ink); border-color: var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.25); }
+.dock .passbtn { margin-top: 6px; }
+/* Schnell-Emojis wandern nach links neben deine Figur (rechts sind jetzt deine Knöpfe) */
+.qemo { left: 5px; right: auto; top: 206px; }
+.stage .meplate, .stage .meplate.full { left: 50px !important; }
+.stage:has(.tduel.respond) .mysets { left: auto; right: 8px; }
+.dock .bidgrid .bidbtn.main { height: 52px; }
+.stage:has(.tduel.respond) .mysets { bottom: 8px; }
+/* v0.87 Überboten: großer Auftritt, Klicks gehen durch */
+.outbidfx { position: absolute; inset: 0; z-index: 70; pointer-events: none; display: grid; place-items: center; }
+.outbidfx .obedge { position: absolute; inset: 0; box-shadow: inset 0 0 0 6px rgba(230,40,60,.85), inset 0 0 60px 20px rgba(230,40,60,.45); animation: obedge 1.5s ease-out both; }
+.outbidfx .obbox { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 22px 10px; border-radius: 16px; background: var(--red); color: #fff; border: 4px solid #fff; box-shadow: 0 8px 0 var(--red-dark), 0 14px 30px rgba(0,0,0,.4); rotate: -4deg; animation: obbox 1.5s cubic-bezier(.3,1.6,.5,1) both; }
+.outbidfx .obbox b { font: 900 38px/1 var(--font-head); letter-spacing: 1px; text-shadow: 0 3px 0 var(--red-dark); }
+.outbidfx .obbox small { font: 800 14px/1.1 var(--font-head); color: #FFE3E8; }
+@keyframes obedge { 0% { opacity: 0; } 12% { opacity: 1; } 30% { opacity: .5; } 45% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes obbox { 0% { opacity: 0; scale: 2.2; } 18% { opacity: 1; scale: 1; } 26% { scale: 1.08; translate: -6px 0; } 32% { translate: 6px 0; } 38% { translate: -3px 0; } 44% { translate: 0 0; scale: 1; } 80% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: .85; translate: 0 -20px; } }
+@media (prefers-reduced-motion: reduce) { .outbidfx .obedge, .outbidfx .obbox { animation-duration: .01s; animation-delay: 0s !important; } .outbidfx { display: none; } }
+/* v0.87 (Alp): Podest wächst je nach Punkten – Sockel unter dem Kasten, Höhe nach Punkten; der Letzte zuerst, der Sieger zuletzt (seekFx spult beim Neuzeichnen vor) */
+.pods.grow .pod .pblock { min-height: 0; border-radius: 12px 12px 0 0; animation: podnum .45s ease-out calc(var(--gd, 0ms) + 700ms) both; }
+.pods.grow .pod .pplinth { display: block; width: 100%; height: calc(var(--sh, 1) * var(--pbr, 24px)); min-height: 6px; background: linear-gradient(180deg, color-mix(in srgb, var(--c) 70%, #fff), var(--c)); border-radius: 0 0 6px 6px; box-shadow: inset 0 -4px 0 rgba(0,0,0,.25); transform-origin: 50% 100%; animation: podgrow .9s cubic-bezier(.25,1.4,.5,1) var(--gd, 0ms) both; }
+.pods.grow .pod > .pname2, .pods.grow .pod > .crown, .pods.grow .pod > .pdub { animation: podrise .5s ease-out calc(var(--gd, 0ms) + 700ms) both; }
+@keyframes podgrow { from { scale: 1 0; } }
+@keyframes podnum { from { opacity: 0; translate: 0 18px; scale: .9; } }
+@keyframes podrise { from { opacity: 0; translate: 0 -24px; } }
+@media (max-height: 400px) { .pods.grow .pod .pplinth { --pbr: 18px; } .pods.grow .pod .pblock { padding-bottom: 13px; } }
+@media (prefers-reduced-motion: reduce) { .pods.grow .pod .pblock, .pods.grow .pod .pplinth, .pods.grow .pod > .pname2, .pods.grow .pod > .crown, .pods.grow .pod > .pdub { animation: none; } }
+.endbtns .pill { white-space: nowrap; letter-spacing: .3px; }
+@media (max-height: 400px) { .endbtns .pill { min-height: 40px; font-size: 13.5px; padding: 0 12px; } }
+/* v0.87 (Alp): Geld der Mitspieler als kleiner Fächer verdeckter Scheine (Anzahl fühlbar) */
+.mcnt .mfan { position: relative; display: inline-block; width: calc(13px + (var(--n) - 1) * 4.5px); height: 18px; margin: 0 9px 0 4px; }
+.mcnt .mfan i { position: absolute; left: calc(var(--k) * 4.5px); bottom: 0; width: 11px; height: 16px; background-color: #fff; margin: 0; border-radius: 2px; border: 1.5px solid var(--ink); box-shadow: none;
+  background: radial-gradient(circle at 50% 50%, #fff 0 2px, transparent 2.5px), var(--back, #C8463D);
+  transform-origin: 50% 160%; rotate: calc((var(--k) - (var(--n) - 1) / 2) * 9deg); }
+/* v0.87: Kuhhandel Schritt 1 – alle Tiere des Gegners */
+.tp-opset { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; padding: 3px 8px; border-radius: 10px; background: rgba(255,255,255,.08); box-shadow: inset 3px 0 0 var(--c); font-size: 11px; color: #fff; }
+.tp-opset > b { font: 800 11px/1 var(--font-head); margin-right: 2px; }
+.tp-opset .tpo { display: inline-flex; align-items: center; gap: 2px; }
+.tp-opset .tpo .mcard, .tp-opset .tpo svg { width: 16px; height: 20px; }
+.tp-opset .tpo em { font-style: normal; font-weight: 800; font-size: 11px; }
+.tp-opset .tpo.q em { color: var(--gold); }
+.stage:has(.tpick) .meplate { visibility: hidden !important; }
+.dock .autozero { text-transform: none; letter-spacing: 0; min-height: 34px; font-size: 13px; }
+/* v0.87 Balatro-Bieten: gewählte Scheine springen hoch, Zähler oben */
+.money.fan .msel { position: absolute; top: -9px; left: 50%; translate: -50% 0; background: var(--red); color: #fff; font: 800 10px/1 var(--font-head); padding: 2px 5px; border-radius: 999px; border: 2px solid #fff; white-space: nowrap; }
+.dock .bidsend { min-height: 48px; margin-top: 4px; }
+.dock .bidgrid[hidden] { display: none; }
+/* v0.87 (Alp): die letzte Runde steht klein auf dem Tisch (nur die letzte, kein Verlauf) */
+.lastround { position: absolute; left: 478px; top: 192px; z-index: 5; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; pointer-events: none; width: 185px; }
+.lastround > small { font: 800 9px/1 var(--font-head); letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+.lastround .evstrip { font-size: 11px; line-height: 1.25; gap: 2px 3px; padding: 4px 8px; white-space: normal; flex-wrap: wrap; justify-content: flex-start; max-width: 185px; border-radius: 12px; background: rgba(0,0,0,.35); }
+.lastround .evstrip .avatar { width: 20px; height: 20px; }
+.lastround .evstrip .mcard { width: 18px; height: 24px; }
+.stage:has(.evcard, .tpick, .tduel, .ending, .overlay) .lastround { visibility: hidden; }
+/* v0.87 Gebotsknöpfe kurz gesperrt, wenn gerade jemand anderes geboten hat */
+.bidbtn.locked:disabled { opacity: 1; animation: bidlock .27s steps(2, jump-none) 3; filter: saturate(.4) brightness(1.15); }
+@keyframes bidlock { 0% { outline: 3px solid #fff; outline-offset: 1px; } 100% { outline: 3px solid transparent; outline-offset: 1px; } }
+/* v0.87 offen gezeigte Scheine nach „kann nicht zahlen“ (bis die Versteigerung vorbei ist) */
+.prow .openmoney { position: absolute; left: 50%; top: calc(100% + 2px); translate: -50% 0; z-index: 7; display: flex; align-items: center; gap: 2px; padding: 2px 6px 2px 3px; border-radius: 999px; background: #FFF4D2; border: 2px solid var(--ink); box-shadow: 0 2px 0 rgba(0,0,0,.25); white-space: nowrap; }
+.prow .openmoney i { font: 800 9.5px/1 var(--font-head); font-style: normal; color: var(--ink); background: var(--m); border: 1.5px solid var(--ink); border-radius: 3px; padding: 2px 3px; min-width: 14px; text-align: center; }
+.prow .openmoney em { font: 700 10px var(--font-body); color: var(--muted); font-style: normal; }
+.prow .openmoney b { font: 800 11px var(--font-head); color: var(--ink); margin-left: 2px; }
+.prow.seat-l .openmoney, .prow.seat-r .openmoney { top: auto; bottom: calc(100% + 2px); }
+.prow.seat-r .openmoney { left: auto; right: 0; translate: 0 0; }
+.prow.seat-l .openmoney { left: 0; translate: 0 0; }
+.stage .dock { right: 8px !important; left: auto !important; }
+.stage .dock { translate: 0 14px; }
+.dock .bidgrid .bidbtn.main { height: 48px; }
+/* v0.87 alle anderen haben gepasst */
+.dock .lastin { background: var(--gold); color: var(--ink); border-radius: 12px; padding: 6px 10px; font: 800 13px/1.15 var(--font-head); box-shadow: 0 3px 0 rgba(0,0,0,.25); animation: lastin .9s ease-in-out 2; }
+.dock .lastin small { display: block; font: 700 10.5px/1.2 var(--font-body); margin-top: 2px; }
+.dock .passbtn.endnow { background: var(--gold); width: 100%; }
+@keyframes lastin { 50% { scale: 1.05; } }
+.stage .waitbtn { letter-spacing: 0; padding-left: 10px; padding-right: 10px; max-width: 176px; }
+.tpick:has(.tp-opset) .tp-kind { display: none; }
+.tp-opset { padding: 1px 8px; gap: 2px 5px; }
+.tp-opset .tpo .mcard, .tp-opset .tpo svg { width: 14px; height: 18px; }
+.stage .waitbtn { translate: -16px 0; max-width: 170px; }
+.stage .dock { translate: 0 20px; }
+.lastround { left: 196px; top: 128px; align-items: flex-end; width: 170px; }
+.lastround .evstrip { max-width: 170px; }
+.pods.grow .pod .pfig { height: 54px; } .pods.grow .pod.p1 .pfig { height: 62px; }
+.pods.grow .pod.p1 .picons .ci { width: 22px; height: 22px; }
+.pods.grow .pod .pblock { padding-top: 2px; }
+@media (max-height: 440px) { .endbtns .pill { min-height: 38px; } .pods.grow .pod .pplinth { --pbr: 16px; } }

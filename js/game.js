@@ -734,6 +734,8 @@ export function renderGame(root, ctx) {
     local.sel = [];
     local.ratSel = null;
     if (state.phase !== 'turn') local.tradeOpen = false;
+    local.bidSel = []; // v0.87 Balatro-Bieten: Auswahl gilt nur bis sich etwas tut
+    if (state.phase !== 'rat') local.autoZero = false; // v0.87: Auto-0 gilt nur für die laufende Rattenrunde
   }
   let selSum = local.sel.reduce((s, i) => s + (me.money[i] ?? 0), 0);
 
@@ -893,12 +895,15 @@ export function renderGame(root, ctx) {
     // du sitzt unten: kein eigener Platz – nur Sprechblasen erscheinen über deinem Geld
     if (isMe) return said ? `<div class="mebubble ${state.phase === 'payment' || state.phase === 'trade' || state.phase === 'rat' || local.tradeOpen ? 'up' : ''}">${bubble}</div>` : '';
     const laidN = state.phase === 'rat' ? (v.rat.laid[p.id] || 0) : 0;
+    // v0.87 (Alp): wer nicht zahlen konnte, dessen Scheine bleiben bis zum Ende dieser Versteigerung für alle offen
+    const om = state.phase === 'auction' && v.auction?.openMoney?.[p.id];
+    const openMoney = om ? `<div class="openmoney" title="${esc(p.name)} hat offen gezeigt" aria-label="Offene Scheine: ${om.join(', ') || 'keine'}">${om.length ? om.map((m) => `<i style="--m:${MONEY_COLORS[m]}">${m}</i>`).join('') : '<em>keine Scheine</em>'}<b>= ${om.reduce((x, y) => x + y, 0)}</b></div>` : '';
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
-    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
+    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${openMoney}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
-        <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${myPartner === p.id ? '<b class="teamb" title="Dein Partner">🤝</b>' : ''}${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld"><i></i>${count}${myPartner === p.id && Array.isArray(p.money) ? `<b class="psum">${p.money.reduce((a, b) => a + b, 0)}</b>` : ''}</span>` : status}</span></div>
+        <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${myPartner === p.id ? '<b class="teamb" title="Dein Partner">🤝</b>' : ''}${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld">${isMe ? '<i></i>' : `<span class="mfan" aria-hidden="true" style="--n:${Math.min(count, 8)}">${Array.from({ length: Math.min(count, 8) }, (_, k) => `<i style="--k:${k}"></i>`).join('')}</span>`}${count}${myPartner === p.id && Array.isArray(p.money) ? `<b class="psum">${p.money.reduce((a, b) => a + b, 0)}</b>` : ''}</span>` : status}</span></div>
       </div>
       <div class="chips" data-a="setsOf" data-v="${esc(p.id)}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
     </div>`;
@@ -923,7 +928,14 @@ export function renderGame(root, ctx) {
     const nowR = ctx.now();
     const held = a.holdUntil != null && nowR < a.holdUntil; // nach „kann nicht zahlen“: alle schauen erst die Scheine an
     if (held && (!wake || wake > a.holdUntil)) wake = a.holdUntil;
-    const canBid = (amt) => !held && (cap == null || amt <= cap);
+    // v0.87 (Nico): Schutz vor Fehlgeboten – bietet jemand anderes, sind die Gebotsknöpfe kurz gesperrt und blinken,
+    // damit man nicht aus Versehen auf den schon neuen (höheren) Betrag tippt
+    { const hk = a.high ? `${a.opensAt}|${a.high.player}|${a.high.amount}` : `${a.opensAt}|-`;
+      if (local.bidLockKey !== undefined && local.bidLockKey !== hk && a.high && a.high.player !== meId) local.bidLockUntil = Date.now() + 800;
+      local.bidLockKey = hk; }
+    const bidLocked = local.bidLockUntil && Date.now() < local.bidLockUntil;
+    if (bidLocked) wakeLocal(local.bidLockUntil + 20);
+    const canBid = (amt) => !held && !bidLocked && (cap == null || amt <= cap);
     const revealing = a.opensAt != null && nowR < a.opensAt;
     if (revealing) wake = a.opensAt; // nach der Animation neu zeichnen
     // Kleiner, dezenter Infokasten – erscheint erst nach dem Aufdecken
@@ -1002,22 +1014,36 @@ export function renderGame(root, ctx) {
       aucLeft = `<div class="ldecide">${a.forced ? '⚖️ Der Gerichtsvollzieher kommt …' : 'Karte wird aufgedeckt …'}</div>`;
     } else if (running) {
       const passed = a.passed.includes(meId);
+      const otherBidders = v.players.filter((p) => p.id !== a.auctioneer && p.id !== meId);
+      const lastIn = !passed && !held && otherBidders.length > 0 && otherBidders.every((p) => a.passed.includes(p.id)) && !(a.high && a.high.player === meId);
       // Ein Knopf pro Scheinwert, den es im Spiel gibt: aufs Höchstgebot draufbieten
       const steps = [10, 20, 50, 100]; // mehr bieten = mehrmals tippen (z. B. 100, dann 20)
       const mine = sum(me.money);
       aucLeft = `<div class="lhead">Bieten <small>${held ? 'gleich geht’s los …' : `mind. ${high + BID_STEP}`}</small></div>
-        <div class="bidgrid">${steps.map((st) => {
+        <div class="bidgrid" ${(local.bidSel || []).length ? 'hidden' : ''}>${steps.map((st) => {
           const amt = high + st;
           const over = amt > mine;
-          return `<button type="button" class="bidbtn ${over ? 'over' : ''}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten${over ? ', mehr als du hast' : ''}"><b>${amt}</b><small>${over ? '⚠ zu viel' : `+${st}`}</small></button>`;
+          return `<button type="button" class="bidbtn ${st === 10 ? 'main' : ''} ${over ? 'over' : ''} ${bidLocked ? 'locked' : ''}" data-a="bid" data-v="${amt}" ${canBid(amt) ? '' : 'disabled'} aria-label="${amt} bieten${over ? ', mehr als du hast' : ''}"><b>${amt}</b><small>${over ? '⚠ zu viel' : `+${st}`}</small></button>`;
         }).join('')}</div>
-        <button type="button" class="pill pill-white pill-small passbtn" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : 'Passen'}</button>`;
+        ${(() => { // v0.87 (Nico): wie bei Balatro – Scheine im Fächer antippen (sie springen hoch), dann zusammen als Gebot abschicken
+          const bs = local.bidSel || []; const bsum = bs.reduce((x, y) => x + y, 0);
+          return bs.length ? `<button type="button" class="pill pill-red bidsend" data-a="bidSel" ${canBid(bsum) ? '' : 'disabled'}><small>${bs.length} Schein${bs.length > 1 ? 'e' : ''} · ${canBid(bsum) ? 'als Gebot' : `mind. ${high + BID_STEP}`}</small>${bsum} bieten</button><button type="button" class="pill pill-white pill-small" data-a="bidClear">Auswahl weg</button>` : '';
+        })()}
+        <button type="button" class="pill pill-white pill-small passbtn ${lastIn ? 'endnow' : ''}" data-a="pass" ${passed ? 'disabled' : ''}>${passed ? 'Gepasst' : lastIn ? 'Beenden' : 'Passen'}</button>`;
+      // v0.87 (Nico): Haben alle anderen Bieter gepasst, bekommt der letzte eine Anzeige und kann selbst beenden
+      if (lastIn) aucLeft = `<div class="lastin" role="status">🙋 Alle anderen haben gepasst<small>${a.high ? `Höchstgebot ${a.high.amount}` : 'Noch kein Gebot'} – bieten oder beenden</small></div>` + aucLeft;
+      if (!passed && !held) pickMode = 'bid';
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(a.auctioneer))} entscheidet …</div>`;
     }
 
     const tick = () => haptic('tap', ctx.vibe !== false);
   H.bid = (amt) => { tick(); ctx.act((s) => bid(s, meId, Number(amt), ctx.now())); };
+  // v0.87 Balatro-Bieten: Schein antippen = einer mehr hoch; sind alle dieses Werts oben, gehen sie wieder runter
+  H.bidTog = (val) => { const m = Number(val); const bs = local.bidSel || (local.bidSel = []); const have = me.money.filter((x) => x === m).length; const n = bs.filter((x) => x === m).length;
+    if (n < have) bs.push(m); else local.bidSel = bs.filter((x) => x !== m); tick(); ctx.rerender(); };
+  H.bidClear = () => { local.bidSel = []; ctx.rerender(); };
+  H.bidSel = () => { const amt = (local.bidSel || []).reduce((x, y) => x + y, 0); if (!amt) return; tick(); local.bidSel = []; ctx.act((s) => bid(s, meId, amt, ctx.now())); };
     H.pass = () => ctx.act((s) => passAuction(s, meId, ctx.now()));
     H.aWait = () => { haptic('tap', ctx.vibe !== false); ctx.act((s) => waitAuction(s, meId, ctx.now())); };
     const lw = a.lastWait; const wsig = lw ? `${lw.player}|${lw.at}` : null;
@@ -1048,6 +1074,13 @@ export function renderGame(root, ctx) {
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(turnId))} überlegt …</div>`;
     }
+    // v0.87 (Nico): Knopf „Automatisch 0 legen“ – solange an, legt die App für dich reihum eine 0 (falls du eine hast)
+    if (me.money.includes(0)) aucLeft += `<button type="button" class="pill pill-small ${local.autoZero ? 'pill-red' : 'pill-white'} autozero" data-a="autoZero" aria-pressed="${local.autoZero ? 'true' : 'false'}">${local.autoZero ? '🤖 Auto-0: an' : '🤖 Auto-0 legen'}</button>`;
+    if (local.autoZero && turnId === meId && me.money.includes(0)) {
+      const azKey = `${logNo(state)}`;
+      if (local.azKey !== azKey) { local.azKey = azKey; setTimeout(() => { if (local.autoZero && local.azKey === azKey) H.ratLay(0); }, 700); }
+    }
+    H.autoZero = () => { local.autoZero = !local.autoZero; local.azKey = null; ctx.rerender(); };
     H.ratLay = (val) => { const i = me.money.indexOf(Number(val)); if (i >= 0) ctx.act((s) => ratLay(s, meId, i)); };
     // Antippen wählt den Schein, schnelles Doppeltippen legt ihn direkt in die Mitte
     H.ratPick = (val) => {
@@ -1274,6 +1307,11 @@ export function renderGame(root, ctx) {
         <div class="tp-head"><b>Mit wem, um welches Tier?</b>
           <div class="tp-opps">${targets.map((id) => { const i = idxOf(id); return targets.length > 1 ? `<button type="button" class="tp-opp ${id === local.tradeTarget ? 'on' : ''}" data-a="tTarget" data-v="${esc(id)}">${avatar(v.players[i], i)}<span>${tName(id)}</span></button>` : `<span class="tp-opp on solo">${avatar(v.players[i], i)}<span>${tName(id)}</span></span>`; }).join('')}</div>
           <button type="button" class="tp-x" data-a="tradeClose" aria-label="Abbrechen">✕</button></div>
+        ${(() => { // v0.87 (Alp/Nico): alle Tiere des gewählten Gegners auf einen Blick – auch solange der Stapel noch liegt
+          const own = Object.entries(target.animals).filter(([, n]) => n > 0);
+          const tot = own.reduce((x, [, n]) => x + n, 0);
+          return own.length ? `<div class="tp-opset" style="--c:${SEAT_COLORS[idxOf(target.id)]}"><b>${tName(target.id)} hat ${tot} Tier${tot === 1 ? '' : 'e'}:</b>${own.map(([id, n]) => `<span class="tpo ${n === 4 ? 'q' : ''}" title="${n}× ${esc(aname(id))}">${miniCard(id)}<em>${n}×</em></span>`).join('')}</div>` : '';
+        })()}
         <div class="tp-grid ${many}">${forTarget.map((t) => `<button type="button" class="tp-t" data-a="tAnimal" data-v="${t.animal}" style="--a:${ANIMAL_COLORS[t.animal]}" aria-label="${aname(t.animal)}: es geht um ${t.count}">
           <span class="tp-um">um ${t.count}</span>${miniCard(t.animal, 'fill')}${aval(t.animal) != null ? `<em class="tp-val">${valHtml(t.animal)}</em>` : ''}<span class="tp-nm">${esc(aname(t.animal))}</span>
           <span class="tp-cnt"><span class="me">Du ${me.animals[t.animal] || 0}</span><span class="op" style="--c:${SEAT_COLORS[idxOf(target.id)]}">${tName(target.id)} ${target.animals[t.animal] || 0}</span></span></button>`).join('')}</div>
@@ -1532,13 +1570,14 @@ export function renderGame(root, ctx) {
     const off = i - mid;
     const style = `--m:${MONEY_COLORS[m]};--rot:${(off * 2.5).toFixed(1)}deg;--dy:${Math.round(Math.abs(off) * 2.5)}px`;
     if (!cnt) return `<span class="mghost" data-v="${m}" style="${style}" aria-hidden="true"><i>${m}</i></span>`;
-    const lift = pickMode === 'rat' && local.ratSel === m && !lifted;
-    if (lift) lifted = true;
-    const inner = `${mIn(m)}${cnt > 1 ? `<span class="mcount">×${cnt}</span>` : ''}`;
+    const nSel = pickMode === 'bid' ? (local.bidSel || []).filter((x) => x === m).length : 0;
+    const lift = (pickMode === 'rat' && local.ratSel === m && !lifted) || nSel > 0;
+    if (lift && pickMode === 'rat') lifted = true;
+    const inner = `${mIn(m)}${cnt > 1 ? `<span class="mcount">×${cnt}</span>` : ''}${nSel ? `<span class="msel">${cnt > 1 ? `${nSel}/${cnt}` : '✓'}</span>` : ''}`;
     const gi = glowVals.indexOf(m); const glow = gi >= 0; if (glow) glowVals.splice(0, glowVals.length);
     if (!pickMode) return `<div class="money fan ${cnt > 1 ? 'multi' : ''} ${glow ? 'newcard' : ''}" data-v="${m}" style="${style}">${inner}</div>`;
-    const label = pickMode === 'rat' ? `${m} zum Legen wählen` : `${m} ins Feld legen`;
-    return `<button type="button" class="money fan pick ${cnt > 1 ? 'multi' : ''} ${lift ? 'lift' : ''}" style="${style}" data-a="${pickMode === 'rat' ? 'ratPick' : 'addv'}" data-v="${m}" aria-label="${label}"${lift ? ' aria-pressed="true"' : ''}>${inner}</button>`;
+    const label = pickMode === 'rat' ? `${m} zum Legen wählen` : pickMode === 'bid' ? `${m} fürs Gebot wählen` : `${m} ins Feld legen`;
+    return `<button type="button" class="money fan pick ${cnt > 1 ? 'multi' : ''} ${lift ? 'lift' : ''}" style="${style}" data-a="${pickMode === 'rat' ? 'ratPick' : pickMode === 'bid' ? 'bidTog' : 'addv'}" data-v="${m}" aria-label="${label}"${lift ? ' aria-pressed="true"' : ''}>${inner}</button>`;
   }).join('');
 
   const trades = possibleTrades(state, meId);
@@ -1717,7 +1756,7 @@ export function renderGame(root, ctx) {
   if (finaleOn) wakeLocal(local.tallyAt + awMs + tallyTotal + FINALE_MS + 20);
   if (finaleOn && !local.finaleSound) { local.finaleSound = true; sounds.push('drum'); later.push(['fanfare', 1700]); }
   const podiumIn = state.phase === 'ended' && !endWait && !awardsOn && !tallyOn && !finaleOn && !local.recap && !local.podiumShown;
-  if (podiumIn) local.podiumShown = true;
+  if (podiumIn) { local.podiumShown = true; local.podAt = Date.now(); }
   if (state.phase === 'ended' && local.recap) {
     const list = reportList();
     const copied = local.shared && Date.now() - local.shared < 3000;
@@ -1766,12 +1805,16 @@ export function renderGame(root, ctx) {
     // v0.71: Verlierer-Pose – wer allein ganz hinten liegt, lässt den Kopf hängen, über ihm regnet es
     const worst = Math.max(...ranked.map((x) => x.place));
     const lastPlace = (r) => worst > 1 && r.place === worst && ranked.filter((x) => x.place === worst).length === 1;
+    // v0.87 (Alp): Podest wächst – Höhe nach Punkten, der Letzte zuerst, der Sieger zuletzt
+    const maxScore = Math.max(1, ...ranked.map((x) => x.score));
+    const growOrder = [...order].sort((a, b) => a.score - b.score);
     const step = (r) => {
       const i = idxOf(r.id);
-      return `<button type="button" class="pod p${Math.min(r.place, 3)} ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}" style="--c:${SEAT_COLORS[i]}">
+      const sh = Math.max(0.12, Math.min(1, r.score / maxScore)).toFixed(3);
+      return `<button type="button" class="pod p${Math.min(r.place, 3)} ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}" style="--c:${SEAT_COLORS[i]};--sh:${sh};--gd:${growOrder.indexOf(r) * 550}ms">
         ${r.place === 1 ? '<span class="crown">👑</span>' : ''}${lastPlace(r) ? '<span class="raincloud" aria-hidden="true">🌧️</span>' : ''}${kingHat(r.id) ? `<span class="podhat">${figure(v.players[i], i, `hop${r.place === 1 ? ' win' : lastPlace(r) ? ' lose' : ''}`)}${kingHat(r.id)}</span>` : figure(v.players[i], i, `hop${r.place === 1 ? ' win' : lastPlace(r) ? ' lose' : ''}`)}
         <span class="pname2">${esc(r.id === meId ? 'Du' : r.name)}</span>
-        <span class="pblock"><b>${r.score}</b><span class="picons">${iconsOf(r)}</span><i>${r.place}.</i></span>
+        <span class="pblock"><b>${r.score}</b><span class="picons">${iconsOf(r)}</span><i>${r.place}.</i></span><span class="pplinth" aria-hidden="true"></span>
         ${r.place === 1 && ctx.rewards && !ctx.myRewards ? '<span class="pdub">+10 <i class="dub" aria-label="Dublonen"></i></span>' : ''}</button>`;
     };
     // Rechnung steht immer da: erst die des Gewinners, Antippen zeigt die eines anderen
@@ -1782,7 +1825,7 @@ export function renderGame(root, ctx) {
     overlay = `<div class="overlay endtable ${podiumIn ? 'enter' : ''}">${confetti}<div class="ending podium">
       <h2 style="--c:${SEAT_COLORS[winIdx]}">${teamsOn ? (v.winner?.includes(meId) ? 'Euer Team hat gewonnen!' : `Team ${esc(s[0].teamName)} gewinnt!`) : v.winner?.includes(meId) ? 'Du hast gewonnen!' : `${esc(s[0].name)} gewinnt!`}</h2>
       ${state.settings?.stake ? (() => { const pot = state.settings.stake * v.players.length; const w = (v.winner || []).length || 1; const share = pot / w; const nm = (v.winner || []).map((id) => (id === meId ? 'Du' : v.players[idxOf(id)]?.name)).join(' & '); return `<div class="podstake">💶 ${esc(nm)} ${w > 1 ? `bekommen je ${String(Math.round(share * 100) / 100).replace('.', ',')} €` : (v.winner || []).includes(meId) ? `bekommst ${pot} €` : `bekommt ${pot} €`} <small>(Topf ${pot} €, steht in der Kasse)</small></div>`; })() : ''}
-      <div class="pods ${teamsOn ? 'teams' : ''}">${order.map(step).join('')}</div>
+      <div class="pods grow ${teamsOn ? 'teams' : ''}" ${local.podAt ? `data-fxat="${local.podAt}"` : ''}>${order.map(step).join('')}</div>
       ${rest.length ? `<div class="prest">${rest.map((r) => { const i = idxOf(r.id); return `<button type="button" class="prow4 ${local.scoreOpen === r.id ? 'open' : ''}" data-a="scoreOpen" data-v="${esc(r.id)}"><i>${r.place}.</i>${avatar(v.players[i], i)}<span>${esc(r.id === meId ? 'Du' : r.name)}${lastPlace(r) ? ' 🌧️' : ''}</span><span class="picons">${iconsOf(r)}</span><b>${r.score}</b></button>`; }).join('')}</div>` : ''}
       ${ctx.rewards && ctx.myRewards ? (() => {
         // v0.55: was du in dieser Partie verdient hast (vom Server berechnet)
@@ -2053,6 +2096,13 @@ export function renderGame(root, ctx) {
   // Überboten: du lagst vorne, jetzt jemand anderes
   if (state.phase === 'auction' && prev.phase === 'auction' && prev.highMe && auction.high && auction.high.player !== meId) {
     sounds.push('outbid'); feel('outbid');
+    // v0.87 (Alp): größere Animation – roter Rand-Blitz und großes „ÜBERBOTEN!“ mit wer und wie viel (blockiert nichts)
+    keepFx(`<div class="outbidfx" role="status" aria-live="assertive"><i class="obedge"></i><div class="obbox"><b>ÜBERBOTEN!</b><small>${esc(nameOf(auction.high.player))} bietet ${auction.high.amount}</small></div></div>`, 1500);
+  }
+  // v0.87 (Alp): nach „kann nicht zahlen“ gibt es nichts umsonst – Versteigerung beginnt von vorn
+  if (evFresh && le && le.type === 'auction_restart' && state.phase === 'auction') {
+    keepFx(`<div class="lastcard" role="status">🔁 Niemand bietet – ${esc(aname(le.animal))} gibt es nicht umsonst, nochmal von vorn!</div>`, 3200);
+    sounds.push('bell');
   }
   if (evFresh && le && (state.phase === 'turn' || state.phase === 'ended')) {
     if (le.type === 'auction_won') { sounds.push('gavel'); if (le.amount > 0) sounds.push('coins'); if (le.buyer === meId) feel('won'); }
@@ -2543,7 +2593,7 @@ export function renderGame(root, ctx) {
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
-    ${standingsHtml}${setsPop}${quickHtml}
+    ${standingsHtml}${setsPop}${quickHtml}${evStrip && state.phase === 'turn' && !local.tradeOpen && !local.reactTo ? `<div class="lastround" role="status"><small>Letzte Runde</small><div class="evstrip">${evStrip}</div></div>` : ''}
     ${effects}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}

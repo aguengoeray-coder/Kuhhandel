@@ -95,6 +95,7 @@ export function buildDemoState(kind, local) {
       g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u4', 60, t + 3200); g = bid(g, 'u1', 100, t + 3200); g = bid(g, 'u3', 120, t + 3200);
       if (new URLSearchParams(location.search).get('wpop')) g = waitAuction(g, 'u3', Date.now() - 200); // v0.79: „Warte, warte, warte!“ von Lea
+      if (new URLSearchParams(location.search).get('outbid')) local.prev = { logLen: g.log.length - 1, phase: 'auction', highMe: true }; // v0.87: du wurdest gerade überboten
       return g;
     }
     case 'auctionrun': {
