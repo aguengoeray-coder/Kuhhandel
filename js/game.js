@@ -1,7 +1,7 @@
 // Kuhhandel – Spieltisch im Querformat (alle Spielphasen)
 import { shopAvatar, shopAvatarFull } from './shopavatars.js';
 import {
-  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
+  ANIMALS, ANIMAL_BY_ID, DONKEY_PAYOUTS, BID_STEP, cantpayMs, infoFactor, revealMs, tradeTimerSec, hektikMs, pfaendShowMs, AUCTION_START_MS, AUCTION_BID_MS, auctionStartMs, auctionBidMs, isTurbo,
   viewFor, possibleTrades, scores, currentPlayer, missionStatus, animalsOf, isTeams, partnerOf, teamOf, teamPool,
   drawForAuction, bid, passAuction, closeAuction, pay,
   startTrade, acceptTrade, counterTrade, bestPay,
@@ -942,8 +942,10 @@ export function renderGame(root, ctx) {
     const pct = running ? Math.max(0, Math.min(100, ((a.endsAt - now) / total) * 100)) : 0;
     // v0.65 Zwangsversteigerung: Karte wird nicht umgedreht, sondern bekommt das Siegel „GEPFÄNDET“ (bleibt während der Versteigerung drauf)
     const seal = a.forced ? `<span class="aucseal" style="animation-delay:${revealing ? Math.max(0, 1150 - (pfaendShowMs(state) - (a.opensAt - nowR))) : -999}ms" aria-label="gepfändet"><b>⚖</b><small>GEPFÄNDET</small></span>` : '';
+    // v0.85: Bei jedem neuen Zeichnen (Teams: viele Updates) startete die Dreh-Animation neu und die Karte „zappelte“ – jetzt läuft sie zeitlich weiter
+    const revealDelay = revealing ? -Math.max(0, Math.min(revealMs(state), revealMs(state) - (a.opensAt - nowR))) : 0;
     const card = revealing
-      ? (!a.animal ? `<div class="revealcard blindc">${blindCard()}</div>` : a.forced ? `<div class="revealcard forced">${playCard(a.animal)}${seal}</div>` : `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`)
+      ? (!a.animal ? `<div class="revealcard blindc" style="--rd:${revealDelay}ms">${blindCard()}</div>` : a.forced ? `<div class="revealcard forced">${playCard(a.animal)}${seal}</div>` : `<div class="revealcard ${aval(a.animal) >= 650 ? 'big' : ''}" style="--rd:${revealDelay}ms">${playCard(a.animal)}${aval(a.animal) >= 650 ? glitz(14, 'burst') : ''}</div>`)
       : `<div class="aucard center ringwrap ${infoFresh ? 'settle' : ''} ${running ? (secs <= 3 ? 'low' : '') : 'over'}" ${a.endsAt != null ? `data-ends="${a.endsAt}" data-total="${total}" data-fmt="n"` : ''}>
           ${a.animal ? playCard(a.animal) : blindCard()}${aval(a.animal) >= 650 ? glitz(7, 'calm') : ''}${seal}
           <svg class="ring" viewBox="0 0 112 152" aria-hidden="true"><rect class="ringbg" x="4" y="4" width="104" height="144" rx="16" pathLength="100"></rect><rect class="ringp" x="4" y="4" width="104" height="144" rx="16" pathLength="100" style="stroke-dashoffset:${100 - pct}"></rect></svg>
@@ -1940,7 +1942,9 @@ export function renderGame(root, ctx) {
   // v0.77 Zu zweit: aufgeteilt – beide Karten laufen/fliegen aus der Mitte zu ihrem Platz (Tier zum Stapel, Geld ins Geld)
   if (evFresh && le && le.type === 'divided') {
     const parts = [le.first, le.second].filter(Boolean);
-    let fx = `<div class="divstrip" aria-live="polite">${esc(nameOf(le.by))} ${le.by === meId ? (le.keep ? 'behältst' : 'gibst ab') : le.keep ? 'behält' : 'gibt ab'}${le.auto ? ' (Zeit um)' : ''}</div>`;
+    // v0.85 (Alp): zu zweit sieht jeder, wer was bekommen hat – auch welchen Geldschein
+    const got = (x) => (String(x.card).startsWith('geld-') ? `💰 ${x.card === 'geld-?' ? '?' : moneyValue(x.card)}` : isSpecialCard(x.card) ? `⭐ ${aname(specialAnimal(x.card))}` : aname(x.card));
+    let fx = `<div class="divstrip" aria-live="polite"><b>${esc(nameOf(le.by))} ${le.by === meId ? (le.keep ? 'behältst' : 'gibst ab') : le.keep ? 'behält' : 'gibt ab'}${le.auto ? ' (Zeit um)' : ''}</b>${parts.map((x) => `<span class="dgot" style="--c:${SEAT_COLORS[idxOf(x.to)]}">${esc(nameOf(x.to))}: <em>${esc(got(x))}</em></span>`).join('')}${(le.esel || []).map((e) => `<span class="dgot esel">🫏 ${e.nr}. Esel – beide +${e.payout}</span>`).join('')}</div>`;
     parts.forEach((x, k) => {
       const d = 250 + k * 450;
       if (String(x.card).startsWith('geld-')) {
@@ -1951,7 +1955,8 @@ export function renderGame(root, ctx) {
         fx += homeWalk(an, '@card', `@stall:${x.to}:${an}`, d, { star: isSpecialCard(x.card) });
       }
     });
-    keepFx(fx, 250 + parts.length * 450 + FLY_MS + 400);
+    for (const e of le.esel || []) { const t = 250 + parts.length * 450 + 500; for (const p of v.players) fx += moneyFly('@card', p.id, 2, t); later.push(['iah', t - 200]); later.push(['coins', t + 600]); } // v0.85 Esel-Bonus zu zweit
+    keepFx(fx, 250 + parts.length * 450 + FLY_MS + 400 + ((le.esel || []).length ? 1400 : 0));
     sounds.push('flip'); later.push(['trade', 300]);
   }
   if (entered && state.phase === 'divide') sounds.push('flip');

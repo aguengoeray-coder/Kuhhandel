@@ -50,7 +50,8 @@ export function buildDemoState(kind, local) {
   if (kind === 'duotrade') { g = duoBase(); g.turn = 1; if (qs.get('rat')) { g.players[0].animals.ratte = 1; g.players[1].animals.ratte = 1; } g.players[0].money = [0, 0, 10, 10, 10, 20, 50, 100, 100, 200, 500]; g.players[1].money = [0, 0, 10, 10, 10, 20, 50, 100, 10, 10, 50, 200]; return startTrade(g, 'u2', 'u1', qs.get('rat') ? 'ratte' : 'kuh', qs.get('many') ? Array.from({ length: Number(qs.get('many')) }, (_, i) => i) : [0, 1]); } // v0.77: Kuhhandel zu zweit (du antwortest)
   if (kind === 'divide') { g = duoBase(); if (qs.get('other')) g.turn = 1; return divideLook(g, g.players[g.turn].id, Date.now()); }
   if (kind === 'divided') {
-    g = divideChoose(divideLook(duoBase(), 'u1', Date.now()), 'u1', qs.get('give') ? false : true);
+    const b0 = duoBase(); if (qs.get('esel')) b0.deck.splice(0, 2, 'esel', 'geld-50'); // v0.85: &esel=1 Esel + Geldschein
+    g = divideChoose(divideLook(b0, 'u1', Date.now()), 'u1', qs.get('give') ? false : true);
     if (qs.get('pop') === '1') local.prev = { logLen: g.log.length - 1, phase: 'divide' };
     return g;
   }
@@ -89,7 +90,8 @@ export function buildDemoState(kind, local) {
     }
     case 'auction': { // &fresh=1: Karte wird gerade erst aufgedeckt (Esel-Bonus von Anfang an)
       const t = Date.now() - (new URLSearchParams(location.search).get('fresh') ? 0 : 4100);
-      g = base(); g.turn = 1; g.deck[0] = 'esel';
+      g = base(); g.turn = 1; g.deck[0] = new URLSearchParams(location.search).get('card') || 'esel';
+      if (new URLSearchParams(location.search).get('teams')) g.settings = { ...(g.settings || {}), teams: true };
       g = drawForAuction(g, 'u2', t); if (g.special) { g.special.batzen = null; g.special.startsAt = t + SPECIAL_DELAY_MS; }
       g = bid(g, 'u4', 60, t + 3200); g = bid(g, 'u1', 100, t + 3200); g = bid(g, 'u3', 120, t + 3200);
       if (new URLSearchParams(location.search).get('wpop')) g = waitAuction(g, 'u3', Date.now() - 200); // v0.79: „Warte, warte, warte!“ von Lea

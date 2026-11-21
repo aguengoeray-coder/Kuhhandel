@@ -10,7 +10,7 @@ Stand: 21.11.2026, 15:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 | | |
 |---|---|
 | Live-Version (`main`) | **v0.84.0** (#59, Einsatz & Kasse); Cloudflare-Build erfolgreich |
-| In Arbeit | v0.85.0: Layout-Abgleich (Schriften, Größen, Abstände) – Befund an Alp, Umsetzung nach Go; `supabase/v0.85-kasse-rechte.sql` (Schreibrechte formal entziehen) |
+| In Arbeit | v0.85.0 (PR #60): Spielende-Highlights, eigene Sets im Kuhhandel, Sets-Fenster, Zu zweit: Geld sichtbar + Esel-Bonus, Aufdeck-Animation ohne Zappeln; danach Layout-Abgleich (Schriften, Größen, Abstände) – Befund an Alp, Umsetzung nach Go; `supabase/v0.85-kasse-rechte.sql` (Schreibrechte formal entziehen) |
 | Nächste Versionen | Erste echte Partien spielen (noch kein einziges Spielergebnis in der DB) · Börsen-Chaos danach nachjustieren · Shop-Ideen (Preise = Alp) · Rückblick nach dem Spiel |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.84-kasse.sql` (Claude über Connector 20.11., Prüfabfrage + Advisors ✓); davor `v0.80-avatar-ablegen.sql` (20.11.), `v0.67-emotes.sql` (14.11.) |
 

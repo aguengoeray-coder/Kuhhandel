@@ -4126,3 +4126,11 @@ button.stake-badge.ask { cursor: pointer; background: #FFD34E; color: #2B2B2B; b
 .awcard small { font-size: 11.5px; font-weight: 600; text-align: center; color: #556; line-height: 1.25; }
 @keyframes awin { 0% { opacity: 0; transform: translateY(30px) scale(.7) rotate(-4deg); } 70% { opacity: 1; transform: translateY(-4px) scale(1.04) rotate(1deg); } 100% { opacity: 1; transform: none; } }
 .ending.awards .awsub { color: #FFE27A; }
+/* v0.85 Zu zweit: wer hat was bekommen (auch Geld) + Esel-Bonus */
+.divstrip { display: flex; align-items: center; gap: 8px; animation-duration: 3.4s; border-radius: 16px; padding: 6px 12px; }
+.divstrip b { font-weight: 600; }
+.dgot { font: 700 13px/1.2 var(--font-body); padding: 2px 8px; border-radius: 999px; background: #fff; color: #2B2B2B; border: 2px solid var(--c, #888); }
+.dgot em { font-style: normal; font-weight: 900; }
+.dgot.esel { background: #FFE27A; border-color: #2B2B2B; }
+/* v0.85: Aufdeck-Animation läuft beim Neuzeichnen weiter statt neu zu starten (--rd = schon vergangene Zeit, negativ) */
+.revealcard .pcard, .revealcard.big::after, .revealcard .glitz.burst { animation-delay: var(--rd, 0ms); }

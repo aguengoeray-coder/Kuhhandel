@@ -117,7 +117,7 @@ export const START_MONEY = [0, 0, 10, 10, 10, 20, 50]; // = 100 Taler
 export const DONKEY_PAYOUTS = [50, 100, 200, 500]; // 1. bis 4. Esel: jeder Spieler bekommt so viel von der Bank
 export const MIN_PLAYERS = 3;
 // v0.77 Zu zweit (Kuhhandel-Master-Variante, Alp 20.11.): Aufteilen statt Versteigern, Geldscheine (ohne 0er) im Stapel,
-// kein Esel-Bonus, Ratten und Spezialkarten werden einfach mit aufgeteilt, nur Klassisch (kein Turbo/Börsen-Chaos)
+// Esel-Bonus wie sonst (v0.85), Ratten und Spezialkarten werden einfach mit aufgeteilt, nur Klassisch (kein Turbo/Börsen-Chaos)
 export const DUO_PLAYERS = 2;
 export const DUO_MONEY = { 10: 2, 50: 2, 100: 1, 200: 1, 500: 1 }; // wie „Geld im Stapel“ (Standard) ohne 0er
 export const DIVIDE_MS = 10000; // Bedenkzeit beim Aufteilen – danach wird automatisch behalten
@@ -684,7 +684,16 @@ export function drawForAuction(prev, playerId, now) {
 function receiveCard(state, p, card) {
   if (isMoneyCard(card)) { const v = moneyValue(card); giveCards(p, [v]); stat(state, p.id).moneyDrawn += v; return; }
   if (isSpecialCard(card)) { p.specials.push(specialAnimal(card)); return; }
-  p.animals[card] = (p.animals[card] || 0) + 1; // Tier oder Ratte – kein Esel-Bonus zu zweit
+  p.animals[card] = (p.animals[card] || 0) + 1; // Tier oder Ratte
+  // v0.85 (Alp): der Esel bringt auch zu zweit jedem Geld (50 / 100 / 200 / 500)
+  if (card === 'esel' && state.donkeysDrawn < DONKEY_PAYOUTS.length) {
+    const payout = DONKEY_PAYOUTS[state.donkeysDrawn];
+    state.donkeysDrawn += 1;
+    for (const q of state.players) giveCards(q, bankCards(payout));
+    log(state, `${state.donkeysDrawn}. Esel – alle bekommen ${payout} Taler.`);
+    return { payout, nr: state.donkeysDrawn };
+  }
+  return null;
 }
 export function divideLook(prev, playerId, now) {
   const state = clone(prev);
@@ -706,10 +715,11 @@ export function divideChoose(prev, playerId, keep) {
   const second = state.deck.length ? state.deck.shift() : null;
   const firstTo = keep ? me : other;
   const secondTo = keep ? other : me;
-  receiveCard(state, firstTo, first);
-  if (second != null) receiveCard(state, secondTo, second);
+  const e1 = receiveCard(state, firstTo, first);
+  const e2 = second != null ? receiveCard(state, secondTo, second) : null;
+  const esel = [e1, e2].filter(Boolean);
   state.lastEvent = { n: state.log.length, type: 'divided', by: playerId, keep: !!keep,
-    first: { to: firstTo.id, card: first }, second: second != null ? { to: secondTo.id, card: second } : null };
+    first: { to: firstTo.id, card: first }, second: second != null ? { to: secondTo.id, card: second } : null, ...(esel.length ? { esel } : {}) };
   log(state, `${me.name} ${keep ? 'behält' : 'gibt ab'}: ${cardName(first)} an ${firstTo.name}${second != null ? `, ${cardName(second)} an ${secondTo.name}` : ''}.`);
   nextTurn(state);
   return state;
@@ -1317,9 +1327,7 @@ export function viewFor(state, playerId) {
   if (v.divide && v.divide.by !== playerId) v.divide.card = null; // nur wer aufteilt, sieht die Karte
   if (v.phase === 'auction' && v.auction && v.auction.blind) v.auction.animal = null;
   if (v.missions && v.phase !== 'ended') v.missions = v.missions[playerId] ? { [playerId]: v.missions[playerId] } : {}; // v0.82: fremde Aufträge erst am Ende // v0.81 Blindmarkt: auch der Auktionator sieht nichts
-  if (v.lastEvent && v.lastEvent.type === 'divided') {
-    for (const k of ['first', 'second']) { const x = v.lastEvent[k]; if (x && x.to !== playerId && isMoneyCard(x.card)) x.card = 'geld-?'; } // fremdes Geld bleibt verdeckt
-  }
+  // v0.85 (Alp): zu zweit sieht jeder, wer welchen Geldschein beim Aufteilen bekommen hat
   // Handkarten: eigene offen, fremde nur als Anzahl (Bluff!)
   if (v.hands) for (const id of Object.keys(v.hands)) if (id !== playerId) v.hands[id] = v.hands[id].length;
   if (v.lastEvent && v.lastEvent.type === 'hand' && v.lastEvent.player !== playerId) delete v.lastEvent.kind;

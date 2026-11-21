@@ -19,6 +19,7 @@ Nächster Schritt / wer: …
 
 - Live: v0.84.0 (`main` 88caf99, #59). Gemergt seit dem letzten Eintrag: #48–#59 (siehe `PROJECT_STATUS.md`).
 - SQL ausgeführt (Connector): `v0.80-avatar-ablegen.sql`, `v0.84-kasse.sql`; Prüfabfragen + Advisors ohne neue Befunde.
+- 21.11. abends: Zu zweit Esel-Bonus + Geld beim Aufteilen sichtbar (engine `receiveCard`/`divideChoose`/`viewFor`, Test angepasst), Aufdeck-Animation mit `--rd` (negative Verzögerung) gegen Neustart beim Neuzeichnen. Tests: npm 80/80, check, e2e views/sizes/duo grün.
 - Offen: `v0.85-kasse-rechte.sql` (Branch `claude/v085-layout`) nach Merge ausführen; Layout-Abgleich wartet auf Alps Go.
 - Hinweis: In `game_results` steht noch kein Ergebnis – bei der ersten echten Partie prüfen, ob Ergebnis, Dublonen und Kasse gebucht werden.
 

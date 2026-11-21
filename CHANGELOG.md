@@ -5,6 +5,8 @@
 - [x] **Spielende mit Highlights:** Nach dem letzten Zug (und ggf. dem Rattenkönig) kommen erst die Highlights der Partie, Karte für Karte – z. B. Kuhhandel-König, Teuerster Kauf, Rattenfänger, Sternsammler –, danach die Abrechnung, „Und der Sieger ist …“ und das Treppchen.
 - [x] **Kuhhandel:** Deine eigenen Sets bleiben sichtbar – als Leiste „Deine Sets“ mit Tier und Anzahl (✓ bei fertigem Quartett), das Kuhhandel-Fenster bleibt darüber.
 - [x] **Sets der Mitspieler ansehen:** Tiere eines Mitspielers antippen → Fenster mit all seinen Tieren (Anzahl, aktueller Wert, fertige Quartette, Spezialkarten, Ratten). Seine Figur antippen öffnet weiterhin die Reaktionen.
+- [x] **Zu zweit:** Beim Aufteilen steht kurz da, wer was bekommt – auch welcher Geldschein. Der Esel bringt jetzt auch zu zweit beiden den Esel-Bonus (50 / 100 / 200 / 500).
+- [x] **Teams/alle:** Die aufgedeckte Karte „zappelt“ nicht mehr – die Dreh-Animation startete bei jedem Neuzeichnen neu.
 - [x] Datenbank: `supabase/v0.85-kasse-rechte.sql` – die Kasse ist für Spieler nur noch lesbar (Schreiben nur über die Abrechnung).
 
 ## v0.84.0 – Einsatz & Kasse
