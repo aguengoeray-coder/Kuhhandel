@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.86.0 – Feinschliff: einheitliche Knöpfe, Schnell-Emojis
+
+- [x] **Einheitliches Layout:** alle Hauptknöpfe in Großbuchstaben, jede Fenster-Überschrift mit ihrem Emoji (📖 Spielregeln, 📊 Meine Statistik, 🏆 Bestenliste, 🧍 Mein Profil …).
+- [x] **„Sehr günstig!“:** Wer einen Kuhhandel für höchstens 50 gewinnt, bekommt den großen Auftritt (sehen nur die beiden Beteiligten) – der Gewinner jubelt 😄, der Verlierer ist traurig 😢.
+- [x] **Rattenhandel:** Im VS-Auftritt steht jetzt „… will die Ratte an … loswerden“ statt „will die Ratte“.
+- [x] **Schnell-Emojis rechts:** In spannenden Momenten (Versteigerung, Kuhhandel, Spezialkarte, Ratte, Bezahlen, Aufteilen) stehen rechts am Rand 😱 🔥 🤑 😂 – ein Tipp, und alle sehen es über deiner Figur.
+
 ## v0.85.0 – Spannung am Ende, Sets immer im Blick
 
 - [x] **Spielende mit Highlights:** Nach dem letzten Zug (und ggf. dem Rattenkönig) kommen erst die Highlights der Partie, Karte für Karte – z. B. Kuhhandel-König, Teuerster Kauf, Rattenfänger, Sternsammler –, danach die Abrechnung, „Und der Sieger ist …“ und das Treppchen.

@@ -137,7 +137,7 @@ export function themeModal(t) {
   const bg = BACKGROUNDS[t.bg] || BACKGROUNDS.bordeaux;
   const bk = BACKS[t.back] || BACKS.rot;
   const presetOn = Object.entries(PRESETS).find(([, p]) => Object.keys(p.v).every((k) => p.v[k] === t[k]))?.[0];
-  return `<h2>Aussehen</h2>
+  return `<h2>🎨 Aussehen</h2>
     <div class="tlayout">
     <div class="tprevcol">
       <div class="tprev" aria-hidden="true">

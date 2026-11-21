@@ -539,6 +539,8 @@ export const INTRO_MS = 3200, INTRO_START_MS = 3200, INTRO_SHORT_MS = 2400;
 const TIER_AKK = { hahn: ['den', 'deinen', 'Hahn', 'Hähne'], gans: ['die', 'deine', 'Gans', 'Gänse'], katze: ['die', 'deine', 'Katze', 'Katzen'], hund: ['den', 'deinen', 'Hund', 'Hunde'], schaf: ['das', 'dein', 'Schaf', 'Schafe'], ziege: ['die', 'deine', 'Ziege', 'Ziegen'], esel: ['den', 'deinen', 'Esel', 'Esel'], schwein: ['das', 'dein', 'Schwein', 'Schweine'], kuh: ['die', 'deine', 'Kuh', 'Kühe'], pferd: ['das', 'dein', 'Pferd', 'Pferde'], ratte: ['die', 'deine', 'Ratte', 'Ratten'] };
 export function wantText(who, whom, animal, count, meIsWho, meIsWhom) {
   const a = TIER_AKK[animal] || ['das', 'dein', animal, animal];
+  // v0.86 (Alp): beim Rattenhandel will man die Ratten nicht haben, sondern loswerden
+  if (animal === 'ratte') { const r = count > 1 ? `die ${count} Ratten` : 'die Ratte'; return meIsWho ? `Du willst ${r} an ${whom} loswerden` : meIsWhom ? `${who} will ${r} an dich loswerden` : `${who} will ${r} an ${whom} loswerden`; }
   const obj = count > 1 ? (meIsWhom ? `deine ${count} ${a[3]}` : `${count} ${a[3]}`) : (meIsWhom ? `${a[1]} ${a[2]}` : `${a[0]} ${a[2]}`);
   return meIsWho ? `Du willst ${obj} von ${whom}` : meIsWhom ? `${who} will ${obj}` : `${who} will ${obj} von ${whom}`;
 }
@@ -677,7 +679,7 @@ export function renderGame(root, ctx) {
   { const hk = `${state.phase}|${state.log.length}|${state.turn}`; if (local.hintKey !== hk) { local.hintKey = hk; local.hintAt = Date.now(); } } // seit wann wartet der Zug
   // v0.68 Mimik über dem Kopf: kurz (💢 Wunschtier weg, 😍 Quartett) oder dauerhaft (💸 kein Geld, 💦 lange am Zug)
   const moodMark = (pid, kind, from, ms) => { local.mood = local.mood || {}; const m = local.mood[pid]; if (m && m.from === from && m.kind === kind) return; local.mood[pid] = { kind, from, until: from + ms }; wakeLocal(from); wakeLocal(from + ms + 20); }; // erst nach der Sitzplatz-Zeichnung aufrufen
-  const MOOD = { sweat: '💦', angry: '💢', love: '😍' }; // v0.69: kein 💸 – wer kein Geld hat, muss man sich merken
+  const MOOD = { sweat: '💦', angry: '💢', love: '😍', happy: '😄', sad: '😢' }; // v0.69: kein 💸 – wer kein Geld hat, muss man sich merken
   const moodOf = (pid) => {
     const now = Date.now(); const m = local.mood && local.mood[pid];
     if (m && m.from <= now && now < m.until) return m.kind;
@@ -1041,7 +1043,7 @@ export function renderGame(root, ctx) {
       if (local.ratSel != null && !values.includes(local.ratSel)) local.ratSel = null;
       // Dein niedrigster Schein ist vorgewählt – nur noch „Verdeckt legen“ drücken (oder einen anderen antippen)
       if (local.ratSel == null && values.length) local.ratSel = Math.min(...values);
-      aucLeft = `${values.length ? `<button type="button" class="pill pill-white" data-a="ratGo" ${local.ratSel != null ? '' : 'disabled'}><small>VERDECKT LEGEN</small>${local.ratSel != null ? `${local.ratSel}er legen` : 'Schein antippen · 2× tippen legt'}</button>` : ''}`;
+      aucLeft = `${values.length ? `<button type="button" class="pill pill-white nocaps" data-a="ratGo" ${local.ratSel != null ? '' : 'disabled'}><small>VERDECKT LEGEN</small>${local.ratSel != null ? `${local.ratSel}er legen` : 'Schein antippen · 2× tippen legt'}</button>` : ''}`;
       if (values.length) pickMode = 'rat';
     } else {
       aucLeft = `<div class="ldecide">${esc(nameOf(turnId))} überlegt …</div>`;
@@ -1615,6 +1617,11 @@ export function renderGame(root, ctx) {
   };
   // v0.85 (Alp): Sets eines Mitspielers antippen → Fenster mit allen seinen Tieren (Anzahl, Wert, fertige Quartette, Spezialkarten)
   H.setsOf = (id) => { local.setsOf = local.setsOf === id ? null : id; local.menu = false; local.reactTo = null; ctx.rerender(); };
+  // v0.86 (Alp): Schnell-Emojis rechts – nur wenn es drauf ankommt (Versteigerung, Kuhhandel, Spezialkarte, Ratte, Bezahlen, Aufteilen)
+  const QUICK = ctx.quickEmoji || [];
+  const quickOn = QUICK.length > 0 && !!ctx.react && v.players.some((p) => p.id === meId) && ['auction', 'trade', 'special', 'rat', 'payment', 'divide'].includes(state.phase) && !local.reactTo;
+  const quickHtml = quickOn ? `<div class="qemo" role="group" aria-label="Schnell-Reaktion an alle">${QUICK.map((e, i) => `<button type="button" class="qe" data-a="qemo" data-v="${i}" aria-label="${e} an alle">${e}</button>`).join('')}</div>` : '';
+  H.qemo = (i) => { const e = QUICK[Number(i)]; if (e) ctx.react(e, null); };
   const setsPop = (() => {
     const pid = local.setsOf; const i = pid ? idxOf(pid) : -1; const p = i >= 0 ? v.players[i] : null;
     if (!p) return '';
@@ -1719,7 +1726,7 @@ export function renderGame(root, ctx) {
     </div></div>`;
   } else if (state.phase === 'ended' && awardsOn) {
     overlay = `<div class="overlay endtable"><div class="ending awards" style="--el:${endEl}ms">
-      <h2>Die Highlights der Partie</h2><small class="awsub">… bevor wir den Sieger erfahren</small>
+      <h2>🏅 Die Highlights der Partie</h2><small class="awsub">… bevor wir den Sieger erfahren</small>
       <div class="awcards">${awList.map((a, k) => { const i = idxOf(a.who); return `<div class="awcard" style="--d:${AW_INTRO + k * AW_STEP - endEl}ms;--c:${i >= 0 ? SEAT_COLORS[i] : '#888'}">
         <i class="awicon">${ICON[a.key] || '🏅'}</i><b class="awtitle">${esc(a.title)}</b>${i >= 0 ? `<div class="awfig">${avatar(v.players[i], i)}</div>` : ''}<span class="awname">${esc(a.who === meId ? 'Du' : a.name)}</span><small>${esc(a.text)}</small></div>`; }).join('')}</div>
     </div></div>`;
@@ -1730,7 +1737,7 @@ export function renderGame(root, ctx) {
     const n = ranked.length;
     const cnt = typeof CSS !== 'undefined' && CSS.registerProperty ? 'cnt' : '';
     overlay = `<div class="overlay endtable"><div class="ending tally ${cnt}">
-      <h2>Abrechnung</h2>
+      <h2>🧮 Abrechnung</h2>
       <div class="tallyrows">${ranked.map((r, idx) => {
         const i = idxOf(r.id); const d = TALLY_START + (n - 1 - idx) * TALLY_STEP - tallyEl;
         return `<div class="trow ${r.place === 1 ? 'win' : ''}" style="--d:${d}ms;--to:${r.score};--c:${SEAT_COLORS[i]}"><i>${r.place === 1 ? '👑' : `${r.place}.`}</i>${avatar(v.players[i], i)}<span class="tname">${esc(r.id === meId ? 'Du' : r.name)}</span><span class="picons">${iconsOf(r)}</span><b class="tnum"><span>${r.score}</span></b></div>`;
@@ -2071,6 +2078,8 @@ export function renderGame(root, ctx) {
   // Große Auftritte – nur bei besonderen Ereignissen, höchstens einer pro Ergebnis (Rang: Gleichstand > Bluff > Geschenkt > Quartett)
   const boom = (title, sub, cls = '', delay = 0) => { keepFx(`<div class="khscrim" style="--d:${delay}ms" aria-hidden="true"></div><div class="khsplash boom ${cls}" style="--d:${delay}ms" aria-live="polite"><b>${title}</b><small>${sub}</small></div>`, delay + 1500); later.push(['wow', delay]); };
   const vb = (id, du, er) => (id === meId ? du : er);
+  // Gewinnsumme eines Kuhhandels mit Tieren, wenn sie zwischen 10 und 50 liegt (lauter Nullen = Bluff, eigener Auftritt)
+  const cheapWin = (e) => { if (!e || e.type !== 'trade' || e.animal === RAT) return 0; const c = e.accepted || e.winner === e.challenger ? e.offer : e.counter; if (!Array.isArray(c) || !c.length || c.some((m) => typeof m !== 'number')) return 0; const sum = c.reduce((x, y) => x + y, 0); return sum > 0 && sum <= 50 ? sum : 0; };
   const nmB = (id) => esc(id === meId ? 'Du' : nameOf(id));
   if (evNew && le) {
     const isRatT = le.animal === RAT;
@@ -2082,6 +2091,8 @@ export function renderGame(root, ctx) {
     if (le.type === 'trade' && !le.accepted && le.diff === 0) boom('GLEICHSTAND!', isRatT ? `${nmB(le.challenger)} ${vb(le.challenger, 'wirst', 'wird')} ${thing} los` : `${nmB(le.challenger)} ${vb(le.challenger, 'holst', 'holt')} ${thing} umsonst`, 'tie', afterFlip);
     // Bluff: nur die beiden Beteiligten sehen die Beträge – also auch nur sie den Auftritt
     else if (iAmIn && zeros(winCards)) boom('BLUFF!', `${nmB(le.winner)} ${vb(le.winner, 'gewinnst', 'gewinnt')} mit lauter Nullen`, 'bluff', le.accepted ? 300 : afterFlip);
+    // v0.86 (Alp): Kuhhandel für höchstens 50 gewonnen → „Sehr günstig!“ (nur die Beteiligten kennen die Beträge)
+    else if (iAmIn && cheapWin(le)) boom('SEHR GÜNSTIG!', `${nmB(le.winner)} ${vb(le.winner, 'holst', 'holt')} ${thing} für nur ${cheapWin(le)}`, 'cheap', le.accepted ? 300 : afterFlip);
     else if (le.type === 'special_won' && !le.count) boom('GESCHENKT!', `Niemand buzzert – ${nmB(le.buyer)} ${vb(le.buyer, 'bekommst', 'bekommt')} die Spezialkarte umsonst`, 'gift', 0);
     else if (local.qBadge === evSig) { const qp = receiverOf(le); boom('QUARTETT!', `${nmB(qp)} ${vb(qp, 'hast', 'hat')} alle 4× ${esc(aname(le.animal))}`, 'quartet', le.type === 'trade' && !le.accepted ? afterFlip : 300); }
   }
@@ -2183,13 +2194,18 @@ export function renderGame(root, ctx) {
     if (le.type === 'auction_won' && idxOf(le.buyer) >= 0) keepFx(aliveGag(le.buyer, 'cheer', 0, 2300, evDelay + 700, true), evDelay + 3100);
     // v0.68 „Ka-ching!“: wer Geld bekommt (Verkäufer der Versteigerung, Geldschein, Rattentopf, Spezialkarte, Kuhhandel-Verlierer)
     if (le.type === 'auction_won' && le.animal) v.players.forEach((p) => { if (p.id !== le.buyer && (p.animals?.[le.animal] || 0) > 0) moodMark(p.id, 'angry', Date.now() + evDelay + 600, 2600); });
-    if (le.type === 'trade') { const win = receiverOf(le); moodMark(win === le.challenger ? le.target : le.challenger, 'angry', Date.now() + evDelay + 2200, 2400); }
+    if (le.type === 'trade') {
+      const win = receiverOf(le); const lose = win === le.challenger ? le.target : le.challenger;
+      // v0.86: sehr günstig gewonnen → Gewinner jubelt (springt aus dem Bild), Verlierer ist traurig – nur bei den Beteiligten
+      if ((le.challenger === meId || le.target === meId) && cheapWin(le)) { keepFx(aliveGag(win, 'cheer', 0, 2300, evDelay + 900, true), evDelay + 3300); moodMark(win, 'happy', Date.now() + evDelay + 900, 4200); moodMark(lose, 'sad', Date.now() + evDelay + 900, 4200); }
+      else moodMark(lose, 'angry', Date.now() + evDelay + 2200, 2400);
+    }
     const kach = (pid, amount, extra = 0) => { if (idxOf(pid) >= 0) { keepFx(aliveGag(pid, 'kaching', 0, 2600, evDelay + 700 + extra, true, amount), evDelay + 3400 + extra); later.push(['kaching', evDelay + 1300 + extra]); } };
     if (le.type === 'auction_won' && le.payee && le.amount > 0 && le.payee !== le.buyer) kach(le.payee, `+${le.amount}`);
     if (le.type === 'special_won' && le.payee && le.count > 0 && le.payee !== le.buyer) kach(le.payee, `+${le.count} Karte${le.count === 1 ? '' : 'n'}`);
     if (le.type === 'money_drawn' && le.value > 0) kach(le.player, `+${le.value}`, -500);
     if (le.type === 'rat_taken' && le.count > 0) kach(le.player, `+${le.count} Karte${le.count === 1 ? '' : 'n'}`, -300);
-    if (le.type === 'trade') { const win = receiverOf(le); const lose = win === le.challenger ? le.target : le.challenger; kach(lose, '💰', 600); }
+    if (le.type === 'trade') { const win = receiverOf(le); const lose = win === le.challenger ? le.target : le.challenger; if (!((le.challenger === meId || le.target === meId) && cheapWin(le))) kach(lose, '💰', 600); }
   }
   // Ratte aufgedeckt: die Ratte klettert aus der Karte, flitzt zu jedem Geldstapel, schnüffelt, und zurück
   if (le?.type === 'rat_drawn' && evFresh && local.ratRunSig !== le.n) {
@@ -2524,7 +2540,7 @@ export function renderGame(root, ctx) {
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
-    ${standingsHtml}${setsPop}
+    ${standingsHtml}${setsPop}${quickHtml}
     ${effects}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}

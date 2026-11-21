@@ -15,7 +15,7 @@ import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.85.0';
+export const APP_VERSION = '0.86.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -742,6 +742,7 @@ function renderPlaying() {
     reactions: activeReactions(),
     reactionList: myReactions(),
     reactionEmoji: 0,
+    quickEmoji: ['😱', '🔥', '🤑', '😂'], // v0.86 Schnell-Emojis rechts (alle in REACT_EMOJI, damit die anderen sie annehmen)
     reactionBase: REACTIONS.length, // ab hier: gekaufte Shop-Sprüche
     demoPop: DEMO && params.get('pop') === '1', // Screenshots: Ergebnis-Fenster sofort zeigen
     demoPodium: DEMO && params.get('podium') === '1', // Screenshots/Tests: gleich das Siegertreppchen (im echten Spiel nicht überspringbar)
@@ -1860,7 +1861,7 @@ function profileBody() {
       </form>
       ${modal.pwMsg ? `<div class="${modal.pwOk ? 'okmsg' : 'error'}" role="status">${esc(modal.pwMsg)}</div>` : ''}`;
   }
-  return `<h2>Mein Profil</h2>
+  return `<h2>🧍 Mein Profil</h2>
     <div class="prof2">
       <aside class="pf-side">
         ${big}
@@ -1945,7 +1946,7 @@ function rulesBody(tab = 'classic') {
   <h3>Im Warteraum einstellbar</h3><p><b>Tempo</b> (🐢 Gemütlich / Normal / ⚡ Schnell): Denkzeiten ×1,5 / ×1 / ×0,7, Ergebnis-Fenster nur leicht. <b>Geld im Stapel:</b> Geldscheine zwischen den Tieren (grüne Rückseite mit 💰) – wer einen aufdeckt, bekommt ihn, sein Zug ist vorbei. <b>Kuhhandel-Zeit</b> und <b>Geld zählt am Ende</b>.<br><b>🎯 Geheimaufträge:</b> Jeder bekommt zu Beginn verdeckt einen Auftrag (z. B. „Gewinne mindestens 3 Kuhhandel“ oder „Sammle das Esel-Quartett“) – nur du siehst deinen (🎯 oben links, mit Stand). Am Ende werden alle aufgedeckt; wer seinen erfüllt, bekommt 300–500 Punkte dazu.<br><b>🤝 Teams 2 gegen 2</b> (nur zu viert): Platz 1 + 3 und 2 + 4 sind ein Team und sitzen sich gegenüber. Eure Tiere zählen zusammen – 2 + 2 Kühe sind euer Kuh-Quartett. Das Geld deines Partners siehst du offen (🤝), Kuhhandel im eigenen Team gibt es nicht. Gewertet wird pro Team wie ein Spieler (Quartette zusammen), plus erfüllte Geheimaufträge beider; das bessere Team gewinnt gemeinsam.<br><b>💶 Einsatz</b> (jede Spielart): Jeder setzt den gleichen Betrag (1–20 €), alle bestätigen im Warteraum mit „💶 Dabei“. Platz 1 bekommt den ganzen Topf (Gleichstand/Team: geteilt). Die App bewegt kein Geld – in der 💶 Kasse steht, wer wem was schuldet; abhaken kann nur, wer das Geld bekommt.</p>
   <h3>Knöpfe</h3><p class="rlegend"><span class="rl rl-get">Grün</span> du bekommst etwas (+ ⬇) · <span class="rl rl-pay">Orange</span> du zahlst (− ⬆) · <span class="rl rl-move">Rot</span> Karte aufdecken · <span class="rl rl-trade">Lila</span> Kuhhandel · <span class="rl rl-neutral">Weiß</span> neutral / zurück. Gestrichelt = gerade gesperrt. Der Knopf, der gerade erwartet wird, leuchtet nach ein paar Sekunden sanft.</p>
   <h3>Ende</h3><p>Ist der Stapel leer, wird nur noch gehandelt – bis alle Quartette komplett sind und einer alle Ratten hat.</p>`;
-  return `<h2>Spielregeln</h2>${tabs}<div class="rules">${body}</div>`;
+  return `<h2>📖 Spielregeln</h2>${tabs}<div class="rules">${body}</div>`;
 }
 
 function renderModal() {
@@ -1956,7 +1957,7 @@ function renderModal() {
   if (modal.kind === 'design') body = themeModal(theme);
   if (modal.kind === 'rules') body = rulesBody(modal.rtab);
   if (modal.kind === 'install') {
-    body = `<h2>Als App aufs Handy</h2>
+    body = `<h2>📲 Als App aufs Handy</h2>
       ${installPrompt ? '<button type="button" class="pill pill-red pill-small" data-m="doInstall">Jetzt installieren</button>' : ''}
       <div class="rules">
         <h3>iPhone (Safari)</h3><p>Unten auf das Teilen-Symbol (Quadrat mit Pfeil) tippen → „Zum Home-Bildschirm“ → „Hinzufügen“.</p>
@@ -1965,7 +1966,7 @@ function renderModal() {
       </div>`;
   }
   if (modal.kind === 'pin') {
-    body = `<h2>Wiedereinstieg</h2>
+    body = `<h2>🔁 Wiedereinstieg</h2>
       <p class="mtext">Damit kommst du auf einem anderen Gerät zurück auf deinen Platz. Nicht weitergeben!</p>
       <div class="pinbox"><div><small>Spiel-Code</small><b>${esc(ui.game?.code || '—')}</b></div><div><small>Deine PIN</small><b>${modal.pin === undefined ? '…' : esc(modal.pin || '—')}</b></div></div>
       ${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}`;
@@ -1977,10 +1978,10 @@ function renderModal() {
     <p class="mtext small">Die App bewegt kein Geld – sie merkt sich nur in der 💶 Kasse, wer wem was schuldet. Bezahlt wird unter euch.</p>`; }
   if (modal.kind === 'kasse') body = kasseBody();
   if (modal.kind === 'admin') body = adminBody();
-  if (modal.kind === 'mystats') body = `<h2>Meine Statistik</h2>${myStatsBody(modal.mine)}`;
+  if (modal.kind === 'mystats') body = `<h2>📊 Meine Statistik</h2>${myStatsBody(modal.mine)}`;
   if (modal.kind === 'stats') {
     const rows = modal.stats;
-    body = `<h2>Bestenliste</h2>
+    body = `<h2>🏆 Bestenliste</h2>
       ${!rows ? '<p class="mtext">Lädt …</p>' : !rows.length ? '<p class="mtext">Noch keine fertigen Spiele. Nach dem ersten Spielende steht hier, wer vorne liegt.</p>' : `
       <table class="stats">
         <thead><tr><th></th><th>Spieler</th><th>Siege</th><th>Spiele</th><th>Quote</th><th>Rekord</th><th>Ø Quartette</th></tr></thead>
@@ -2009,7 +2010,7 @@ function renderModal() {
     </div>`;
   }
   if (modal.kind === 'rejoin') {
-    body = `<h2>Mit Code zurück ins Spiel</h2>
+    body = `<h2>🔑 Mit Code zurück ins Spiel</h2>
       <p class="mtext">Code und PIN findest du auf deinem alten Gerät im Spiel unter Menü → „Wiedereinstieg-Code“.</p>
       <form id="rejoin-form" class="rejoin">
         <label>Spiel-Code<input name="code" maxlength="4" autocomplete="off" autocapitalize="characters" required></label>
@@ -2209,7 +2210,7 @@ function adminBody() {
       <code class="aerr">${esc(e.message)}</code>
     </li>`).join('')}</ul><div class="afoot">${confirmBtn('errall', 'Alle löschen', 'clearErrors', '')}</div>` : '<p class="mtext">Keine Fehler gemeldet. 🎉</p>');
   }
-  return `<h2>Admin</h2><div class="atabs">${tabs}</div>
+  return `<h2>⚙ Admin</h2><div class="atabs">${tabs}</div>
     ${modal.okMsg ? `<div class="okmsg">${esc(modal.okMsg)}</div>` : ''}${modal.error ? `<div class="error">${esc(modal.error)}</div>` : ''}${list}`;
 }
 

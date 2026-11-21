@@ -4134,3 +4134,15 @@ button.stake-badge.ask { cursor: pointer; background: #FFD34E; color: #2B2B2B; b
 .dgot.esel { background: #FFE27A; border-color: #2B2B2B; }
 /* v0.85: Aufdeck-Animation läuft beim Neuzeichnen weiter statt neu zu starten (--rd = schon vergangene Zeit, negativ) */
 .revealcard .pcard, .revealcard.big::after, .revealcard .glitz.burst { animation-delay: var(--rd, 0ms); }
+/* v0.86 Layout-Abgleich (Alp): alle Hauptknöpfe in Großbuchstaben, gleicher Buchstabenabstand */
+.pill, .waitbtn { text-transform: uppercase; letter-spacing: .6px; }
+.pill.nocaps, .pill small, .pill em, .waitbtn small { text-transform: none; letter-spacing: normal; }
+/* v0.86 Schnell-Emojis rechts am Rand (nur in spannenden Momenten) */
+.qemo { position: absolute; right: 5px; top: 198px; z-index: 30; display: flex; flex-direction: column; gap: 5px; padding: 5px 4px; border-radius: 999px; background: rgba(0,0,0,.28); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); animation: qemoin .3s ease-out both; }
+.qe { width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(255,255,255,.92); font-size: 19px; line-height: 1; padding: 0; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,.25); display: grid; place-items: center; transition: transform .08s; }
+.qe:active { transform: scale(.88); }
+@keyframes qemoin { from { opacity: 0; translate: 12px 0; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .qemo { animation: none; } }
+.room-actions .pill { letter-spacing: .2px; padding: 0 16px; }
+.room-actions .pill-small { font-size: 14px; }
+@media (max-width: 700px) { .room-actions { gap: 8px; } .room-actions .pill-small { padding: 0 12px; } }
