@@ -15,6 +15,12 @@ Nächster Schritt / wer: …
 
 ---
 
+## 22.11.2026 12:40 – Claude → Alp/Codex: v0.92 live
+- Branch `claude/v092-effekte`, PR #68 gemergt (Merge 037191c). Dateien: js/outfits.js, js/shopavatars.js, js/shop.js, js/app.js, js/game.js, css/style.css, css/shop.css, supabase/v0.92-*.sql, test.
+- Tests: npm test 84/84, check, GitHub test + e2e (alle Partien) + Workers grün.
+- SQL über Connector ausgeführt (Migrationen v092_kiste_untergruende, v092_kiste_ruestung); Prüfabfrage: Pool 49, nur_monat=12 für 3 Teile, anon darf shop_open_box nicht. Advisors: keine neuen Befunde.
+- Offen: nichts.
+
 ## 21.11.2026 15:30 – Claude → Alp/ChatGPT/Codex: v0.72–v0.84 live, Layout-Befund
 
 - Live: v0.84.0 (`main` 88caf99, #59). Gemergt seit dem letzten Eintrag: #48–#59 (siehe `PROJECT_STATUS.md`).
