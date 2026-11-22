@@ -1,5 +1,17 @@
 # Änderungsprotokoll
 
+## v0.92.0 – Effekte, Rüstungen, Waffen, Shop (Alps Go 22.11. 10:19)
+
+- [x] **Set-Effekte neu gezeichnet** statt Emojis: Höllenfeuer als große Flammenwand hinter der Figur, Stinkwolke mit Fliegen, Discokugel mit Lichtkegeln, Blitzbögen, Geldregen mit Münzhaufen, Glanz-Strahlen – in der Farbe des Avatars.
+- [x] **Füße passend zum Tier** (Hufe, Kuhhufe, Krallen, Pfoten, Plateau, Holzbein, Düsen, Sneaker …).
+- [x] **Untergründe** im Fach Beine (Kiste): Rollschuhe, Sprungstelzen, Skateboard, Mini-Traktor, Wolke 7.
+- [x] **Waffen-Stufen** (Kiste): Holzschwert, Eisenschwert, Turnierlanze, Kristallschwert, Katana, Flammenschwert. Beim Zuschlag schwingt deine Figur ihre Waffe.
+- [x] **Rüstungs-Sets** (Kiste, Helm + Brust + Beine → Set-Effekt): Ritter (Ritterglanz), Samurai (Kirschblüten), Astronaut mit Raumhelm (Sternenstaub), Weihnachtsmann (Schneegestöber, nur im Dezember in der Kiste).
+- [x] **Shop übersichtlicher:** Figur links im Scheinwerfer, Avatare in Reihen nach Seltenheit, Anprobieren vor dem Kauf, ruhiger Holz-Hintergrund statt Dauerschimmer.
+- [x] **Anziehen über die eigene Figur:** auf der Startseite und im Profil die Figur antippen → Garderobe.
+- [x] **Tier-Sets größer:** Karten der Mitspieler deutlich größer (Reihen brechen um), eigene Auslage etwas größer.
+- [x] Datenbank: `supabase/v0.92-kiste-untergruende.sql`, `supabase/v0.92-kiste-ruestung.sql` (Saison-Spalte `nur_monat`).
+
 ## v0.91.0 – Kuh-Kiste, Outfits, Erfolgs-Zubehör (Alps Go 22.11. 03:07)
 
 - [x] **📦 Kuh-Kiste** im Shop (40 Dublonen): Gewöhnlich 60 % · Selten 27 % · Episch 10 % · Legendär 3 %; Pech-Schutz (spätestens jede 25. legendär, jede 8. mindestens episch); Doppelte geben 5/10/20/50 Dublonen zurück. Gezogen wird auf dem Server.
