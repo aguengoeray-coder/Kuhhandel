@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v1.0.1 – Zwei legendäre Sets (Alp 22.11. 21:00)
+
+- [x] **Goldene Kuh:** Goldene Kuh (Kopf) + Goldrüstung + neu Goldene Hufe → Set-Effekt Goldregen.
+- [x] **Pharao:** Pharaonen-Haube, -Kragen, -Schurz (alle legendär) → Set-Effekt Sonnenkönig.
+- [x] Kisten-Sets können jetzt Teile mit anderen Namen bündeln (`BOX_SETS[…].parts`); SQL `supabase/v1.0.1-kiste-goldsets.sql`.
+
 ## v1.0.0 – Schmiede (Alp 22.11. 20:17)
 
 - [x] **Schmiede** im Fach Gegenstand: 2 Gegenstände derselben Seltenheit (auch dasselbe Teil doppelt) → 1 zufälliger Gegenstand der nächsten Seltenheit: Gewöhnlich (grau) → Selten (blau) → Episch (lila) → Legendär (gold). Beide werden verbraucht; ein verbrauchter getragener Gegenstand wird ausgezogen.

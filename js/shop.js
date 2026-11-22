@@ -1,4 +1,4 @@
-import { SLOTS, RARITIES, BOX_ITEMS, BOX_PRICE, PITY_LEGEND, PITY_EPIC, itemInfo, ownedParts, fullOutfit, setOf, SET_FX, partName, BOX_SETS, boxSetOf, boxSetProgress, dingArt } from './outfits.js';
+import { SLOTS, RARITIES, BOX_ITEMS, BOX_PRICE, PITY_LEGEND, PITY_EPIC, itemInfo, ownedParts, fullOutfit, setOf, SET_FX, partName, BOX_SETS, boxSetOf, boxSetProgress, boxSetParts, dingArt } from './outfits.js';
 import { snapScroll, restoreScroll } from './keepscroll.js';
 import { SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS, shopAvatarFull } from './shopavatars.js';
 
@@ -152,7 +152,7 @@ export function renderShop(root, ctx) {
   const allSets = () => [...AVATARS.filter((a) => SET_FX[a.id]).map((a) => ({ id: a.id, name: a.name, kind: 'avatar', price: a.price })),
     ...Object.entries(BOX_SETS).map(([id, b]) => ({ id, name: b.icon + ' ' + b.name, kind: 'kiste' }))];
   const setsListHtml = (mine) => {
-    const rows = allSets().map((x) => { const parts = ['kopf', 'brust', 'beine'].map((k) => k + ':' + x.id); const have = parts.filter((p) => mine.has(p) || inventory.has(p)); return { ...x, parts, have }; })
+    const rows = allSets().map((x) => { const parts = x.kind === 'kiste' ? boxSetParts(x.id) : ['kopf', 'brust', 'beine'].map((k) => k + ':' + x.id); const have = parts.filter((p) => mine.has(p) || inventory.has(p)); return { ...x, parts, have }; })
       .filter((x) => x.kind === 'avatar' || x.parts.every((p) => BOX_ITEMS[p]))
       .sort((a, b) => (b.have.length === 3) - (a.have.length === 3) || b.have.length - a.have.length || (a.kind === 'kiste') - (b.kind === 'kiste'));
     const wearing = (x) => x.parts.every((p, i) => draft[['kopf', 'brust', 'beine'][i]] === p);
@@ -319,8 +319,8 @@ export function renderShop(root, ctx) {
     root.querySelectorAll('[data-forge]').forEach((b) => b.addEventListener('click', () => { const v = b.dataset.forge; if (v === 'on') { forge = []; onlyMine = true; } else if (v === 'off') forge = null; else return doForge(); render(); }));
     if (forged) { const f = root.querySelector('.wd-fig'); if (f) { f.classList.add('forged'); } forged = null; }
     root.querySelectorAll('[data-onlymine]').forEach((b) => b.addEventListener('click', () => { onlyMine = b.dataset.onlymine === '1'; render(); }));
-    root.querySelectorAll('[data-wearset]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.wearset; draft = { ...draft, kopf: 'kopf:' + id, brust: 'brust:' + id, beine: 'beine:' + id }; infoId = null;
-      const mine = partsOwned(); if (['kopf', 'brust', 'beine'].every((k) => mine.has(k + ':' + id) || inventory.has(k + ':' + id)) && JSON.stringify(draft) !== JSON.stringify(outfit)) return saveOutfit(); render(); }));
+    root.querySelectorAll('[data-wearset]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.wearset; const ps = BOX_SETS[id] ? boxSetParts(id) : ['kopf', 'brust', 'beine'].map((k) => k + ':' + id); draft = { ...draft, kopf: ps[0], brust: ps[1], beine: ps[2] }; infoId = null;
+      const mine = partsOwned(); if (ps.every((p) => mine.has(p) || inventory.has(p)) && JSON.stringify(draft) !== JSON.stringify(outfit)) return saveOutfit(); render(); }));
     root.querySelectorAll('[data-tryitem]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.tryitem; const it = BOX_ITEMS[id]; if (!it) return;
       if (it.slot === 'design') { tab = 'garderobe'; return render(); } tab = 'garderobe'; slot = it.slot; draft = { ...draft, [it.slot]: id }; infoId = id; render(); }));
     root.querySelector('[data-fullshop]')?.addEventListener('click', () => { only = null; tab = 'kiste'; render(); });

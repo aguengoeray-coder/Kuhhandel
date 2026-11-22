@@ -1209,7 +1209,7 @@ test('v0.90: Börsen-Chaos – jeder startet mit 1 Pfändung + 1 Einspruch (eins
 test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen 100 %, Set-Erkennung', async () => {
   const fs = await import('node:fs');
   const O = await import('../js/outfits.js');
-  const sql = fs.readdirSync(new URL('../supabase/', import.meta.url)).filter((f) => /^v0\.9\d-kiste|^v0\.91-kuhkiste/.test(f)).sort().map((f) => fs.readFileSync(new URL(`../supabase/${f}`, import.meta.url), 'utf8')).join('\n');
+  const sql = fs.readdirSync(new URL('../supabase/', import.meta.url)).filter((f) => /^v0\.9\d-kiste|^v0\.91-kuhkiste|^v1\.[\d.]+-kiste/.test(f)).sort().map((f) => fs.readFileSync(new URL(`../supabase/${f}`, import.meta.url), 'utf8')).join('\n');
   const inSql = [...new Set([...sql.matchAll(/\('([a-z:-]+)', '(gewoehnlich|selten|episch|legendaer)'\)/g)].map((m) => `${m[1]}=${m[2]}`))].sort();
   const inApp = Object.entries(O.BOX_ITEMS).map(([id, it]) => `${id}=${it.rarity}`).sort();
   assert.deepEqual(inSql, inApp);
@@ -1225,7 +1225,7 @@ test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen
   for (const [id, it] of Object.entries(O.BOX_ITEMS)) if (it.slot === 'kopf' && !it.head) assert.ok(O.partArt(id)?.helm, `Helm ${id}`);
   for (const s of ['ritter', 'samurai', 'astronaut', 'weihnachtsmann']) assert.equal(O.setOf({ kopf: `kopf:${s}`, brust: `brust:${s}`, beine: `beine:${s}` }), s);
   // v0.93 Sammel-Sets: jedes Set hat Kopf, Brust und Beine in der Kiste
-  for (const st of Object.keys(O.BOX_SETS)) { assert.equal(O.boxSetOf(`kopf:${st}`), st); for (const k of ['kopf', 'brust', 'beine']) assert.ok(O.BOX_ITEMS[`${k}:${st}`], `${k}:${st} in der Kiste`); }
+  for (const st of Object.keys(O.BOX_SETS)) { const ps = O.boxSetParts(st); assert.equal(ps.length, 3); for (const p of ps) { assert.equal(O.boxSetOf(p), st); assert.ok(O.BOX_ITEMS[p], `${p} in der Kiste`); } assert.equal(O.setOf({ kopf: ps[0], brust: ps[1], beine: ps[2] }), st); }
   assert.equal(O.boxSetOf('ding:katana'), null); assert.equal(O.boxSetOf('kopf:noergler'), null);
   assert.deepEqual(O.boxSetProgress('ritter', ['kopf:ritter', 'beine:ritter', 'ding:lanze']).have, ['kopf:ritter', 'beine:ritter']);
   { const fs2 = await import('node:fs'); const sm = fs2.readFileSync(new URL('../supabase/v1.0-schmiede.sql', import.meta.url), 'utf8');
