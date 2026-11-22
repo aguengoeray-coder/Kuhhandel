@@ -4465,9 +4465,10 @@ button.pf-big { position: relative; border: 0; background: none; padding: 0; cur
 @media (prefers-reduced-motion: reduce) { .cheerfx .sa-ding, .mefig.swing .sa-ding, .sa-ding .flick, .fx-sakura .drop, .fx-snow .drop, .fx-stars .st, .fx-stars .tw { animation: none; } }
 
 /* v0.92 (Alp): Tier-Sets der Mitspieler einen Ticken größer (nichts eingeklappt, Reihen brechen um) */
-.stage .gright .prow .chip.card .mcard, .stage.small .gright .prow .chip.card .mcard { width: 28px; height: 38px; border-radius: 6px; }
+/* oben (3 Spieler links/rechts oben, 4 Spieler oben): +10 %, damit die Tischmitte nicht nach unten rutscht; links/rechts: 28×38 */
+.stage .gright .prow.seat-t .chip.card .mcard, .stage .gright .prow.seat-tl .chip.card .mcard, .stage .gright .prow.seat-tr .chip.card .mcard { width: 24px; height: 33px; }
+.stage .gright .prow.seat-l .chip.card .mcard, .stage .gright .prow.seat-r .chip.card .mcard, .stage.small .gright .prow.seat-l .chip.card .mcard, .stage.small .gright .prow.seat-r .chip.card .mcard { width: 28px; height: 38px; border-radius: 6px; }
 .stage .gright .prow .chip.card em { font-size: 10.5px; line-height: 14px; min-width: 16px; }
 .stage .gright .prow.seat-l .chips, .stage .gright .prow.seat-r .chips, .stage.small .gright .prow.seat-l .chips, .stage.small .gright .prow.seat-r .chips { max-width: 140px; gap: 6px; row-gap: 8px; }
-.stage .prow.seat-t .chips, .stage .prow.seat-tl .chips, .stage .prow.seat-tr .chips { zoom: clamp(.55, calc(6 / max(6, var(--nchip, 1))), 1); }
 .stage:has(.tpick) .gright .prow .chip.card .mcard { width: 24px; height: 33px; } /* Kuhhandel-Auswahl: wie bisher, das Fenster braucht den Platz */
 .stage:has(.tpick) .gright .prow.seat-l .chips, .stage:has(.tpick) .gright .prow.seat-r .chips { max-width: 124px; gap: 5px; }

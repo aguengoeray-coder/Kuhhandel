@@ -322,9 +322,17 @@ function fitAuslage(root) {
   const kids = [...a.children].map((e) => e.getBoundingClientRect()).filter((r) => r.width);
   if (!kids.length || !box.width) return;
   const used = Math.max(...kids.map((r) => r.right)) - Math.min(...kids.map((r) => r.left));
-  if (used <= box.width + 1) return;
   const sc = Number(a.style.getPropertyValue('--sc')) || 1;
-  a.style.setProperty('--sc', (sc * (box.width / used) * 0.97).toFixed(3));
+  let f = used > box.width + 1 ? (box.width / used) * 0.97 : 1;
+  // v0.92: „Warte, warte, warte!“ (oder anderes in der Mitte) darf nicht auf die Auslage ragen → Auslage so weit verkleinern, dass sie darunter passt
+  const left = Math.min(...kids.map((r) => r.left)) + (1 - f) * used / 2; const right = left + used * f;
+  const top = Math.min(...kids.map((r) => r.top)); const bottom = Math.max(...kids.map((r) => r.bottom));
+  for (const el of root.querySelectorAll('.stage .waitbtn')) {
+    const w = el.getBoundingClientRect();
+    if (!w.width || w.right <= left || w.left >= right || w.bottom <= top + (bottom - top) * (1 - f)) continue;
+    f = Math.min(f, Math.max(0.6, (bottom - w.bottom - 3) / (bottom - top)));
+  }
+  if (f < 1) a.style.setProperty('--sc', (sc * f).toFixed(3));
 }
 
 // Hohe Plätze oben (3 Spieler, viele Tiere): Tischmitte nach unten rücken, damit die Zeile „… versteigert“ nicht in den Platz ragt
