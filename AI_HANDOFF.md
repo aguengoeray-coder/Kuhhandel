@@ -58,3 +58,4 @@ SQL: `v0.58-neue-charaktere.sql` von Alp ausgeführt (Connector getrennt), Prüf
 Lerneffekt: Der „hängende Countdown“ in `spiel3-spaet` war ein langes Bietgefecht der Test-Spieler (jedes Gebot startet die Uhr neu), kein Spielfehler – die Hänger-Erkennung zählt jetzt das Höchstgebot mit.
 Offen: Advisors-Vorschlag (wartet auf Alp) · Börsen-Chaos-Regelvorschlag · 2-Spieler-Regelprüfung.
 Nächster Schritt / wer: Claude – Regelvorschlag Börsen-Chaos an Alp. Codex-Aufgaben C-1 bis C-4 siehe Archiv-Eintrag 13.11. 09:30 (weiter offen).
+- 22.11. vormittags: v0.89+v0.90 live (#65 gemergt, Workers ✓, #64 darin enthalten und geschlossen). v0.91 Kuh-Kiste auf `claude/v091-outfits` (#66): wartet auf Alps „Merge-Go #66“; danach `supabase/v0.91-kuhkiste.sql` über den Connector, Prüfabfrage + Advisors. e2e: Harness bietet als Führender nicht mehr gegen sich selbst.

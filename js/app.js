@@ -12,10 +12,11 @@ import { haptic } from './haptics.js';
 import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM, SCENE_ITEM, SHOP_EMOTES } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
+import { BOX_ITEMS, RARITIES, BOX_PRICE } from './outfits.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.90.0';
+export const APP_VERSION = '0.91.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -66,6 +67,8 @@ let auth = { mode: 'login', error: '', busy: false }; // Anmelde-Bildschirm
 const profiles = new Map(); // Anmelde-ID → { name, animal, color }
 // v0.48 Shop: eigener Kontostand/Käufe + gekaufte Avatare aller Mitspieler (Anmelde-ID → Avatar-ID)
 const shopAvatars = new Map();
+const shopOutfits = new Map(); // v0.91 user → Outfit { kopf, brust, beine, ding }
+let shopTitles = new Map(); // v0.91 user → ['krone', 'rattenschwanz', 'geldregen']
 const shopMe = { state: 'idle', balance: 0, owned: new Set(), active: null, freeLeft: 0, custom: '' };
 const customSayings = new Map(); // v0.63: Konto-ID → eigener Spruch (Mitspieler) // state: idle | loading | ok | off (SQL noch nicht eingerichtet)
 const SAYING_TEXTS = SHOP_SAYINGS.map((x) => x.text);
@@ -747,7 +750,7 @@ function renderPlaying() {
       // Testspiel: Test-Spieler bekommen zufällige Shop-Avatare (pro Testspiel fest)
       if (local && seat !== 'me' && ui.game.botAvatars?.[seat]) return { shop: ui.game.botAvatars[seat] };
       const pr = profiles.get(uid) || null; const sa = shopAvatars.get(uid);
-      return sa ? { ...(pr || {}), shop: sa } : pr;
+      return sa ? { ...(pr || {}), shop: sa, outfit: shopOutfits.get(uid) || null, titles: shopTitles.get(uid) || [] } : pr ? { ...pr, titles: shopTitles.get(uid) || [] } : pr;
     },
     playSound: (kind) => { if (soundOn() && !DEMO) playSound(kind); },
     reactions: activeReactions(),
@@ -1249,8 +1252,11 @@ async function loadProfiles(ids) {
   const { data } = await sb.from('profiles').select('id, name, animal, color').in('id', missing);
   (data || []).forEach((p) => profiles.set(p.id, p));
   // gekaufte Shop-Avatare der Mitspieler (öffentlich lesbar über eine eigene Funktion; fehlt sie noch, bleibt es beim Profilbild)
-  const sa = await sb.rpc('shop_public_avatars', { p_ids: missing }).then((r) => r, () => ({ data: null }));
-  (sa?.data || []).forEach((r) => { if (r.active_avatar) shopAvatars.set(r.user_id, r.active_avatar); });
+  // v0.91: Outfits mitladen (fehlt die Funktion noch, nur die Avatare wie bisher)
+  let sa = await sb.rpc('shop_public_outfits', { p_ids: missing }).then((r) => r, () => ({ data: null, error: true }));
+  if (sa?.error || !sa?.data) sa = await sb.rpc('shop_public_avatars', { p_ids: missing }).then((r) => r, () => ({ data: null }));
+  (sa?.data || []).forEach((r) => { if (r.active_avatar) shopAvatars.set(r.user_id, r.active_avatar); if (r.outfit && Object.keys(r.outfit).length) shopOutfits.set(r.user_id, r.outfit); });
+  loadTitles();
   const cs = await sb.rpc('shop_public_sayings', { p_ids: missing }).then((r) => r, () => ({ data: null })); // v0.63
   (cs?.data || []).forEach((r) => { if (r.text) customSayings.set(r.user_id, r.text); });
   if (data?.length || sa?.data?.length || cs?.data?.length) render();
@@ -1263,12 +1269,22 @@ function myReactions() {
   return [...REACTIONS, ...(shopMe.owned.has(SHOP_CUSTOM.id) && shopMe.custom ? [shopMe.custom] : []), ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)]; // v0.58: nur Sprüche; v0.63: eigener Spruch zuerst
 }
 
+// v0.91 Erfolgs-Zubehör: wer gerade den Rekord hält (Krone, Rattenschwanz, Geldregen)
+let titlesAt = 0;
+async function loadTitles() {
+  if (!sb || DEMO || Date.now() - titlesAt < 60000) return; titlesAt = Date.now();
+  const { data, error } = await sb.rpc('shop_titles').then((r) => r, () => ({ error: true }));
+  if (error || !data) return;
+  const m = new Map(); data.forEach((r) => { if (r.user_id) m.set(r.user_id, [...(m.get(r.user_id) || []), r.title]); });
+  shopTitles = m; render();
+}
 async function loadShop(force = false) {
   if (!me?.id || (!force && shopMe.state !== 'idle')) return;
   shopMe.state = 'loading';
   if (DEMO) {
     const av = params.get('myav') || 'noergler';
-    Object.assign(shopMe, { state: 'ok', balance: 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen', ...(params.get('eigen') ? ['spruch-eigener'] : [])]), freeLeft: params.get('free') === '0' ? 0 : 2, custom: params.get('eigen') || '' });
+    Object.assign(shopMe, { inventory: new Set((params.get('inv') || 'ding:donnerhammer,brust:goldruestung,beine:raketenstiefel,kopf:goldkuh,ding:gummihuhn,design-winter').split(',').filter(Boolean)), outfit: {}, boxState: { since_legend: 21, since_epic: 3 } });
+    Object.assign(shopMe, { state: 'ok', balance: params.get('dub') ? Number(params.get('dub')) : 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen', ...(params.get('eigen') ? ['spruch-eigener'] : [])]), freeLeft: params.get('free') === '0' ? 0 : 2, custom: params.get('eigen') || '' });
     if (params.get('eigen')) { customSayings.set(me.id, params.get('eigen')); customSayings.set('u2', 'Nico, schrei nicht!'); }
     shopAvatars.set(me.id, av);
     return;
@@ -1282,6 +1298,12 @@ async function loadShop(force = false) {
     const freeUsed = (p.data || []).filter((x) => Number(x.price) === 0).length;
     Object.assign(shopMe, { state: 'ok', balance: w.data?.balance || 0, active: w.data?.active_avatar || null, owned: new Set((p.data || []).map((x) => x.item_id)), freeLeft: Math.max(0, 2 - freeUsed) });
     if (shopMe.active) shopAvatars.set(me.id, shopMe.active); else shopAvatars.delete(me.id);
+    // v0.91 Inventar, Outfit, Pech-Schutz-Zähler (fehlt die Datenbank-Erweiterung noch: leer)
+    const inv = await sb.from('shop_inventory').select('item_id').eq('user_id', me.id).then((r) => r, () => ({ data: null }));
+    const wo = await sb.from('shop_wallets').select('outfit').eq('user_id', me.id).maybeSingle().then((r) => r, () => ({ data: null }));
+    const bs = await sb.from('shop_box_state').select('since_legend, since_epic').eq('user_id', me.id).maybeSingle().then((r) => r, () => ({ data: null }));
+    shopMe.inventory = new Set((inv?.data || []).map((x) => x.item_id)); shopMe.outfit = wo?.data?.outfit || {}; shopMe.boxState = bs?.data || { since_legend: 0, since_epic: 0 }; shopMe.boxOk = !inv?.error && Array.isArray(inv?.data);
+    if (Object.keys(shopMe.outfit).length) shopOutfits.set(me.id, shopMe.outfit); else shopOutfits.delete(me.id);
     const cs = await sb.rpc('shop_public_sayings', { p_ids: [me.id] }).then((r) => r, () => ({ data: null })); // v0.63
     shopMe.custom = cs?.data?.[0]?.text || ''; if (shopMe.custom) customSayings.set(me.id, shopMe.custom);
   } catch { shopMe.state = 'off'; }
@@ -1298,6 +1320,22 @@ async function openShop() {
   renderShop(root, {
     me: { id: me.id, name: me.name },
     balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active, freeLeft: shopMe.freeLeft, customText: shopMe.custom,
+    inventory: shopMe.inventory || [], outfit: shopMe.outfit || {}, boxState: shopMe.boxState, tab: params.get('shoptab') || undefined,
+    async openBox() {
+      if (DEMO) { const pool = Object.entries(BOX_ITEMS); const r0 = Math.random(); const rar = r0 < .03 ? 'legendaer' : r0 < .13 ? 'episch' : r0 < .4 ? 'selten' : 'gewoehnlich'; const c = pool.filter(([, it]) => it.rarity === (params.get('boxrar') || rar)); const [id] = c[Math.floor(Math.random() * c.length)]; const dupe = (shopMe.inventory || new Set()).has(id); const refund = dupe ? RARITIES[params.get('boxrar') || rar].refund : 0; shopMe.balance += refund - BOX_PRICE; shopMe.inventory.add(id); return { item: id, rarity: params.get('boxrar') || rar, dupe, refund, balance: shopMe.balance }; }
+      const { data, error } = await sb.rpc('shop_open_box');
+      if (error) throw err(error, 'Die Kiste klemmt – gleich nochmal versuchen.');
+      shopMe.balance = Number(data.balance); (shopMe.inventory = shopMe.inventory || new Set()).add(data.item);
+      return data;
+    },
+    async setOutfit(o) {
+      const clean = Object.fromEntries(Object.entries(o || {}).filter(([, v]) => v));
+      let v = clean;
+      if (!DEMO) { const { data, error } = await sb.rpc('shop_set_outfit', { p_outfit: clean }); if (error) throw err(error, 'Anziehen hat nicht geklappt.'); v = data || clean; }
+      shopMe.outfit = v; if (Object.keys(v).length) shopOutfits.set(me.id, v); else shopOutfits.delete(me.id);
+      return v;
+    },
+    useDesign(id) { if (SPECIAL_PRESETS[id]) { theme = { ...SPECIAL_PRESETS[id].v, bigText: theme.bigText }; saveTheme(store, theme); applyTheme(theme); } },
     async saveCustom(text) {
       let v = text;
       if (!DEMO) { const { data, error } = await sb.rpc('shop_set_custom_saying', { p_text: text }); if (error) throw err(error, 'Der Spruch konnte nicht gespeichert werden.'); v = data || text; }
@@ -1319,6 +1357,10 @@ async function openShop() {
     async setAvatar(id) {
       if (!DEMO) { const { error } = await sb.rpc('shop_set_avatar', { p_avatar_id: id }); if (error) throw err(error, 'Der Avatar konnte nicht ausgewählt werden.'); }
       shopMe.active = id; shopAvatars.set(me.id, id);
+      // v0.91: neuer Avatar → dessen komplettes Set anziehen (Gegenstand bleibt)
+      const keep = shopMe.outfit?.ding ? { ding: shopMe.outfit.ding } : {};
+      if (!DEMO) await sb.rpc('shop_set_outfit', { p_outfit: keep }).then(() => {}, () => {});
+      shopMe.outfit = keep; if (keep.ding) shopOutfits.set(me.id, keep); else shopOutfits.delete(me.id);
     },
     close() { root.remove(); render(); },
   });
@@ -1475,7 +1517,7 @@ function maybeRecordResults() {
   const rows = scores(g.state).map((r) => {
     const pl = g.players.find((x) => (x.seat || x.id) === r.id);
     const st = g.state.stats?.[r.id] || {};
-    const extras = { animals: r.quartets, maxBuy: st.maxBuy || null, tradesWon: st.tradesWon || 0, tradesLost: st.tradesLost || 0, ratsTaken: st.ratsTaken || 0, specialsWon: st.specialsWon || 0 };
+    const extras = { animals: r.quartets, maxBuy: st.maxBuy || null, tradesWon: st.tradesWon || 0, tradesLost: st.tradesLost || 0, ratsTaken: st.ratsTaken || 0, specialsWon: st.specialsWon || 0, money: (g.state.players.find((x) => x.id === r.id)?.money || []).reduce((x, y) => x + y, 0) }; // v0.91 money: für „Geldregen“
     return pl ? { player_id: pl.id, name: r.name, score: r.score, quartets: r.quartets.length, won: (g.state.winner || []).includes(r.id), extras } : null;
   }).filter(Boolean);
   if (g.state.settings?.stake) sb.rpc('kasse_settle', { p_game: g.id }).then(({ error }) => { if (error) logError(`Kasse: ${error.message}`); }); // v0.84 Einsatz abrechnen
@@ -2002,7 +2044,7 @@ function renderModal() {
   if (!modal) { el?.remove(); return; }
   if (!el) { el = document.createElement('div'); el.id = 'modal'; document.body.appendChild(el); }
   let body = '';
-  if (modal.kind === 'design') body = themeModal(theme, [...shopMe.owned]);
+  if (modal.kind === 'design') body = themeModal(theme, [...shopMe.owned, ...(shopMe.inventory || [])]);
   if (modal.kind === 'rules') body = rulesBody(modal.rtab);
   if (modal.kind === 'install') {
     body = `<h2>📲 Als App aufs Handy</h2>
@@ -2268,6 +2310,8 @@ function adminBody() {
 
 function demo(kind) {
   if (params.get('shopav')) shopAvatars.set('u2', params.get('shopav'));
+  if (params.get('fits')) { shopOutfits.set('u2', { brust: 'brust:goldruestung', beine: 'beine:raketenstiefel', ding: 'ding:donnerhammer' }); shopOutfits.set('u3', { ding: 'ding:gummihuhn' }); } // v0.91 Demo
+  if (params.get('titles')) { shopTitles = new Map([['u2', ['krone']], ['u3', ['rattenschwanz']], ['u4', ['geldregen']], ['u1', ['krone', 'geldregen']]]); }
   if (params.get('allav')) [['u1', 'alp-quasselt'], ['u2', 'nico-schreit'], ['u3', 'bennet-verletzt'], ['u4', 'kuh-kaiser']].forEach(([id, av]) => shopAvatars.set(id, av));
   const demoProfiles = { u1: ['Alp', 'pferd', '#1D5FC2'], u2: ['Nico', 'schwein', '#B8285F'], u3: ['Bennet', 'esel', '#0B7A68'], u4: ['Mo', 'hahn', '#B58A00'] };
   Object.entries(demoProfiles).forEach(([id, [name, animal, color]]) => profiles.set(id, { id, name, animal, color }));

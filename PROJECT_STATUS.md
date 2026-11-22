@@ -10,7 +10,7 @@ Stand: 21.11.2026, 15:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 | | |
 |---|---|
 | Live-Version (`main`) | **v0.84.0** (#59, Einsatz & Kasse); Cloudflare-Build erfolgreich |
-| In Arbeit | v0.86.0: Layout-Abgleich (Großbuchstaben-Knöpfe, Emojis in Überschriften), „Sehr günstig!“, Rattenhandel-Text, Schnell-Emojis rechts. v0.85 live (#60), SQL `v0.85-kasse-rechte.sql` ausgeführt |
+| In Arbeit | v0.91.0 (PR #66, 🟡 wartet auf Alps Merge-Go): Kuh-Kiste, Garderobe (4 Fächer), Set-Effekte, Erfolgs-Zubehör; SQL `supabase/v0.91-kuhkiste.sql` erst nach Merge ausführen. Live: v0.90 (#65, 22.11.) |
 | Nächste Versionen | Erste echte Partien spielen (noch kein einziges Spielergebnis in der DB) · Börsen-Chaos danach nachjustieren · Shop-Ideen (Preise = Alp) · Rückblick nach dem Spiel |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.84-kasse.sql` (Claude über Connector 20.11., Prüfabfrage + Advisors ✓); davor `v0.80-avatar-ablegen.sql` (20.11.), `v0.67-emotes.sql` (14.11.) |
 

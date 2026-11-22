@@ -1205,3 +1205,20 @@ test('v0.90: Börsen-Chaos – jeder startet mit 1 Pfändung + 1 Einspruch (eins
   assert.deepEqual(k.hands[P[0].id], ['pfaendung', 'pfaendung', 'pfaendung']);
   assert.equal(createGame({ players: P, seed: 3 }).hands, undefined);
 });
+
+test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen 100 %, Set-Erkennung', async () => {
+  const fs = await import('node:fs');
+  const O = await import('../js/outfits.js');
+  const sql = fs.readFileSync(new URL('../supabase/v0.91-kuhkiste.sql', import.meta.url), 'utf8');
+  const inSql = [...sql.matchAll(/\('([a-z:-]+)', '(gewoehnlich|selten|episch|legendaer)'\)/g)].map((m) => `${m[1]}=${m[2]}`).sort();
+  const inApp = Object.entries(O.BOX_ITEMS).map(([id, it]) => `${id}=${it.rarity}`).sort();
+  assert.deepEqual(inSql, inApp);
+  assert.equal(Object.values(O.RARITIES).reduce((a, r) => a + r.chance, 0), 100);
+  for (const r of Object.keys(O.RARITIES)) assert.ok(O.boxPool(r).length >= 3, `genug ${r}`);
+  assert.equal(O.setOf(O.fullOutfit('noergler', {})), 'noergler');
+  assert.equal(O.setOf(O.fullOutfit('noergler', { brust: 'brust:disco-kuh' })), null);
+  assert.equal(O.setOf(O.fullOutfit('noergler', { ding: 'ding:lasso' })), 'noergler');
+  for (const [id, it] of Object.entries(O.BOX_ITEMS)) if (it.slot === 'ding') assert.ok(O.dingArt(id), `Bild für ${id}`);
+  for (const [id, it] of Object.entries(O.BOX_ITEMS)) if (it.slot === 'brust' || it.slot === 'beine') assert.ok(O.partArt(id), `Teil ${id}`);
+  assert.ok(sql.includes('since_legend + 1 >= 25') && sql.includes('since_epic + 1 >= 8'), 'Pech-Schutz wie in der App');
+});

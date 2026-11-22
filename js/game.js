@@ -229,7 +229,7 @@ function avatar(p, idx, extra = '') {
 // v0.54: Ganzkörper-Figur (Siegertreppchen, Jubel) – ohne Shop-Avatar der runde Kopf
 function figure(p, idx, cls = '') {
   const pr = avatarLookup(p.id);
-  return pr?.shop ? `<span class="pfig ${cls}" style="--c:${SEAT_COLORS[idx]}" aria-hidden="true">${shopAvatarFull(pr.shop)}</span>` : avatar(p, idx);
+  return pr?.shop ? `<span class="pfig ${cls}" style="--c:${SEAT_COLORS[idx]}" aria-hidden="true">${shopAvatarFull(pr.shop, '', pr.outfit)}</span>` : avatar(p, idx);
 }
 
 // ---------- Hauptfunktion ----------
@@ -343,6 +343,11 @@ function fitTop(root) {
 }
 
 // Eigene neue Karte: genau auf den passenden Stapel in deiner Auslage fliegen lassen (Ziel erst nach dem Zeichnen bekannt)
+// v0.91 Erfolgs-Zubehör (nur der aktuelle Rekordhalter): 👑 Kuhhandel-Krone, 🐀 Rattenschwanz, 💸 Geldregen
+function titleBits(pr) {
+  const t = pr?.titles || []; if (!t.length) return '';
+  return `<span class="titles" aria-label="Rekorde: ${t.map((x) => ({ krone: 'Kuhhandel-König', rattenschwanz: 'Ratten-Sammler', geldregen: 'Geldregen' })[x]).join(', ')}">${t.includes('krone') ? '<i class="tt-krone" title="Kuhhandel-König: die meisten gewonnenen Kuhhandel">👑</i>' : ''}${t.includes('rattenschwanz') ? '<i class="tt-ratte" title="Ratten-Sammler: am häufigsten die Ratte genommen"></i>' : ''}${t.includes('geldregen') ? '<i class="tt-geld" title="Geldregen: am häufigsten am Ende das meiste Geld"><b></b><b></b><b></b></i>' : ''}</span>`;
+}
 const tapState = { down: null, fired: null, H: {} }; // v0.88 sichere Tipps über Neuzeichnen hinweg
 function aimFly(root) {
   const stage = root.querySelector('#stage');
@@ -601,8 +606,8 @@ function starterBody(animal, color, seat) {
 // Ganzkörper-Figur eines Spielers: Shop-Avatar (eigener Körper), sonst Starter-Figur aus dem Profil-Tier
 // (wer gar kein Profilbild hat: Standard-Körper + Buchstabe als Kopf)
 function aliveFig(p, i, shop) {
-  if (shop) return `<div class="afull">${shopAvatarFull(shop)}</div>`;
   const pr = avatarLookup(p.id);
+  if (shop) return `<div class="afull">${shopAvatarFull(shop, '', pr?.outfit)}${titleBits(pr)}</div>`;
   if (pr?.animal) return `<div class="agen starter">${starterBody(pr.animal, pr.color || '#F2C9A0', SEAT_COLORS[i] || '#1D5FC2')}</div>`;
   return `<div class="agen">${genericBody(SEAT_COLORS[i] || '#1D5FC2')}<div class="ahead">${avatar(p, i)}</div></div>`;
 }
@@ -1997,7 +2002,7 @@ export function renderGame(root, ctx) {
       keepFx(`<div class="cheerfx me burst" data-aim-to="@me" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true"><i class="cheerstar">🎉</i></div>`, ch.payAt + 1700, tg);
     } else if (ri >= 0) {
       const pr = avatarLookup(rid);
-      const inner = pr?.shop ? shopAvatarFull(pr.shop) : `<span class="cheerhead">${avatar(v.players[ri], ri)}</span>`;
+      const inner = pr?.shop ? shopAvatarFull(pr.shop, '', pr.outfit) : `<span class="cheerhead">${avatar(v.players[ri], ri)}</span>`;
       keepFx(`<div class="cheerfx ${rid === meId ? 'me' : ''} ${pr?.shop ? 'full' : ''}" data-aim-to="${esc(rid)}" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true">${inner}<i class="cheerstar">🎉</i></div>`, ch.payAt + 1700, tg);
     }
   }
@@ -2647,7 +2652,7 @@ export function renderGame(root, ctx) {
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
       const meOut = local.out && local.out[meId] && local.out[meId].from <= now && now < local.out[meId].until;
       return `<div class="meplate full ${pr?.shop ? '' : 'gen'} ${meOut ? 'out' : ''} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">${myHand.length ? `<span class="myhand" aria-label="Deine Handkarten">${myHand.map((k) => `<i class="hcard ${k}" title="${k === 'pfaendung' ? 'Zwangsversteigerung: statt eines Zuges ein Tier pfänden' : 'Einspruch: wehrt eine Pfändung gegen dich ab'}">${k === 'pfaendung' ? '⚖️' : '🛡️'}</i>`).join('')}</span>` : ''}
-        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop) : aliveFig(me, meIdx, null)}${kingHat(meId)}${ouchOn(meId) ? OUCH : ''}${moodHtml(meId)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
+        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop, '', pr.outfit) : aliveFig(me, meIdx, null)}${kingHat(meId)}${ouchOn(meId) ? OUCH : ''}${moodHtml(meId)}${titleBits(pr)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}

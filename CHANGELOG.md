@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v0.91.0 – Kuh-Kiste, Outfits, Erfolgs-Zubehör (Alps Go 22.11. 03:07)
+
+- [x] **📦 Kuh-Kiste** im Shop (40 Dublonen): Gewöhnlich 60 % · Selten 27 % · Episch 10 % · Legendär 3 %; Pech-Schutz (spätestens jede 25. legendär, jede 8. mindestens episch); Doppelte geben 5/10/20/50 Dublonen zurück. Gezogen wird auf dem Server.
+- [x] **👕 Garderobe** mit 4 Fächern: Kopf, Brust, Beine, Gegenstand – frei kombinierbar. Ein gekaufter Avatar bringt Kopf, Brust und Beine mit; Gegenstände (Donnerhammer, Gurken-Säbel, Kristall-Kuhglocke …) und sehr seltene Teile (Goldrüstung, Raketenstiefel, Goldene Kuh …) gibt es nur in der Kiste.
+- [x] **Set-Effekt:** alle 3 Teile eines Avatars an → passender Effekt (Stinkwolke, Höllenfeuer, Disco-Glitzer, Münzregen, Stromschlag …).
+- [x] **Spezial-Spielfelder** (Casino, Bauernhof, Ozean, Strand, Winter) als Kisten-Inhalt.
+- [x] **Erfolgs-Zubehör:** 👑 Kuhhandel-Krone (meiste gewonnene Kuhhandel), 🐀 Rattenschwanz (am häufigsten die Ratte), 💸 Geldregen (am häufigsten am Ende das meiste Geld) – trägt immer nur der aktuelle Rekordhalter.
+- [x] Datenbank: `supabase/v0.91-kuhkiste.sql`.
+
 ## v0.90.0 – Einstellungen, Aussehen, Schnick-Schnack-Schnuck
 
 - [x] **Börsen-Chaos: Start-Hand** – jeder beginnt mit 1 Pfändung und 1 Einspruch auf der Hand, vor dem Spiel 0–3 je Karte einstellbar (zusätzlich zu den Karten im Stapel).
