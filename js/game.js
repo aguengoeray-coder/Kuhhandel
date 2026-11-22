@@ -322,9 +322,17 @@ function fitAuslage(root) {
   const kids = [...a.children].map((e) => e.getBoundingClientRect()).filter((r) => r.width);
   if (!kids.length || !box.width) return;
   const used = Math.max(...kids.map((r) => r.right)) - Math.min(...kids.map((r) => r.left));
-  if (used <= box.width + 1) return;
   const sc = Number(a.style.getPropertyValue('--sc')) || 1;
-  a.style.setProperty('--sc', (sc * (box.width / used) * 0.97).toFixed(3));
+  let f = used > box.width + 1 ? (box.width / used) * 0.97 : 1;
+  // v0.92: „Warte, warte, warte!“ (oder anderes in der Mitte) darf nicht auf die Auslage ragen → Auslage so weit verkleinern, dass sie darunter passt
+  const left = Math.min(...kids.map((r) => r.left)) + (1 - f) * used / 2; const right = left + used * f;
+  const top = Math.min(...kids.map((r) => r.top)); const bottom = Math.max(...kids.map((r) => r.bottom));
+  for (const el of root.querySelectorAll('.stage .waitbtn')) {
+    const w = el.getBoundingClientRect();
+    if (!w.width || w.right <= left || w.left >= right || w.bottom <= top + (bottom - top) * (1 - f)) continue;
+    f = Math.min(f, Math.max(0.6, (bottom - w.bottom - 3) / (bottom - top)));
+  }
+  if (f < 1) a.style.setProperty('--sc', (sc * f).toFixed(3));
 }
 
 // Hohe Plätze oben (3 Spieler, viele Tiere): Tischmitte nach unten rücken, damit die Zeile „… versteigert“ nicht in den Platz ragt
@@ -918,7 +926,7 @@ export function renderGame(root, ctx) {
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${myPartner === p.id ? '<b class="teamb" title="Dein Partner">🤝</b>' : ''}${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld">${isMe ? '<i></i>' : `<span class="mfan" aria-hidden="true" style="--n:${Math.min(count, 8)}">${Array.from({ length: Math.min(count, 8) }, (_, k) => `<i style="--k:${k}"></i>`).join('')}</span>`}${count}${myPartner === p.id && Array.isArray(p.money) ? `<b class="psum">${p.money.reduce((a, b) => a + b, 0)}</b>` : ''}</span>` : status}</span></div>
       </div>
-      <div class="chips" data-a="setsOf" data-v="${esc(p.id)}" style="--nchip:${(chips.match(/class="chip /g) || []).length}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
+      <div class="chips ${(chips.match(/class="chip /g) || []).length > 8 ? 'manych' : ''}" data-a="setsOf" data-v="${esc(p.id)}" style="--nchip:${(chips.match(/class="chip /g) || []).length}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
     </div>`;
   }).join('');
 
@@ -1639,7 +1647,7 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''} ${topCls}">${v.deck > 0 ? deckFace : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}${state.blind ? ` · 🙈 Blind ${state.blind}` : ''}</b>` : ''}${state.settings?.stake ? `<b class="turbotag staketag" title="Einsatz: Platz 1 bekommt den Topf">💶 Topf ${state.settings.stake * v.players.length} €</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
-    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX * 1.06, 470 / Math.max(1, myItems.length * 44)).toFixed(3)};--sg:${myItems.length > 8 ? 5 : 12}px" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX * 1.1, 470 / Math.max(1, myItems.length * 44)).toFixed(3)};--sg:${myItems.length > 8 ? 5 : 12}px" aria-label="Deine Karten">${myAnimals}</div>
     ${state.phase === 'trade' || (local.tradeOpen && local.tradePicked) ? mySetsStrip() : ''}
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" style="--ov:${fanOv}px" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum" aria-hidden="true">${sum(handMoney)}<i class="taler"></i></span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
@@ -2652,7 +2660,7 @@ export function renderGame(root, ctx) {
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
       const meOut = local.out && local.out[meId] && local.out[meId].from <= now && now < local.out[meId].until;
       return `<div class="meplate full ${pr?.shop ? '' : 'gen'} ${meOut ? 'out' : ''} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">${myHand.length ? `<span class="myhand" aria-label="Deine Handkarten">${myHand.map((k) => `<i class="hcard ${k}" title="${k === 'pfaendung' ? 'Zwangsversteigerung: statt eines Zuges ein Tier pfänden' : 'Einspruch: wehrt eine Pfändung gegen dich ab'}">${k === 'pfaendung' ? '⚖️' : '🛡️'}</i>`).join('')}</span>` : ''}
-        <span class="mefig" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop, '', pr.outfit) : aliveFig(me, meIdx, null)}${kingHat(meId)}${ouchOn(meId) ? OUCH : ''}${moodHtml(meId)}${titleBits(pr)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
+        <span class="mefig ${jub ? 'swing' : ''}" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop, '', pr.outfit) : aliveFig(me, meIdx, null)}${kingHat(meId)}${ouchOn(meId) ? OUCH : ''}${moodHtml(meId)}${titleBits(pr)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}

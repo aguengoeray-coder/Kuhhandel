@@ -16,7 +16,7 @@ import { BOX_ITEMS, RARITIES, BOX_PRICE } from './outfits.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.91.0';
+export const APP_VERSION = '0.92.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -296,7 +296,7 @@ function homeItems() {
 // v0.52: dein aktiver Shop-Avatar steht groß neben dem Tisch (Tippen öffnet den Shop)
 function heroHtml() {
   const a = SHOP_AVATARS.find((x) => x.id === shopMe.active);
-  return a ? `<button type="button" class="hb-hero" data-dock="shop" data-tier="${a.tier}" aria-label="Dein Avatar: ${esc(a.name)} – Shop öffnen">${shopAvatarFull(a.id)}<small>${esc(a.name)}</small></button>`
+  return a ? `<button type="button" class="hb-hero" data-dock="wear" data-tier="${a.tier}" aria-label="Dein Avatar: ${esc(a.name)} – anziehen">${shopAvatarFull(a.id, '', shopMe.outfit)}<small>${esc(a.name)}</small></button>`
     : `<button type="button" class="hb-hero empty" data-dock="shop" aria-label="Avatar im Shop holen"><span class="hb-ghost" aria-hidden="true">?</span><small>Avatar holen</small></button>`;
 }
 
@@ -402,6 +402,7 @@ function renderStart() {
     const k = b.dataset.dock;
     if (k === 'play') return;
     if (k === 'shop') { openShop(); return; }
+    if (k === 'wear') { openShop('garderobe'); return; } // v0.92: eigene Figur antippen → Garderobe
     openModal(k);
   }));
   app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
@@ -1310,7 +1311,7 @@ async function loadShop(force = false) {
   render();
 }
 
-async function openShop() {
+async function openShop(startTab) {
   if (shopMe.state !== 'ok') await loadShop(true);
   if (shopMe.state !== 'ok') { ui.homeNote = 'Der Shop wird gerade eingerichtet – gleich geht’s los 🛒'; render(); setTimeout(() => { ui.homeNote = ''; render(); }, 3500); return; }
   const root = document.createElement('div');
@@ -1320,7 +1321,7 @@ async function openShop() {
   renderShop(root, {
     me: { id: me.id, name: me.name },
     balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active, freeLeft: shopMe.freeLeft, customText: shopMe.custom,
-    inventory: shopMe.inventory || [], outfit: shopMe.outfit || {}, boxState: shopMe.boxState, tab: params.get('shoptab') || undefined,
+    inventory: shopMe.inventory || [], outfit: shopMe.outfit || {}, boxState: shopMe.boxState, tab: startTab || params.get('shoptab') || undefined,
     async openBox() {
       if (DEMO) { const pool = Object.entries(BOX_ITEMS); const r0 = Math.random(); const rar = r0 < .03 ? 'legendaer' : r0 < .13 ? 'episch' : r0 < .4 ? 'selten' : 'gewoehnlich'; const c = pool.filter(([, it]) => it.rarity === (params.get('boxrar') || rar)); const [id] = c[Math.floor(Math.random() * c.length)]; const dupe = (shopMe.inventory || new Set()).has(id); const refund = dupe ? RARITIES[params.get('boxrar') || rar].refund : 0; shopMe.balance += refund - BOX_PRICE; shopMe.inventory.add(id); return { item: id, rarity: params.get('boxrar') || rar, dupe, refund, balance: shopMe.balance }; }
       const { data, error } = await sb.rpc('shop_open_box');
@@ -1923,7 +1924,7 @@ function profileBody() {
   const tab = modal.tab || 'figur';
   const rows = modal.mine;
   const games = rows ? rows.length : null; const wins = rows ? rows.filter((r) => r.won).length : null; const best = rows && rows.length ? Math.max(...rows.map((r) => r.score)) : null;
-  const big = activeItem ? `<div class="pf-big shop">${shopAvatarFull(activeItem.id)}</div>` : `<div class="pf-big">${avatarHtml(me.id, me.name)}</div>`;
+  const big = activeItem ? `<button type="button" class="pf-big shop" data-m="pfWear" aria-label="Figur anziehen">${shopAvatarFull(activeItem.id, '', shopMe.outfit)}<span class="pf-wear">👕 Anziehen</span></button>` : `<div class="pf-big">${avatarHtml(me.id, me.name)}</div>`;
   const ownedAv = SHOP_AVATARS.filter((a) => shopMe.owned.has(a.id));
   const ownedSay = SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id));
   const ownedEmo = SHOP_EMOTES.filter((x) => shopMe.owned.has(x.id) || ui.isAdmin);
@@ -2165,6 +2166,8 @@ function renderModal() {
     if (b.dataset.m === 'pfTab') { modal.tab = b.dataset.v; modal.pfErr = ''; return render(); }
     if (b.dataset.m === 'pfStats') return openModal('mystats');
     if (b.dataset.m === 'pfShop') { modal = null; render(); return openShop(); }
+    // v0.92: Figur im Profil antippen → Garderobe (Kopf, Brust, Beine, Gegenstand anziehen); danach zurück ins Profil
+    if (b.dataset.m === 'pfWear') return openShop('garderobe');
     if (b.dataset.m === 'pfAv') return setMyAvatar(b.dataset.v);
   };
   el.querySelectorAll('form.apw').forEach((f) => { f.onsubmit = (e) => {
