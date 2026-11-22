@@ -73,9 +73,9 @@ export function renderShop(root, ctx) {
   let only = ctx.only || null; // v0.94: 'garderobe' = nur Anziehen (Figur antippen auf Startseite/Profil)
   // v0.94 Outfit-Speicher (3 Plätze, auf diesem Gerät)
   const PKEY = 'kh_outfits_' + ((ctx.me && ctx.me.id) || 'gast');
-  let presets = (() => { try { const v = JSON.parse(localStorage.getItem(PKEY) || '[]'); return Array.isArray(v) ? v.slice(0, 3) : []; } catch { return []; } })();
+  let presets = Array.isArray(ctx.presets) && ctx.presets.some(Boolean) ? ctx.presets.slice(0, 3) : (() => { try { const v = JSON.parse(localStorage.getItem(PKEY) || '[]'); return Array.isArray(v) ? v.slice(0, 3) : []; } catch { return []; } })();
   let presetSel = 0;
-  const savePresets = () => { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch { /* privat/gesperrt: nur für diese Sitzung */ } };
+  const savePresets = () => { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch { /* privat/gesperrt: nur für diese Sitzung */ } if (typeof ctx.savePresets === 'function') ctx.savePresets([0, 1, 2].map((k) => presets[k] || null)); };
   // v0.91 Kuh-Kiste + Garderobe
   let inventory = new Set(ctx.inventory || []);
   let outfit = { ...(ctx.outfit || {}) };
@@ -106,7 +106,7 @@ export function renderShop(root, ctx) {
     const left = PITY_LEGEND - (boxState.since_legend || 0);
     const stage = box.st === 'open' && r
       ? '<div class="box-reveal r-' + r.rarity + '" style="--rc:' + RARITIES[r.rarity].color + ';--rg:' + RARITIES[r.rarity].glow + '">' +
-          '<div class="br-rays" aria-hidden="true"></div><div class="br-item">' + itemThumb(r.item, true) + '</div>' +
+          '<div class="br-rays" aria-hidden="true"></div><i class="br-flash" aria-hidden="true"></i>' + (r.rarity === 'episch' || r.rarity === 'legendaer' ? '<span class="br-confetti" aria-hidden="true">' + Array.from({ length: r.rarity === 'legendaer' ? 26 : 14 }, (_, k) => '<i style="--x:' + ((k * 37) % 100) + '%;--d:' + ((k * 53) % 700) + 'ms;--h:' + ((k * 67) % 360) + '"></i>').join('') + '</span>' : '') + '<div class="br-item">' + itemThumb(r.item, true) + '</div>' +
           '<div class="br-text">' + rarTag(r.rarity) + '<b>' + esc(info ? info.name : r.item) + '</b>' + setLine(r.item) +
           (r.dupe ? '<small>Doppelt – +' + r.refund + ' ' + DUB + ' zurück</small>' : '<small>✨ Neu in deiner Sammlung!</small>') + '</div>' +
           '<div class="br-actions">' + (!r.dupe && info && info.slot !== 'design' ? '<button class="shop-action shop-select" data-wear="' + esc(r.item) + '">Gleich anziehen</button>' : '') +
