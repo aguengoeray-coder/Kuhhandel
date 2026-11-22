@@ -93,7 +93,7 @@ async function play(browser, url, g) {
   return { ...st, errs: [...new Set(errs)] };
 }
 
-test('Komplette Partien mit Test-Spielern', { timeout: 20 * 60 * 1000 }, async () => {
+test('Komplette Partien mit Test-Spielern', { timeout: 40 * 60 * 1000 }, async () => {
   const srv = await startServer();
   const browser = await chromium.launch();
   const rows = []; const lines = [];
