@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.97.0', date: '22.11.', items: ['📌 Startseite und Tisch stehen fest – nichts verrutscht mehr beim Wischen'] },
   { v: '0.96.0', date: '22.11.', items: ['👆 Jedes Teil antippen = sofort an deiner Figur anprobieren – auch noch nicht gezogene', '📊 Infos zu jedem Teil: Seltenheit, Set, Chance pro Kiste, wie oft du es hast', '🔒 Kein versehentliches Reinzoomen mehr (Doppeltipp/Zwei Finger)'] },
   { v: '0.95.0', date: '22.11.', items: ['📦 Kuh-Kiste mit Lichtblitz und Konfetti ab Episch', '💾 Gespeicherte Outfits jetzt im Konto – auf jedem Gerät'] },
   { v: '0.94.0', date: '22.11.', items: ['👕 Figur antippen → eigenes Anzieh-Fenster', '💾 3 Outfits speichern und mit einem Tipp wechseln', '⚔️ Waffe schwingt auch beim Rattenkönig, Eisenschwert blitzt', '✨ Effekte am Tisch: alle, nur meine oder aus (unter Aussehen)', '🃏 Mitspieler-Sets auch auf kleinen Handys größer'] },

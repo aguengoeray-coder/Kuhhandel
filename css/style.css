@@ -4494,3 +4494,7 @@ html[data-fx="meine"] .stage :not(.mefig) > .shop-avatar-full :is(.fxb, .fxf), h
 
 /* v0.96 kein Zoomen im Spiel (Doppeltipp / Zwei-Finger) */
 html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* v0.97 Startseite & Tisch stehen fest: keine Seiten-Scrollbalken, kein Gummiband */
+html, body { overscroll-behavior: none; }
+html:has(.home), html:has(.home) body, html:has(.stage), html:has(.stage) body { overflow: hidden; height: 100%; }
