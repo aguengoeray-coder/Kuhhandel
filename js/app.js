@@ -16,7 +16,7 @@ import { BOX_ITEMS, RARITIES, BOX_PRICE } from './outfits.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.97.0';
+export const APP_VERSION = '0.98.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room

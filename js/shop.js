@@ -91,7 +91,8 @@ export function renderShop(root, ctx) {
   let inventory = new Set(ctx.inventory || []);
   let outfit = { ...(ctx.outfit || {}) };
   let draft = { ...outfit };
-  let slot = 'kopf';
+  let slot = 'sets'; // v0.98: Garderobe startet bei den Sets
+  let onlyMine = true; // v0.98 Einzelteile: nur meine / alle
   let tryOn = null; // v0.92 Anprobieren: Avatar-Vorschau links, gekauft wird erst mit dem Knopf
   let box = { st: 'idle', res: null }; // idle | shake | open
   let boxState = ctx.boxState || { since_legend: 0, since_epic: 0 };
@@ -141,6 +142,20 @@ export function renderShop(root, ctx) {
     if (!rows.length) return '';
     return '<ul class="wd-sets">' + rows.map((x) => { const full = x.have.length === 3; const miss = x.parts.filter((p) => !x.have.includes(p)).map((p) => SLOTS.find((k) => k.id === p.split(':')[0]).name);
       return '<li class="' + (full ? 'full' : '') + '" title="' + esc(full ? 'Alle 3 Teile anziehen → ' + SET_FX[x.st].name : 'Fehlt: ' + miss.join(' + ')) + '">' + BOX_SETS[x.st].icon + ' ' + esc(BOX_SETS[x.st].name) + '<span class="pips">' + x.parts.map((p) => '<i class="' + (x.have.includes(p) ? 'on' : '') + '"></i>').join('') + '</span><b>' + (full ? '✨ komplett' : 'fehlt: ' + miss.join(', ')) + '</b></li>'; }).join('') + '</ul>'; };
+  // v0.98 Set-Liste: jedes Set eine Zeile (Figur im Set, 3 Teile mit ✓/🔒, Effekt, ein Knopf)
+  const allSets = () => [...AVATARS.filter((a) => SET_FX[a.id]).map((a) => ({ id: a.id, name: a.name, kind: 'avatar', price: a.price })),
+    ...Object.entries(BOX_SETS).map(([id, b]) => ({ id, name: b.icon + ' ' + b.name, kind: 'kiste' }))];
+  const setsListHtml = (mine) => {
+    const rows = allSets().map((x) => { const parts = ['kopf', 'brust', 'beine'].map((k) => k + ':' + x.id); const have = parts.filter((p) => mine.has(p) || inventory.has(p)); return { ...x, parts, have }; })
+      .filter((x) => x.kind === 'avatar' || x.parts.every((p) => BOX_ITEMS[p]))
+      .sort((a, b) => (b.have.length === 3) - (a.have.length === 3) || b.have.length - a.have.length || (a.kind === 'kiste') - (b.kind === 'kiste'));
+    const wearing = (x) => x.parts.every((p, i) => draft[['kopf', 'brust', 'beine'][i]] === p);
+    return '<div class="wd-setlist">' + rows.map((x) => { const full = x.have.length === 3; const o = { kopf: x.parts[0], brust: x.parts[1], beine: x.parts[2] };
+      const base = x.kind === 'avatar' ? x.id : (activeAvatar || 'noergler');
+      return '<div class="wd-setrow' + (full ? ' full' : '') + (wearing(x) ? ' on' : '') + '"><span class="sr-fig">' + shopAvatarFull(base, 'still', o) + '</span>' +
+        '<span class="sr-txt"><b>' + esc(x.name) + '</b><small><span class="sr-dots">' + x.parts.map((p) => '<i class="' + (x.have.includes(p) ? 'ok' : '') + '"></i>').join('') + '</span>' + (full ? 'Komplett · ✨ ' + esc(SET_FX[x.id].name) : x.have.length + ' von 3 · ' + (x.kind === 'avatar' ? '🛒 Shop' : '📦 Kiste')) + '</small></span>' +
+        '<button class="sr-btn' + (full ? ' go' : '') + '" data-wearset="' + esc(x.id) + '">' + (wearing(x) ? '✓ Trägst du' : full ? 'Anziehen' : 'Anprobieren') + '</button></div>'; }).join('') + '</div>';
+  };
   const tryLocked = () => Object.values(draft).some((id) => id && BOX_ITEMS[id] && !inventory.has(id));
   const presetsHtml = () => '<div class="wd-presets" role="group" aria-label="Gespeicherte Outfits"><span>Outfits</span>' +
     [0, 1, 2].map((k) => '<button class="' + (presetSel === k ? 'sel ' : '') + (presets[k] ? 'has' : '') + '" data-preset="' + k + '" title="' + (presets[k] ? 'Outfit ' + (k + 1) + ' anprobieren' : 'Aktuelles Outfit hier speichern') + '">' + (k + 1) + '</button>').join('') +
@@ -151,16 +166,19 @@ export function renderShop(root, ctx) {
     const fo = fullOutfit(activeAvatar, draft);
     const missing = (() => { const a = String(fo.kopf || '').split(':')[1]; if (!SET_FX[a] || BOX_SETS[a] || infoId) return ''; const need = ['brust', 'beine'].filter((k) => fo[k] !== k + ':' + a); return need.length ? 'Für den Set-Effekt „' + SET_FX[a].name + '“ fehlt noch: ' + need.map((k) => SLOTS.find((x) => x.id === k).name).join(' + ') + ' von ' + esc(avName(a)) : ''; })();
     const list = [...mine].filter((id) => String(id).startsWith(slot + ':'));
-    const locked = Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === slot && !inventory.has(id)).map(([id]) => id);
+    const locked = onlyMine ? [] : Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === slot && !inventory.has(id)).map(([id]) => id);
+    const nLocked = Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === slot && !inventory.has(id)).length;
     const cur = fo[slot];
     const cell = (id, lock) => '<button class="wd-cell r-' + rarOf(id) + (cur === id ? ' on' : '') + (lock ? ' locked' : '') + '" ' + 'data-part="' + esc(id) + '"' + (lock ? ' data-lock="1"' : '') + ' title="' + esc(partName(id, avName)) + '">' + itemThumb(id) + '<small>' + esc(itemInfo(id) ? itemInfo(id).name : avName(String(id).split(':')[1])) + '</small>' + (boxSetOf(id) ? '<i class="setbadge" title="' + esc(BOX_SETS[boxSetOf(id)].name) + '-Set">' + BOX_SETS[boxSetOf(id)].icon + '</i>' : '') + (lock ? '<em class="lk">' + (itemInfo(id) && itemInfo(id).month ? '📦 ' + MONTHS[itemInfo(id).month - 1] : '📦') + '</em>' : '') + '</button>';
     return '<div class="wd-wrap"><div class="wd-left"><div class="wd-fig">' + previewFor(draft) + '</div>' +
-      (set ? '<p class="wd-set">✨ Set komplett: <b>' + esc(SET_FX[set].name) + '</b></p>' : missing ? '<p class="wd-miss">' + missing + '</p>' : '') +
-      (tryLocked() ? '<button class="shop-action shop-select" disabled>🔒 Nur Anprobe – erst ziehen</button>' : '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button>') + infoHtml(infoId) + presetsHtml() + setsHtml() + '</div>' +
-      '<div class="wd-right"><nav class="wd-slots">' + SLOTS.map((x) => '<button class="' + (slot === x.id ? 'on' : '') + '" data-slot="' + x.id + '">' + x.icon + ' ' + x.name + '</button>').join('') + '</nav>' +
+      (set ? '<p class="wd-set">✨ ' + (tryLocked() ? 'Anprobe' : 'Set komplett') + ': <b>' + esc(SET_FX[set].name) + '</b></p>' : missing ? '<p class="wd-miss">' + missing + '</p>' : '') +
+      (tryLocked() ? '<button class="shop-action shop-select" disabled>🔒 Nur Anprobe – erst ziehen</button>' : '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button>') + infoHtml(infoId) + presetsHtml() + (slot === 'sets' ? '' : setsHtml()) + '</div>' +
+      '<div class="wd-right"><nav class="wd-slots">' + [{ id: 'sets', name: 'Sets', icon: '✨' }, ...SLOTS].map((x) => '<button class="' + (slot === x.id ? 'on' : '') + '" data-slot="' + x.id + '">' + x.icon + ' ' + x.name + '</button>').join('') + '</nav>' +
+      (slot === 'sets' ? setsListHtml(mine) :
+      '<div class="wd-filter"><button class="' + (onlyMine ? 'on' : '') + '" data-onlymine="1">Nur meine</button><button class="' + (!onlyMine ? 'on' : '') + '" data-onlymine="0">Alle' + (nLocked ? ' (+' + nLocked + ' 🔒)' : '') + '</button></div>' +
       '<div class="wd-grid">' + (slot === 'ding' || draft[slot] ? '<button class="wd-cell none' + (!draft[slot] ? ' on' : '') + '" data-part="">' + (slot === 'ding' ? '✋ Nichts' : '↺ Vom Avatar') + '</button>' : '') +
       list.map((id) => cell(id, false)).join('') + locked.map((id) => cell(id, true)).join('') + '</div>' +
-      (locked.length ? '<p class="shop-hint">📦 = nur in der Kuh-Kiste</p>' : '') + '</div></div>';
+      (locked.length ? '<p class="shop-hint">📦 = nur in der Kuh-Kiste</p>' : '')) + '</div></div>';
   };
   const tierLabel = { selten: 'Selten', episch: 'Episch', legendaer: 'Legendär', kult: 'Kult' };
   // v0.92 Bühne links: deine Figur (oder die Anprobe) groß im Spot
@@ -269,6 +287,9 @@ export function renderShop(root, ctx) {
       if (!presets[k]) { presets[k] = { ...draft }; savePresets(); notice = 'Outfit ' + (k + 1) + ' gespeichert.'; noticeKind = 'success'; return render(); }
       const mine = partsOwned(); draft = Object.fromEntries(Object.entries(presets[k]).filter(([sl, id]) => id && (sl === 'ding' ? inventory.has(id) : mine.has(id)))); notice = ''; render(); }));
     root.querySelector('[data-savepreset]')?.addEventListener('click', () => { presets[presetSel] = { ...draft }; savePresets(); notice = 'Outfit ' + (presetSel + 1) + ' gespeichert.'; noticeKind = 'success'; render(); });
+    root.querySelectorAll('[data-onlymine]').forEach((b) => b.addEventListener('click', () => { onlyMine = b.dataset.onlymine === '1'; render(); }));
+    root.querySelectorAll('[data-wearset]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.wearset; draft = { ...draft, kopf: 'kopf:' + id, brust: 'brust:' + id, beine: 'beine:' + id }; infoId = null;
+      const mine = partsOwned(); if (['kopf', 'brust', 'beine'].every((k) => mine.has(k + ':' + id) || inventory.has(k + ':' + id)) && JSON.stringify(draft) !== JSON.stringify(outfit)) return saveOutfit(); render(); }));
     root.querySelectorAll('[data-tryitem]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.tryitem; const it = BOX_ITEMS[id]; if (!it) return;
       if (it.slot === 'design') { tab = 'garderobe'; return render(); } tab = 'garderobe'; slot = it.slot; draft = { ...draft, [it.slot]: id }; infoId = id; render(); }));
     root.querySelector('[data-fullshop]')?.addEventListener('click', () => { only = null; tab = 'kiste'; render(); });
