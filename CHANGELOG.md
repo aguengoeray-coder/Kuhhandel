@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.90.0 – Einstellungen, Aussehen, Schnick-Schnack-Schnuck
+
+- [x] **Börsen-Chaos: Start-Hand** – jeder beginnt mit 1 Pfändung und 1 Einspruch auf der Hand, vor dem Spiel 0–3 je Karte einstellbar (zusätzlich zu den Karten im Stapel).
+- [x] **Spiel-Einstellungen auf einem Bild:** Warteraum in Gruppen (Spielart · Tempo · Start-Hand · Extras), Startfenster ohne Scrollen.
+- [x] **Aussehen abgespeckt:** 6 abgestimmte Vorlagen, „Selbst mischen“ nur noch Spielfeld, Muster, Kartenrücken (Hintergrund passt automatisch). Spezial-Designs (Casino, Bauernhof, Ozean, Strand, Winter) gibt es künftig im Shop/in der Kuh-Kiste.
+- [x] **Langweilig? Schnick-Schnack-Schnuck!** Tut sich 20 s nichts, kannst du einen Mitspieler herausfordern – alle sehen das Ergebnis (ändert nichts am Spiel).
+
 ## v0.89.0 – Rückmeldungen 22.11. nachts
 
 - [x] **Schimmer „du bist dran“** leuchtet hinter deiner Figur unten links (nicht mehr hinter den Knöpfen).

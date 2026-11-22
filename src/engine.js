@@ -70,6 +70,12 @@ export function applyKurs(kurse, animal, factor) {
 //    Geschützt: fertige Quartette, Ratten, Spieler ohne Geld. Wer schon gepfändet wurde, kann nochmal gepfändet werden (Alp, 19.11.).
 //  • Einspruch: wehrt eine Pfändung gegen dich automatisch ab (beide Karten sind dann weg).
 export const HAND_KINDS = ['pfaendung', 'einspruch'];
+export const START_HAND_MAX = 3;
+export function startHandOf(settings) {
+  const h = (settings && settings.startHand) || {};
+  const n = (x, d) => (Number.isInteger(x) ? Math.max(0, Math.min(START_HAND_MAX, x)) : d);
+  return { pfaendung: n(h.pfaendung, 1), einspruch: n(h.einspruch, 1) };
+}
 export const PFAEND_SHOW_MS = 3200; // Auftritt des Gerichtsvollziehers, erst danach wird geboten (Info-Fenster: folgt dem Tempo leicht)
 export function pfaendShowMs(state) { return Math.round(PFAEND_SHOW_MS * infoFactor(state)); }
 // Preis fürs Vorkaufsrecht (bei Zwangsversteigerung gibt es keins)
@@ -318,6 +324,11 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
   };
   for (const p of players) stat(state, p.id);
   if (settings && settings.missions) state.missions = dealMissions(state, seed); // v0.82 Geheimaufträge
+  // v0.90 (Alp): Börsen-Chaos – jeder startet mit Pfändung/Einspruch auf der Hand (Standard je 1, im Raum 0–3 einstellbar)
+  if (isBoerse(settings)) {
+    const sh = startHandOf(settings);
+    state.hands = Object.fromEntries(state.players.map((p) => [p.id, [...Array(sh.pfaendung).fill('pfaendung'), ...Array(sh.einspruch).fill('einspruch')]]));
+  }
   log(state, 'Das Spiel beginnt.');
   return state;
 }

@@ -734,7 +734,7 @@ test('Börsen-Chaos: 68 Karten (54 + 14 News inkl. Hype, Blase, Blindmarkt, 2× 
 });
 
 function boerseWithTop(card) {
-  const g = createGame({ players: P, seed: 1, settings: { boerse: true } });
+  const g = createGame({ players: P, seed: 1, settings: { boerse: true, startHand: { pfaendung: 0, einspruch: 0 } } });
   g.deck = [card, 'kuh', 'hahn', 'esel', 'pferd', 'schaf'];
   return g;
 }
@@ -1194,4 +1194,14 @@ test('v0.87: nach „kann nicht zahlen“ gibt es das Tier nicht umsonst – Ver
   h = drawForAuction(h, 'a');
   h = closeAuction(h, 'a', 'sell');
   assert.equal(h.phase, 'turn');
+});
+
+test('v0.90: Börsen-Chaos – jeder startet mit 1 Pfändung + 1 Einspruch (einstellbar 0–3)', () => {
+  const g = createGame({ players: P, seed: 3, settings: { boerse: true } });
+  for (const p of g.players) assert.deepEqual(g.hands[p.id], ['pfaendung', 'einspruch']);
+  const h = createGame({ players: P, seed: 3, settings: { boerse: true, startHand: { pfaendung: 3, einspruch: 0 } } });
+  assert.deepEqual(h.hands[P[0].id], ['pfaendung', 'pfaendung', 'pfaendung']);
+  const k = createGame({ players: P, seed: 3, settings: { boerse: true, startHand: { pfaendung: 9, einspruch: -2 } } });
+  assert.deepEqual(k.hands[P[0].id], ['pfaendung', 'pfaendung', 'pfaendung']);
+  assert.equal(createGame({ players: P, seed: 3 }).hands, undefined);
 });

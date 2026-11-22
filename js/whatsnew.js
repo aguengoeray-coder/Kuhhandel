@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.90.0', date: '22.11.', items: ['🔨 Börsen-Chaos: Pfändung + Einspruch schon auf der Start-Hand', '⚙️ Einstellungen übersichtlich auf einem Bild', '🎨 Aussehen aufgeräumt – Spezial-Designs bald im Shop', '✊✋✌️ Schnick-Schnack-Schnuck, wenn’s langweilig wird'] },
   { v: '0.89.0', date: '22.11.', items: ['✨ Schimmer hinter deiner Figur', '🙋 Passen beendet nicht mehr – selbst überbieten geht', '💸 Kuhhandel: „effektiv bezahlt“ sehen alle', '⭐ Spezialkarte: Stern immer unten am Set', '🐀 Rattenkönig nur einmal', '📊 Statistik im Spielmenü', '🃏 Alle Sets immer sichtbar, eigene größer'] },
   { v: '0.88.1', date: '22.11.', items: ['🧹 Kleinkram am Tisch aufgeräumt'] },
   { v: '0.88.0', date: '21.11.', items: ['👆 Knöpfe reagieren zuverlässiger, weniger Flackern', '💸 Bieten ohne Sperre – „… war schneller“ statt Fehlgebot, selbst überbieten geht', '💬 Neues Emoji-/Sprüche-Fenster beim Antippen deiner Figur', '📜 Letzte Runde mit Differenz', '💰 Handgeld wieder Schein für Schein'] },

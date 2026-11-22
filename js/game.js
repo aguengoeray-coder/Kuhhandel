@@ -1688,6 +1688,40 @@ export function renderGame(root, ctx) {
   const quickOn = QUICK.length > 0 && !!ctx.react && v.players.some((p) => p.id === meId) && ['auction', 'trade', 'special', 'rat', 'payment', 'divide'].includes(state.phase) && !local.reactTo;
   const quickHtml = quickOn ? `<div class="qemo" role="group" aria-label="Schnell-Reaktion an alle">${QUICK.map((e, i) => `<button type="button" class="qe" data-a="qemo" data-v="${i}" aria-label="${e} an alle">${e}</button>`).join('')}</div>` : '';
   H.qemo = (i) => { const e = QUICK[Number(i)]; if (e) ctx.react(e, null); };
+  // v0.90 (Alp): 20 s keine Aktion → „Schnick-Schnack-Schnuck?“ gegen einen Mitspieler (nur Spaß, ändert nichts am Spiel)
+  const RPS_IC = { stein: '✊', schere: '✌️', papier: '✋' };
+  const rpsHtml = (() => {
+    if (!ctx.rps || state.phase === 'ended' || !v.players.some((p) => p.id === meId)) return '';
+    const ik = `${state.phase}|${logNo(state)}|${state.turn}|${state.auction?.high?.amount ?? ''}`;
+    if (local.idleKey !== ik) { local.idleKey = ik; local.idleAt = Date.now(); }
+    const idle = Date.now() - local.idleAt >= 20000;
+    if (!idle) wakeLocal(local.idleAt + 20010);
+    const r = ctx.rps();
+    if (r && r.done && Date.now() - r.doneAt > 4200) { ctx.rpsClose(); return ''; }
+    if (r && !r.done && Date.now() - r.at > 25000) { ctx.rpsClose(); return ''; }
+    if (r) {
+      if (r.done) wakeLocal(r.doneAt + 4250); else wakeLocal(r.at + 25050);
+      const nm = (id) => (id === meId ? 'Du' : esc(nameOf(id)));
+      const inIt = r.from === meId || r.to === meId;
+      if (r.done) {
+        const a = r.picks[r.from], b = r.picks[r.to];
+        const txt = r.declined ? `${nm(r.to)} ${r.to === meId ? 'willst' : 'will'} gerade nicht` : r.winner == null ? `${RPS_IC[a]} Unentschieden ${RPS_IC[b]}` : `${RPS_IC[r.picks[r.winner]]} ${nm(r.winner)} ${r.winner === meId ? 'gewinnst' : 'gewinnt'} gegen ${nm(r.winner === r.from ? r.to : r.from)} ${RPS_IC[r.picks[r.winner === r.from ? r.to : r.from]]}`;
+        return `<div class="rpsbox done ${r.winner === meId ? 'win' : inIt && r.winner ? 'lose' : ''}" role="status">${txt}</div>`;
+      }
+      if (!inIt) return `<div class="rpsbox mini" role="status">✊✋✌️ ${nm(r.from)} gegen ${nm(r.to)} …</div>`;
+      if (r.picks[meId]) return `<div class="rpsbox mini" role="status">${RPS_IC[r.picks[meId]]} gewählt – warte auf ${nm(r.from === meId ? r.to : r.from)} …</div>`;
+      return `<div class="rpsbox" role="dialog" aria-label="Schnick-Schnack-Schnuck"><b>${r.from === meId ? `Schnick-Schnack-Schnuck gegen ${nm(r.to)}` : `${nm(r.from)} fordert dich heraus!`}</b>
+        <div class="rpsch">${Object.entries(RPS_IC).map(([k, ic]) => `<button type="button" data-a="rpsPick" data-v="${k}" aria-label="${k}">${ic}</button>`).join('')}</div>
+        ${r.to === meId ? '<button type="button" class="rpsno" data-a="rpsNo">Keine Lust</button>' : ''}</div>`;
+    }
+    if (!idle) return '';
+    if (local.rpsOpen) return `<div class="rpsbox" role="dialog" aria-label="Gegen wen?"><b>Gegen wen? ✊✋✌️</b><div class="rpswho">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" data-a="rpsAsk" data-v="${esc(p.id)}">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div><button type="button" class="rpsno" data-a="rpsOpen">Abbrechen</button></div>`;
+    return `<button type="button" class="rpsgo" data-a="rpsOpen" aria-label="Schnick-Schnack-Schnuck spielen">✊✋✌️ <span>Langweilig? Schnick-Schnack-Schnuck!</span></button>`;
+  })();
+  H.rpsOpen = () => { local.rpsOpen = !local.rpsOpen; ctx.rerender(); };
+  H.rpsAsk = (id) => { local.rpsOpen = false; ctx.rpsAsk(id); };
+  H.rpsPick = (k) => ctx.rpsPick(k);
+  H.rpsNo = () => ctx.rpsNo();
   const setsPop = (() => {
     const pid = local.setsOf; const i = pid ? idxOf(pid) : -1; const p = i >= 0 ? v.players[i] : null;
     if (!p) return '';
@@ -2616,7 +2650,7 @@ export function renderGame(root, ctx) {
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
-    ${standingsHtml}${setsPop}${quickHtml}${evStrip && state.phase === 'turn' && !local.tradeOpen && !local.reactTo ? `<div class="lastround" role="status"><small>Letzte Runde</small><div class="evstrip">${evStrip}</div></div>` : ''}
+    ${standingsHtml}${setsPop}${quickHtml}${rpsHtml}${evStrip && state.phase === 'turn' && !local.tradeOpen && !local.reactTo ? `<div class="lastround" role="status"><small>Letzte Runde</small><div class="evstrip">${evStrip}</div></div>` : ''}
     ${effects}
     ${wake ? `<i hidden data-wake="${wake}"></i>` : ''}
     ${(ctx.autoplay || []).includes(meId) && state.phase !== 'ended' ? `<div class="botbar" role="alert"><span>🤖 Ein Test-Spieler spielt gerade für dich.</span><button type="button" data-a="selfPlay">Selbst weiterspielen</button></div>` : ''}
