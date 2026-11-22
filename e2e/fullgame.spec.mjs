@@ -87,6 +87,10 @@ async function play(browser, url, g) {
       if (!await tap('[data-a="tradeGo"]:not([disabled])')) await tap('[data-a="tradeClose"]');
       continue;
     }
+    // v0.89: wer führt, bietet nicht weiter gegen sich selbst (sonst läuft jede Versteigerung endlos) – „Beenden“, sobald es geht
+    if (await tap('[data-a="pass"].endnow:not([disabled])')) continue;
+    const leading = await page.evaluate(() => /Du\s*führst/.test(document.querySelector('.bidbox')?.innerText || '')).catch(() => false);
+    if (leading) { await page.waitForTimeout(200); continue; }
     for (const sel of ['[data-a="divKeep"]', '[data-a="duoPass"]:not([disabled])', '[data-a="block"]', '[data-a="batzen"]', 'button.pill[data-a="auction"]:not([disabled])', 'button.bidbtn:not([disabled])', '[data-a="sell"]', '[data-a="spSell"]', '[data-a="buzz"]:not([disabled])', '[data-a="rps"]']) if (await tap(sel)) break;
   }
   await page.close();
