@@ -1,4 +1,4 @@
-import { SLOTS, RARITIES, BOX_ITEMS, BOX_PRICE, PITY_LEGEND, PITY_EPIC, itemInfo, ownedParts, fullOutfit, setOf, SET_FX, partName } from './outfits.js';
+import { SLOTS, RARITIES, BOX_ITEMS, BOX_PRICE, PITY_LEGEND, PITY_EPIC, itemInfo, ownedParts, fullOutfit, setOf, SET_FX, partName, BOX_SETS, boxSetOf, boxSetProgress, dingArt } from './outfits.js';
 import { SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS, shopAvatarFull } from './shopavatars.js';
 
 export const SHOP_SAYINGS = [
@@ -83,21 +83,25 @@ export function renderShop(root, ctx) {
   const rarOf = (id) => { const it = itemInfo(id); if (it) return it.rarity; const av = String(id).split(':')[1]; const t = (AVATARS.find((a) => a.id === av) || {}).tier; return t === 'kult' ? 'episch' : t || 'gewoehnlich'; };
   const rarTag = (r) => '<span class="rar r-' + r + '">' + RARITIES[r].name + '</span>';
   const previewFor = (o) => shopAvatarFull(activeAvatar || (String(o.kopf || '').split(':')[1]) || 'noergler', 'wardrobe-fig', o);
-  const itemThumb = (id) => {
+  const itemThumb = (id, full) => {
     const it = itemInfo(id);
     if (it && it.slot === 'design') return '<span class="it-design" data-design="' + esc(id) + '">🎨</span>';
+    if (it && it.slot === 'ding' && !full) return '<span class="shop-avatar-full thumb-fig slot-ding"><svg class="shop-avatar-art" viewBox="62 16 68 146" aria-hidden="true"><defs><linearGradient id="gold-glow" x2="0" y2="1"><stop stop-color="#FFE98A"/><stop offset="1" stop-color="#D99519"/></linearGradient></defs><g class="sa-ding">' + dingArt(id) + '</g></svg></span>'; // v0.93: Gegenstand allein
     const sl = it ? it.slot : String(id).split(':')[0];
     const o = { kopf: null, brust: null, beine: null, ding: null };
     o[sl] = id;
-    return shopAvatarFull(activeAvatar || 'noergler', 'thumb-fig slot-' + sl, o);
+    return shopAvatarFull(activeAvatar || 'noergler', full ? 'reveal-fig' : 'thumb-fig slot-' + sl, o);
   };
+  // v0.93: zu welchem Sammel-Set gehört ein Teil? „🛡️ Ritter-Set · Teil 2 von 3“ / „Set komplett!“
+  const setLine = (id) => { const st = boxSetOf(id); if (!st) return ''; const pr = boxSetProgress(st, inventory); const full = pr.have.length === 3;
+    return '<span class="br-set">' + BOX_SETS[st].icon + ' ' + esc(BOX_SETS[st].name) + '-Set · ' + (full ? 'komplett! ✨ ' + esc(SET_FX[st].name) : pr.have.length + ' von 3') + '</span>'; };
   const kisteTab = () => {
     const r = box.res; const info = r ? itemInfo(r.item) : null;
     const left = PITY_LEGEND - (boxState.since_legend || 0);
     const stage = box.st === 'open' && r
       ? '<div class="box-reveal r-' + r.rarity + '" style="--rc:' + RARITIES[r.rarity].color + ';--rg:' + RARITIES[r.rarity].glow + '">' +
-          '<div class="br-rays" aria-hidden="true"></div><div class="br-item">' + itemThumb(r.item) + '</div>' +
-          '<div class="br-text">' + rarTag(r.rarity) + '<b>' + esc(info ? info.name : r.item) + '</b>' +
+          '<div class="br-rays" aria-hidden="true"></div><div class="br-item">' + itemThumb(r.item, true) + '</div>' +
+          '<div class="br-text">' + rarTag(r.rarity) + '<b>' + esc(info ? info.name : r.item) + '</b>' + setLine(r.item) +
           (r.dupe ? '<small>Doppelt – +' + r.refund + ' ' + DUB + ' zurück</small>' : '<small>✨ Neu in deiner Sammlung!</small>') + '</div>' +
           '<div class="br-actions">' + (!r.dupe && info && info.slot !== 'design' ? '<button class="shop-action shop-select" data-wear="' + esc(r.item) + '">Gleich anziehen</button>' : '') +
           (info && info.slot === 'design' ? '<button class="shop-action shop-select" data-usedesign="' + esc(r.item) + '">Spielfeld benutzen</button>' : '') +
@@ -114,6 +118,12 @@ export function renderShop(root, ctx) {
       '<div class="kiste-show">' + pool.filter(([, it]) => it.rarity === 'legendaer').map(([id, it]) => '<span class="ks-item ' + (inventory.has(id) ? 'have' : '') + '" title="' + esc(it.name) + '">' + itemThumb(id) + '</span>').join('') + '</div>' +
       '</aside></div>';
   };
+  const MONTHS = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.'];
+  // v0.93 Set-Fortschritt: welche Kisten-Sets hast du angefangen, was fehlt noch?
+  const setsHtml = () => { const rows = Object.keys(BOX_SETS).map((st) => ({ st, ...boxSetProgress(st, inventory) })).filter((x) => x.have.length > 0);
+    if (!rows.length) return '';
+    return '<ul class="wd-sets">' + rows.map((x) => { const full = x.have.length === 3; const miss = x.parts.filter((p) => !x.have.includes(p)).map((p) => SLOTS.find((k) => k.id === p.split(':')[0]).name);
+      return '<li class="' + (full ? 'full' : '') + '" title="' + esc(full ? 'Alle 3 Teile anziehen → ' + SET_FX[x.st].name : 'Fehlt: ' + miss.join(' + ')) + '">' + BOX_SETS[x.st].icon + ' ' + esc(BOX_SETS[x.st].name) + '<span class="pips">' + x.parts.map((p) => '<i class="' + (x.have.includes(p) ? 'on' : '') + '"></i>').join('') + '</span><b>' + (full ? '✨ komplett' : 'fehlt: ' + miss.join(', ')) + '</b></li>'; }).join('') + '</ul>'; };
   const garderobeTab = () => {
     const mine = partsOwned();
     const set = setOf(fullOutfit(activeAvatar, draft));
@@ -122,10 +132,10 @@ export function renderShop(root, ctx) {
     const list = [...mine].filter((id) => String(id).startsWith(slot + ':'));
     const locked = Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === slot && !inventory.has(id)).map(([id]) => id);
     const cur = fo[slot];
-    const cell = (id, lock) => '<button class="wd-cell r-' + rarOf(id) + (cur === id ? ' on' : '') + (lock ? ' locked' : '') + '" ' + (lock ? 'disabled' : 'data-part="' + esc(id) + '"') + ' title="' + esc(partName(id, avName)) + '">' + itemThumb(id) + '<small>' + esc(itemInfo(id) ? itemInfo(id).name : avName(String(id).split(':')[1])) + '</small>' + (lock ? '<em>📦</em>' : '') + '</button>';
+    const cell = (id, lock) => '<button class="wd-cell r-' + rarOf(id) + (cur === id ? ' on' : '') + (lock ? ' locked' : '') + '" ' + (lock ? 'disabled' : 'data-part="' + esc(id) + '"') + ' title="' + esc(partName(id, avName)) + '">' + itemThumb(id) + '<small>' + esc(itemInfo(id) ? itemInfo(id).name : avName(String(id).split(':')[1])) + '</small>' + (boxSetOf(id) ? '<i class="setbadge" title="' + esc(BOX_SETS[boxSetOf(id)].name) + '-Set">' + BOX_SETS[boxSetOf(id)].icon + '</i>' : '') + (lock ? '<em class="lk">' + (itemInfo(id) && itemInfo(id).month ? '📦 ' + MONTHS[itemInfo(id).month - 1] : '📦') + '</em>' : '') + '</button>';
     return '<div class="wd-wrap"><div class="wd-left"><div class="wd-fig">' + previewFor(draft) + '</div>' +
       (set ? '<p class="wd-set">✨ Set komplett: <b>' + esc(SET_FX[set].name) + '</b></p>' : missing ? '<p class="wd-miss">' + missing + '</p>' : '') +
-      '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button></div>' +
+      '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button>' + setsHtml() + '</div>' +
       '<div class="wd-right"><nav class="wd-slots">' + SLOTS.map((x) => '<button class="' + (slot === x.id ? 'on' : '') + '" data-slot="' + x.id + '">' + x.icon + ' ' + x.name + '</button>').join('') + '</nav>' +
       '<div class="wd-grid">' + (slot === 'ding' || draft[slot] ? '<button class="wd-cell none' + (!draft[slot] ? ' on' : '') + '" data-part="">' + (slot === 'ding' ? '✋ Nichts' : '↺ Vom Avatar') + '</button>' : '') +
       list.map((id) => cell(id, false)).join('') + locked.map((id) => cell(id, true)).join('') + '</div>' +
@@ -222,6 +232,8 @@ export function renderShop(root, ctx) {
         '</div><footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer></section>';
 
     root.querySelector('[data-close]')?.addEventListener('click', () => ctx.close());
+    // v0.93: Gegenstands-Kacheln auf das Teil zuschneiden (jeder Gegenstand ist anders groß)
+    root.querySelectorAll('.thumb-fig.slot-ding svg').forEach((svg) => { try { const g = svg.querySelector('.sa-ding'); const b = g && g.getBBox(); if (!b || !b.width) return; const m = Math.max(b.width, b.height) * 0.12 + 3; const w = Math.max(b.width, b.height * 0.75) + 2 * m; const h = Math.max(b.height, b.width / 1.1) + 2 * m; svg.setAttribute('viewBox', [b.x + b.width / 2 - w / 2, b.y + b.height / 2 - h / 2, w, h].map((x) => x.toFixed(1)).join(' ')); } catch { /* ohne Layout (Test) egal */ } });
     root.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; notice = ''; render(); }));
     root.querySelectorAll('[data-buy]').forEach(b => b.addEventListener('click', () => buy(b.dataset.buy)));
     root.querySelectorAll('[data-free]').forEach(b => b.addEventListener('click', () => claim(b.dataset.free)));

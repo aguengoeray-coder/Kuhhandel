@@ -235,6 +235,10 @@ export function setOf(o) {
   const av = (k) => (String(o?.[k] || '').startsWith(`${k}:`) ? String(o[k]).slice(k.length + 1) : null);
   const a = av('kopf'); return a && a === av('brust') && a === av('beine') && SET_FX[a] ? a : null;
 }
+// v0.93 Sammel-Sets aus der Kiste (Kopf + Brust + Beine) → Fortschritt in der Garderobe, Hinweis beim Ziehen
+export const BOX_SETS = { ritter: { name: 'Ritter', icon: '🛡️' }, samurai: { name: 'Samurai', icon: '⛩️' }, astronaut: { name: 'Astronaut', icon: '🚀' }, weihnachtsmann: { name: 'Weihnachtsmann', icon: '🎅' } };
+export function boxSetOf(id) { const s = String(id || '').split(':')[1]; return BOX_SETS[s] && ['kopf', 'brust', 'beine'].includes(String(id).split(':')[0]) ? s : null; }
+export function boxSetProgress(set, inventory) { const inv = inventory instanceof Set ? inventory : new Set(inventory || []); const parts = ['kopf', 'brust', 'beine'].map((k) => `${k}:${set}`); return { have: parts.filter((p) => inv.has(p)), parts }; }
 // Kurzname eines Teils für Listen
 export function partName(id, avatarName) {
   if (BOX_ITEMS[id]) return BOX_ITEMS[id].name;

@@ -118,7 +118,7 @@
 .odds li i{width:10px;height:10px;border-radius:3px}.odds li b{margin-left:auto}
 .pity{margin:0;font-size:11.5px;line-height:1.35;opacity:.9}
 .kiste-show{display:flex;flex-wrap:wrap;gap:4px}
-.ks-item{width:40px;height:52px;border-radius:8px;background:#0004;box-shadow:inset 0 0 0 2px #F59E0B;display:flex;align-items:center;justify-content:center;overflow:hidden;filter:grayscale(.8) brightness(.7)}
+.ks-item{width:52px;height:52px;border-radius:8px;background:#0004;box-shadow:inset 0 0 0 2px #F59E0B;display:flex;align-items:center;justify-content:center;overflow:hidden;filter:grayscale(.8) brightness(.7)}
 .ks-item.have{filter:none}
 .ks-item .shop-avatar-full{height:52px}.ks-item svg{height:52px;width:auto}
 .it-design{font-size:44px}
@@ -135,7 +135,7 @@
 .wd-cell{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border:0;border-radius:12px;background:#ffffff14;color:#fff;cursor:pointer;box-shadow:inset 0 0 0 2px #9CA3AF}
 .wd-cell.r-selten{box-shadow:inset 0 0 0 2px #3B82F6}.wd-cell.r-episch{box-shadow:inset 0 0 0 2px #A855F7}.wd-cell.r-legendaer{box-shadow:inset 0 0 0 2px #F59E0B,0 0 10px rgba(245,158,11,.5)}
 .wd-cell.on{background:#ffffff40;outline:3px solid #fff}
-.wd-cell.locked{cursor:default;filter:grayscale(.85) brightness(.6)}
+.wd-cell.locked{cursor:default;background:#0000002e}.wd-cell.locked .thumb-fig{filter:grayscale(.55) brightness(.82);opacity:.8}
 .wd-cell em{position:absolute;right:4px;top:2px;font-style:normal;font-size:12px}
 .wd-cell small{font-size:9.5px;line-height:1.1;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wd-cell .shop-avatar-full{height:68px}.wd-cell svg{height:68px;width:auto}
@@ -143,10 +143,6 @@
 /* Teile-Vorschau: auf das jeweilige Fach zoomen (scale/translate statt transform, damit die Avatar-Bewegung nicht stört) */
 .thumb-fig{overflow:hidden;display:block}
 .thumb-fig .sfx{display:none}.thumb-fig svg{filter:none!important}
-.thumb-fig.slot-kopf svg{scale:1.9;transform-origin:50% 20%}
-.thumb-fig.slot-brust svg{scale:1.8;transform-origin:50% 60%}
-.thumb-fig.slot-beine svg{scale:1.9;transform-origin:50% 90%}
-.thumb-fig.slot-ding svg{scale:1.9;transform-origin:88% 55%}
 .br-item .thumb-fig svg{scale:1;translate:0 0}
 @media (max-height:400px){.wd-fig .shop-avatar-full,.wd-fig svg{height:170px}.br-item,.br-item .shop-avatar-full,.br-item .shop-avatar-full svg{height:140px}}
 .ks-item .it-design{font-size:24px}
@@ -192,3 +188,16 @@
 .shop-avatar-item.v2:hover .shop-avatar-full.still *,.shop-avatar-item.v2.is-trying .shop-avatar-full.still *{animation-play-state:running}
 .kiste-side,.wd-left{background:#00000038}
 @media(max-height:400px){.stage-figwrap,.stage-figwrap .shop-avatar-full{height:160px}.shop-split{grid-template-columns:180px 1fr}}
+
+/* v0.93 Garderobe: Teil-Nahaufnahme, Set-Fortschritt */
+.wd-cell .thumb-fig{height:68px;width:72px;display:flex;align-items:center;justify-content:center}.wd-cell .thumb-fig svg{height:68px;width:72px}
+.wd-cell em.lk{font-size:10px;background:#0009;border-radius:6px;padding:0 4px}
+.wd-cell .setbadge{position:absolute;left:3px;top:2px;font:800 8.5px/1.4 var(--font-head,Fredoka,sans-serif);background:#F5C542;color:#2A2420;border-radius:5px;padding:0 4px}
+.wd-sets{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px;width:100%}
+.wd-sets li{display:flex;align-items:center;gap:6px;font:700 11px/1.2 var(--font-head,Fredoka,sans-serif);color:#fff;background:#ffffff12;border-radius:8px;padding:3px 6px}
+.wd-sets li b{margin-left:auto;font-size:11px}.wd-sets li.full{background:#F5C54233;box-shadow:inset 0 0 0 1.5px #F5C542}
+.wd-sets .pips{display:flex;gap:2px}.wd-sets .pips i{width:7px;height:7px;border-radius:50%;background:#ffffff33}.wd-sets .pips i.on{background:#F5C542}
+.br-set{display:block;margin-top:2px;font:800 12px var(--font-head,Fredoka,sans-serif);color:#F5C542}
+.wd-left{overflow-y:auto;max-height:100%;scrollbar-width:thin}
+.wd-left:has(.wd-sets) .wd-fig .shop-avatar-full,.wd-left:has(.wd-sets) .wd-fig svg{height:150px}
+.wd-cell .setbadge{font-size:11px;padding:0 2px;background:#F5C542cc}

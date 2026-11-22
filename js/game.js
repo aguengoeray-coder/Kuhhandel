@@ -327,7 +327,7 @@ function fitAuslage(root) {
   // v0.92: „Warte, warte, warte!“ (oder anderes in der Mitte) darf nicht auf die Auslage ragen → Auslage so weit verkleinern, dass sie darunter passt
   const left = Math.min(...kids.map((r) => r.left)) + (1 - f) * used / 2; const right = left + used * f;
   const top = Math.min(...kids.map((r) => r.top)); const bottom = Math.max(...kids.map((r) => r.bottom));
-  for (const el of root.querySelectorAll('.stage .waitbtn')) {
+  for (const el of root.querySelectorAll('.stage .waitbtn, .stage .evstrip')) {
     const w = el.getBoundingClientRect();
     if (!w.width || w.right <= left || w.left >= right || w.bottom <= top + (bottom - top) * (1 - f)) continue;
     f = Math.min(f, Math.max(0.6, (bottom - w.bottom - 3) / (bottom - top)));
@@ -1647,7 +1647,7 @@ export function renderGame(root, ctx) {
         : `<div class="deck ${v.deck === 0 ? 'empty' : ''} ${topCls}">${v.deck > 0 ? deckFace : ''}</div>`}
       <span class="deck-count ${v.deck > 0 && v.deck <= 5 ? 'low' : ''}">${v.deck > 0 ? `${v.deck} im Stapel${v.deck <= 5 ? ' – bald nur noch Kuhhandel' : ''}` : 'Stapel leer – nur Kuhhandel'}${isTurbo(state) ? '<b class="turbotag">⚡ Turbo</b>' : ''}${isBoerse(state) ? `<b class="turbotag boersetag">📈 Börse${state.hektik ? ` · ⚡ Hektik ${state.hektik}` : ''}${state.blind ? ` · 🙈 Blind ${state.blind}` : ''}</b>` : ''}${state.settings?.stake ? `<b class="turbotag staketag" title="Einsatz: Platz 1 bekommt den Topf">💶 Topf ${state.settings.stake * v.players.length} €</b>` : ''}${kursZettel(state)}</span>
     </div>`}</div>
-    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX * 1.1, 470 / Math.max(1, myItems.length * 44)).toFixed(3)};--sg:${myItems.length > 8 ? 5 : 12}px" aria-label="Deine Karten">${myAnimals}</div>
+    <div class="auslage shelf ${local.tradeOpen || state.phase === 'trade' ? 'hide' : ''}" style="--sc:${Math.min(SHELF_MAX * 1.22, 470 / Math.max(1, myItems.length * 44)).toFixed(3)};--sg:${myItems.length > 8 ? 5 : 12}px" aria-label="Deine Karten">${myAnimals}</div>
     ${state.phase === 'trade' || (local.tradeOpen && local.tradePicked) ? mySetsStrip() : ''}
     ${leftActionsHtml ? `<div class="dock">${leftActionsHtml}</div>` : ''}
     <div class="fan-wrap slots ${pickMode ? 'picking' : ''} ${iLead ? 'leading' : ''}" style="--ov:${fanOv}px" aria-label="Dein Geld: ${sum(me.money)} Taler">${fan}${handMoney.length ? `<span class="fansum" aria-hidden="true">${sum(handMoney)}<i class="taler"></i></span>` : pickMode === 'sel' && me.money.length ? '<span class="fanempty">Alles im Feld</span>' : ''}</div>
