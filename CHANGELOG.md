@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.93.0 – Garderobe übersichtlicher, Set-Fortschritt, größere eigene Sets (Alps Go 22.11. 12:56)
+
+- [x] **Garderobe-Kacheln zeigen das Teil:** Kopf, Brust, Beine als Ausschnitt, Gegenstände allein und auf ihre Größe zugeschnitten; gesperrte Teile gut erkennbar statt dunkler Figur.
+- [x] **Set-Fortschritt** unter der Figur (z. B. „🛡️ Ritter ●●○ fehlt: Beine“), Set-Zeichen an den Kacheln, Saison-Teile mit „📦 Dez.“.
+- [x] **Kuh-Kiste:** beim Ziehen „🛡️ Ritter-Set · 2 von 3“ bzw. „komplett! ✨ Ritterglanz“.
+- [x] **Eigene Tier-Sets ca. 15 % größer:** die Auslage verkleinert sich nur, wenn „Warte, warte, warte!“ oder die Zeile „Letzte Runde“ sonst draufragen würde.
+
 ## v0.92.0 – Effekte, Rüstungen, Waffen, Shop (Alps Go 22.11. 10:19)
 
 - [x] **Set-Effekte neu gezeichnet** statt Emojis: Höllenfeuer als große Flammenwand hinter der Figur, Stinkwolke mit Fliegen, Discokugel mit Lichtkegeln, Blitzbögen, Geldregen mit Münzhaufen, Glanz-Strahlen – in der Farbe des Avatars.

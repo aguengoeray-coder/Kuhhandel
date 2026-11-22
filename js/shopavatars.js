@@ -429,6 +429,8 @@ export const SHOP_AVATAR_FULL_CSS = SHOP_AVATAR_CSS.split('\n')
 
 // v0.91 Outfit: Kopf, Brust, Beine aus verschiedenen Avataren oder der Kuh-Kiste + Gegenstand; komplettes Set → Effekt
 const avOf = (part, slot) => { const v = String(part || ''); return v.startsWith(`${slot}:`) ? v.slice(slot.length + 1) : null; };
+// v0.93 Ausschnitte für Garderobe-Kacheln (Figur 120×200, Helm/Fahrzeug ragen etwas raus)
+const THUMB_VB = { kopf: '4 -10 112 104', brust: '14 76 92 88', beine: '-8 128 136 92', ding: '46 14 90 128' };
 export function shopAvatarFull(id, className = '', outfit = null) {
   const o = fullOutfit(id, outfit);
   const headInfo = itemInfo(o.kopf);
@@ -450,6 +452,8 @@ export function shopAvatarFull(id, className = '', outfit = null) {
   const legExtra = be.legExtra || ''; const beFront = be.front && !avOf(o.beine, 'beine') ? be.front : '';
   const ride = be.ride ? RIDE_ART[be.ride] || '' : '';
   const set = /\b(still|thumb-fig)\b/.test(className) ? null : setOf(o); const fx = set ? SET_FX[set].fx : ''; // Kacheln/Vorschauen ohne Effekt
-  const svg = `<svg class="shop-avatar-art" viewBox="0 0 120 200" role="img" aria-hidden="true" focusable="false"><defs><linearGradient id="gold-glow" x2="0" y2="1"><stop stop-color="#FFE98A"/><stop offset="1" stop-color="#D99519"/></linearGradient></defs>${fxBack(fx, set)}<g class="sa-rider" ${ride ? `transform="translate(0 ${RIDE_OFF[be.ride] - (RIDE_SC[be.ride] - 1) * 6})"` : ''}><g class="sa-body" stroke-linejoin="round" stroke-linecap="round">${figureBody(b)}${legExtra}${beFront}</g><g class="sa-head${headInfo?.tint ? ` tint-${headInfo.tint}` : ''}" transform="translate(12 0) scale(.8)">${head}</g>${partArt(o.kopf)?.helm ? `<g class="sa-helm">${partArt(o.kopf).helm}</g>` : ''}${o.ding ? `<g class="sa-ding">${dingArt(o.ding)}</g>` : ''}</g>${ride ? `<g transform="translate(0 ${RIDE_OFF[be.ride]}) translate(60 200) scale(${RIDE_SC[be.ride]}) translate(-60 -200)">${ride}</g>` : ''}${fxFront(fx, set)}</svg>`;
+  const zoom = (/\bthumb-fig slot-(kopf|brust|beine|ding)\b/.exec(className) || [])[1]; // v0.93: Kachel zeigt nur das Teil (Ausschnitt)
+  const vb = zoom ? THUMB_VB[zoom] : '0 0 120 200';
+  const svg = `<svg class="shop-avatar-art" viewBox="${vb}" role="img" aria-hidden="true" focusable="false"><defs><linearGradient id="gold-glow" x2="0" y2="1"><stop stop-color="#FFE98A"/><stop offset="1" stop-color="#D99519"/></linearGradient></defs>${fxBack(fx, set)}<g class="sa-rider" ${ride ? `transform="translate(0 ${RIDE_OFF[be.ride] - (RIDE_SC[be.ride] - 1) * 6})"` : ''}><g class="sa-body" stroke-linejoin="round" stroke-linecap="round">${figureBody(b)}${legExtra}${beFront}</g><g class="sa-head${headInfo?.tint ? ` tint-${headInfo.tint}` : ''}" transform="translate(12 0) scale(.8)">${head}</g>${partArt(o.kopf)?.helm ? `<g class="sa-helm">${partArt(o.kopf).helm}</g>` : ''}${o.ding ? `<g class="sa-ding">${dingArt(o.ding)}</g>` : ''}</g>${ride ? `<g transform="translate(0 ${RIDE_OFF[be.ride]}) translate(60 200) scale(${RIDE_SC[be.ride]}) translate(-60 -200)">${ride}</g>` : ''}${fxFront(fx, set)}</svg>`;
   return `<span class="shop-avatar-full ${className} ${fx ? `setfx fx-${fx}` : ''}" data-avatar="${item.id}" data-tier="${item.tier}" data-motion="${item.motion}" aria-label="${item.name}">${svg}</span>`;
 }

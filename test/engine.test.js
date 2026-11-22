@@ -1224,5 +1224,9 @@ test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen
   for (const [id, it] of Object.entries(O.BOX_ITEMS)) if (it.month) assert.match(sql, new RegExp(`set nur_monat = ${it.month} where item_id in \\([^)]*'${id}'`), `Monat für ${id}`);
   for (const [id, it] of Object.entries(O.BOX_ITEMS)) if (it.slot === 'kopf' && !it.head) assert.ok(O.partArt(id)?.helm, `Helm ${id}`);
   for (const s of ['ritter', 'samurai', 'astronaut', 'weihnachtsmann']) assert.equal(O.setOf({ kopf: `kopf:${s}`, brust: `brust:${s}`, beine: `beine:${s}` }), s);
+  // v0.93 Sammel-Sets: jedes Set hat Kopf, Brust und Beine in der Kiste
+  for (const st of Object.keys(O.BOX_SETS)) { assert.equal(O.boxSetOf(`kopf:${st}`), st); for (const k of ['kopf', 'brust', 'beine']) assert.ok(O.BOX_ITEMS[`${k}:${st}`], `${k}:${st} in der Kiste`); }
+  assert.equal(O.boxSetOf('ding:katana'), null); assert.equal(O.boxSetOf('kopf:noergler'), null);
+  assert.deepEqual(O.boxSetProgress('ritter', ['kopf:ritter', 'beine:ritter', 'ding:lanze']).have, ['kopf:ritter', 'beine:ritter']);
   assert.ok(sql.includes('since_legend + 1 >= 25') && sql.includes('since_epic + 1 >= 8'), 'Pech-Schutz wie in der App');
 });
