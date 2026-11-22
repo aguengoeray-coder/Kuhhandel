@@ -4489,3 +4489,5 @@ html[data-fx="meine"] .stage :not(.mefig) > .shop-avatar-full :is(.fxb, .fxf), h
 /* v0.94 kleine Handys: Mitspieler-Sets etwas größer, 4 pro Reihe (viele Sets bleiben klein) */
 @media (max-width: 779px) { .stage .gright .prow.seat-l .chips:not(.manych) .chip.card .mcard, .stage .gright .prow.seat-r .chips:not(.manych) .chip.card .mcard { width: 25px; height: 34px; }
   .stage .gright .prow.seat-l .chips:not(.manych), .stage .gright .prow.seat-r .chips:not(.manych) { max-width: 124px; gap: 4px; row-gap: 7px; } }
+/* v0.94: Kasse beim Bezahlen (spät im Spiel, 3 Spieler) etwas tiefer – rührt die Zeile „Du bist dran“ nicht mehr an; die Auslage weicht nach unten aus */
+.stage .kasse.side { margin-top: 5px; }

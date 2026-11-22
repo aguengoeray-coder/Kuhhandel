@@ -7,6 +7,7 @@
 - [x] **Waffen:** schwingen auch in der Rattenkönig-Show (Kuhhandel-Sieg schwang schon); das Eisenschwert blitzt regelmäßig auf.
 - [x] **Effekte am Tisch** unter „Aussehen“: Alle · Nur meine · Aus.
 - [x] **Kleine Handys:** Mitspieler-Sets 25×34 statt 24×33, 4 pro Reihe (viele Sets bleiben in alter Größe).
+- [x] Bezahlen spät im Spiel: Kasse rührt die Zeile „Du bist dran“ nicht mehr an (Browser-Test meldete 3 px).
 
 ## v0.93.0 – Garderobe übersichtlicher, Set-Fortschritt, größere eigene Sets (Alps Go 22.11. 12:56)
 
