@@ -1,4 +1,5 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
+import { snapScroll, restoreScroll } from './keepscroll.js';
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
 import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf, tradeTimerSec, logNo, startHandOf, START_HAND_MAX } from '../src/engine.js';
 import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor, showBusy } from './game.js';
@@ -16,7 +17,7 @@ import { BOX_ITEMS, RARITIES, BOX_PRICE } from './outfits.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.98.0';
+export const APP_VERSION = '0.99.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -154,8 +155,10 @@ function render() {
   // v0.68: Fenster und Listen behalten beim Neuzeichnen ihren Scroll-Stand (sprang vorher immer nach oben)
   const KEEP = ['.mbox', '.games-list', '.news'];
   const kept = KEEP.map((sel) => { const el = document.querySelector(sel); return el ? el.scrollTop : 0; });
+  const snapAll = document.querySelector('.stage') ? null : snapScroll(app); // v0.99 alle Scroll-Fenster
   renderInner();
   KEEP.forEach((sel, i) => { const el = document.querySelector(sel); if (el && kept[i]) el.scrollTop = kept[i]; });
+  if (snapAll) restoreScroll(app, snapAll);
 }
 function renderInner() {
   renderModal();
@@ -2126,7 +2129,9 @@ function renderModal() {
   const keep = el.querySelector('.mbox')?.scrollTop || 0;
   const sameKind = el._kind === modal.kind;
   el._kind = modal.kind;
+  const snapM = sameKind ? snapScroll(el) : null;
   el.innerHTML = html;
+  if (snapM) restoreScroll(el, snapM);
   if (sameKind && keep) { const box = el.querySelector('.mbox'); if (box) box.scrollTop = keep; }
   el.onclick = async (e) => {
     const b = e.target.closest('[data-m]');

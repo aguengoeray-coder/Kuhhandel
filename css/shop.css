@@ -198,8 +198,6 @@
 .wd-sets li b{margin-left:auto;font-size:11px}.wd-sets li.full{background:#F5C54233;box-shadow:inset 0 0 0 1.5px #F5C542}
 .wd-sets .pips{display:flex;gap:2px}.wd-sets .pips i{width:7px;height:7px;border-radius:50%;background:#ffffff33}.wd-sets .pips i.on{background:#F5C542}
 .br-set{display:block;margin-top:2px;font:800 12px var(--font-head,Fredoka,sans-serif);color:#F5C542}
-.wd-left{overflow-y:auto;max-height:100%;scrollbar-width:thin}
-.wd-left:has(.wd-sets) .wd-fig .shop-avatar-full,.wd-left:has(.wd-sets) .wd-fig svg{height:150px}
 .wd-cell .setbadge{font-size:11px;padding:0 2px;background:#F5C542cc}
 
 /* v0.94 Nur-Anziehen-Modus + Outfit-Speicher */
@@ -248,3 +246,17 @@
 .sr-btn{border:0;border-radius:999px;padding:7px 14px;font:800 12.5px var(--font-head,Fredoka,sans-serif);background:#ffffff26;color:#fff;cursor:pointer;white-space:nowrap}
 .sr-btn.go{background:#2E7D4F;box-shadow:0 2px 0 #1d5233}
 .wd-setrow.on .sr-btn{background:none;color:#8EE0A8}
+
+/* v0.99 linke Spalte passt immer ohne Scrollen: Figur nimmt den Rest, Infos kompakt */
+.wd-left{height:100%;min-height:0;overflow:hidden;gap:6px}
+.wd-left .wd-fig{flex:1 1 0;min-height:70px;width:100%;display:flex;justify-content:center;align-items:center}
+.wd-left .wd-fig .shop-avatar-full,.wd-left .wd-fig svg{height:100%!important;max-height:200px;width:auto}
+.wd-left > *:not(.wd-fig){flex:0 0 auto}
+.wd-left .wd-set,.wd-left .wd-miss{margin:0;font-size:11px;line-height:1.25;text-align:center}
+.wd-info{padding:4px 7px;font-size:10px;line-height:1.3}.wd-info b{font-size:11.5px}
+.wd-left .shop-action{padding:6px 10px}
+
+/* v0.99 Avatar-Karten: Effekt sichtbar (ruhig), Effektname */
+.shop-avatar-item.v2 .shop-fxname{display:block;font:700 10px var(--font-head,Fredoka,sans-serif);color:#F5C542;margin-top:-2px}
+.shop-avatar-item.v2:not(:hover):not(.is-trying) .card-fig *{animation-play-state:paused!important}
+.shop-sub{margin:0 0 8px}

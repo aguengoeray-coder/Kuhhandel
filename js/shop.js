@@ -1,4 +1,5 @@
 import { SLOTS, RARITIES, BOX_ITEMS, BOX_PRICE, PITY_LEGEND, PITY_EPIC, itemInfo, ownedParts, fullOutfit, setOf, SET_FX, partName, BOX_SETS, boxSetOf, boxSetProgress, dingArt } from './outfits.js';
+import { snapScroll, restoreScroll } from './keepscroll.js';
 import { SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS, shopAvatarFull } from './shopavatars.js';
 
 export const SHOP_SAYINGS = [
@@ -83,7 +84,7 @@ export function renderShop(root, ctx) {
   const RNAME = { gewoehnlich: 'Gewöhnlich', selten: 'Selten', episch: 'Episch', legendaer: 'Legendär' };
   const infoHtml = (id) => { if (!id) return ''; const it = itemInfo(id); const sl = SLOTS.find((k) => k.id === String(id).split(':')[0]); const has = inventory.has(id) || partsOwned().has(id); const n = (ctx.invCount || {})[id] || (has ? 1 : 0); const ch = chanceOf(id); const st = boxSetOf(id);
     return '<div class="wd-info r-' + rarOf(id) + '"><b>' + esc(it ? it.name : partName(id, avName)) + '</b><span>' + (it ? RNAME[it.rarity] || '' : 'Avatar-Teil') + ' · ' + (sl ? sl.icon + ' ' + sl.name : '') + '</span>' +
-      (st ? '<span>' + BOX_SETS[st].icon + ' ' + esc(BOX_SETS[st].name) + '-Set → ✨ ' + esc(SET_FX[st].name) + '</span>' : '') +
+      (st ? '<span>' + BOX_SETS[st].icon + ' ' + esc(BOX_SETS[st].name) + '-Set</span>' : '') +
       (ch === null ? '<span>🛒 kommt mit dem Avatar</span>' : ch === 0 ? '<span>📦 nur im ' + MONTHS[it.month - 1] + ' in der Kiste</span>' : '<span>📦 Chance pro Kiste: ' + (ch * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' %</span>') +
       '<span>' + (has ? '✅ Besitzt du' + (n > 1 ? ' (' + n + '×, ' + (n - 1) + ' doppelt)' : '') : '🔒 Noch nicht gezogen – nur Anprobe') + '</span></div>'; };
   const savePresets = () => { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch { /* privat/gesperrt: nur für diese Sitzung */ } if (typeof ctx.savePresets === 'function') ctx.savePresets([0, 1, 2].map((k) => presets[k] || null)); };
@@ -92,6 +93,7 @@ export function renderShop(root, ctx) {
   let outfit = { ...(ctx.outfit || {}) };
   let draft = { ...outfit };
   let slot = 'sets'; // v0.98: Garderobe startet bei den Sets
+  let lastView = '';
   let onlyMine = true; // v0.98 Einzelteile: nur meine / alle
   let tryOn = null; // v0.92 Anprobieren: Avatar-Vorschau links, gekauft wird erst mit dem Knopf
   let box = { st: 'idle', res: null }; // idle | shake | open
@@ -195,6 +197,8 @@ export function renderShop(root, ctx) {
         : tryOn ? '<button class="shop-action shop-plain" data-try="">Zurück zu mir</button>' : '');
   };
 
+  // v0.99 Sprüche & Emotes teilen sich einen Reiter
+  const subTabs = () => '<div class="wd-filter shop-sub"><button class="' + (tab === 'sprueche' ? 'on' : '') + '" data-tab="sprueche">💬 Sprüche</button><button class="' + (tab === 'emotes' ? 'on' : '') + '" data-tab="emotes">😀 Emotes</button></div>';
   const avatarCard = (item) => {
     const has = owned.has(item.id);
     const active = activeAvatar === item.id;
@@ -207,8 +211,8 @@ export function renderShop(root, ctx) {
     return '<article class="shop-item shop-avatar-item v2 shop-tier-' + esc(item.tier) + (active ? ' is-active' : '') + (has ? ' is-owned' : '') + (tryOn === item.id ? ' is-trying' : '') + '">' +
       '<button class="shop-try" data-try="' + esc(item.id) + '" aria-label="' + esc(item.name) + ' anprobieren">' +
       '<span class="shop-tier-tag">' + tierLabel[item.tier] + '</span>' +
-      '<span class="shop-art full" data-tier="' + esc(item.tier) + '">' + shopAvatarFull(item.id, 'still') + '</span>' +
-      '<strong class="shop-item-name">' + esc(item.name) + '</strong>' + (has ? '<i class="shop-check" aria-label="hast du">✓</i>' : '') + '</button>' +
+      '<span class="shop-art full" data-tier="' + esc(item.tier) + '">' + shopAvatarFull(item.id, 'card-fig') + '</span>' +
+      '<strong class="shop-item-name">' + esc(item.name) + '</strong>' + (SET_FX[item.id] ? '<small class="shop-fxname">✨ ' + esc(SET_FX[item.id].name) + '</small>' : '') + (has ? '<i class="shop-check" aria-label="hast du">✓</i>' : '') + '</button>' +
       action + '</article>';
   };
 
@@ -244,32 +248,33 @@ export function renderShop(root, ctx) {
 
   function render() {
     const nAv = AVATARS.filter((x) => owned.has(x.id)).length, nSp = SHOP_SAYINGS.filter((x) => owned.has(x.id)).length + (owned.has(SHOP_CUSTOM.id) ? 1 : 0);
+    const viewKey = tab + '|' + slot + '|' + only; const snap = viewKey === lastView ? snapScroll(root) : null; lastView = viewKey; // gleicher Reiter → Stelle halten
     root.innerHTML =
       '<section class="shop-shell" aria-label="Shop">' +
         '<header class="shop-header"><h1>🛒 Shop</h1>' +
         (only ? '<nav class="shop-tabs only"><b class="only-h">👕 Anziehen</b><button data-fullshop>🛒 Zum Shop</button></nav>' :
         '<nav class="shop-tabs" role="tablist">' +
           '<button role="tab" data-tab="kiste" class="kiste-tab ' + (tab === 'kiste' ? 'on' : '') + '">📦 Kuh-Kiste</button>' +
-          '<button role="tab" data-tab="garderobe" class="' + (tab === 'garderobe' ? 'on' : '') + '">👕 Garderobe</button>' +
-          '<button role="tab" data-tab="avatare" class="' + (tab === 'avatare' ? 'on' : '') + '">Avatare <small>' + nAv + '/' + AVATARS.length + '</small></button>' +
-          '<button role="tab" data-tab="sprueche" class="' + (tab === 'sprueche' ? 'on' : '') + '">Sprüche <small>' + nSp + '/' + (SHOP_SAYINGS.length + 1) + '</small></button>' +
-          '<button role="tab" data-tab="emotes" class="' + (tab === 'emotes' ? 'on' : '') + '">Emotes <small>' + SHOP_EMOTES.filter((x) => owned.has(x.id)).length + '/' + SHOP_EMOTES.length + '</small></button>' +
+          '<button role="tab" data-tab="avatare" class="' + (tab === 'avatare' ? 'on' : '') + '">🐮 Avatare <small>' + nAv + '/' + AVATARS.length + '</small></button>' +
+          '<button role="tab" data-tab="garderobe" class="' + (tab === 'garderobe' ? 'on' : '') + '">👕 Anziehen</button>' +
+          '<button role="tab" data-tab="sprueche" class="' + (tab === 'sprueche' || tab === 'emotes' ? 'on' : '') + '">💬 Sprüche & Emotes</button>' +
         '</nav>') +
         '<div class="shop-balance" title="Dein Guthaben">' + DUB + '<strong>' + new Intl.NumberFormat('de-DE').format(balance) + '</strong></div>' +
         '<button class="shop-close" data-close aria-label="Shop schließen">×</button></header>' +
         (notice?'<div class="shop-notice shop-notice-' + noticeKind + '" role="status">' + esc(notice) + '</div>':'') +
         '<div class="shop-content">' +
           (only ? garderobeTab() : tab === 'kiste' ? kisteTab() : tab === 'garderobe' ? garderobeTab() : tab === 'emotes'
-            ? '<div class="shop-grid shop-emote-grid">' + SHOP_EMOTES.map(emoteCard).join('') + '</div>' +
+            ? subTabs() + '<div class="shop-grid shop-emote-grid">' + SHOP_EMOTES.map(emoteCard).join('') + '</div>' +
               '<p class="shop-hint">Im Spiel: auf deine Figur tippen → 💬 → Emote auswählen.</p>'
             : tab === 'avatare'
             ? '<div class="shop-split"><aside class="shop-stage">' + stageHtml() + '</aside><div class="shop-rows">' +
               TIERS.map((t) => '<h3 class="shop-row-h t-' + t.id + '">' + esc(t.label) + ' <small>' + t.items.filter((x) => owned.has(x.id)).length + '/' + t.items.length + '</small></h3><div class="shop-grid shop-avatar-grid">' + t.items.map(avatarCard).join('') + '</div>').join('') +
               '<p class="shop-hint">Antippen = anprobieren. Ein Avatar bringt Kopf, Brust und Beine für die Garderobe mit.</p></div></div>'
-            : (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
+            : subTabs() + (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
               '<div class="shop-grid shop-saying-grid">' + customCard() + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
               '<p class="shop-hint">Gekaufte Sprüche findest du im Spiel unter 💬.</p>') +
         '</div><footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer></section>';
+    restoreScroll(root, snap); // v0.99 Scroll-Stand bleiben
 
     root.querySelector('[data-close]')?.addEventListener('click', () => ctx.close());
     // v0.93: Gegenstands-Kacheln auf das Teil zuschneiden (jeder Gegenstand ist anders groß)

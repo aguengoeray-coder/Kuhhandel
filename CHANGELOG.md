@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v0.99.0 – Shop aufgeräumt (Alp 22.11. 20:14)
+
+- [x] Reiter: 📦 Kuh-Kiste · 🐮 Avatare · 👕 Anziehen · 💬 Sprüche & Emotes (Sprüche/Emotes als Unter-Reiter).
+- [x] Avatar-Karten zeigen die Figur mit Set-Effekt (ruhig, bewegt sich beim Antippen) und den Effekt-Namen.
+- [x] Anziehen: linke Spalte passt immer ohne Scrollen (Figur passt sich an, Infos kompakt).
+- [x] **Scroll-Stand bleibt:** In Shop, Fenstern und Listen springt nichts mehr nach oben, wenn man etwas antippt (`js/keepscroll.js`).
+
 ## v0.98.0 – Garderobe nach Sets (Alp 22.11. 19:26)
 
 - [x] Neuer erster Reiter **Sets**: jedes Avatar- und Kisten-Set eine Zeile (Figur im Set, ●●○ Fortschritt, Effekt, Herkunft Shop/Kiste) mit einem Knopf: Anziehen / Anprobieren / ✓ Trägst du. Komplette Sets oben.
