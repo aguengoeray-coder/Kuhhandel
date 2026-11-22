@@ -913,7 +913,7 @@ export function renderGame(root, ctx) {
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${myPartner === p.id ? '<b class="teamb" title="Dein Partner">🤝</b>' : ''}${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld">${isMe ? '<i></i>' : `<span class="mfan" aria-hidden="true" style="--n:${Math.min(count, 8)}">${Array.from({ length: Math.min(count, 8) }, (_, k) => `<i style="--k:${k}"></i>`).join('')}</span>`}${count}${myPartner === p.id && Array.isArray(p.money) ? `<b class="psum">${p.money.reduce((a, b) => a + b, 0)}</b>` : ''}</span>` : status}</span></div>
       </div>
-      <div class="chips" data-a="setsOf" data-v="${esc(p.id)}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
+      <div class="chips" data-a="setsOf" data-v="${esc(p.id)}" style="--nchip:${(chips.match(/class="chip /g) || []).length}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
     </div>`;
   }).join('');
 
@@ -1585,7 +1585,7 @@ export function renderGame(root, ctx) {
   const SLOTS = Object.keys(MONEY_COLORS).map(Number).sort((x, y) => x - y);
   const handCards = [...handMoney].sort((x, y) => x - y);
   const nH = handCards.length;
-  const fanOv = nH > 9 ? Math.min(30, Math.round((nH * 44 - 400) / Math.max(1, nH - 1))) : 0;
+  const fanOv = nH > 8 ? Math.min(36, Math.round((nH * 46 - 340) / Math.max(1, nH - 1))) : 0; // v0.89: viele Scheine bleiben zwischen Figur und Knöpfen (sonst lagen die linken unter der Figur)
   const mid = (nH - 1) / 2;
   const liftLeft = {}; // pro Wert: wie viele Scheine noch angehoben werden
   if (pickMode === 'rat' && local.ratSel != null) liftLeft[local.ratSel] = 1;
@@ -1692,6 +1692,7 @@ export function renderGame(root, ctx) {
   const RPS_IC = { stein: '✊', schere: '✌️', papier: '✋' };
   const rpsHtml = (() => {
     if (!ctx.rps || state.phase === 'ended' || !v.players.some((p) => p.id === meId)) return '';
+    const busyUi = local.tradeOpen || local.reactTo || local.menu || state.phase === 'trade' || state.phase === 'payment';
     const ik = `${state.phase}|${logNo(state)}|${state.turn}|${state.auction?.high?.amount ?? ''}`;
     if (local.idleKey !== ik) { local.idleKey = ik; local.idleAt = Date.now(); }
     const idle = Date.now() - local.idleAt >= 20000;
@@ -1714,7 +1715,7 @@ export function renderGame(root, ctx) {
         <div class="rpsch">${Object.entries(RPS_IC).map(([k, ic]) => `<button type="button" data-a="rpsPick" data-v="${k}" aria-label="${k}">${ic}</button>`).join('')}</div>
         ${r.to === meId ? '<button type="button" class="rpsno" data-a="rpsNo">Keine Lust</button>' : ''}</div>`;
     }
-    if (!idle) return '';
+    if (!idle || busyUi) return '';
     if (local.rpsOpen) return `<div class="rpsbox" role="dialog" aria-label="Gegen wen?"><b>Gegen wen? ✊✋✌️</b><div class="rpswho">${v.players.filter((p) => p.id !== meId).map((p) => `<button type="button" data-a="rpsAsk" data-v="${esc(p.id)}">${avatar(p, idxOf(p.id))}<span>${esc(p.name)}</span></button>`).join('')}</div><button type="button" class="rpsno" data-a="rpsOpen">Abbrechen</button></div>`;
     return `<button type="button" class="rpsgo" data-a="rpsOpen" aria-label="Schnick-Schnack-Schnuck spielen">✊✋✌️ <span>Langweilig? Schnick-Schnack-Schnuck!</span></button>`;
   })();

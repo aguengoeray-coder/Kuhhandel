@@ -4389,3 +4389,6 @@ html:has(.stage) { background: var(--tbl-3, #1E2A44); }
 @keyframes rpspop { from { opacity: 0; scale: .7; } }
 .stage.p3 .prow .handchip { right: auto; left: -6px; }
 .stage.p3 .prow .handchip { top: auto; bottom: -4px; left: -4px; right: auto; }
+/* v0.89: obere Plätze – alle Sets in einer Reihe, bei vielen kleiner (nichts eingeklappt, nichts ragt ins Banner) */
+.stage .prow.seat-t .chips, .stage .prow.seat-tl .chips, .stage .prow.seat-tr .chips { flex-wrap: nowrap; zoom: clamp(.6, calc(7 / max(7, var(--nchip, 1))), 1); }
+.stage.p2 .lastround { left: 12px; top: 120px; width: 260px; } .stage.p2 .lastround .evstrip { max-width: 260px; }

@@ -194,7 +194,7 @@ export function buildDemoState(kind, local) {
     }
     case 'traderespond':
       g = base(); g.turn = 1;
-      if (new URLSearchParams(location.search).get('rich')) g.players[0].money = [0, 0, 0, 0, 10, 10, 10, 10, 10, 20, 20, 50, 50, 100, 200, 500]; // v0.88.1: viele Scheine
+      if (new URLSearchParams(location.search).get('rich')) g.players[0].money = [0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 20, 20, 20, 50, 50, 50, 50, 100, 200, 200, 500]; // v0.88.1: viele Scheine
       if (new URLSearchParams(location.search).get('tt')) g.settings = { ...(g.settings || {}), tradeTimer: 20 }; // v0.79: mit Kuhhandel-Zeit (Warte-Knopf)
       g = startTrade(g, 'u2', 'u1', 'hund', [0, 2, 6]);
       local.key = `${g.phase}|${g.turn}|${g.log.length}`; local.sel = [5];
