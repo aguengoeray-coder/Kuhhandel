@@ -5,6 +5,8 @@
 - [x] **Goldene Kuh:** Goldene Kuh (Kopf) + Goldrüstung + neu Goldene Hufe → Set-Effekt Goldregen.
 - [x] **Pharao:** Pharaonen-Haube, -Kragen, -Schurz (alle legendär) → Set-Effekt Sonnenkönig.
 - [x] Kisten-Sets können jetzt Teile mit anderen Namen bündeln (`BOX_SETS[…].parts`); SQL `supabase/v1.0.1-kiste-goldsets.sql`.
+- [x] **Schmiede-Show:** Teile fliegen auf den Amboss, Hammer schlägt mit Funken, danach großes Ergebnis-Fenster (wie bei der Kiste) mit „Gleich anziehen“.
+- [x] **Shop-Knöpfe auf dem Handy:** größere Tippflächen, sichtbares Drücken, kein Hover-Effekt mehr auf Touch-Geräten (iOS brauchte sonst teils zwei Tipps), Hinweise verschwinden nach 3 s und verdecken die Reiter nicht mehr.
 
 ## v1.0.0 – Schmiede (Alp 22.11. 20:17)
 

@@ -96,7 +96,9 @@ export function renderShop(root, ctx) {
   let lastView = '';
   let onlyMine = true;
   let forge = null; // v1.0 Schmiede: null = aus, sonst [ausgewählte Gegenstände]
-  let forged = null; // zuletzt geschmiedetes Teil (Aufblitzen)
+  let forged = null;
+  let forgeFx = null; // v1.0.1 Schmiede-Show: { st: 'smith' | 'reveal', picks, res }
+  let noticeT = 0; // zuletzt geschmiedetes Teil (Aufblitzen)
   const NEXT_RAR = { gewoehnlich: 'selten', selten: 'episch', episch: 'legendaer' };
   const cntOf = (id) => (ctx.invCount || {})[id] || (inventory.has(id) ? 1 : 0); // v0.98 Einzelteile: nur meine / alle
   let tryOn = null; // v0.92 Anprobieren: Avatar-Vorschau links, gekauft wird erst mit dem Knopf
@@ -174,13 +176,27 @@ export function renderShop(root, ctx) {
   async function doForge() {
     if (busy || !forge || forge.length !== 2 || typeof ctx.combine !== 'function') return;
     busy = true; notice = ''; render();
-    try { const res = await ctx.combine(forge[0], forge[1]); inventory.add(res.item); for (const x of forge) if (!(ctx.invCount || {})[x]) inventory.delete(x);
+    const picks = forge.slice(); forgeFx = { st: 'smith', picks, res: null }; render(); const t0 = Date.now();
+    try { const res = await ctx.combine(forge[0], forge[1]); await new Promise((ok) => setTimeout(ok, Math.max(0, 1700 - (Date.now() - t0)))); forgeFx = { st: 'reveal', picks, res }; inventory.add(res.item); for (const x of forge) if (!(ctx.invCount || {})[x]) inventory.delete(x);
       if (outfit.ding && !inventory.has(outfit.ding)) { outfit = { ...outfit }; delete outfit.ding; }
       draft = { ...draft, ding: res.item }; infoId = res.item; forged = res.item; forge = null;
-      notice = '⚒️ Geschmiedet: ' + (itemInfo(res.item) ? itemInfo(res.item).name : res.item) + ' (' + RARITIES[res.rarity].name + ')!'; noticeKind = 'success';
-    } catch (e) { notice = e?.message || 'Schmieden hat nicht geklappt.'; noticeKind = 'error'; }
+    } catch (e) { forgeFx = null; notice = e?.message || 'Schmieden hat nicht geklappt.'; noticeKind = 'error'; }
     finally { busy = false; render(); }
   }
+  // v1.0.1 Schmiede-Show: zwei Teile fliegen auf den Amboss, Hammer schlägt 3×, Funken – dann das Ergebnis groß
+  const forgeFxHtml = () => {
+    if (!forgeFx) return '';
+    if (forgeFx.st === 'smith') return '<div class="forge-fx"><div class="ff-stage">' +
+      '<span class="ff-in a">' + itemThumb(forgeFx.picks[0]) + '</span><span class="ff-in b">' + itemThumb(forgeFx.picks[1]) + '</span>' +
+      '<span class="ff-anvil"></span><span class="ff-hammer">🔨</span><span class="ff-sparks">' + Array.from({ length: 12 }, (_, k) => '<i style="--a:' + (k * 30) + 'deg;--d:' + (k % 3) * 90 + 'ms"></i>').join('') + '</span>' +
+      '<b class="ff-txt">Wird geschmiedet …</b></div></div>';
+    const r0 = forgeFx.res; const info = itemInfo(r0.item);
+    return '<div class="forge-fx"><div class="box-reveal r-' + r0.rarity + '" style="--rc:' + RARITIES[r0.rarity].color + ';--rg:' + RARITIES[r0.rarity].glow + '">' +
+      '<div class="br-rays" aria-hidden="true"></div><i class="br-flash" aria-hidden="true"></i>' + (r0.rarity === 'episch' || r0.rarity === 'legendaer' ? '<span class="br-confetti" aria-hidden="true">' + Array.from({ length: 20 }, (_, k) => '<i style="--x:' + ((k * 37) % 100) + '%;--d:' + ((k * 53) % 700) + 'ms;--h:' + ((k * 67) % 360) + '"></i>').join('') + '</span>' : '') +
+      '<div class="br-item">' + itemThumb(r0.item, true) + '</div>' +
+      '<div class="br-text">' + rarTag(r0.rarity) + '<b>' + esc(info ? info.name : r0.item) + '</b><span class="br-new">⚒️ Frisch geschmiedet' + (r0.dupe ? ' · hattest du schon' : ' · neu in deiner Sammlung!') + '</span></div>' +
+      '<div class="br-actions"><button class="shop-action shop-select" data-ffwear>Gleich anziehen</button><button class="shop-action" data-ffok>Weiter</button></div></div></div>';
+  };
   const tryLocked = () => Object.values(draft).some((id) => id && BOX_ITEMS[id] && !inventory.has(id));
   const presetsHtml = () => '<div class="wd-presets" role="group" aria-label="Gespeicherte Outfits"><span>Outfits</span>' +
     [0, 1, 2].map((k) => '<button class="' + (presetSel === k ? 'sel ' : '') + (presets[k] ? 'has' : '') + '" data-preset="' + k + '" title="' + (presets[k] ? 'Outfit ' + (k + 1) + ' anprobieren' : 'Aktuelles Outfit hier speichern') + '">' + (k + 1) + '</button>').join('') +
@@ -297,7 +313,7 @@ export function renderShop(root, ctx) {
             : subTabs() + (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
               '<div class="shop-grid shop-saying-grid">' + customCard() + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
               '<p class="shop-hint">Gekaufte Sprüche findest du im Spiel unter 💬.</p>') +
-        '</div><footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer></section>';
+        '</div>' + forgeFxHtml() + '<footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer></section>';
     restoreScroll(root, snap); // v0.99 Scroll-Stand bleiben
 
     root.querySelector('[data-close]')?.addEventListener('click', () => ctx.close());
@@ -316,6 +332,9 @@ export function renderShop(root, ctx) {
       if (!presets[k]) { presets[k] = { ...draft }; savePresets(); notice = 'Outfit ' + (k + 1) + ' gespeichert.'; noticeKind = 'success'; return render(); }
       const mine = partsOwned(); draft = Object.fromEntries(Object.entries(presets[k]).filter(([sl, id]) => id && (sl === 'ding' ? inventory.has(id) : mine.has(id)))); notice = ''; render(); }));
     root.querySelector('[data-savepreset]')?.addEventListener('click', () => { presets[presetSel] = { ...draft }; savePresets(); notice = 'Outfit ' + (presetSel + 1) + ' gespeichert.'; noticeKind = 'success'; render(); });
+    root.querySelector('[data-ffok]')?.addEventListener('click', () => { forgeFx = null; render(); });
+    root.querySelector('[data-ffwear]')?.addEventListener('click', () => { forgeFx = null; saveOutfit(); });
+    if (notice) { clearTimeout(noticeT); noticeT = setTimeout(() => { notice = ''; root.querySelector('.shop-notice')?.remove(); }, 2800); } // Hinweis verschwindet von selbst
     root.querySelectorAll('[data-forge]').forEach((b) => b.addEventListener('click', () => { const v = b.dataset.forge; if (v === 'on') { forge = []; onlyMine = true; } else if (v === 'off') forge = null; else return doForge(); render(); }));
     if (forged) { const f = root.querySelector('.wd-fig'); if (f) { f.classList.add('forged'); } forged = null; }
     root.querySelectorAll('[data-onlymine]').forEach((b) => b.addEventListener('click', () => { onlyMine = b.dataset.onlymine === '1'; render(); }));
