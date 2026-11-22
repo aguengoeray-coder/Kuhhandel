@@ -1,5 +1,28 @@
 # Änderungsprotokoll
 
+## v0.90.0 – Einstellungen, Aussehen, Schnick-Schnack-Schnuck
+
+- [x] **Börsen-Chaos: Start-Hand** – jeder beginnt mit 1 Pfändung und 1 Einspruch auf der Hand, vor dem Spiel 0–3 je Karte einstellbar (zusätzlich zu den Karten im Stapel).
+- [x] **Spiel-Einstellungen auf einem Bild:** Warteraum in Gruppen (Spielart · Tempo · Start-Hand · Extras), Startfenster ohne Scrollen.
+- [x] **Aussehen abgespeckt:** 6 abgestimmte Vorlagen, „Selbst mischen“ nur noch Spielfeld, Muster, Kartenrücken (Hintergrund passt automatisch). Spezial-Designs (Casino, Bauernhof, Ozean, Strand, Winter) gibt es künftig im Shop/in der Kuh-Kiste.
+- [x] **Langweilig? Schnick-Schnack-Schnuck!** Tut sich 20 s nichts, kannst du einen Mitspieler herausfordern – alle sehen das Ergebnis (ändert nichts am Spiel).
+
+## v0.89.0 – Rückmeldungen 22.11. nachts
+
+- [x] **Schimmer „du bist dran“** leuchtet hinter deiner Figur unten links (nicht mehr hinter den Knöpfen).
+- [x] **Passen beendet die Versteigerung nicht mehr** – der Höchstbietende darf sich noch selbst überbieten; haben alle anderen gepasst, beendet er mit „Beenden“ (oder die Uhr läuft ab).
+- [x] **Bieten immer unten rechts**, „Passen“ oben und deutlich weg von den Gebotsknöpfen.
+- [x] **Kuhhandel:** „effektiv bezahlt“ (= Differenz, bei Annahme das Angebot) sehen jetzt alle – im Ergebnis-Fenster und in „Letzte Runde“.
+- [x] **Spezialkarte immer gleich:** goldener Stern unten am Tier-Set (bei dir und bei allen Mitspielern), ohne Tier ein eigenes Kärtchen mit Stern unten.
+- [x] **Rattenkönig nur einmal** pro Partie, danach schneller zur Abrechnung.
+- [x] **Sets der Mitspieler nie mehr eingeklappt** (kein „+3“), **eigene Sets größer** mit mehr Abstand, **„Deine Sets“ im Kuhhandel** im selben Kärtchen-Look.
+- [x] **Statistik und Bestenliste im Spielmenü**, Menü zweispaltig ohne Abschneiden.
+
+## v0.88.1 – Kleinkram
+
+- [x] „Letzte Runde“ etwas schmaler (stieß an den Stapel).
+- [x] Debug-Knöpfe (nur Testmodus) liegen nicht mehr über dem Geld-Fächer; „Deine Sets“ beim Kuhhandel-Antworten weiter oben.
+
 ## v0.88.0 – Bieten und Knöpfe flüssiger (Rückmeldung vom Testabend, 23:27)
 
 - [x] **Keine Gebotssperre mehr.** Schutz vor Fehlgeboten jetzt so: Jeder Knopf bietet einen festen Betrag – war jemand schneller, kommt „Lea war schneller (130)“ statt eines höheren Gebots. Neue Beträge blinken kurz auf.

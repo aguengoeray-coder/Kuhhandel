@@ -75,21 +75,29 @@ const BACKS = {
   weiss: { name: 'Weiß', c: ['#E9E4D8', '#C9C2B2'] },
 };
 
-// Fertige Zusammenstellungen
+// v0.90 (Alp): wenige, gut abgestimmte Vorlagen (Spielfeld, Hintergrund, Kartenrücken passen zusammen) –
+// besondere Designs mit auffälligen Mustern gibt es im Shop / in der Kuh-Kiste (Besitz: Shop-Gegenstand „design-<id>“)
 export const PRESETS = {
-  // Standard: Nachtblau mit Filz
   nachtblau: { name: 'Nachtblau', tip: true, v: { table: 'blau', tablePat: 'filz', bg: 'nachtblau', bgPat: 'filz', back: 'rot', backPat: 'streifen' } },
-  casino: { name: 'Casino', v: { table: 'petrol', tablePat: 'glatt', bg: 'bordeaux', bgPat: 'streifen', back: 'rot', backPat: 'streifen' } },
-  bauernhof: { name: 'Bauernhof', v: { table: 'dunkelgruen', tablePat: 'filz', bg: 'heu', bgPat: 'dielen', back: 'rot', backPat: 'karo' } },
-  klassisch: { name: 'Klassisch', v: { table: 'gruen', tablePat: 'glatt', bg: 'wiese', bgPat: 'streifen', back: 'rot', backPat: 'streifen' } },
-  scheune: { name: 'Scheune', v: { table: 'dunkelgruen', tablePat: 'glatt', bg: 'scheune', bgPat: 'dielen', back: 'blau', backPat: 'karo' } },
-  nacht: { name: 'Nacht', v: { table: 'blau', tablePat: 'filz', bg: 'anthrazit', bgPat: 'punkte', back: 'gold', backPat: 'rauten' } },
-  ozean: { name: 'Ozean', v: { table: 'ozean', tablePat: 'wellen', bg: 'ozean', bgPat: 'wellen', back: 'tuerkis', backPat: 'kreise' } },
-  wald: { name: 'Wald', v: { table: 'oliv', tablePat: 'filz', bg: 'wald', bgPat: 'fischgraet', back: 'orange', backPat: 'zickzack' } },
-  pflaume: { name: 'Pflaume', v: { table: 'lila', tablePat: 'glatt', bg: 'pflaume', bgPat: 'kreise', back: 'gold', backPat: 'streifen' } },
-  winter: { name: 'Winter', v: { table: 'blau', tablePat: 'schnee', bg: 'nachtblau', bgPat: 'schnee', back: 'rot', backPat: 'streifen' } },
-  strand: { name: 'Strand', v: { table: 'petrol', tablePat: 'wellen', bg: 'sand', bgPat: 'punkte', back: 'rosa', backPat: 'punkte' } },
+  smaragd: { name: 'Smaragd', v: { table: 'dunkelgruen', tablePat: 'filz', bg: 'wald', bgPat: 'filz', back: 'gold', backPat: 'rauten' } },
+  bordeaux: { name: 'Bordeaux', v: { table: 'bordeaux', tablePat: 'filz', bg: 'anthrazit', bgPat: 'filz', back: 'gold', backPat: 'streifen' } },
+  petrol: { name: 'Petrol', v: { table: 'petrol', tablePat: 'filz', bg: 'ozean', bgPat: 'filz', back: 'orange', backPat: 'streifen' } },
+  pflaume: { name: 'Pflaume', v: { table: 'lila', tablePat: 'filz', bg: 'pflaume', bgPat: 'filz', back: 'gold', backPat: 'karo' } },
+  anthrazit: { name: 'Anthrazit', v: { table: 'anthrazit', tablePat: 'filz', bg: 'anthrazit', bgPat: 'glatt', back: 'rot', backPat: 'streifen' } },
 };
+export const SPECIAL_PRESETS = {
+  casino: { name: 'Casino', rarity: 'selten', v: { table: 'petrol', tablePat: 'glatt', bg: 'bordeaux', bgPat: 'streifen', back: 'rot', backPat: 'streifen' } },
+  bauernhof: { name: 'Bauernhof', rarity: 'selten', v: { table: 'dunkelgruen', tablePat: 'filz', bg: 'heu', bgPat: 'dielen', back: 'rot', backPat: 'karo' } },
+  ozean: { name: 'Ozean', rarity: 'episch', v: { table: 'ozean', tablePat: 'wellen', bg: 'ozean', bgPat: 'wellen', back: 'tuerkis', backPat: 'kreise' } },
+  strand: { name: 'Strand', rarity: 'episch', v: { table: 'petrol', tablePat: 'wellen', bg: 'sand', bgPat: 'punkte', back: 'rosa', backPat: 'punkte' } },
+  winter: { name: 'Winter', rarity: 'legendaer', v: { table: 'blau', tablePat: 'schnee', bg: 'nachtblau', bgPat: 'schnee', back: 'rot', backPat: 'streifen' } },
+};
+// Zum Spielfeld passender Hintergrund (beim freien Mischen automatisch)
+const BG_FOR = { blau: 'nachtblau', dunkelgruen: 'wald', gruen: 'wald', bordeaux: 'anthrazit', petrol: 'ozean', ozean: 'ozean', lila: 'pflaume', anthrazit: 'anthrazit', holz: 'anthrazit', oliv: 'wald', schoko: 'anthrazit' };
+export function bgForTable(table) { return BG_FOR[table] || 'nachtblau'; }
+const FREE_TABLES = ['blau', 'dunkelgruen', 'bordeaux', 'petrol', 'lila', 'anthrazit', 'holz'];
+const FREE_BACKS = ['rot', 'gold', 'blau', 'schwarz', 'gruen', 'orange'];
+const FREE_PATS = ['filz', 'glatt', 'streifen'];
 export const DEFAULT_THEME = PRESETS.nachtblau.v;
 
 const KEY = 'kh_theme';
@@ -131,14 +139,17 @@ function patterns(key, list, cur, color, tip) {
     <span class="swc" style="background:${o.css === 'none' ? '' : `${o.css},`} ${color}"></span><small>${esc(o.name)}</small>${id === tip ? tipMark : ''}</button>`).join('')}</div>`;
 }
 
-// Inhalt des Fensters „Aussehen“
-export function themeModal(t) {
-  const tb = TABLES[t.table] || TABLES.petrol;
-  const bg = BACKGROUNDS[t.bg] || BACKGROUNDS.bordeaux;
-  const bk = BACKS[t.back] || BACKS.rot;
-  const presetOn = Object.entries(PRESETS).find(([, p]) => Object.keys(p.v).every((k) => p.v[k] === t[k]))?.[0];
+// Inhalt des Fensters „Aussehen“ (v0.90 abgespeckt: Vorlagen + wenige freie Farben; Spezial-Designs aus dem Shop)
+export function themeModal(t, owned = []) {
+  const tb = TABLES[t.table] || TABLES.blau;
+  const all = { ...PRESETS, ...SPECIAL_PRESETS };
+  const presetOn = Object.entries(all).find(([, p]) => Object.keys(p.v).every((k) => p.v[k] === t[k]))?.[0];
+  const pick = (obj, ids) => Object.fromEntries(ids.filter((id) => obj[id]).map((id) => [id, obj[id]]));
+  const tile = (id, p, locked) => `<button type="button" class="tpreset ${presetOn === id ? 'on' : ''} ${locked ? 'locked' : ''} ${p.rarity ? `r-${p.rarity}` : ''}" data-m="${locked ? 'themeShop' : 'themePreset'}" data-v="${id}" ${locked ? 'aria-label="Im Shop"' : ''}>
+      <span class="tpp" style="background:${(PATTERNS[p.v.tablePat] || PATTERNS.glatt).css === 'none' ? '' : `${PATTERNS[p.v.tablePat].css},`} ${TABLES[p.v.table].c[1]}"><i></i><b style="background:${BACKS[p.v.back].c[0]}"></b><s style="background:${BACKGROUNDS[p.v.bg].c}"></s>${locked ? '<em>🔒</em>' : ''}</span>
+      <small>${esc(p.name)}</small>${p.tip ? tipMark : ''}</button>`;
   return `<h2>🎨 Aussehen</h2>
-    <div class="tlayout">
+    <div class="tlayout v2">
     <div class="tprevcol">
       <div class="tprev" aria-hidden="true">
         <div class="tprev-table">
@@ -150,22 +161,16 @@ export function themeModal(t) {
         <span class="tpv-player"><b></b><em>Du</em></span>
       </div>
       <button type="button" class="tbig ${t.bigText ? 'on' : ''}" data-m="theme" data-k="bigText" data-v="${t.bigText ? '' : '1'}" aria-pressed="${!!t.bigText}"><span class="tgl"><i></i></span>Große Schrift</button>
-      <p class="tnote">Gilt nur auf diesem Gerät. ${tipMark} = Empfehlung.</p>
-      <div class="tfoot"><button type="button" class="pill pill-white pill-small" data-m="themeReset">Zurück auf Empfehlung</button></div>
+      <div class="tfoot"><button type="button" class="pill pill-white pill-small" data-m="themeReset">Zurück auf Nachtblau</button></div>
     </div>
     <div class="toptions">
     <h3>Vorlagen</h3>
-    <div class="tpresets">${Object.entries(PRESETS).map(([id, p]) => `<button type="button" class="tpreset ${presetOn === id ? 'on' : ''}" data-m="themePreset" data-v="${id}">
-      <span class="tpp" style="background:${(PATTERNS[p.v.tablePat] || PATTERNS.glatt).css === 'none' ? '' : `${PATTERNS[p.v.tablePat].css},`} ${TABLES[p.v.table].c[1]}"><i></i><b style="background:${BACKS[p.v.back].c[0]}"></b><s style="background:${BACKGROUNDS[p.v.bg].c}"></s></span>
-      <small>${esc(p.name)}</small>${p.tip ? tipMark : ''}</button>`).join('')}</div>
-    <h3>Spielfeld</h3>
-    ${swatches('table', TABLES, t.table, (o) => `background:${o.c[1]}`)}
-    ${patterns('tablePat', PATTERNS, t.tablePat, tb.c[1], 'filz')}
-    <h3>Hintergrund <small class="th3note">Startseite &amp; Menüs</small></h3>
-    ${swatches('bg', BACKGROUNDS, t.bg, (o) => `background:${o.c}`)}
-    ${patterns('bgPat', PATTERNS, t.bgPat, bg.c, 'filz')}
-    <h3>Kartenrücken</h3>
-    ${swatches('back', BACKS, t.back, (o) => `background:${o.c[0]}`)}
-    ${patterns('backPat', BACK_PATTERNS, t.backPat, bk.c[0], 'streifen')}
+    <div class="tpresets">${Object.entries(PRESETS).map(([id, p]) => tile(id, p, false)).join('')}</div>
+    <h3>Spezial-Designs <small class="th3note">aus dem Shop &amp; der Kuh-Kiste</small></h3>
+    <div class="tpresets special">${Object.entries(SPECIAL_PRESETS).map(([id, p]) => tile(id, p, !owned.includes(`design-${id}`))).join('')}</div>
+    <h3>Selbst mischen</h3>
+    <div class="tmix"><span>Spielfeld</span>${swatches('table', pick(TABLES, FREE_TABLES), t.table, (o) => `background:${o.c[1]}`)}</div>
+    <div class="tmix"><span>Muster</span>${patterns('tablePat', pick(PATTERNS, FREE_PATS), t.tablePat, tb.c[1], 'filz')}</div>
+    <div class="tmix"><span>Karten</span>${swatches('back', pick(BACKS, FREE_BACKS), t.back, (o) => `background:${o.c[0]}`)}</div>
     </div></div>`;
 }

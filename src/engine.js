@@ -70,6 +70,12 @@ export function applyKurs(kurse, animal, factor) {
 //    Geschützt: fertige Quartette, Ratten, Spieler ohne Geld. Wer schon gepfändet wurde, kann nochmal gepfändet werden (Alp, 19.11.).
 //  • Einspruch: wehrt eine Pfändung gegen dich automatisch ab (beide Karten sind dann weg).
 export const HAND_KINDS = ['pfaendung', 'einspruch'];
+export const START_HAND_MAX = 3;
+export function startHandOf(settings) {
+  const h = (settings && settings.startHand) || {};
+  const n = (x, d) => (Number.isInteger(x) ? Math.max(0, Math.min(START_HAND_MAX, x)) : d);
+  return { pfaendung: n(h.pfaendung, 1), einspruch: n(h.einspruch, 1) };
+}
 export const PFAEND_SHOW_MS = 3200; // Auftritt des Gerichtsvollziehers, erst danach wird geboten (Info-Fenster: folgt dem Tempo leicht)
 export function pfaendShowMs(state) { return Math.round(PFAEND_SHOW_MS * infoFactor(state)); }
 // Preis fürs Vorkaufsrecht (bei Zwangsversteigerung gibt es keins)
@@ -318,6 +324,11 @@ export function createGame({ players, seed = Date.now(), settings = null }) {
   };
   for (const p of players) stat(state, p.id);
   if (settings && settings.missions) state.missions = dealMissions(state, seed); // v0.82 Geheimaufträge
+  // v0.90 (Alp): Börsen-Chaos – jeder startet mit Pfändung/Einspruch auf der Hand (Standard je 1, im Raum 0–3 einstellbar)
+  if (isBoerse(settings)) {
+    const sh = startHandOf(settings);
+    state.hands = Object.fromEntries(state.players.map((p) => [p.id, [...Array(sh.pfaendung).fill('pfaendung'), ...Array(sh.einspruch).fill('einspruch')]]));
+  }
   log(state, 'Das Spiel beginnt.');
   return state;
 }
@@ -863,10 +874,12 @@ export function passAuction(prev, playerId, now) {
   if (state.phase !== 'auction') fail('Gerade läuft keine Versteigerung.');
   const a = state.auction;
   if (playerId === a.auctioneer) fail('Der Auktionator kann nicht passen.');
+  // v0.89 (Alp): Passen beendet die Versteigerung nicht mehr – der Höchstbietende darf sich noch selbst überbieten.
+  // Erst wenn alle anderen gepasst haben, kann der übrig gebliebene Bieter mit „Beenden“ (= passAuction) abschließen.
+  const others = state.players.filter((p) => p.id !== a.auctioneer && p.id !== playerId);
+  const lastLeft = others.every((p) => a.passed.includes(p.id));
+  if (lastLeft && a.high && a.high.player === playerId) { if (a.endsAt != null && now != null) a.endsAt = Math.min(a.endsAt, now); return state; }
   if (!a.passed.includes(playerId)) a.passed.push(playerId);
-  // Haben alle außer dem Höchstbietenden gepasst, ist die Versteigerung sofort vorbei
-  const others = state.players.filter((p) => p.id !== a.auctioneer && (!a.high || p.id !== a.high.player));
-  if (a.endsAt != null && now != null && others.every((p) => a.passed.includes(p.id))) a.endsAt = Math.min(a.endsAt, now);
   return state;
 }
 
@@ -1021,7 +1034,7 @@ export function acceptTrade(prev, playerId) {
   stat(state, ch.id).tradesWon += 1;
   stat(state, tg.id).tradesLost += 1;
   bluff(state, ch.id, t.offer);
-  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
+  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer), paid: sum(t.offer) }; // v0.89 paid: effektiv bezahlt – sehen alle
   nextTurn(state);
   return state;
 }
@@ -1057,7 +1070,7 @@ export function counterTrade(prev, playerId, cardIndices) {
   stat(state, loser.id).tradesLost += 1;
   bluff(state, winner.id, challengerWins ? t.offer : counter);
   if (Math.abs(offerSum - counterSum) <= 10) { const ls = stat(state, loser.id); ls.closeLosses = (ls.closeLosses || 0) + 1; }
-  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
+  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), paid: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
   nextTurn(state);
   return state;
 }

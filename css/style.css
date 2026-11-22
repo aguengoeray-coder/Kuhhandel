@@ -4287,3 +4287,108 @@ html:has(.stage) { background: var(--tbl-3, #1E2A44); }
 .stage.p3 .lastround { left: 12px; top: 120px; width: 260px; }
 .stage.p3 .lastround .evstrip { max-width: 260px; }
 .lastround { left: 160px; }
+/* v0.88.1: „Deine Sets“ beim Antworten im Kuhhandel nicht mehr über dem Geld-Fächer (bei vielen Scheinen ließen sich die rechten nicht antippen) */
+.stage:has(.tduel.respond) .mysets { bottom: 118px; right: 8px; }
+.lastround { width: 192px; }
+.lastround .evstrip { max-width: 192px; }
+.stage .dchips { top: 4px !important; bottom: auto !important; left: 112px !important; right: auto !important; z-index: 20; } /* v0.88.1: Debug-Knöpfe nicht mehr über dem Geld-Fächer (Figur steht jetzt unten links) */
+.stage .myglow { left: 6px !important; right: auto !important; bottom: -20px; width: 190px; } /* v0.89 (Alp): Schimmer „du bist dran“ hinter deiner Figur unten links */
+/* v0.89 (Alp): Bieten immer ganz unten rechts, Passen oben und deutlich weg von den Gebotsknöpfen */
+.dock .lastin { order: -3; }
+.dock .passbtn { order: -2; margin: 0 0 22px; width: 62%; align-self: flex-end; min-height: 32px; }
+.dock .passbtn.endnow { width: 100%; margin-bottom: 12px; }
+.dock .lhead { order: 0; }
+.dock .bidgrid, .dock .bidsend { order: 1; }
+.dock .bidsend + .pill { order: 2; }
+/* v0.89 Spezialkarte: einheitlicher goldener Stern unten am Set */
+.chip.hassp, .stack .spile { position: relative; }
+.chip.hassp { margin-bottom: 7px; }
+.spbadge { position: absolute; left: 50%; bottom: -8px; translate: -50% 0; z-index: 3; display: grid; place-items: center; min-width: 17px; height: 15px; padding: 0 3px; border-radius: 999px; background: linear-gradient(180deg, #FFE27A, #F2B705); color: #6A4500; border: 1.5px solid #6A4500; font: 900 10px/1 var(--font-head); box-shadow: 0 1px 0 rgba(0,0,0,.3); white-space: nowrap; pointer-events: none; }
+.spbadge.big { bottom: -9px; height: 17px; padding: 0 6px; font-size: 10.5px; }
+.chip.card.sp > svg, .chip.card.sp > .star { display: none; }
+.stack .spbadge.big { bottom: 3px; }
+.stack .spbadge.big { left: 3px; right: auto; translate: 0 0; font-size: 9.5px; padding: 0 4px; height: 15px; }
+.stack .spbadge.big { left: 50%; translate: -50% 0; min-width: 22px; height: 18px; font-size: 13px; bottom: 2px; }  .stack .spile { overflow: visible; }
+.stage .auslage.shelf { gap: var(--sg, 10px); } /* v0.89 (Alp): eigene Sets etwas größer und mit mehr Abstand, wenn Platz ist */
+/* v0.89 Menü passt ohne Abschneiden: zwei Spalten, scrollt notfalls */
+.stage .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 400px; max-height: 310px; overflow-y: auto; }
+.stage .menu .menu-row { display: contents; }
+.stage .menu .pill { min-height: 36px; font-size: 12px; margin: 0; }
+.stage:has(.tpick) .prow .chips { zoom: .78; } /* Kuhhandel-Auswahl: die Tiere des Gegners stehen ohnehin im Fenster */
+/* v0.90 Warteraum-Einstellungen in Gruppen, alles auf einem Bild */
+.room-settings.v2 { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: center; padding: 8px 12px; }
+.room-settings.v2 .rs-grp { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.room-settings.v2 .rs-grp.wide { grid-column: 1 / -1; }
+.room-settings.v2 .rs-grp > small { font: 800 10px var(--font-head); letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6B7280); white-space: nowrap; min-width: 52px; }
+.room-settings.v2 .rs-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.room-settings.v2 .rs-seg { display: flex; border: 2px solid var(--ink); border-radius: 999px; overflow: hidden; }
+.room-settings.v2 .rs-seg > * { border: 0; background: #fff; padding: 5px 10px; font: 800 12px var(--font-head); color: var(--ink); cursor: pointer; white-space: nowrap; }
+.room-settings.v2 .rs-seg > * + * { border-left: 2px solid var(--ink); }
+.room-settings.v2 .rs-seg > .on { background: var(--gold, #FFD34E); }
+.room-settings.v2 .rs-steps { display: flex; gap: 10px; }
+.room-settings.v2 .rs-step { display: inline-flex; align-items: center; gap: 4px; font: 700 12px var(--font-body); }
+.room-settings.v2 .rs-step button { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--ink); background: #fff; font-weight: 800; cursor: pointer; }
+.room-settings.v2 .rs-step b { min-width: 14px; text-align: center; font: 800 14px var(--font-head); }
+.room-settings.v2 .tempo-seg { flex: 1; }
+.room-settings.v2 .msteps { grid-column: 1 / -1; }
+.room-settings.v2 { padding: 6px 12px; gap: 5px 12px; }
+.room-settings.v2 .rs-chip { font-size: 11.5px; padding: 3px 8px; min-height: 26px; }
+.room-settings.v2 .tempo-seg { min-height: 30px; }
+.room-settings.v2 .tempo-seg button { min-height: 26px; padding: 2px 6px; font-size: 12px; }
+.room-settings.v2 .rs-sl { white-space: nowrap; }
+.room-settings.v2 .rs-steps { gap: 18px; }
+.room-settings.v2 .rs-chips { gap: 4px; }
+.room-settings.v2 .rs-chip { padding: 3px 7px; }
+.room-settings.v2 { grid-template-columns: auto 1fr; }
+.room-settings.v2 .tempo-seg > span { display: none; }
+.room-settings.v2 .rs-chip { font-size: 11px; }
+.room-settings.v2 .rs-chips { flex-wrap: nowrap; }
+.room-settings.v2 .rs-chip { font-size: 10.5px; padding: 2px 6px; min-height: 24px; white-space: nowrap; }
+.room-settings.v2 .tempo-seg button { white-space: nowrap; font-size: 11px; }
+.room-settings.v2 { gap: 4px 10px; }
+.room-settings.v2 .tempo-seg button { padding: 2px 5px; } .room-settings.v2 .rs-seg > * { padding: 4px 8px; }
+/* v0.90 Startbildschirm: Börsen-Start-Hand */
+.mp-hand { display: flex; align-items: center; gap: 12px; font: 700 12px var(--font-body); }
+.mp-hand > b { font: 800 11px var(--font-head); text-transform: uppercase; letter-spacing: .05em; color: var(--muted, #6B7280); }
+.mp-hand span { display: inline-flex; align-items: center; gap: 4px; }
+.mp-hand button { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--ink); background: #fff; font-weight: 800; cursor: pointer; }
+.mp-hand span > b { min-width: 12px; text-align: center; font: 800 14px var(--font-head); }
+.mp-tiles .mp-tbtn { min-height: 0; padding-top: 5px; padding-bottom: 5px; } .mp-tiles { gap: 5px; }
+.mpanel.m-classic .mp-tbtn .tx small { display: none; } .mpanel.m-classic .mp-tbtn { padding-top: 7px; padding-bottom: 7px; }
+.mpanel.m-classic .mp-tbtn { min-height: 38px !important; }
+.mpanel.m-classic .mp-tiles { gap: 4px; } .mpanel.m-classic .mp-body { padding-bottom: 6px; } .mpanel.m-classic .mp-tbtn { min-height: 36px !important; padding-top: 4px; padding-bottom: 4px; }
+/* v0.90 Aussehen abgespeckt */
+.tlayout.v2 .tpresets { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.tlayout.v2 .tpresets.special { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.tpreset.locked .tpp { filter: grayscale(.55) brightness(.85); }
+.tpreset .tpp em { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-size: 18px; }
+.tpreset .tpp { position: relative; }
+.tpreset.r-selten { box-shadow: inset 0 -3px 0 #3B82F6; } .tpreset.r-episch { box-shadow: inset 0 -3px 0 #A855F7; } .tpreset.r-legendaer { box-shadow: inset 0 -3px 0 #F59E0B; }
+.tmix { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.tmix > span { font: 800 11px var(--font-head); text-transform: uppercase; letter-spacing: .05em; color: var(--muted, #6B7280); min-width: 62px; }
+.tmix .tsw { flex: 1; }
+.tlayout.v2 .tpresets { display: grid; gap: 6px; } .tlayout.v2 .tpreset { width: auto; min-width: 0; } .tlayout.v2 .tpreset .tpp { width: 100%; height: 44px; } .tlayout.v2 .tpreset small { font-size: 11px; }
+.toptions .tmix { display: flex; flex-direction: row; align-items: center; gap: 8px; } .toptions .tmix > span { order: -1; } .toptions .tmix .tsw { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; } .toptions .tmix .sw { width: 50px; } .toptions .tmix .swc { width: 30px; height: 30px; } .toptions .tmix .sw small { font-size: 9.5px; }
+/* v0.90 Schnick-Schnack-Schnuck bei Leerlauf */
+.rpsgo { position: absolute; left: 12px; bottom: 124px; z-index: 9; display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; padding: 4px 10px 4px 8px; font: 800 12px var(--font-head); color: var(--ink); cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,.3); animation: rpsin .4s ease-out both, rpswig 2.4s ease-in-out .4s infinite; }
+.rpsgo span { font-size: 11px; }
+@keyframes rpsin { from { opacity: 0; translate: -10px 0; } }
+@keyframes rpswig { 0%, 90%, 100% { rotate: 0deg; } 93% { rotate: -4deg; } 96% { rotate: 4deg; } }
+.rpsbox { position: absolute; left: 50%; top: 50px; translate: -50% 0; z-index: 60; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 16px; background: #fff; border: 3px solid var(--ink); box-shadow: 0 6px 0 rgba(0,0,0,.3); font: 800 14px var(--font-head); color: var(--ink); animation: rpspop .35s cubic-bezier(.3,1.5,.5,1) both; }
+.rpsbox.mini { top: 8px; padding: 4px 12px; font-size: 12px; border-width: 2px; box-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.rpsbox.done { font-size: 18px; padding: 10px 18px; }
+.rpsbox.done.win { background: var(--gold, #FFD34E); }
+.rpsbox.done.lose { background: #F1ECE2; }
+.rpsch { display: flex; gap: 10px; }
+.rpsch button { width: 62px; height: 62px; border-radius: 16px; border: 2px solid var(--ink); background: #FFF3D6; font-size: 34px; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
+.rpsch button:active { translate: 0 3px; box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+.rpswho { display: flex; gap: 8px; }
+.rpswho button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; padding: 6px 10px; font: 700 12px var(--font-body); cursor: pointer; }
+.rpswho .avatar { width: 34px; height: 34px; }
+.rpsno { border: 0; background: none; font: 700 12px var(--font-body); color: var(--muted, #6B7280); text-decoration: underline; cursor: pointer; }
+@keyframes rpspop { from { opacity: 0; scale: .7; } }
+.stage.p3 .prow .handchip { right: auto; left: -6px; }
+.stage.p3 .prow .handchip { top: auto; bottom: -4px; left: -4px; right: auto; }
+/* v0.89: obere Plätze – alle Sets in einer Reihe, bei vielen kleiner (nichts eingeklappt, nichts ragt ins Banner) */
+.stage .prow.seat-t .chips, .stage .prow.seat-tl .chips, .stage .prow.seat-tr .chips { flex-wrap: nowrap; zoom: clamp(.6, calc(7 / max(7, var(--nchip, 1))), 1); }
+.stage.p2 .lastround { left: 12px; top: 120px; width: 260px; } .stage.p2 .lastround .evstrip { max-width: 260px; }

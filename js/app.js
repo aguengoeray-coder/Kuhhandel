@@ -1,6 +1,6 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
-import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf, tradeTimerSec, logNo } from '../src/engine.js';
+import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf, tradeTimerSec, logNo, startHandOf, START_HAND_MAX } from '../src/engine.js';
 import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor, showBusy } from './game.js';
 import { buildDemoState } from './demo.js';
 import { botStep, whoMustAct } from './bots.js';
@@ -12,10 +12,10 @@ import { haptic } from './haptics.js';
 import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM, SCENE_ITEM, SHOP_EMOTES } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
-import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, DEFAULT_THEME } from './theme.js';
+import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.88.0';
+export const APP_VERSION = '0.90.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -370,10 +370,11 @@ function renderStart() {
     if (k === 'moneyEdit') { ui.mpMoney = true; return render(); }
     if (k === 'info') return openModal(`rules:${(ui.modeOpts || {}).duo ? 'duo' : ui.mode}`); // v0.80: ⓘ erklärt die Spielart
     if (k === 'moneyDone') { ui.mpMoney = false; return render(); }
-    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}), ...(o.teams && !o.duo ? { teams: true } : {}), ...(o.stake ? { stake: 5, stakeOk: { [me.id]: true } } : {}) }); }
+    if (k === 'create') { const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null; return onCreate({ ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}), ...(o.startHand ? { startHand: o.startHand } : {}), ...(o.teams && !o.duo ? { teams: true } : {}), ...(o.stake ? { stake: 5, stakeOk: { [me.id]: true } } : {}) }); }
     if (k === 'pin') { ui.mode = null; return openModal('rejoin'); }
     ui.modeOpts = { ...(ui.modeOpts || {}), [k]: !(ui.modeOpts || {})[k] }; render();
   }));
+  app.querySelectorAll('[data-mphand]').forEach((b) => b.addEventListener('click', () => { const o = ui.modeOpts || {}; const h = startHandOf(o); h[b.dataset.mphand] = Math.max(0, Math.min(START_HAND_MAX, h[b.dataset.mphand] + Number(b.dataset.d))); ui.modeOpts = { ...o, startHand: h }; render(); }));
   app.querySelectorAll('[data-mptempo]').forEach((b) => b.addEventListener('click', () => { ui.modeOpts = { ...(ui.modeOpts || {}), tempo: b.dataset.mptempo }; render(); }));
   app.querySelectorAll('[data-mpm]').forEach((b) => b.addEventListener('click', () => {
     const o = ui.modeOpts || {}; const ms = { ...(o.moneySet || DEFAULT_MONEY) }; const v = b.dataset.mpm; const cnt = Object.values(ms).reduce((a, c) => a + c, 0);
@@ -392,7 +393,7 @@ function renderStart() {
   app.querySelectorAll('[data-modal]').forEach((b) => b.addEventListener('click', () => openModal(b.dataset.modal)));
   app.querySelectorAll('[data-mptest]').forEach((b) => b.addEventListener('click', () => { // v0.74 Debug: Testspiel mit diesem Modus und diesen Einstellungen
     const m = MODES.find((x) => x.id === ui.mode); const o = ui.modeOpts || {}; ui.mode = null;
-    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}), ...(o.teams && !o.duo ? { teams: true } : {}) }); }));
+    startLocalGame(o.duo ? 2 : Number(b.dataset.mptest), { ...m.settings, ...(o.duo ? { duo: true } : {}), ...(o.tempo && o.tempo !== 'normal' ? { tempo: o.tempo } : {}), ...(o.money ? { money: { ...(o.moneySet || DEFAULT_MONEY) } } : {}), ...(o.tradeTimer ? { tradeTimer: 20 } : {}), ...(o.moneyCounts ? { moneyCounts: true } : {}), ...(o.missions ? { missions: true } : {}), ...(o.startHand ? { startHand: o.startHand } : {}), ...(o.teams && !o.duo ? { teams: true } : {}) }); }));
   app.querySelectorAll('[data-hb]').forEach((b) => b.addEventListener('click', () => { ui.homeIdx = (ui.homeIdx || 0) + (b.dataset.hb === 'next' ? 1 : -1); render(); }));
   app.querySelectorAll('[data-dock]').forEach((b) => b.addEventListener('click', () => {
     const k = b.dataset.dock;
@@ -451,7 +452,8 @@ function modePanel(id) {
       ['stake', '💶', 'Einsatz 5 €', 'Platz 1 bekommt den Topf · im Warteraum änderbar'],
     ];
     right = `<div class="mp-hd"><b>${esc(m.name)}</b><span>${esc(m.tag)} · ${o.duo ? '2 Spieler' : esc(m.players || '3–4 Spieler')}</span><button type="button" class="mp-info" data-mp="info" aria-label="Regeln dieser Spielart">i</button></div>
-      <div class="mp-facts">${(m.facts || []).slice(0, 3).map((f) => `<i>${esc(f)}</i>`).join('')}</div>
+      ${tiles.length > 6 || id === 'boerse' ? '' : `<div class="mp-facts">${(m.facts || []).slice(0, 3).map((f) => `<i>${esc(f)}</i>`).join('')}</div>`}
+      ${id === 'boerse' ? (() => { const sh = startHandOf(o); return `<div class="mp-hand"><b>Start-Hand</b>${[['pfaendung', '🔨 Pfändung'], ['einspruch', '🛡️ Einspruch']].map(([k, l]) => `<span>${l}<button type="button" data-mphand="${k}" data-d="-1" ${sh[k] ? '' : 'disabled'} aria-label="weniger">−</button><b>${sh[k]}</b><button type="button" data-mphand="${k}" data-d="1" ${sh[k] < START_HAND_MAX ? '' : 'disabled'} aria-label="mehr">+</button></span>`).join('')}</div>`; })() : ''}
       <div class="mp-tiles">${tiles.map(([k, ic, l, s]) => `<div class="mp-tile ${o[k] ? 'on' : ''}"><button type="button" class="mp-tbtn" data-mp="${k}" role="switch" aria-checked="${!!o[k]}"><span class="ic" aria-hidden="true">${ic}</span><span class="tx"><b>${l}</b><small>${s}</small></span><i class="sw" aria-hidden="true"></i></button>${k === 'money' && o.money ? '<button type="button" class="mp-edit" data-mp="moneyEdit">Scheine anpassen ›</button>' : ''}</div>`).join('')}</div>
       ${tempoSeg(o.tempo, true, 'data-mptempo')}
       <div class="mp-gorow"><button type="button" class="pill pill-red mp-go" data-mp="create">Raum erstellen</button>${DEBUG ? `<button type="button" class="pill pill-white mp-tst" data-mptest="3" title="Testspiel (nur auf diesem Gerät)">🧪 3</button><button type="button" class="pill pill-white mp-tst" data-mptest="4" title="Testspiel (nur auf diesem Gerät)">🧪 4</button>` : ''}</div>`;
@@ -516,16 +518,23 @@ function renderRoom() {
       ${isHost ? `<div class="mctl"><button type="button" data-money="${v}" data-d="-1" ${n ? '' : 'disabled'} aria-label="${v}er weniger">−</button><b>${n}</b><button type="button" data-money="${v}" data-d="1" ${moneyCount < MAX_MONEY_CARDS ? '' : 'disabled'} aria-label="${v}er mehr">+</button></div>` : `<div class="mctl"><b>${n}×</b></div>`}
     </div>`;
   }).join('') : '';
-  const settingsBox = `<div class="room-settings">
-    <div class="rs-head">
-      ${isHost ? `<button type="button" class="toggle ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}"><i></i></button>` : ''}
-      <span><b>Geldscheine im Stapel</b><small>${money ? `${moneyCount} von max. ${MAX_MONEY_CARDS} Scheinen · ${moneySum} Taler` : isHost ? 'aus – antippen zum Einschalten' : 'aus'}</small></span>
-      <div class="rs-extra">
-      ${[['duo', '👥 Zu zweit'], ['turbo', '⚡ Turbo'], ['boerse', '📈 Börsen-Chaos'], ['tradeTimer', `⏱ Kuhhandel ${tradeTimerSec({ settings: { ...(g.state?.settings || {}), tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt'], ['missions', '🎯 Aufträge'], ...(duo ? [] : [['teams', '🤝 Teams 2:2']]), ['stake', `💶 ${g.state?.settings?.stake ? `${g.state.settings.stake} € Einsatz` : 'Einsatz'}`]].map(([k, label]) => { const on = !!g.state?.settings?.[k];
-        return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); }).join('')}
-      ${tempoSeg(g.state?.settings?.tempo, isHost, 'data-tempo')}
-    </div>
-    </div>
+  // v0.90 (Alp): Einstellungen übersichtlich in Gruppen, alles auf einem Bild (Spielart · Extras · Börse · Tempo)
+  const st0 = g.state?.settings || {};
+  const chip = (k, label) => { const on = !!st0[k]; return isHost ? `<button type="button" class="rs-chip ${on ? 'on' : ''}" data-setting="${k}" aria-pressed="${on}">${on ? '✓ ' : ''}${label}</button>` : (on ? `<span class="rs-chip on">✓ ${label}</span>` : ''); };
+  const modeKey = st0.duo ? 'duo' : st0.turbo ? 'turbo' : st0.boerse ? 'boerse' : 'classic';
+  const modeSeg = `<div class="rs-seg" role="radiogroup" aria-label="Spielart">${[['classic', '🐮 Klassisch'], ['duo', '👥 Zu zweit'], ['turbo', '⚡ Turbo'], ['boerse', '📈 Börse']].map(([k, l]) => (isHost
+    ? `<button type="button" role="radio" aria-checked="${modeKey === k}" class="${modeKey === k ? 'on' : ''}" data-rsmode="${k}">${l}</button>`
+    : `<span class="${modeKey === k ? 'on' : ''}">${l}</span>`)).join('')}</div>`;
+  const sh = startHandOf(st0);
+  const shStep = (k, ic, l) => `<span class="rs-step"><span class="rs-sl">${ic} ${l}</span>${isHost ? `<button type="button" data-hand="${k}" data-d="-1" ${sh[k] ? '' : 'disabled'} aria-label="${l} weniger">−</button>` : ''}<b>${sh[k]}</b>${isHost ? `<button type="button" data-hand="${k}" data-d="1" ${sh[k] < START_HAND_MAX ? '' : 'disabled'} aria-label="${l} mehr">+</button>` : ''}</span>`;
+  const settingsBox = `<div class="room-settings v2">
+    <div class="rs-grp"><small>Spielart</small>${modeSeg}</div>
+    <div class="rs-grp">${tempoSeg(st0.tempo, isHost, 'data-tempo') || '<small>Tempo: Normal</small>'}</div>
+    ${st0.boerse ? `<div class="rs-grp wide"><small>Start-Hand</small><div class="rs-steps">${shStep('pfaendung', '🔨', 'Pfändung')}${shStep('einspruch', '🛡️', 'Einspruch')}</div></div>` : ''}
+    <div class="rs-grp wide"><small>Extras</small><div class="rs-chips">
+      ${isHost ? `<button type="button" class="rs-chip ${money ? 'on' : ''}" id="moneyToggle" aria-pressed="${!!money}">${money ? '✓ ' : ''}💵 Geld-Stapel${money ? ` · ${moneyCount}` : ''}</button>` : money ? `<span class="rs-chip on">✓ 💵 Geld im Stapel · ${moneyCount}</span>` : ''}
+      ${[['tradeTimer', `⏱ Kuhhandel ${tradeTimerSec({ settings: { ...st0, tradeTimer: 20 } })} s`], ['moneyCounts', '💰 Geld zählt'], ['missions', '🎯 Aufträge'], ...(duo ? [] : [['teams', '🤝 Teams 2:2']]), ['stake', `💶 Einsatz${st0.stake ? ` ${st0.stake} €` : ''}`]].map(([k, l]) => chip(k, l)).join('')}
+    </div></div>
     ${money ? `<div class="msteps">${steppers}</div>` : ''}
   </div>`;
   const hint = outdated.length
@@ -560,6 +569,8 @@ function renderRoom() {
   document.getElementById('start')?.addEventListener('click', onStart);
   document.getElementById('moneyToggle')?.addEventListener('click', () => saveSettings({ money: money ? null : { ...DEFAULT_MONEY } }));
   app.querySelectorAll('[data-tempo]').forEach((b) => b.addEventListener('click', () => saveSettings({ tempo: b.dataset.tempo === 'normal' ? null : b.dataset.tempo })));
+  app.querySelectorAll('[data-rsmode]').forEach((b) => b.addEventListener('click', () => { const k = b.dataset.rsmode; saveSettings({ duo: k === 'duo' ? true : null, turbo: k === 'turbo' ? true : null, boerse: k === 'boerse' ? true : null, ...(k === 'duo' ? { teams: null } : {}) }); }));
+  app.querySelectorAll('[data-hand]').forEach((b) => b.addEventListener('click', () => saveSettings((cur) => { const h = startHandOf(cur); h[b.dataset.hand] = Math.max(0, Math.min(START_HAND_MAX, h[b.dataset.hand] + Number(b.dataset.d))); return { startHand: h }; })));
   app.querySelectorAll('[data-stakeok]').forEach((b) => b.addEventListener('click', () => { const k = seatIn(ui.game) || me.id; saveSettings((cur) => ({ stakeOk: { ...(cur.stakeOk || {}), [k]: true } })); }));
   app.querySelectorAll('[data-teampick]').forEach((b) => b.addEventListener('click', () => {
     const g = ui.game; const tp = { ...(g.state?.settings?.teamPick || {}) };
@@ -749,6 +760,11 @@ function renderPlaying() {
     seatTip: !DEMO || params.get('tip') === '1', // einmaliger Hinweis zur Sitzordnung (in Demo-Bildern nur mit &tip=1)
     react: sendReaction,
     buzzHint: () => buzzHint,
+    rps: () => rps,
+    rpsAsk: (to) => { const seat = ui.game.local ? dbg.viewAs : seatIn(ui.game); rpsSend({ type: 'ask', id: `${seat}-${Date.now()}`, from: seat, to }); },
+    rpsPick: (pick) => { const seat = ui.game.local ? dbg.viewAs : seatIn(ui.game); if (rps && !rps.done) rpsSend({ type: 'pick', id: rps.id, seat, pick }); },
+    rpsNo: () => { if (rps && !rps.done) rpsSend({ type: 'no', id: rps.id }); },
+    rpsClose: () => { rps = null; render(); },
     sendBuzz: (n) => { const sp = ui.game?.state?.special; const seat = seatIn(ui.game); if (!sp || !seat) return; buzzHint = { seat, n, startsAt: sp.startsAt }; if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'buzz', payload: { seat, n, startsAt: sp.startsAt } }); },
     canPunch: canPunch(), // Emote „Verprügeln“: gekauft oder Admin
     taglineOf: (seat) => customSayings.get(userOfSeat(seat)) || (ui.game?.local && seat === dbg.viewAs ? shopMe.custom : '') || '', // v0.63 VS-Intro: eigener Spruch
@@ -1372,6 +1388,25 @@ function showReaction(seat, text, to = null) {
   render();
   setTimeout(render, 3300);
 }
+// v0.90 (Alp): Schnick-Schnack-Schnuck, wenn 20 s niemand spielt – nur über die Live-Verbindung, ändert nichts am Spiel
+let rps = null; // { id, from, to, picks: {seat: 'stein'|'schere'|'papier'}, at, done }
+const RPS_BEATS = { stein: 'schere', schere: 'papier', papier: 'stein' };
+function rpsSend(msg) {
+  if (ui.game?.local) { setTimeout(() => rpsGot(msg, true), 0); return; }
+  if (roomChannel) roomChannel.send({ type: 'broadcast', event: 'rps', payload: msg });
+  rpsGot(msg, true);
+}
+function rpsGot(m, own = false) {
+  if (!m || !m.id) return;
+  if (m.type === 'ask') { if (rps && !rps.done && rps.id !== m.id && Date.now() - rps.at < 20000) return; rps = { id: m.id, from: m.from, to: m.to, picks: {}, at: Date.now() };
+    if (ui.game?.local && m.to !== dbg.viewAs) setTimeout(() => rpsGot({ type: 'pick', id: m.id, seat: m.to, pick: ['stein', 'schere', 'papier'][Math.floor(Math.random() * 3)] }), 900 + Math.random() * 1200); }
+  else if (m.type === 'no' && rps && rps.id === m.id) { rps = { ...rps, done: true, declined: true, doneAt: Date.now() }; }
+  else if (m.type === 'pick' && rps && rps.id === m.id && (m.seat === rps.from || m.seat === rps.to)) {
+    rps.picks = { ...rps.picks, [m.seat]: m.pick };
+    if (rps.picks[rps.from] && rps.picks[rps.to]) { const a = rps.picks[rps.from], b = rps.picks[rps.to]; rps.done = true; rps.doneAt = Date.now(); rps.winner = a === b ? null : RPS_BEATS[a] === b ? rps.from : rps.to; }
+  } else return;
+  render();
+}
 function sendReaction(text, to = null) {
   if (Date.now() - lastReactAt < 2500) return toast('Kurz warten – nicht so schnell hintereinander.');
   lastReactAt = Date.now();
@@ -1647,6 +1682,7 @@ function watchRoom(id) {
       showPunch(payload.from, payload.to);
     })
     // v0.86 Buzzer: sofort allen zeigen, wer bei welcher Zahl gedrückt hat (schneller als der gespeicherte Spielstand)
+    .on('broadcast', { event: 'rps' }, ({ payload }) => rpsGot(payload))
     .on('broadcast', { event: 'buzz' }, ({ payload }) => {
       const sp = ui.game?.state?.special;
       if (!payload || !sp || payload.startsAt !== sp.startsAt || !ui.game.state.players.some((p) => p.id === payload.seat) || !(payload.n >= 1 && payload.n <= 10)) return;
@@ -1966,7 +2002,7 @@ function renderModal() {
   if (!modal) { el?.remove(); return; }
   if (!el) { el = document.createElement('div'); el.id = 'modal'; document.body.appendChild(el); }
   let body = '';
-  if (modal.kind === 'design') body = themeModal(theme);
+  if (modal.kind === 'design') body = themeModal(theme, [...shopMe.owned]);
   if (modal.kind === 'rules') body = rulesBody(modal.rtab);
   if (modal.kind === 'install') {
     body = `<h2>📲 Als App aufs Handy</h2>
@@ -2050,9 +2086,11 @@ function renderModal() {
     if (b.dataset.m === 'logout') { modal = null; render(); return doLogout(); }
     if (b.dataset.m === 'doInstall' && installPrompt) { installPrompt.prompt(); installPrompt = null; modal = null; return render(); }
     if (b.dataset.m === 'animal') { if (shopMe.active || shopAvatars.get(me.id)) return setMyAvatar(null, b.dataset.v); return saveProfile({ animal: b.dataset.v }); }
+    if (b.dataset.m === 'themeShop') { modal = null; render(); return openShop(); }
     if (b.dataset.m === 'theme' || b.dataset.m === 'themePreset' || b.dataset.m === 'themeReset') {
       if (b.dataset.m === 'theme') theme = { ...theme, [b.dataset.k]: b.dataset.v };
-      if (b.dataset.m === 'themePreset') theme = { ...PRESETS[b.dataset.v].v, bigText: theme.bigText };
+      if (b.dataset.m === 'themePreset') theme = { ...(PRESETS[b.dataset.v] || SPECIAL_PRESETS[b.dataset.v]).v, bigText: theme.bigText };
+      if (b.dataset.m === 'theme' && b.dataset.k === 'table') theme = { ...theme, bg: bgForTable(b.dataset.v), bgPat: theme.tablePat === 'glatt' ? 'glatt' : 'filz' }; // v0.90: Hintergrund passt automatisch
       if (b.dataset.m === 'themeReset') theme = { ...DEFAULT_THEME, bigText: theme.bigText };
       saveTheme(store, theme); applyTheme(theme); return render();
     }
