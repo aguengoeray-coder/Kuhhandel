@@ -1,4 +1,5 @@
 // Kuhhandel – Startseite, Lobby und Warteraum
+import { snapScroll, restoreScroll } from './keepscroll.js';
 import { SUPABASE_URL, SUPABASE_KEY, PUSH_PUBLIC_KEY } from './config.js';
 import { createGame, MIN_PLAYERS, MAX_PLAYERS, GameError, DONKEY_PAYOUTS, debugEnd, animalsOf, tradeTimerSec, logNo, startHandOf, START_HAND_MAX } from '../src/engine.js';
 import { renderGame, SEAT_COLORS, fitStage, miniCard, CALM_TYPES, calmFor, showBusy } from './game.js';
@@ -16,7 +17,7 @@ import { BOX_ITEMS, RARITIES, BOX_PRICE } from './outfits.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.98.0';
+export const APP_VERSION = '1.0.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -154,8 +155,10 @@ function render() {
   // v0.68: Fenster und Listen behalten beim Neuzeichnen ihren Scroll-Stand (sprang vorher immer nach oben)
   const KEEP = ['.mbox', '.games-list', '.news'];
   const kept = KEEP.map((sel) => { const el = document.querySelector(sel); return el ? el.scrollTop : 0; });
+  const snapAll = document.querySelector('.stage') ? null : snapScroll(app); // v0.99 alle Scroll-Fenster
   renderInner();
   KEEP.forEach((sel, i) => { const el = document.querySelector(sel); if (el && kept[i]) el.scrollTop = kept[i]; });
+  if (snapAll) restoreScroll(app, snapAll);
 }
 function renderInner() {
   renderModal();
@@ -1284,7 +1287,8 @@ async function loadShop(force = false) {
   shopMe.state = 'loading';
   if (DEMO) {
     const av = params.get('myav') || 'noergler';
-    Object.assign(shopMe, { inventory: new Set((params.get('inv') || 'ding:donnerhammer,brust:goldruestung,beine:raketenstiefel,kopf:goldkuh,ding:gummihuhn,design-winter').split(',').filter(Boolean)), outfit: {}, boxState: { since_legend: 21, since_epic: 3 } });
+    const invL = (params.get('inv') || 'ding:donnerhammer,brust:goldruestung,beine:raketenstiefel,kopf:goldkuh,ding:gummihuhn,design-winter').split(',').filter(Boolean).map((x) => x.split('*'));
+    Object.assign(shopMe, { inventory: new Set(invL.map(([id]) => id)), invCount: Object.fromEntries(invL.map(([id, n]) => [id, Number(n) || 1])), outfit: {}, boxState: { since_legend: 21, since_epic: 3 } });
     Object.assign(shopMe, { state: 'ok', balance: params.get('dub') ? Number(params.get('dub')) : 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen', ...(params.get('eigen') ? ['spruch-eigener'] : [])]), freeLeft: params.get('free') === '0' ? 0 : 2, custom: params.get('eigen') || '' });
     if (params.get('eigen')) { customSayings.set(me.id, params.get('eigen')); customSayings.set('u2', 'Nico, schrei nicht!'); }
     shopAvatars.set(me.id, av);
@@ -1334,7 +1338,17 @@ async function openShop(startTab, only) {
       if (DEMO) { const pool = Object.entries(BOX_ITEMS); const r0 = Math.random(); const rar = r0 < .03 ? 'legendaer' : r0 < .13 ? 'episch' : r0 < .4 ? 'selten' : 'gewoehnlich'; const c = pool.filter(([, it]) => it.rarity === (params.get('boxrar') || rar)); const [id] = c[Math.floor(Math.random() * c.length)]; const dupe = (shopMe.inventory || new Set()).has(id); const refund = dupe ? RARITIES[params.get('boxrar') || rar].refund : 0; shopMe.balance += refund - BOX_PRICE; shopMe.inventory.add(id); return { item: id, rarity: params.get('boxrar') || rar, dupe, refund, balance: shopMe.balance }; }
       const { data, error } = await sb.rpc('shop_open_box');
       if (error) throw err(error, 'Die Kiste klemmt – gleich nochmal versuchen.');
-      shopMe.balance = Number(data.balance); (shopMe.inventory = shopMe.inventory || new Set()).add(data.item);
+      shopMe.balance = Number(data.balance); (shopMe.inventory = shopMe.inventory || new Set()).add(data.item); shopMe.invCount = shopMe.invCount || {}; shopMe.invCount[data.item] = (shopMe.invCount[data.item] || 0) + 1;
+      return data;
+    },
+    // v1.0 Schmiede: 2 Gegenstände gleicher Seltenheit → 1 der nächsten
+    async combine(a, b) {
+      const cnt = (shopMe.invCount = shopMe.invCount || {}); const inv = (shopMe.inventory = shopMe.inventory || new Set());
+      let data;
+      if (DEMO) { const NEXT = { gewoehnlich: 'selten', selten: 'episch', episch: 'legendaer' }; const nx = NEXT[BOX_ITEMS[a]?.rarity]; const c = Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === 'ding' && it.rarity === nx && !it.month); const [id] = c[Math.floor(Math.random() * c.length)]; data = { item: id, rarity: nx, dupe: inv.has(id) }; }
+      else { const res = await sb.rpc('shop_combine', { p_a: a, p_b: b }); if (res.error) throw err(res.error, 'Schmieden hat nicht geklappt.'); data = res.data; }
+      for (const x of [a, b]) { cnt[x] = (cnt[x] || 1) - 1; if (cnt[x] <= 0) { delete cnt[x]; inv.delete(x); if (shopMe.outfit && shopMe.outfit.ding === x) { const o = { ...shopMe.outfit }; delete o.ding; shopMe.outfit = o; } } }
+      inv.add(data.item); cnt[data.item] = (cnt[data.item] || 0) + 1;
       return data;
     },
     async setOutfit(o) {
@@ -2126,7 +2140,9 @@ function renderModal() {
   const keep = el.querySelector('.mbox')?.scrollTop || 0;
   const sameKind = el._kind === modal.kind;
   el._kind = modal.kind;
+  const snapM = sameKind ? snapScroll(el) : null;
   el.innerHTML = html;
+  if (snapM) restoreScroll(el, snapM);
   if (sameKind && keep) { const box = el.querySelector('.mbox'); if (box) box.scrollTop = keep; }
   el.onclick = async (e) => {
     const b = e.target.closest('[data-m]');

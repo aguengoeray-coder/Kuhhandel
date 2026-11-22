@@ -198,8 +198,6 @@
 .wd-sets li b{margin-left:auto;font-size:11px}.wd-sets li.full{background:#F5C54233;box-shadow:inset 0 0 0 1.5px #F5C542}
 .wd-sets .pips{display:flex;gap:2px}.wd-sets .pips i{width:7px;height:7px;border-radius:50%;background:#ffffff33}.wd-sets .pips i.on{background:#F5C542}
 .br-set{display:block;margin-top:2px;font:800 12px var(--font-head,Fredoka,sans-serif);color:#F5C542}
-.wd-left{overflow-y:auto;max-height:100%;scrollbar-width:thin}
-.wd-left:has(.wd-sets) .wd-fig .shop-avatar-full,.wd-left:has(.wd-sets) .wd-fig svg{height:150px}
 .wd-cell .setbadge{font-size:11px;padding:0 2px;background:#F5C542cc}
 
 /* v0.94 Nur-Anziehen-Modus + Outfit-Speicher */
@@ -248,3 +246,31 @@
 .sr-btn{border:0;border-radius:999px;padding:7px 14px;font:800 12.5px var(--font-head,Fredoka,sans-serif);background:#ffffff26;color:#fff;cursor:pointer;white-space:nowrap}
 .sr-btn.go{background:#2E7D4F;box-shadow:0 2px 0 #1d5233}
 .wd-setrow.on .sr-btn{background:none;color:#8EE0A8}
+
+/* v0.99 linke Spalte passt immer ohne Scrollen: Figur nimmt den Rest, Infos kompakt */
+.wd-left{height:100%;min-height:0;overflow:hidden;gap:6px}
+.wd-left .wd-fig{flex:1 1 0;min-height:70px;width:100%;display:flex;justify-content:center;align-items:center}
+.wd-left .wd-fig .shop-avatar-full,.wd-left .wd-fig svg{height:100%!important;max-height:200px;width:auto}
+.wd-left > *:not(.wd-fig){flex:0 0 auto}
+.wd-left .wd-set,.wd-left .wd-miss{margin:0;font-size:11px;line-height:1.25;text-align:center}
+.wd-info{padding:4px 7px;font-size:10px;line-height:1.3}.wd-info b{font-size:11.5px}
+.wd-left .shop-action{padding:6px 10px}
+
+/* v0.99 Avatar-Karten: Effekt sichtbar (ruhig), Effektname */
+.shop-avatar-item.v2 .shop-fxname{display:block;font:700 10px var(--font-head,Fredoka,sans-serif);color:#F5C542;margin-top:-2px}
+.shop-avatar-item.v2:not(:hover):not(.is-trying) .card-fig *{animation-play-state:paused!important}
+.shop-sub{margin:0 0 8px}
+
+/* v1.0 Schmiede */
+.forge{display:flex;align-items:center;gap:8px;background:#0000003a;border-radius:12px;padding:5px 8px 5px 12px;margin:0 0 6px;color:#fff;font:600 12px var(--font-head,Fredoka,sans-serif);box-shadow:inset 0 0 0 1.5px #F5C54266}
+.forge > span:first-child{margin-right:auto}.forge.on{gap:6px;padding:4px 8px}
+.forge .fp{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#ffffff14;box-shadow:inset 0 0 0 2px var(--rc,#ffffff33);overflow:hidden;flex:0 0 auto}
+.forge .fp .thumb-fig,.forge .fp svg{width:42px!important;height:42px!important}
+.forge .fp.empty{font-weight:800;opacity:.6}.forge .fp.res{width:auto;padding:0 10px;font-weight:800;font-size:12px;white-space:nowrap}
+.forge .fp.r-gewoehnlich{--rc:#9AA3AA}.forge .fp.r-selten{--rc:#3B82F6}.forge .fp.r-episch{--rc:#A855F7}.forge .fp.r-legendaer{--rc:#F59E0B}
+.forge .sr-btn[disabled]{opacity:.45;cursor:default}.forge .sr-btn:last-child{margin-left:auto}
+.forge-hint{margin:-2px 0 6px;font:600 11px var(--font-head,Fredoka,sans-serif);color:#ffffffcc}
+.wd-cell .cntbadge{position:absolute;right:3px;bottom:16px;font:800 10px var(--font-head,Fredoka,sans-serif);background:#2A2420cc;color:#fff;border-radius:6px;padding:0 4px;font-style:normal}
+.wd-cell .forgepick{position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 3px #F5C542;background:#F5C54233;display:flex;align-items:flex-start;justify-content:flex-start;padding:2px 5px;font:800 12px var(--font-head,Fredoka,sans-serif);color:#F5C542;font-style:normal}
+.wd-fig.forged{animation:forged .9s ease-out}
+@keyframes forged{0%{filter:brightness(3) drop-shadow(0 0 18px #F5C542)}100%{filter:none}}

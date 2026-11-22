@@ -1228,5 +1228,7 @@ test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen
   for (const st of Object.keys(O.BOX_SETS)) { assert.equal(O.boxSetOf(`kopf:${st}`), st); for (const k of ['kopf', 'brust', 'beine']) assert.ok(O.BOX_ITEMS[`${k}:${st}`], `${k}:${st} in der Kiste`); }
   assert.equal(O.boxSetOf('ding:katana'), null); assert.equal(O.boxSetOf('kopf:noergler'), null);
   assert.deepEqual(O.boxSetProgress('ritter', ['kopf:ritter', 'beine:ritter', 'ding:lanze']).have, ['kopf:ritter', 'beine:ritter']);
+  { const fs2 = await import('node:fs'); const sm = fs2.readFileSync(new URL('../supabase/v1.0-schmiede.sql', import.meta.url), 'utf8');
+    assert.match(sm, /revoke all on function public\.shop_combine\(text, text\) from public, anon/); assert.match(sm, /'gewoehnlich' then 'selten' when 'selten' then 'episch' when 'episch' then 'legendaer'/); }
   assert.ok(sql.includes('since_legend + 1 >= 25') && sql.includes('since_epic + 1 >= 8'), 'Pech-Schutz wie in der App');
 });
