@@ -4491,3 +4491,6 @@ html[data-fx="meine"] .stage :not(.mefig) > .shop-avatar-full :is(.fxb, .fxf), h
   .stage .gright .prow.seat-l .chips:not(.manych), .stage .gright .prow.seat-r .chips:not(.manych) { max-width: 124px; gap: 4px; row-gap: 7px; } }
 /* v0.94: Kasse beim Bezahlen (spät im Spiel, 3 Spieler) etwas tiefer – rührt die Zeile „Du bist dran“ nicht mehr an; die Auslage weicht nach unten aus */
 .stage .kasse.side { margin-top: 5px; }
+
+/* v0.96 kein Zoomen im Spiel (Doppeltipp / Zwei-Finger) */
+html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }

@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.96.0 – Teile antippen & anprobieren, Teil-Infos, kein Zoom (Alp 22.11. 16:12)
+
+- [x] **Anprobe überall:** In der Garderobe sind auch gesperrte Teile antippbar (Vorschau an der Figur, „🔒 Nur Anprobe – erst ziehen“); die Vitrine in der Kuh-Kiste führt per Tipp direkt zur Anprobe.
+- [x] **Teil-Infos** unter der Figur: Name, Seltenheit, Fach, Set + Set-Effekt, Chance pro Kiste, Besitz (inkl. Anzahl Doppelte).
+- [x] **Kein Zoomen:** Viewport fest (maximum-scale=1, user-scalable=no), `touch-action: manipulation`, iOS-Gesten und Doppeltipp abgefangen.
+
 ## v0.95.0 – Kisten-Show, Outfits im Konto (Alps Go 22.11. 14:28)
 
 - [x] **Kuh-Kiste:** Lichtblitz in Seltenheitsfarbe, Teil springt heraus, Konfetti ab Episch, Legendär wackelt.
