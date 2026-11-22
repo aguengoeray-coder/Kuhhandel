@@ -70,6 +70,12 @@ export function renderShop(root, ctx) {
   let noticeKind = 'info';
 
   let tab = ctx.tab || 'kiste';
+  let only = ctx.only || null; // v0.94: 'garderobe' = nur Anziehen (Figur antippen auf Startseite/Profil)
+  // v0.94 Outfit-Speicher (3 Plätze, auf diesem Gerät)
+  const PKEY = 'kh_outfits_' + ((ctx.me && ctx.me.id) || 'gast');
+  let presets = (() => { try { const v = JSON.parse(localStorage.getItem(PKEY) || '[]'); return Array.isArray(v) ? v.slice(0, 3) : []; } catch { return []; } })();
+  let presetSel = 0;
+  const savePresets = () => { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch { /* privat/gesperrt: nur für diese Sitzung */ } };
   // v0.91 Kuh-Kiste + Garderobe
   let inventory = new Set(ctx.inventory || []);
   let outfit = { ...(ctx.outfit || {}) };
@@ -124,6 +130,9 @@ export function renderShop(root, ctx) {
     if (!rows.length) return '';
     return '<ul class="wd-sets">' + rows.map((x) => { const full = x.have.length === 3; const miss = x.parts.filter((p) => !x.have.includes(p)).map((p) => SLOTS.find((k) => k.id === p.split(':')[0]).name);
       return '<li class="' + (full ? 'full' : '') + '" title="' + esc(full ? 'Alle 3 Teile anziehen → ' + SET_FX[x.st].name : 'Fehlt: ' + miss.join(' + ')) + '">' + BOX_SETS[x.st].icon + ' ' + esc(BOX_SETS[x.st].name) + '<span class="pips">' + x.parts.map((p) => '<i class="' + (x.have.includes(p) ? 'on' : '') + '"></i>').join('') + '</span><b>' + (full ? '✨ komplett' : 'fehlt: ' + miss.join(', ')) + '</b></li>'; }).join('') + '</ul>'; };
+  const presetsHtml = () => '<div class="wd-presets" role="group" aria-label="Gespeicherte Outfits"><span>Outfits</span>' +
+    [0, 1, 2].map((k) => '<button class="' + (presetSel === k ? 'sel ' : '') + (presets[k] ? 'has' : '') + '" data-preset="' + k + '" title="' + (presets[k] ? 'Outfit ' + (k + 1) + ' anprobieren' : 'Aktuelles Outfit hier speichern') + '">' + (k + 1) + '</button>').join('') +
+    '<button class="sv" data-savepreset title="Aktuelles Outfit auf Platz ' + (presetSel + 1) + ' speichern">💾</button></div>';
   const garderobeTab = () => {
     const mine = partsOwned();
     const set = setOf(fullOutfit(activeAvatar, draft));
@@ -135,7 +144,7 @@ export function renderShop(root, ctx) {
     const cell = (id, lock) => '<button class="wd-cell r-' + rarOf(id) + (cur === id ? ' on' : '') + (lock ? ' locked' : '') + '" ' + (lock ? 'disabled' : 'data-part="' + esc(id) + '"') + ' title="' + esc(partName(id, avName)) + '">' + itemThumb(id) + '<small>' + esc(itemInfo(id) ? itemInfo(id).name : avName(String(id).split(':')[1])) + '</small>' + (boxSetOf(id) ? '<i class="setbadge" title="' + esc(BOX_SETS[boxSetOf(id)].name) + '-Set">' + BOX_SETS[boxSetOf(id)].icon + '</i>' : '') + (lock ? '<em class="lk">' + (itemInfo(id) && itemInfo(id).month ? '📦 ' + MONTHS[itemInfo(id).month - 1] : '📦') + '</em>' : '') + '</button>';
     return '<div class="wd-wrap"><div class="wd-left"><div class="wd-fig">' + previewFor(draft) + '</div>' +
       (set ? '<p class="wd-set">✨ Set komplett: <b>' + esc(SET_FX[set].name) + '</b></p>' : missing ? '<p class="wd-miss">' + missing + '</p>' : '') +
-      '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button>' + setsHtml() + '</div>' +
+      '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button>' + presetsHtml() + setsHtml() + '</div>' +
       '<div class="wd-right"><nav class="wd-slots">' + SLOTS.map((x) => '<button class="' + (slot === x.id ? 'on' : '') + '" data-slot="' + x.id + '">' + x.icon + ' ' + x.name + '</button>').join('') + '</nav>' +
       '<div class="wd-grid">' + (slot === 'ding' || draft[slot] ? '<button class="wd-cell none' + (!draft[slot] ? ' on' : '') + '" data-part="">' + (slot === 'ding' ? '✋ Nichts' : '↺ Vom Avatar') + '</button>' : '') +
       list.map((id) => cell(id, false)).join('') + locked.map((id) => cell(id, true)).join('') + '</div>' +
@@ -208,18 +217,19 @@ export function renderShop(root, ctx) {
     root.innerHTML =
       '<section class="shop-shell" aria-label="Shop">' +
         '<header class="shop-header"><h1>🛒 Shop</h1>' +
+        (only ? '<nav class="shop-tabs only"><b class="only-h">👕 Anziehen</b><button data-fullshop>🛒 Zum Shop</button></nav>' :
         '<nav class="shop-tabs" role="tablist">' +
           '<button role="tab" data-tab="kiste" class="kiste-tab ' + (tab === 'kiste' ? 'on' : '') + '">📦 Kuh-Kiste</button>' +
           '<button role="tab" data-tab="garderobe" class="' + (tab === 'garderobe' ? 'on' : '') + '">👕 Garderobe</button>' +
           '<button role="tab" data-tab="avatare" class="' + (tab === 'avatare' ? 'on' : '') + '">Avatare <small>' + nAv + '/' + AVATARS.length + '</small></button>' +
           '<button role="tab" data-tab="sprueche" class="' + (tab === 'sprueche' ? 'on' : '') + '">Sprüche <small>' + nSp + '/' + (SHOP_SAYINGS.length + 1) + '</small></button>' +
           '<button role="tab" data-tab="emotes" class="' + (tab === 'emotes' ? 'on' : '') + '">Emotes <small>' + SHOP_EMOTES.filter((x) => owned.has(x.id)).length + '/' + SHOP_EMOTES.length + '</small></button>' +
-        '</nav>' +
+        '</nav>') +
         '<div class="shop-balance" title="Dein Guthaben">' + DUB + '<strong>' + new Intl.NumberFormat('de-DE').format(balance) + '</strong></div>' +
         '<button class="shop-close" data-close aria-label="Shop schließen">×</button></header>' +
         (notice?'<div class="shop-notice shop-notice-' + noticeKind + '" role="status">' + esc(notice) + '</div>':'') +
         '<div class="shop-content">' +
-          (tab === 'kiste' ? kisteTab() : tab === 'garderobe' ? garderobeTab() : tab === 'emotes'
+          (only ? garderobeTab() : tab === 'kiste' ? kisteTab() : tab === 'garderobe' ? garderobeTab() : tab === 'emotes'
             ? '<div class="shop-grid shop-emote-grid">' + SHOP_EMOTES.map(emoteCard).join('') + '</div>' +
               '<p class="shop-hint">Im Spiel: auf deine Figur tippen → 💬 → Emote auswählen.</p>'
             : tab === 'avatare'
@@ -243,6 +253,11 @@ export function renderShop(root, ctx) {
     root.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => { slot = b.dataset.slot; render(); }));
     root.querySelectorAll('[data-part]').forEach((b) => b.addEventListener('click', () => { draft = { ...draft, [slot]: b.dataset.part || null }; if (!draft[slot]) delete draft[slot]; render(); }));
     root.querySelector('[data-saveoutfit]')?.addEventListener('click', saveOutfit);
+    root.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => { const k = Number(b.dataset.preset); presetSel = k;
+      if (!presets[k]) { presets[k] = { ...draft }; savePresets(); notice = 'Outfit ' + (k + 1) + ' gespeichert.'; noticeKind = 'success'; return render(); }
+      const mine = partsOwned(); draft = Object.fromEntries(Object.entries(presets[k]).filter(([sl, id]) => id && (sl === 'ding' ? inventory.has(id) : mine.has(id)))); notice = ''; render(); }));
+    root.querySelector('[data-savepreset]')?.addEventListener('click', () => { presets[presetSel] = { ...draft }; savePresets(); notice = 'Outfit ' + (presetSel + 1) + ' gespeichert.'; noticeKind = 'success'; render(); });
+    root.querySelector('[data-fullshop]')?.addEventListener('click', () => { only = null; tab = 'kiste'; render(); });
     root.querySelectorAll('[data-wear]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.wear; const sl = itemInfo(id).slot; draft = { ...outfit, [sl]: id }; slot = sl; tab = 'garderobe'; box = { st: 'idle', res: null }; saveOutfit(); }));
     root.querySelectorAll('[data-usedesign]').forEach((b) => b.addEventListener('click', () => { if (typeof ctx.useDesign === 'function') ctx.useDesign(b.dataset.usedesign.replace(/^design-/, '')); notice = 'Spielfeld gewechselt.'; noticeKind = 'success'; render(); }));
     root.querySelector('[data-customform]')?.addEventListener('submit', (e) => { e.preventDefault(); saveCustom(e.target.querySelector('input').value); });

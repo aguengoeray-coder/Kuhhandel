@@ -16,7 +16,7 @@ import { BOX_ITEMS, RARITIES, BOX_PRICE } from './outfits.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.93.0';
+export const APP_VERSION = '0.94.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -402,7 +402,7 @@ function renderStart() {
     const k = b.dataset.dock;
     if (k === 'play') return;
     if (k === 'shop') { openShop(); return; }
-    if (k === 'wear') { openShop('garderobe'); return; } // v0.92: eigene Figur antippen → Garderobe
+    if (k === 'wear') { openShop('garderobe', 'garderobe'); return; } // v0.92: eigene Figur antippen → Garderobe
     openModal(k);
   }));
   app.querySelectorAll('[data-resume]').forEach((b) => b.addEventListener('click', async () => {
@@ -1311,7 +1311,7 @@ async function loadShop(force = false) {
   render();
 }
 
-async function openShop(startTab) {
+async function openShop(startTab, only) {
   if (shopMe.state !== 'ok') await loadShop(true);
   if (shopMe.state !== 'ok') { ui.homeNote = 'Der Shop wird gerade eingerichtet – gleich geht’s los 🛒'; render(); setTimeout(() => { ui.homeNote = ''; render(); }, 3500); return; }
   const root = document.createElement('div');
@@ -1321,7 +1321,7 @@ async function openShop(startTab) {
   renderShop(root, {
     me: { id: me.id, name: me.name },
     balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active, freeLeft: shopMe.freeLeft, customText: shopMe.custom,
-    inventory: shopMe.inventory || [], outfit: shopMe.outfit || {}, boxState: shopMe.boxState, tab: startTab || params.get('shoptab') || undefined,
+    inventory: shopMe.inventory || [], outfit: shopMe.outfit || {}, boxState: shopMe.boxState, tab: startTab || params.get('shoptab') || undefined, only: only || undefined,
     async openBox() {
       if (DEMO) { const pool = Object.entries(BOX_ITEMS); const r0 = Math.random(); const rar = r0 < .03 ? 'legendaer' : r0 < .13 ? 'episch' : r0 < .4 ? 'selten' : 'gewoehnlich'; const c = pool.filter(([, it]) => it.rarity === (params.get('boxrar') || rar)); const [id] = c[Math.floor(Math.random() * c.length)]; const dupe = (shopMe.inventory || new Set()).has(id); const refund = dupe ? RARITIES[params.get('boxrar') || rar].refund : 0; shopMe.balance += refund - BOX_PRICE; shopMe.inventory.add(id); return { item: id, rarity: params.get('boxrar') || rar, dupe, refund, balance: shopMe.balance }; }
       const { data, error } = await sb.rpc('shop_open_box');
@@ -1336,7 +1336,7 @@ async function openShop(startTab) {
       shopMe.outfit = v; if (Object.keys(v).length) shopOutfits.set(me.id, v); else shopOutfits.delete(me.id);
       return v;
     },
-    useDesign(id) { if (SPECIAL_PRESETS[id]) { theme = { ...SPECIAL_PRESETS[id].v, bigText: theme.bigText }; saveTheme(store, theme); applyTheme(theme); } },
+    useDesign(id) { if (SPECIAL_PRESETS[id]) { theme = { ...SPECIAL_PRESETS[id].v, bigText: theme.bigText, fx: theme.fx }; saveTheme(store, theme); applyTheme(theme); } },
     async saveCustom(text) {
       let v = text;
       if (!DEMO) { const { data, error } = await sb.rpc('shop_set_custom_saying', { p_text: text }); if (error) throw err(error, 'Der Spruch konnte nicht gespeichert werden.'); v = data || text; }
@@ -2132,9 +2132,9 @@ function renderModal() {
     if (b.dataset.m === 'themeShop') { modal = null; render(); return openShop(); }
     if (b.dataset.m === 'theme' || b.dataset.m === 'themePreset' || b.dataset.m === 'themeReset') {
       if (b.dataset.m === 'theme') theme = { ...theme, [b.dataset.k]: b.dataset.v };
-      if (b.dataset.m === 'themePreset') theme = { ...(PRESETS[b.dataset.v] || SPECIAL_PRESETS[b.dataset.v]).v, bigText: theme.bigText };
+      if (b.dataset.m === 'themePreset') theme = { ...(PRESETS[b.dataset.v] || SPECIAL_PRESETS[b.dataset.v]).v, bigText: theme.bigText, fx: theme.fx };
       if (b.dataset.m === 'theme' && b.dataset.k === 'table') theme = { ...theme, bg: bgForTable(b.dataset.v), bgPat: theme.tablePat === 'glatt' ? 'glatt' : 'filz' }; // v0.90: Hintergrund passt automatisch
-      if (b.dataset.m === 'themeReset') theme = { ...DEFAULT_THEME, bigText: theme.bigText };
+      if (b.dataset.m === 'themeReset') theme = { ...DEFAULT_THEME, bigText: theme.bigText, fx: theme.fx };
       saveTheme(store, theme); applyTheme(theme); return render();
     }
     if (modal.kind === 'admin') {
@@ -2167,7 +2167,7 @@ function renderModal() {
     if (b.dataset.m === 'pfStats') return openModal('mystats');
     if (b.dataset.m === 'pfShop') { modal = null; render(); return openShop(); }
     // v0.92: Figur im Profil antippen → Garderobe (Kopf, Brust, Beine, Gegenstand anziehen); danach zurück ins Profil
-    if (b.dataset.m === 'pfWear') return openShop('garderobe');
+    if (b.dataset.m === 'pfWear') return openShop('garderobe', 'garderobe');
     if (b.dataset.m === 'pfAv') return setMyAvatar(b.dataset.v);
   };
   el.querySelectorAll('form.apw').forEach((f) => { f.onsubmit = (e) => {

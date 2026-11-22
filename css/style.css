@@ -4474,3 +4474,18 @@ button.pf-big { position: relative; border: 0; background: none; padding: 0; cur
 .stage:has(.tpick) .gright .prow.seat-l .chips, .stage:has(.tpick) .gright .prow.seat-r .chips { max-width: 124px; gap: 5px; }
 .stage .gright .prow .chips.manych .chip.card .mcard { width: 24px; height: 33px; } /* viele Sets (3+ Reihen): bisherige Größe, damit der Platz nicht in die Knöpfe wächst */
 .stage .gright .prow.seat-l .chips.manych, .stage .gright .prow.seat-r .chips.manych { max-width: 124px; gap: 5px; row-gap: 7px; }
+
+/* v0.94 Effekte-Schalter (Aussehen): nur meine / aus – gilt am Tisch */
+html[data-fx="aus"] .stage :is(.fxb, .fxf), html[data-fx="aus"] .qshow :is(.fxb, .fxf) { display: none; }
+html[data-fx="meine"] .stage :not(.mefig) > .shop-avatar-full :is(.fxb, .fxf), html[data-fx="meine"] .stage .cheerfx :is(.fxb, .fxf) { display: none; }
+.tfx { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: #F3F1EA; border-radius: 12px; padding: 6px 10px; font-weight: 800; font-size: 13px; }
+.tfx span { margin-right: auto; }
+.tfx button { border: 2px solid #2A2420; background: #fff; border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.tfx button.on { background: #2E7D4F; color: #fff; border-color: #2E7D4F; }
+/* v0.94 Eisenschwert blitzt kurz auf; Rattenkönig/Quartett-Show: Waffe schwingen */
+.sa-ding .gleam { animation: gleam 2.6s ease-in-out infinite; } @keyframes gleam { 0%, 55% { stroke-dashoffset: 120; opacity: 0; } 60% { opacity: .95; } 85% { stroke-dashoffset: -20; opacity: .95; } 100% { stroke-dashoffset: -20; opacity: 0; } }
+.qshow .sa-ding { animation: dingswing .42s ease-in-out calc(var(--qd, 0ms) + 600ms) 6 alternate; }
+@media (prefers-reduced-motion: reduce) { .sa-ding .gleam, .qshow .sa-ding { animation: none; } }
+/* v0.94 kleine Handys: Mitspieler-Sets etwas größer, 4 pro Reihe (viele Sets bleiben klein) */
+@media (max-width: 779px) { .stage .gright .prow.seat-l .chips:not(.manych) .chip.card .mcard, .stage .gright .prow.seat-r .chips:not(.manych) .chip.card .mcard { width: 25px; height: 34px; }
+  .stage .gright .prow.seat-l .chips:not(.manych), .stage .gright .prow.seat-r .chips:not(.manych) { max-width: 124px; gap: 4px; row-gap: 7px; } }
