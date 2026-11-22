@@ -10,8 +10,8 @@ import { known, writeReport, appendSummary, OUT } from './lib/report.mjs';
 
 // E2E_GAMES=duo-komplett: nur diese Partie(n) spielen. spaet=1: Partie startet kurz vor Schluss (volle Plätze, viel Geld) – schnell und anspruchsvoll fürs Layout
 const GAMES = (process.env.E2E_GAMES ? (x) => x.filter((g) => process.env.E2E_GAMES.split(',').includes(g.name)) : (x) => x)([
-  { name: 'spiel3-spaet', q: '?debug=1&demo=testspiel3&spaet=1', vp: [852, 393], seed: 11, max: 660000 }, // v0.86: seit Ergebnis-Fenster auch spät im Spiel wieder kommen, dauert es länger
-  { name: 'spiel4-spaet', q: '?debug=1&demo=testspiel&spaet=1', vp: [667, 375], seed: 23, max: 660000 },
+  { name: 'spiel3-spaet', q: '?debug=1&demo=testspiel3&spaet=1', vp: [852, 393], seed: 11, max: 900000 }, // v0.86: seit Ergebnis-Fenster auch spät im Spiel wieder kommen, dauert es länger
+  { name: 'spiel4-spaet', q: '?debug=1&demo=testspiel&spaet=1', vp: [667, 375], seed: 23, max: 900000 },
   // von Anfang an: eine ganze Partie dauert 10+ Minuten → hier nur 4 Minuten spielen (darf nicht hängen, keine Fehler)
   { name: 'spiel4-anfang', q: '?debug=1&demo=testspiel', vp: [932, 430], seed: 11, dauer: 240000 },
   { name: 'spiel3-anfang', q: '?debug=1&demo=testspiel3', vp: [800, 360], seed: 23, dauer: 240000 },
@@ -93,7 +93,7 @@ async function play(browser, url, g) {
   return { ...st, errs: [...new Set(errs)] };
 }
 
-test('Komplette Partien mit Test-Spielern', { timeout: 40 * 60 * 1000 }, async () => {
+test('Komplette Partien mit Test-Spielern', { timeout: 50 * 60 * 1000 }, async () => {
   const srv = await startServer();
   const browser = await chromium.launch();
   const rows = []; const lines = [];

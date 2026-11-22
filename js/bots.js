@@ -54,6 +54,8 @@ export function botStep(s, bots, now, rand = Math.random) {
     if (a.holdUntil != null && now < a.holdUntil) return null; // alle schauen noch die Scheine an
     if (running) {
       const high = a.high ? a.high.amount : 0;
+      // v0.89: Haben alle anderen gepasst, beendet der führende Test-Spieler die Versteigerung („Beenden“)
+      if (a.high && isBot(a.high.player) && s.players.filter((p) => p.id !== a.auctioneer && p.id !== a.high.player).every((p) => a.passed.includes(p.id))) return rand() < 0.6 ? passAuction(s, a.high.player, now) : null;
       const candidates = s.players.filter((p) => isBot(p.id) && p.id !== a.auctioneer && !a.passed.includes(p.id) && (!a.high || a.high.player !== p.id));
       if (!candidates.length || rand() > 0.45) return null; // nicht jede Runde reagieren
       const p = pick(candidates, rand);
