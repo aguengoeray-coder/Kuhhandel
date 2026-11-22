@@ -15,6 +15,11 @@ Nächster Schritt / wer: …
 
 ---
 
+## 22.11.2026 14:20 – Claude → Alp/Codex: v0.93 live
+- Branch `claude/v093-garderobe`, PR #69 gemergt (39db8c5). Dateien: js/shop.js, js/shopavatars.js, js/outfits.js, js/game.js, css/shop.css, Test, Versionen.
+- Tests: npm test, check, GitHub test + e2e + Workers grün. Keine SQL.
+- Offen aus Alps Liste (noch nicht freigegeben): Garderobe direkt im Profil + Outfit-Speicher, Schwingen auch bei Kuhhandel/Rattenkönig, Glanz für Eisen, kleinere Platzköpfe auf schmalen Handys, Effekte-Schalter (alle/nur meine/aus).
+
 ## 22.11.2026 12:40 – Claude → Alp/Codex: v0.92 live
 - Branch `claude/v092-effekte`, PR #68 gemergt (Merge 037191c). Dateien: js/outfits.js, js/shopavatars.js, js/shop.js, js/app.js, js/game.js, css/style.css, css/shop.css, supabase/v0.92-*.sql, test.
 - Tests: npm test 84/84, check, GitHub test + e2e (alle Partien) + Workers grün.

@@ -10,7 +10,8 @@ Stand: 21.11.2026, 15:30 Uhr · Repository `aguengoeray-coder/Kuhhandel` · Live
 | | |
 |---|---|
 | Live-Version (`main`) | **v0.84.0** (#59, Einsatz & Kasse); Cloudflare-Build erfolgreich |
-| Live | v0.92.0 (#68, 22.11. ~12:40): gezeichnete Set-Effekte, Füße/Untergründe, Waffen-Stufen, Rüstungs-Sets (Weihnachtsmann nur Dezember, `nur_monat`), Shop mit Anprobe, Figur antippen → Garderobe, größere Tier-Sets; DB `v0.92-kiste-untergruende.sql` + `v0.92-kiste-ruestung.sql` ausgeführt (Pool 49, 3× Dezember) |
+| Live | v0.93.0 (#69, 22.11. ~14:20): Garderobe mit Teil-Ausschnitten, Set-Fortschritt, Set-Hinweis in der Kiste, eigene Sets ≈ +15 % (weichen Warte-Knopf/„Letzte Runde“ aus); keine SQL |
+| Davor | v0.92.0 (#68, 22.11. ~12:40): gezeichnete Set-Effekte, Füße/Untergründe, Waffen-Stufen, Rüstungs-Sets (Weihnachtsmann nur Dezember, `nur_monat`), Shop mit Anprobe, Figur antippen → Garderobe, größere Tier-Sets; DB `v0.92-kiste-untergruende.sql` + `v0.92-kiste-ruestung.sql` ausgeführt (Pool 49, 3× Dezember) |
 | Davor | v0.91.0 (#66, 22.11. 10:10): Kuh-Kiste, Garderobe, Set-Effekte, Erfolgs-Zubehör; DB `v0.91-kuhkiste.sql` ausgeführt (Pool 28, Rechte nur SELECT, anon ohne Zugriff) |
 | Nächste Versionen | Erste echte Partien spielen (noch kein einziges Spielergebnis in der DB) · Börsen-Chaos danach nachjustieren · Shop-Ideen (Preise = Alp) · Rückblick nach dem Spiel |
 | Datenbank | Supabase; ausgeführt bis einschließlich `supabase/v0.84-kasse.sql` (Claude über Connector 20.11., Prüfabfrage + Advisors ✓); davor `v0.80-avatar-ablegen.sql` (20.11.), `v0.67-emotes.sql` (14.11.) |
