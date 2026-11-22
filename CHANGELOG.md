@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v1.0.0 – Schmiede (Alp 22.11. 20:17)
+
+- [x] **Schmiede** im Fach Gegenstand: 2 Gegenstände derselben Seltenheit (auch dasselbe Teil doppelt) → 1 zufälliger Gegenstand der nächsten Seltenheit: Gewöhnlich (grau) → Selten (blau) → Episch (lila) → Legendär (gold). Beide werden verbraucht; ein verbrauchter getragener Gegenstand wird ausgezogen.
+- [x] Serverseitig in `shop_combine` (`supabase/v1.0-schmiede.sql`), Anzahl doppelter Gegenstände an den Kacheln (×2 …).
+
 ## v0.99.0 – Shop aufgeräumt (Alp 22.11. 20:14)
 
 - [x] Reiter: 📦 Kuh-Kiste · 🐮 Avatare · 👕 Anziehen · 💬 Sprüche & Emotes (Sprüche/Emotes als Unter-Reiter).

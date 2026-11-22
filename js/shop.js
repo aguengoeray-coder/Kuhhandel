@@ -92,9 +92,13 @@ export function renderShop(root, ctx) {
   let inventory = new Set(ctx.inventory || []);
   let outfit = { ...(ctx.outfit || {}) };
   let draft = { ...outfit };
-  let slot = 'sets'; // v0.98: Garderobe startet bei den Sets
+  let slot = ctx.slot || 'sets'; // v0.98: Garderobe startet bei den Sets
   let lastView = '';
-  let onlyMine = true; // v0.98 Einzelteile: nur meine / alle
+  let onlyMine = true;
+  let forge = null; // v1.0 Schmiede: null = aus, sonst [ausgewählte Gegenstände]
+  let forged = null; // zuletzt geschmiedetes Teil (Aufblitzen)
+  const NEXT_RAR = { gewoehnlich: 'selten', selten: 'episch', episch: 'legendaer' };
+  const cntOf = (id) => (ctx.invCount || {})[id] || (inventory.has(id) ? 1 : 0); // v0.98 Einzelteile: nur meine / alle
   let tryOn = null; // v0.92 Anprobieren: Avatar-Vorschau links, gekauft wird erst mit dem Knopf
   let box = { st: 'idle', res: null }; // idle | shake | open
   let boxState = ctx.boxState || { since_legend: 0, since_epic: 0 };
@@ -158,6 +162,25 @@ export function renderShop(root, ctx) {
         '<span class="sr-txt"><b>' + esc(x.name) + '</b><small><span class="sr-dots">' + x.parts.map((p) => '<i class="' + (x.have.includes(p) ? 'ok' : '') + '"></i>').join('') + '</span>' + (full ? 'Komplett · ✨ ' + esc(SET_FX[x.id].name) : x.have.length + ' von 3 · ' + (x.kind === 'avatar' ? '🛒 Shop' : '📦 Kiste')) + '</small></span>' +
         '<button class="sr-btn' + (full ? ' go' : '') + '" data-wearset="' + esc(x.id) + '">' + (wearing(x) ? '✓ Trägst du' : full ? 'Anziehen' : 'Anprobieren') + '</button></div>'; }).join('') + '</div>';
   };
+  // v1.0 Schmiede-Leiste: 2 Gegenstände gleicher Seltenheit → 1 Gegenstand der nächsten Seltenheit
+  const forgeBar = () => {
+    if (!forge) return '<div class="forge"><span>⚒️ <b>Schmiede</b> · 2 gleiche Farbe → 1 höhere</span><button class="sr-btn go" data-forge="on">Schmieden</button></div>';
+    const r0 = forge[0] ? rarOf(forge[0]) : null; const ok = forge.length === 2 && r0 && rarOf(forge[1]) === r0 && NEXT_RAR[r0];
+    const pick = (k) => forge[k] ? '<span class="fp r-' + rarOf(forge[k]) + '">' + itemThumb(forge[k]) + '</span>' : '<span class="fp empty">?</span>';
+    return '<div class="forge on">' + pick(0) + '<b>+</b>' + pick(1) + '<b>→</b><span class="fp res' + (ok ? ' r-' + NEXT_RAR[r0] : '') + '">' + (ok ? '✨ ' + RARITIES[NEXT_RAR[r0]].name : '?') + '</span>' +
+      '<button class="sr-btn go" data-forge="go" ' + (ok && !busy ? '' : 'disabled') + '>⚒️ Schmieden!</button><button class="sr-btn" data-forge="off">Abbrechen</button></div>' +
+      '<p class="forge-hint">' + (forge.length < 2 ? 'Tippe 2 Gegenstände gleicher Farbe an (dasselbe Teil zweimal geht, wenn du es doppelt hast).' : ok ? 'Beide werden verbraucht – du bekommst zufällig einen ' + RARITIES[NEXT_RAR[r0]].name + '-Gegenstand.' : r0 === 'legendaer' ? 'Legendär ist schon die höchste Stufe.' : 'Die beiden haben nicht dieselbe Farbe.') + '</p>';
+  };
+  async function doForge() {
+    if (busy || !forge || forge.length !== 2 || typeof ctx.combine !== 'function') return;
+    busy = true; notice = ''; render();
+    try { const res = await ctx.combine(forge[0], forge[1]); inventory.add(res.item); for (const x of forge) if (!(ctx.invCount || {})[x]) inventory.delete(x);
+      if (outfit.ding && !inventory.has(outfit.ding)) { outfit = { ...outfit }; delete outfit.ding; }
+      draft = { ...draft, ding: res.item }; infoId = res.item; forged = res.item; forge = null;
+      notice = '⚒️ Geschmiedet: ' + (itemInfo(res.item) ? itemInfo(res.item).name : res.item) + ' (' + RARITIES[res.rarity].name + ')!'; noticeKind = 'success';
+    } catch (e) { notice = e?.message || 'Schmieden hat nicht geklappt.'; noticeKind = 'error'; }
+    finally { busy = false; render(); }
+  }
   const tryLocked = () => Object.values(draft).some((id) => id && BOX_ITEMS[id] && !inventory.has(id));
   const presetsHtml = () => '<div class="wd-presets" role="group" aria-label="Gespeicherte Outfits"><span>Outfits</span>' +
     [0, 1, 2].map((k) => '<button class="' + (presetSel === k ? 'sel ' : '') + (presets[k] ? 'has' : '') + '" data-preset="' + k + '" title="' + (presets[k] ? 'Outfit ' + (k + 1) + ' anprobieren' : 'Aktuelles Outfit hier speichern') + '">' + (k + 1) + '</button>').join('') +
@@ -171,12 +194,13 @@ export function renderShop(root, ctx) {
     const locked = onlyMine ? [] : Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === slot && !inventory.has(id)).map(([id]) => id);
     const nLocked = Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === slot && !inventory.has(id)).length;
     const cur = fo[slot];
-    const cell = (id, lock) => '<button class="wd-cell r-' + rarOf(id) + (cur === id ? ' on' : '') + (lock ? ' locked' : '') + '" ' + 'data-part="' + esc(id) + '"' + (lock ? ' data-lock="1"' : '') + ' title="' + esc(partName(id, avName)) + '">' + itemThumb(id) + '<small>' + esc(itemInfo(id) ? itemInfo(id).name : avName(String(id).split(':')[1])) + '</small>' + (boxSetOf(id) ? '<i class="setbadge" title="' + esc(BOX_SETS[boxSetOf(id)].name) + '-Set">' + BOX_SETS[boxSetOf(id)].icon + '</i>' : '') + (lock ? '<em class="lk">' + (itemInfo(id) && itemInfo(id).month ? '📦 ' + MONTHS[itemInfo(id).month - 1] : '📦') + '</em>' : '') + '</button>';
+    const cell = (id, lock) => '<button class="wd-cell r-' + rarOf(id) + (cur === id ? ' on' : '') + (lock ? ' locked' : '') + '" ' + 'data-part="' + esc(id) + '"' + (lock ? ' data-lock="1"' : '') + ' title="' + esc(partName(id, avName)) + '">' + itemThumb(id) + '<small>' + esc(itemInfo(id) ? itemInfo(id).name : avName(String(id).split(':')[1])) + '</small>' + (!lock && slot === 'ding' && cntOf(id) > 1 ? '<i class="cntbadge">×' + cntOf(id) + '</i>' : '') + (forge && forge.includes(id) ? '<i class="forgepick">' + forge.filter((x) => x === id).length + '</i>' : '') + (boxSetOf(id) ? '<i class="setbadge" title="' + esc(BOX_SETS[boxSetOf(id)].name) + '-Set">' + BOX_SETS[boxSetOf(id)].icon + '</i>' : '') + (lock ? '<em class="lk">' + (itemInfo(id) && itemInfo(id).month ? '📦 ' + MONTHS[itemInfo(id).month - 1] : '📦') + '</em>' : '') + '</button>';
     return '<div class="wd-wrap"><div class="wd-left"><div class="wd-fig">' + previewFor(draft) + '</div>' +
       (set ? '<p class="wd-set">✨ ' + (tryLocked() ? 'Anprobe' : 'Set komplett') + ': <b>' + esc(SET_FX[set].name) + '</b></p>' : missing ? '<p class="wd-miss">' + missing + '</p>' : '') +
       (tryLocked() ? '<button class="shop-action shop-select" disabled>🔒 Nur Anprobe – erst ziehen</button>' : '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button>') + infoHtml(infoId) + presetsHtml() + (slot === 'sets' ? '' : setsHtml()) + '</div>' +
       '<div class="wd-right"><nav class="wd-slots">' + [{ id: 'sets', name: 'Sets', icon: '✨' }, ...SLOTS].map((x) => '<button class="' + (slot === x.id ? 'on' : '') + '" data-slot="' + x.id + '">' + x.icon + ' ' + x.name + '</button>').join('') + '</nav>' +
       (slot === 'sets' ? setsListHtml(mine) :
+      (slot === 'ding' ? forgeBar() : '') +
       '<div class="wd-filter"><button class="' + (onlyMine ? 'on' : '') + '" data-onlymine="1">Nur meine</button><button class="' + (!onlyMine ? 'on' : '') + '" data-onlymine="0">Alle' + (nLocked ? ' (+' + nLocked + ' 🔒)' : '') + '</button></div>' +
       '<div class="wd-grid">' + (slot === 'ding' || draft[slot] ? '<button class="wd-cell none' + (!draft[slot] ? ' on' : '') + '" data-part="">' + (slot === 'ding' ? '✋ Nichts' : '↺ Vom Avatar') + '</button>' : '') +
       list.map((id) => cell(id, false)).join('') + locked.map((id) => cell(id, true)).join('') + '</div>' +
@@ -286,12 +310,14 @@ export function renderShop(root, ctx) {
     root.querySelectorAll('[data-openbox]').forEach((b) => b.addEventListener('click', openBox));
     root.querySelectorAll('[data-try]').forEach((b) => b.addEventListener('click', () => { tryOn = b.dataset.try || null; render(); }));
     root.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => { slot = b.dataset.slot; render(); }));
-    root.querySelectorAll('[data-part]').forEach((b) => b.addEventListener('click', () => { infoId = b.dataset.part || null; draft = { ...draft, [slot]: b.dataset.part || null }; if (!draft[slot]) delete draft[slot]; render(); }));
+    root.querySelectorAll('[data-part]').forEach((b) => b.addEventListener('click', () => { if (forge && slot === 'ding') { const id = b.dataset.part; if (!id || b.dataset.lock) return; const picked = forge.filter((x) => x === id).length; if (forge.length < 2 && picked < Math.min(2, cntOf(id))) forge.push(id); else if (picked) forge.splice(forge.lastIndexOf(id), 1); infoId = id; return render(); } infoId = b.dataset.part || null; draft = { ...draft, [slot]: b.dataset.part || null }; if (!draft[slot]) delete draft[slot]; render(); }));
     root.querySelector('[data-saveoutfit]')?.addEventListener('click', saveOutfit);
     root.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => { const k = Number(b.dataset.preset); presetSel = k;
       if (!presets[k]) { presets[k] = { ...draft }; savePresets(); notice = 'Outfit ' + (k + 1) + ' gespeichert.'; noticeKind = 'success'; return render(); }
       const mine = partsOwned(); draft = Object.fromEntries(Object.entries(presets[k]).filter(([sl, id]) => id && (sl === 'ding' ? inventory.has(id) : mine.has(id)))); notice = ''; render(); }));
     root.querySelector('[data-savepreset]')?.addEventListener('click', () => { presets[presetSel] = { ...draft }; savePresets(); notice = 'Outfit ' + (presetSel + 1) + ' gespeichert.'; noticeKind = 'success'; render(); });
+    root.querySelectorAll('[data-forge]').forEach((b) => b.addEventListener('click', () => { const v = b.dataset.forge; if (v === 'on') { forge = []; onlyMine = true; } else if (v === 'off') forge = null; else return doForge(); render(); }));
+    if (forged) { const f = root.querySelector('.wd-fig'); if (f) { f.classList.add('forged'); } forged = null; }
     root.querySelectorAll('[data-onlymine]').forEach((b) => b.addEventListener('click', () => { onlyMine = b.dataset.onlymine === '1'; render(); }));
     root.querySelectorAll('[data-wearset]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.wearset; draft = { ...draft, kopf: 'kopf:' + id, brust: 'brust:' + id, beine: 'beine:' + id }; infoId = null;
       const mine = partsOwned(); if (['kopf', 'brust', 'beine'].every((k) => mine.has(k + ':' + id) || inventory.has(k + ':' + id)) && JSON.stringify(draft) !== JSON.stringify(outfit)) return saveOutfit(); render(); }));
