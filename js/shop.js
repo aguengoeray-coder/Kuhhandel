@@ -75,6 +75,7 @@ export function renderShop(root, ctx) {
   let outfit = { ...(ctx.outfit || {}) };
   let draft = { ...outfit };
   let slot = 'kopf';
+  let tryOn = null; // v0.92 Anprobieren: Avatar-Vorschau links, gekauft wird erst mit dem Knopf
   let box = { st: 'idle', res: null }; // idle | shake | open
   let boxState = ctx.boxState || { since_legend: 0, since_epic: 0 };
   const avName = (id) => (AVATARS.find((a) => a.id === id) || {}).name || id;
@@ -131,6 +132,19 @@ export function renderShop(root, ctx) {
       (locked.length ? '<p class="shop-hint">📦 = nur in der Kuh-Kiste</p>' : '') + '</div></div>';
   };
   const tierLabel = { selten: 'Selten', episch: 'Episch', legendaer: 'Legendär', kult: 'Kult' };
+  // v0.92 Bühne links: deine Figur (oder die Anprobe) groß im Spot
+  const stageHtml = () => {
+    const id = tryOn || activeAvatar || 'noergler';
+    const it = AVATARS.find((a) => a.id === id);
+    const has = owned.has(id);
+    const fig = shopAvatarFull(id, 'stage-fig', tryOn ? {} : outfit);
+    const fx = SET_FX[id];
+    return '<div class="stage-spot"></div><div class="stage-figwrap">' + fig + '</div>' +
+      '<div class="stage-info"><b>' + esc(it ? it.name : '') + '</b>' + (tryOn ? '<small>' + (has ? 'gehört dir' : 'Anprobe') + (fx ? ' · Set-Effekt: ' + esc(fx.name) : '') + '</small>' : '<small>So sehen dich die anderen</small>') + '</div>' +
+      (tryOn && !has ? '<button class="shop-action shop-buy" data-buy="' + esc(id) + '" ' + (balance < (it ? it.price : 0) || busy ? 'disabled' : '') + '>Kaufen · ' + (it ? it.price : '') + ' ' + DUB + '</button>'
+        : tryOn && has && activeAvatar !== id ? '<button class="shop-action shop-select" data-select="' + esc(id) + '" ' + (busy ? 'disabled' : '') + '>Auswählen</button>'
+        : tryOn ? '<button class="shop-action shop-plain" data-try="">Zurück zu mir</button>' : '');
+  };
 
   const avatarCard = (item) => {
     const has = owned.has(item.id);
@@ -140,10 +154,12 @@ export function renderShop(root, ctx) {
       : has
         ? '<button class="shop-action shop-select" data-select="' + esc(item.id) + '" ' + (busy?'disabled':'') + '>Auswählen</button>'
         : '<button class="shop-action shop-buy" data-buy="' + esc(item.id) + '" ' + (balance<item.price||busy?'disabled':'') + '>Kaufen · ' + item.price + ' ' + DUB + '</button>';
-    return '<article class="shop-item shop-avatar-item shop-tier-' + esc(item.tier) + (active ? ' is-active' : '') + (has ? ' is-owned' : '') + '">' +
+    // v0.92: Kachel antippen = links anprobieren; kein Dauer-Schimmer, Seltenheit nur über Rahmen
+    return '<article class="shop-item shop-avatar-item v2 shop-tier-' + esc(item.tier) + (active ? ' is-active' : '') + (has ? ' is-owned' : '') + (tryOn === item.id ? ' is-trying' : '') + '">' +
+      '<button class="shop-try" data-try="' + esc(item.id) + '" aria-label="' + esc(item.name) + ' anprobieren">' +
       '<span class="shop-tier-tag">' + tierLabel[item.tier] + '</span>' +
-      '<div class="shop-art full" data-tier="' + esc(item.tier) + '">' + shopAvatarFull(item.id) + '</div>' +
-      '<strong class="shop-item-name">' + esc(item.name) + '</strong>' +
+      '<span class="shop-art full" data-tier="' + esc(item.tier) + '">' + shopAvatarFull(item.id, 'still') + '</span>' +
+      '<strong class="shop-item-name">' + esc(item.name) + '</strong>' + (has ? '<i class="shop-check" aria-label="hast du">✓</i>' : '') + '</button>' +
       action + '</article>';
   };
 
@@ -197,8 +213,9 @@ export function renderShop(root, ctx) {
             ? '<div class="shop-grid shop-emote-grid">' + SHOP_EMOTES.map(emoteCard).join('') + '</div>' +
               '<p class="shop-hint">Im Spiel: auf deine Figur tippen → 💬 → Emote auswählen.</p>'
             : tab === 'avatare'
-            ? '<div class="shop-grid shop-avatar-grid">' + TIERS.flatMap((t) => t.items).map(avatarCard).join('') + '</div>' +
-              '<p class="shop-hint">Dein aktiver Avatar ersetzt dein Profilbild – für alle am Tisch sichtbar.</p>'
+            ? '<div class="shop-split"><aside class="shop-stage">' + stageHtml() + '</aside><div class="shop-rows">' +
+              TIERS.map((t) => '<h3 class="shop-row-h t-' + t.id + '">' + esc(t.label) + ' <small>' + t.items.filter((x) => owned.has(x.id)).length + '/' + t.items.length + '</small></h3><div class="shop-grid shop-avatar-grid">' + t.items.map(avatarCard).join('') + '</div>').join('') +
+              '<p class="shop-hint">Antippen = anprobieren. Ein Avatar bringt Kopf, Brust und Beine für die Garderobe mit.</p></div></div>'
             : (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
               '<div class="shop-grid shop-saying-grid">' + customCard() + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
               '<p class="shop-hint">Gekaufte Sprüche findest du im Spiel unter 💬.</p>') +
@@ -210,6 +227,7 @@ export function renderShop(root, ctx) {
     root.querySelectorAll('[data-free]').forEach(b => b.addEventListener('click', () => claim(b.dataset.free)));
     root.querySelectorAll('[data-select]').forEach(b => b.addEventListener('click', () => select(b.dataset.select)));
     root.querySelectorAll('[data-openbox]').forEach((b) => b.addEventListener('click', openBox));
+    root.querySelectorAll('[data-try]').forEach((b) => b.addEventListener('click', () => { tryOn = b.dataset.try || null; render(); }));
     root.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => { slot = b.dataset.slot; render(); }));
     root.querySelectorAll('[data-part]').forEach((b) => b.addEventListener('click', () => { draft = { ...draft, [slot]: b.dataset.part || null }; if (!draft[slot]) delete draft[slot]; render(); }));
     root.querySelector('[data-saveoutfit]')?.addEventListener('click', saveOutfit);
