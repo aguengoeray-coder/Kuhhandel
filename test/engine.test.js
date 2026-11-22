@@ -81,9 +81,13 @@ test('Countdown: Zuschlag erst nach Ablauf, jedes Gebot verlängert, alle passen
   assert.throws(() => closeAuction(g, 'a', 'buy', t0 + 12000), GameError);
   assert.throws(() => bid(g, 'c', 30, t0 + 9000 + AUCTION_BID_MS + 2000), GameError); // zu spät
   g = passAuction(g, 'c', t0 + 10000);
-  g = passAuction(g, 'd', t0 + 11000); // alle außer Höchstbietendem gepasst
-  assert.equal(g.auction.endsAt, t0 + 11000);
-  g = closeAuction(g, 'a', 'buy', t0 + 11000); // Auktionator kauft zum Höchstgebot
+  g = passAuction(g, 'd', t0 + 11000); // alle außer Höchstbietendem gepasst – v0.89: läuft weiter, er darf sich selbst überbieten
+  assert.equal(g.auction.endsAt, t0 + 9000 + AUCTION_BID_MS);
+  g = bid(g, 'b', 30, t0 + 11500); // selbst überboten
+  g = passAuction(g, 'b', t0 + 12000); // „Beenden“
+  assert.equal(g.auction.endsAt, t0 + 12000);
+  g.auction.high.amount = 20; // für den Rest des Tests wie bisher
+  g = closeAuction(g, 'a', 'buy', t0 + 12000); // Auktionator kauft zum Höchstgebot
   assert.equal(g.phase, 'payment');
   assert.equal(g.payment.payer, 'a');
   assert.equal(g.payment.amount, 20);

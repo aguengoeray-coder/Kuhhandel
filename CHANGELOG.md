@@ -1,5 +1,16 @@
 # Änderungsprotokoll
 
+## v0.89.0 – Rückmeldungen 22.11. nachts
+
+- [x] **Schimmer „du bist dran“** leuchtet hinter deiner Figur unten links (nicht mehr hinter den Knöpfen).
+- [x] **Passen beendet die Versteigerung nicht mehr** – der Höchstbietende darf sich noch selbst überbieten; haben alle anderen gepasst, beendet er mit „Beenden“ (oder die Uhr läuft ab).
+- [x] **Bieten immer unten rechts**, „Passen“ oben und deutlich weg von den Gebotsknöpfen.
+- [x] **Kuhhandel:** „effektiv bezahlt“ (= Differenz, bei Annahme das Angebot) sehen jetzt alle – im Ergebnis-Fenster und in „Letzte Runde“.
+- [x] **Spezialkarte immer gleich:** goldener Stern unten am Tier-Set (bei dir und bei allen Mitspielern), ohne Tier ein eigenes Kärtchen mit Stern unten.
+- [x] **Rattenkönig nur einmal** pro Partie, danach schneller zur Abrechnung.
+- [x] **Sets der Mitspieler nie mehr eingeklappt** (kein „+3“), **eigene Sets größer** mit mehr Abstand, **„Deine Sets“ im Kuhhandel** im selben Kärtchen-Look.
+- [x] **Statistik und Bestenliste im Spielmenü**, Menü zweispaltig ohne Abschneiden.
+
 ## v0.88.1 – Kleinkram
 
 - [x] „Letzte Runde“ etwas schmaler (stieß an den Stapel).

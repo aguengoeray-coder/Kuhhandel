@@ -863,10 +863,12 @@ export function passAuction(prev, playerId, now) {
   if (state.phase !== 'auction') fail('Gerade läuft keine Versteigerung.');
   const a = state.auction;
   if (playerId === a.auctioneer) fail('Der Auktionator kann nicht passen.');
+  // v0.89 (Alp): Passen beendet die Versteigerung nicht mehr – der Höchstbietende darf sich noch selbst überbieten.
+  // Erst wenn alle anderen gepasst haben, kann der übrig gebliebene Bieter mit „Beenden“ (= passAuction) abschließen.
+  const others = state.players.filter((p) => p.id !== a.auctioneer && p.id !== playerId);
+  const lastLeft = others.every((p) => a.passed.includes(p.id));
+  if (lastLeft && a.high && a.high.player === playerId) { if (a.endsAt != null && now != null) a.endsAt = Math.min(a.endsAt, now); return state; }
   if (!a.passed.includes(playerId)) a.passed.push(playerId);
-  // Haben alle außer dem Höchstbietenden gepasst, ist die Versteigerung sofort vorbei
-  const others = state.players.filter((p) => p.id !== a.auctioneer && (!a.high || p.id !== a.high.player));
-  if (a.endsAt != null && now != null && others.every((p) => a.passed.includes(p.id))) a.endsAt = Math.min(a.endsAt, now);
   return state;
 }
 
@@ -1021,7 +1023,7 @@ export function acceptTrade(prev, playerId) {
   stat(state, ch.id).tradesWon += 1;
   stat(state, tg.id).tradesLost += 1;
   bluff(state, ch.id, t.offer);
-  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer) };
+  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer), paid: sum(t.offer) }; // v0.89 paid: effektiv bezahlt – sehen alle
   nextTurn(state);
   return state;
 }
@@ -1057,7 +1059,7 @@ export function counterTrade(prev, playerId, cardIndices) {
   stat(state, loser.id).tradesLost += 1;
   bluff(state, winner.id, challengerWins ? t.offer : counter);
   if (Math.abs(offerSum - counterSum) <= 10) { const ls = stat(state, loser.id); ls.closeLosses = (ls.closeLosses || 0) + 1; }
-  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
+  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), paid: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
   nextTurn(state);
   return state;
 }

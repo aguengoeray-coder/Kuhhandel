@@ -4292,3 +4292,26 @@ html:has(.stage) { background: var(--tbl-3, #1E2A44); }
 .lastround { width: 192px; }
 .lastround .evstrip { max-width: 192px; }
 .stage .dchips { top: 4px !important; bottom: auto !important; left: 112px !important; right: auto !important; z-index: 20; } /* v0.88.1: Debug-Knöpfe nicht mehr über dem Geld-Fächer (Figur steht jetzt unten links) */
+.stage .myglow { left: 6px !important; right: auto !important; bottom: -20px; width: 190px; } /* v0.89 (Alp): Schimmer „du bist dran“ hinter deiner Figur unten links */
+/* v0.89 (Alp): Bieten immer ganz unten rechts, Passen oben und deutlich weg von den Gebotsknöpfen */
+.dock .lastin { order: -3; }
+.dock .passbtn { order: -2; margin: 0 0 22px; width: 62%; align-self: flex-end; min-height: 32px; }
+.dock .passbtn.endnow { width: 100%; margin-bottom: 12px; }
+.dock .lhead { order: 0; }
+.dock .bidgrid, .dock .bidsend { order: 1; }
+.dock .bidsend + .pill { order: 2; }
+/* v0.89 Spezialkarte: einheitlicher goldener Stern unten am Set */
+.chip.hassp, .stack .spile { position: relative; }
+.chip.hassp { margin-bottom: 7px; }
+.spbadge { position: absolute; left: 50%; bottom: -8px; translate: -50% 0; z-index: 3; display: grid; place-items: center; min-width: 17px; height: 15px; padding: 0 3px; border-radius: 999px; background: linear-gradient(180deg, #FFE27A, #F2B705); color: #6A4500; border: 1.5px solid #6A4500; font: 900 10px/1 var(--font-head); box-shadow: 0 1px 0 rgba(0,0,0,.3); white-space: nowrap; pointer-events: none; }
+.spbadge.big { bottom: -9px; height: 17px; padding: 0 6px; font-size: 10.5px; }
+.chip.card.sp > svg, .chip.card.sp > .star { display: none; }
+.stack .spbadge.big { bottom: 3px; }
+.stack .spbadge.big { left: 3px; right: auto; translate: 0 0; font-size: 9.5px; padding: 0 4px; height: 15px; }
+.stack .spbadge.big { left: 50%; translate: -50% 0; min-width: 22px; height: 18px; font-size: 13px; bottom: 2px; }  .stack .spile { overflow: visible; }
+.stage .auslage.shelf { gap: var(--sg, 10px); } /* v0.89 (Alp): eigene Sets etwas größer und mit mehr Abstand, wenn Platz ist */
+/* v0.89 Menü passt ohne Abschneiden: zwei Spalten, scrollt notfalls */
+.stage .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 400px; max-height: 310px; overflow-y: auto; }
+.stage .menu .menu-row { display: contents; }
+.stage .menu .pill { min-height: 36px; font-size: 12px; margin: 0; }
+.stage:has(.tpick) .prow .chips { zoom: .78; } /* Kuhhandel-Auswahl: die Tiere des Gegners stehen ohnehin im Fenster */
