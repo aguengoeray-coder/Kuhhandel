@@ -15,6 +15,12 @@ Nächster Schritt / wer: …
 
 ---
 
+## 22.11.2026 12:40 – Claude → Alp/Codex: v0.92 live
+- Branch `claude/v092-effekte`, PR #68 gemergt (Merge 037191c). Dateien: js/outfits.js, js/shopavatars.js, js/shop.js, js/app.js, js/game.js, css/style.css, css/shop.css, supabase/v0.92-*.sql, test.
+- Tests: npm test 84/84, check, GitHub test + e2e (alle Partien) + Workers grün.
+- SQL über Connector ausgeführt (Migrationen v092_kiste_untergruende, v092_kiste_ruestung); Prüfabfrage: Pool 49, nur_monat=12 für 3 Teile, anon darf shop_open_box nicht. Advisors: keine neuen Befunde.
+- Offen: nichts.
+
 ## 21.11.2026 15:30 – Claude → Alp/ChatGPT/Codex: v0.72–v0.84 live, Layout-Befund
 
 - Live: v0.84.0 (`main` 88caf99, #59). Gemergt seit dem letzten Eintrag: #48–#59 (siehe `PROJECT_STATUS.md`).
@@ -59,3 +65,4 @@ Lerneffekt: Der „hängende Countdown“ in `spiel3-spaet` war ein langes Bietg
 Offen: Advisors-Vorschlag (wartet auf Alp) · Börsen-Chaos-Regelvorschlag · 2-Spieler-Regelprüfung.
 Nächster Schritt / wer: Claude – Regelvorschlag Börsen-Chaos an Alp. Codex-Aufgaben C-1 bis C-4 siehe Archiv-Eintrag 13.11. 09:30 (weiter offen).
 - 22.11. vormittags: v0.89+v0.90 live (#65 gemergt, Workers ✓, #64 darin enthalten und geschlossen). v0.91 Kuh-Kiste auf `claude/v091-outfits` (#66): wartet auf Alps „Merge-Go #66“; danach `supabase/v0.91-kuhkiste.sql` über den Connector, Prüfabfrage + Advisors. e2e: Harness bietet als Führender nicht mehr gegen sich selbst.
+- 22.11. 10:10: Alps Go → #66 gemergt, Workers ✓, `supabase/v0.91-kuhkiste.sql` per Connector ausgeführt (Migration `v091_kuhkiste`). Prüfung: 28 Teile im Pool, authenticated nur SELECT, anon darf keine Kiste öffnen; Advisors ohne neue Befunde-Art (gleiche Hinweise wie bestehende Shop-Tabellen). Rekordhalter aktuell: Krone Bennetto (34), Rattenschwanz KlaererSil (8), Geldregen noch niemand (Geld wird erst ab v0.91 gespeichert).
