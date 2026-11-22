@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '0.98.0', date: '22.11.', items: ['✨ Garderobe startet mit „Sets“: jedes Set eine Zeile, ein Tipp zieht alle 3 Teile an', '🔎 Einzelteile mit Filter „Nur meine / Alle“'] },
   { v: '0.97.0', date: '22.11.', items: ['📌 Startseite und Tisch stehen fest – nichts verrutscht mehr beim Wischen'] },
   { v: '0.96.0', date: '22.11.', items: ['👆 Jedes Teil antippen = sofort an deiner Figur anprobieren – auch noch nicht gezogene', '📊 Infos zu jedem Teil: Seltenheit, Set, Chance pro Kiste, wie oft du es hast', '🔒 Kein versehentliches Reinzoomen mehr (Doppeltipp/Zwei Finger)'] },
   { v: '0.95.0', date: '22.11.', items: ['📦 Kuh-Kiste mit Lichtblitz und Konfetti ab Episch', '💾 Gespeicherte Outfits jetzt im Konto – auf jedem Gerät'] },

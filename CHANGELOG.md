@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.98.0 – Garderobe nach Sets (Alp 22.11. 19:26)
+
+- [x] Neuer erster Reiter **Sets**: jedes Avatar- und Kisten-Set eine Zeile (Figur im Set, ●●○ Fortschritt, Effekt, Herkunft Shop/Kiste) mit einem Knopf: Anziehen / Anprobieren / ✓ Trägst du. Komplette Sets oben.
+- [x] Einzelteile (Kopf, Brust, Beine, Gegenstand) mit Filter **Nur meine / Alle (+n 🔒)**, Standard „Nur meine“.
+- [x] Anprobe mit gesperrten Teilen zeigt „Anprobe“ statt „Set komplett“.
+
 ## v0.97.0 – Bild steht fest (Alp 22.11. 18:52)
 
 - [x] Startseite und Spieltisch lassen sich nicht mehr verschieben: Seite ohne Scrollen/Gummiband (`overflow: hidden`, `overscroll-behavior: none`), Wischen bewegt nur echte Scroll-Bereiche (Listen, Fenster).
