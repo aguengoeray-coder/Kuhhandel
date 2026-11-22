@@ -123,6 +123,7 @@ export function applyTheme(t) {
   r.setProperty('--back', bk.c[0]); r.setProperty('--back-2', bk.c[1]);
   r.setProperty('--back-pat', (BACK_PATTERNS[t.backPat] || BACK_PATTERNS.streifen).css);
   document.documentElement.classList.toggle('bigtext', !!t.bigText);
+  document.documentElement.dataset.fx = t.fx || 'alle'; // v0.94 Set-Effekte am Tisch: alle / nur meine / aus
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', bg.c);
 }
@@ -161,6 +162,7 @@ export function themeModal(t, owned = []) {
         <span class="tpv-player"><b></b><em>Du</em></span>
       </div>
       <button type="button" class="tbig ${t.bigText ? 'on' : ''}" data-m="theme" data-k="bigText" data-v="${t.bigText ? '' : '1'}" aria-pressed="${!!t.bigText}"><span class="tgl"><i></i></span>Große Schrift</button>
+      <div class="tfx" role="group" aria-label="Set-Effekte am Tisch"><span>✨ Effekte am Tisch</span>${[['', 'Alle'], ['meine', 'Nur meine'], ['aus', 'Aus']].map(([v, n]) => `<button type="button" class="${(t.fx || '') === v ? 'on' : ''}" data-m="theme" data-k="fx" data-v="${v}" aria-pressed="${(t.fx || '') === v}">${n}</button>`).join('')}</div>
       <div class="tfoot"><button type="button" class="pill pill-white pill-small" data-m="themeReset">Zurück auf Nachtblau</button></div>
     </div>
     <div class="toptions">

@@ -201,3 +201,12 @@
 .wd-left{overflow-y:auto;max-height:100%;scrollbar-width:thin}
 .wd-left:has(.wd-sets) .wd-fig .shop-avatar-full,.wd-left:has(.wd-sets) .wd-fig svg{height:150px}
 .wd-cell .setbadge{font-size:11px;padding:0 2px;background:#F5C542cc}
+
+/* v0.94 Nur-Anziehen-Modus + Outfit-Speicher */
+.shop-tabs.only{display:flex;align-items:center;gap:10px}.shop-tabs.only .only-h{font:800 15px var(--font-head,Fredoka,sans-serif);color:#fff;padding:0 8px}
+.shop-tabs.only button{border:0;border-radius:999px;padding:5px 12px;font:700 12px var(--font-head,Fredoka,sans-serif);background:#ffffff1f;color:#fff;cursor:pointer}
+.wd-presets{display:flex;align-items:center;gap:5px;width:100%;font:700 11px var(--font-head,Fredoka,sans-serif);color:#fff}
+.wd-presets span{margin-right:auto;opacity:.85}
+.wd-presets button{width:28px;height:28px;border-radius:8px;border:2px dashed #ffffff66;background:none;color:#fff;font:800 13px var(--font-head,Fredoka,sans-serif);cursor:pointer}
+.wd-presets button.has{border-style:solid;background:#ffffff26}.wd-presets button.sel{border-color:#F5C542;box-shadow:0 0 0 2px #F5C54255}
+.wd-presets button.sv{border:0;background:#ffffff1a}

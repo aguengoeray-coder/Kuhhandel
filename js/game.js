@@ -327,7 +327,7 @@ function fitAuslage(root) {
   // v0.92: „Warte, warte, warte!“ (oder anderes in der Mitte) darf nicht auf die Auslage ragen → Auslage so weit verkleinern, dass sie darunter passt
   const left = Math.min(...kids.map((r) => r.left)) + (1 - f) * used / 2; const right = left + used * f;
   const top = Math.min(...kids.map((r) => r.top)); const bottom = Math.max(...kids.map((r) => r.bottom));
-  for (const el of root.querySelectorAll('.stage .waitbtn, .stage .evstrip')) {
+  for (const el of root.querySelectorAll('.stage .waitbtn, .stage .evstrip, .stage .kasse.side')) {
     const w = el.getBoundingClientRect();
     if (!w.width || w.right <= left || w.left >= right || w.bottom <= top + (bottom - top) * (1 - f)) continue;
     f = Math.min(f, Math.max(0.6, (bottom - w.bottom - 3) / (bottom - top)));

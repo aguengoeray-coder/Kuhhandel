@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v0.94.0 – Anziehen, Outfits, Effekte-Schalter (Alps Go 22.11. 13:38)
+
+- [x] **Figur antippen** (Startseite, Profil) öffnet ein eigenes Anzieh-Fenster (nur Garderobe, „🛒 Zum Shop“ führt weiter).
+- [x] **Outfit-Speicher:** 3 Plätze (auf diesem Gerät) – leerer Platz speichert, voller Platz zieht an, 💾 überschreibt.
+- [x] **Waffen:** schwingen auch in der Rattenkönig-Show (Kuhhandel-Sieg schwang schon); das Eisenschwert blitzt regelmäßig auf.
+- [x] **Effekte am Tisch** unter „Aussehen“: Alle · Nur meine · Aus.
+- [x] **Kleine Handys:** Mitspieler-Sets 25×34 statt 24×33, 4 pro Reihe (viele Sets bleiben in alter Größe).
+- [x] Bezahlen spät im Spiel: Kasse rührt die Zeile „Du bist dran“ nicht mehr an (Browser-Test meldete 3 px).
+
 ## v0.93.0 – Garderobe übersichtlicher, Set-Fortschritt, größere eigene Sets (Alps Go 22.11. 12:56)
 
 - [x] **Garderobe-Kacheln zeigen das Teil:** Kopf, Brust, Beine als Ausschnitt, Gegenstände allein und auf ihre Größe zugeschnitten; gesperrte Teile gut erkennbar statt dunkler Figur.
