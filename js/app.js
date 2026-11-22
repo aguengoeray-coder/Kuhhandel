@@ -16,7 +16,7 @@ import { BOX_ITEMS, RARITIES, BOX_PRICE } from './outfits.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '0.96.0';
+export const APP_VERSION = '0.97.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1314,7 +1314,10 @@ async function loadShop(force = false) {
 // v0.96 kein Zoomen: iOS ignoriert user-scalable=no → Zwei-Finger-Geste und Doppeltipp abfangen
 for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
 document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
-document.addEventListener('touchmove', (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
+// v0.97 Bild steht fest: Wischen bewegt nur echte Scroll-Bereiche (Listen, Fenster), nie die ganze Seite (auch kein Gummiband auf iOS)
+const canScroll = (el) => { for (let n = el; n && n !== document.body && n !== document.documentElement; n = n.parentElement) { const cs = getComputedStyle(n);
+  if ((/(auto|scroll)/.test(cs.overflowY) && n.scrollHeight > n.clientHeight + 1) || (/(auto|scroll)/.test(cs.overflowX) && n.scrollWidth > n.clientWidth + 1)) return true; } return false; };
+document.addEventListener('touchmove', (e) => { if ((e.touches && e.touches.length > 1) || !canScroll(e.target)) e.preventDefault(); }, { passive: false });
 async function openShop(startTab, only) {
   if (shopMe.state !== 'ok') await loadShop(true);
   if (shopMe.state !== 'ok') { ui.homeNote = 'Der Shop wird gerade eingerichtet – gleich geht’s los 🛒'; render(); setTimeout(() => { ui.homeNote = ''; render(); }, 3500); return; }

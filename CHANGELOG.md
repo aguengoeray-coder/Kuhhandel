@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## v0.97.0 – Bild steht fest (Alp 22.11. 18:52)
+
+- [x] Startseite und Spieltisch lassen sich nicht mehr verschieben: Seite ohne Scrollen/Gummiband (`overflow: hidden`, `overscroll-behavior: none`), Wischen bewegt nur echte Scroll-Bereiche (Listen, Fenster).
+
 ## v0.96.0 – Teile antippen & anprobieren, Teil-Infos, kein Zoom (Alp 22.11. 16:12)
 
 - [x] **Anprobe überall:** In der Garderobe sind auch gesperrte Teile antippbar (Vorschau an der Figur, „🔒 Nur Anprobe – erst ziehen“); die Vitrine in der Kuh-Kiste führt per Tipp direkt zur Anprobe.
