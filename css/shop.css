@@ -210,3 +210,15 @@
 .wd-presets button{width:28px;height:28px;border-radius:8px;border:2px dashed #ffffff66;background:none;color:#fff;font:800 13px var(--font-head,Fredoka,sans-serif);cursor:pointer}
 .wd-presets button.has{border-style:solid;background:#ffffff26}.wd-presets button.sel{border-color:#F5C542;box-shadow:0 0 0 2px #F5C54255}
 .wd-presets button.sv{border:0;background:#ffffff1a}
+
+/* v0.95 Kisten-Show: Lichtblitz in Seltenheitsfarbe, Teil springt heraus, Konfetti ab Episch */
+.br-flash{position:absolute;inset:0;background:radial-gradient(circle at 25% 50%,#fff,var(--rc) 35%,transparent 70%);pointer-events:none;animation:brflash .9s ease-out both}
+@keyframes brflash{0%{opacity:1;transform:scale(.3)}40%{opacity:.9}100%{opacity:0;transform:scale(1.6)}}
+.box-reveal .br-item{animation:britem .8s cubic-bezier(.2,1.6,.4,1) .15s both}
+@keyframes britem{0%{transform:translateY(40px) scale(.2) rotate(-25deg);opacity:0}100%{transform:none;opacity:1}}
+.box-reveal.r-legendaer{animation:brin .6s cubic-bezier(.2,1.5,.4,1) both,brshake .5s ease-in-out .1s 2}
+@keyframes brshake{25%{translate:-4px 0}75%{translate:4px 0}}
+.br-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.br-confetti i{position:absolute;left:var(--x);top:-12px;width:7px;height:11px;border-radius:2px;background:hsl(var(--h) 90% 60%);animation:brconf 1.8s cubic-bezier(.3,.1,.6,1) var(--d) both}
+@keyframes brconf{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(260px) rotate(540deg);opacity:0}}
+@media (prefers-reduced-motion: reduce){.br-flash,.br-confetti,.box-reveal .br-item{animation:none;display:none}.box-reveal .br-item{display:block}}

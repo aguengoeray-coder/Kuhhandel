@@ -1,5 +1,11 @@
 # Änderungsprotokoll
 
+## v0.95.0 – Kisten-Show, Outfits im Konto (Alps Go 22.11. 14:28)
+
+- [x] **Kuh-Kiste:** Lichtblitz in Seltenheitsfarbe, Teil springt heraus, Konfetti ab Episch, Legendär wackelt.
+- [x] **Outfit-Speicher im Konto** (`supabase/v0.95-outfit-presets.sql`, `shop_set_presets`) – auf jedem Gerät gleich; ohne Verbindung weiter auf dem Gerät.
+- [x] Laufsteg beim Spielstart gab es schon: die Start-Show zeigt alle Figuren im Outfit mit Set-Effekt.
+
 ## v0.94.0 – Anziehen, Outfits, Effekte-Schalter (Alps Go 22.11. 13:38)
 
 - [x] **Figur antippen** (Startseite, Profil) öffnet ein eigenes Anzieh-Fenster (nur Garderobe, „🛒 Zum Shop“ führt weiter).
