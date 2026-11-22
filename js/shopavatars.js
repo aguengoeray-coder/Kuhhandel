@@ -1,3 +1,4 @@
+import { fullOutfit, partArt, dingArt, itemInfo, setOf, SET_FX } from './outfits.js';
 // Vierzehn eigenständige Shop-Avatare (11 + 3 Kult) im Comic-Stil der Tier Börse.
 // Reine SVG-Illustrationen; keine fremden Figuren, Logos oder Bilddateien.
 
@@ -397,11 +398,28 @@ export const SHOP_AVATAR_FULL_CSS = SHOP_AVATAR_CSS.split('\n')
 .shop-avatar-full .sa-low{display:none}
 @media(prefers-reduced-motion:reduce){.shop-avatar-full *{animation:none!important}}`;
 
-export function shopAvatarFull(id, className = '') {
-  const item = AVATARS.find((a) => a.id === id);
+// v0.91 Outfit: Kopf, Brust, Beine aus verschiedenen Avataren oder der Kuh-Kiste + Gegenstand; komplettes Set → Effekt
+const avOf = (part, slot) => { const v = String(part || ''); return v.startsWith(`${slot}:`) ? v.slice(slot.length + 1) : null; };
+export function shopAvatarFull(id, className = '', outfit = null) {
+  const o = fullOutfit(id, outfit);
+  const headInfo = itemInfo(o.kopf);
+  const headId = headInfo?.head || avOf(o.kopf, 'kopf') || id;
+  const item = AVATARS.find((a) => a.id === headId) || AVATARS.find((a) => a.id === id);
   if (!item) return '';
   const head = item.art().replace(/^<svg[^>]*>/, '').replace(/<\/svg>$/, '');
-  const b = BODIES[item.id];
-  const svg = `<svg class="shop-avatar-art" viewBox="0 0 120 200" role="img" aria-hidden="true" focusable="false"><g class="sa-body" stroke-linejoin="round" stroke-linecap="round">${b ? figureBody(b) : ''}</g><g class="sa-head" transform="translate(12 0) scale(.8)">${head}</g></svg>`;
-  return `<span class="shop-avatar-full ${className}" data-avatar="${item.id}" data-tier="${item.tier}" data-motion="${item.motion}" aria-label="${item.name}">${svg}</span>`;
+  const base = BODIES[item.id] || {};
+  const pick = (part, slot) => { const av = avOf(part, slot); return (av && BODIES[av]) || partArt(part) || (BODIES[id] || {}); };
+  const br = pick(o.brust, 'brust'); const be = pick(o.beine, 'beine');
+  const brAv = avOf(o.brust, 'brust');
+  const b = { fur: base.fur, hand: base.hand,
+    top: br.top, sleeve: br.sleeve, chest: br.chest, back: br.back, armL: br.armL, armR: br.armR,
+    pants: be.pants, shoes: be.shoes, legL: be.legL, legR: be.legR,
+    front: o.ding ? '' : (brAv ? (BODIES[brAv] || {}).front : br.front) || '' };
+  if (!b.top) Object.assign(b, { top: base.top, sleeve: base.sleeve, chest: base.chest });
+  if (!b.pants) Object.assign(b, { pants: base.pants, shoes: base.shoes });
+  if (o.ding) b.armR = 'hold';
+  const legExtra = be.legExtra || ''; const beFront = be.front && !avOf(o.beine, 'beine') ? be.front : '';
+  const set = setOf(o); const fx = set ? SET_FX[set].fx : '';
+  const svg = `<svg class="shop-avatar-art" viewBox="0 0 120 200" role="img" aria-hidden="true" focusable="false"><defs><linearGradient id="gold-glow" x2="0" y2="1"><stop stop-color="#FFE98A"/><stop offset="1" stop-color="#D99519"/></linearGradient></defs><g class="sa-body" stroke-linejoin="round" stroke-linecap="round">${figureBody(b)}${legExtra}${beFront}</g><g class="sa-head${headInfo?.tint ? ` tint-${headInfo.tint}` : ''}" transform="translate(12 0) scale(.8)">${head}</g>${o.ding ? `<g class="sa-ding">${dingArt(o.ding)}</g>` : ''}</svg>`;
+  return `<span class="shop-avatar-full ${className} ${fx ? `setfx fx-${fx}` : ''}" data-avatar="${item.id}" data-tier="${item.tier}" data-motion="${item.motion}" aria-label="${item.name}">${fx ? `<i class="sfx" aria-hidden="true">${'<b></b>'.repeat(6)}</i>` : ''}${svg}</span>`;
 }

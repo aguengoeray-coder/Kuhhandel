@@ -1,3 +1,4 @@
+import { SLOTS, RARITIES, BOX_ITEMS, BOX_PRICE, PITY_LEGEND, PITY_EPIC, itemInfo, ownedParts, fullOutfit, setOf, SET_FX, partName } from './outfits.js';
 import { SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS, shopAvatarFull } from './shopavatars.js';
 
 export const SHOP_SAYINGS = [
@@ -68,7 +69,67 @@ export function renderShop(root, ctx) {
   let notice = '';
   let noticeKind = 'info';
 
-  let tab = 'avatare';
+  let tab = ctx.tab || 'kiste';
+  // v0.91 Kuh-Kiste + Garderobe
+  let inventory = new Set(ctx.inventory || []);
+  let outfit = { ...(ctx.outfit || {}) };
+  let draft = { ...outfit };
+  let slot = 'kopf';
+  let box = { st: 'idle', res: null }; // idle | shake | open
+  let boxState = ctx.boxState || { since_legend: 0, since_epic: 0 };
+  const avName = (id) => (AVATARS.find((a) => a.id === id) || {}).name || id;
+  const partsOwned = () => ownedParts(AVATARS.filter((a) => owned.has(a.id)).map((a) => a.id), [...inventory]);
+  const rarOf = (id) => { const it = itemInfo(id); if (it) return it.rarity; const av = String(id).split(':')[1]; const t = (AVATARS.find((a) => a.id === av) || {}).tier; return t === 'kult' ? 'episch' : t || 'gewoehnlich'; };
+  const rarTag = (r) => '<span class="rar r-' + r + '">' + RARITIES[r].name + '</span>';
+  const previewFor = (o) => shopAvatarFull(activeAvatar || (String(o.kopf || '').split(':')[1]) || 'noergler', 'wardrobe-fig', o);
+  const itemThumb = (id) => {
+    const it = itemInfo(id);
+    if (it && it.slot === 'design') return '<span class="it-design" data-design="' + esc(id) + '">🎨</span>';
+    const sl = it ? it.slot : String(id).split(':')[0];
+    const o = { kopf: null, brust: null, beine: null, ding: null };
+    o[sl] = id;
+    return shopAvatarFull(activeAvatar || 'noergler', 'thumb-fig slot-' + sl, o);
+  };
+  const kisteTab = () => {
+    const r = box.res; const info = r ? itemInfo(r.item) : null;
+    const left = PITY_LEGEND - (boxState.since_legend || 0);
+    const stage = box.st === 'open' && r
+      ? '<div class="box-reveal r-' + r.rarity + '" style="--rc:' + RARITIES[r.rarity].color + ';--rg:' + RARITIES[r.rarity].glow + '">' +
+          '<div class="br-rays" aria-hidden="true"></div><div class="br-item">' + itemThumb(r.item) + '</div>' +
+          '<div class="br-text">' + rarTag(r.rarity) + '<b>' + esc(info ? info.name : r.item) + '</b>' +
+          (r.dupe ? '<small>Doppelt – +' + r.refund + ' ' + DUB + ' zurück</small>' : '<small>✨ Neu in deiner Sammlung!</small>') + '</div>' +
+          '<div class="br-actions">' + (!r.dupe && info && info.slot !== 'design' ? '<button class="shop-action shop-select" data-wear="' + esc(r.item) + '">Gleich anziehen</button>' : '') +
+          (info && info.slot === 'design' ? '<button class="shop-action shop-select" data-usedesign="' + esc(r.item) + '">Spielfeld benutzen</button>' : '') +
+          '<button class="shop-action shop-buy" data-openbox ' + (balance < BOX_PRICE || busy ? 'disabled' : '') + '>Nochmal · ' + BOX_PRICE + ' ' + DUB + '</button></div></div>'
+      : '<div class="box-stage ' + (box.st === 'shake' ? 'shake' : '') + '"><div class="kuhkiste" aria-hidden="true"><i class="kk-lid"></i><i class="kk-body"></i><i class="kk-spots"></i><i class="kk-lock">?</i></div>' +
+          '<button class="shop-action shop-buy big" data-openbox ' + (balance < BOX_PRICE || busy ? 'disabled' : '') + '>📦 Kuh-Kiste öffnen · ' + BOX_PRICE + ' ' + DUB + '</button></div>';
+    const odds = Object.entries(RARITIES).map(([k, v]) => '<li class="r-' + k + '"><i style="background:' + v.color + '"></i>' + v.name + '<b>' + v.chance + ' %</b></li>').join('');
+    const pool = Object.entries(BOX_ITEMS).filter(([, it]) => it.slot !== 'design' || true);
+    const got = pool.filter(([id]) => inventory.has(id)).length;
+    return '<div class="kiste-wrap"><div class="kiste-main">' + stage + '</div>' +
+      '<aside class="kiste-side"><h3>Was drin sein kann</h3><ul class="odds">' + odds + '</ul>' +
+      '<p class="pity">🍀 Spätestens in <b>' + left + '</b> Kiste' + (left === 1 ? '' : 'n') + ' garantiert <span class="r-legendaer">Legendär</span>, jede ' + PITY_EPIC + '. mindestens <span class="r-episch">Episch</span>.</p>' +
+      '<p class="pity">Sammlung: <b>' + got + '/' + pool.length + '</b> · Doppelte geben Dublonen zurück.</p>' +
+      '<div class="kiste-show">' + pool.filter(([, it]) => it.rarity === 'legendaer').map(([id, it]) => '<span class="ks-item ' + (inventory.has(id) ? 'have' : '') + '" title="' + esc(it.name) + '">' + itemThumb(id) + '</span>').join('') + '</div>' +
+      '</aside></div>';
+  };
+  const garderobeTab = () => {
+    const mine = partsOwned();
+    const set = setOf(fullOutfit(activeAvatar, draft));
+    const fo = fullOutfit(activeAvatar, draft);
+    const missing = (() => { const a = String(fo.kopf || '').split(':')[1]; if (!SET_FX[a]) return ''; const need = ['brust', 'beine'].filter((k) => fo[k] !== k + ':' + a); return need.length ? 'Für den Set-Effekt „' + SET_FX[a].name + '“ fehlt noch: ' + need.map((k) => SLOTS.find((x) => x.id === k).name).join(' + ') + ' von ' + esc(avName(a)) : ''; })();
+    const list = [...mine].filter((id) => String(id).startsWith(slot + ':'));
+    const locked = Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === slot && !inventory.has(id)).map(([id]) => id);
+    const cur = fo[slot];
+    const cell = (id, lock) => '<button class="wd-cell r-' + rarOf(id) + (cur === id ? ' on' : '') + (lock ? ' locked' : '') + '" ' + (lock ? 'disabled' : 'data-part="' + esc(id) + '"') + ' title="' + esc(partName(id, avName)) + '">' + itemThumb(id) + '<small>' + esc(itemInfo(id) ? itemInfo(id).name : avName(String(id).split(':')[1])) + '</small>' + (lock ? '<em>📦</em>' : '') + '</button>';
+    return '<div class="wd-wrap"><div class="wd-left"><div class="wd-fig">' + previewFor(draft) + '</div>' +
+      (set ? '<p class="wd-set">✨ Set komplett: <b>' + esc(SET_FX[set].name) + '</b></p>' : missing ? '<p class="wd-miss">' + missing + '</p>' : '') +
+      '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button></div>' +
+      '<div class="wd-right"><nav class="wd-slots">' + SLOTS.map((x) => '<button class="' + (slot === x.id ? 'on' : '') + '" data-slot="' + x.id + '">' + x.icon + ' ' + x.name + '</button>').join('') + '</nav>' +
+      '<div class="wd-grid">' + (slot === 'ding' || draft[slot] ? '<button class="wd-cell none' + (!draft[slot] ? ' on' : '') + '" data-part="">' + (slot === 'ding' ? '✋ Nichts' : '↺ Vom Avatar') + '</button>' : '') +
+      list.map((id) => cell(id, false)).join('') + locked.map((id) => cell(id, true)).join('') + '</div>' +
+      (locked.length ? '<p class="shop-hint">📦 = nur in der Kuh-Kiste</p>' : '') + '</div></div>';
+  };
   const tierLabel = { selten: 'Selten', episch: 'Episch', legendaer: 'Legendär', kult: 'Kult' };
 
   const avatarCard = (item) => {
@@ -122,6 +183,8 @@ export function renderShop(root, ctx) {
       '<section class="shop-shell" aria-label="Shop">' +
         '<header class="shop-header"><h1>🛒 Shop</h1>' +
         '<nav class="shop-tabs" role="tablist">' +
+          '<button role="tab" data-tab="kiste" class="kiste-tab ' + (tab === 'kiste' ? 'on' : '') + '">📦 Kuh-Kiste</button>' +
+          '<button role="tab" data-tab="garderobe" class="' + (tab === 'garderobe' ? 'on' : '') + '">👕 Garderobe</button>' +
           '<button role="tab" data-tab="avatare" class="' + (tab === 'avatare' ? 'on' : '') + '">Avatare <small>' + nAv + '/' + AVATARS.length + '</small></button>' +
           '<button role="tab" data-tab="sprueche" class="' + (tab === 'sprueche' ? 'on' : '') + '">Sprüche <small>' + nSp + '/' + (SHOP_SAYINGS.length + 1) + '</small></button>' +
           '<button role="tab" data-tab="emotes" class="' + (tab === 'emotes' ? 'on' : '') + '">Emotes <small>' + SHOP_EMOTES.filter((x) => owned.has(x.id)).length + '/' + SHOP_EMOTES.length + '</small></button>' +
@@ -130,7 +193,7 @@ export function renderShop(root, ctx) {
         '<button class="shop-close" data-close aria-label="Shop schließen">×</button></header>' +
         (notice?'<div class="shop-notice shop-notice-' + noticeKind + '" role="status">' + esc(notice) + '</div>':'') +
         '<div class="shop-content">' +
-          (tab === 'emotes'
+          (tab === 'kiste' ? kisteTab() : tab === 'garderobe' ? garderobeTab() : tab === 'emotes'
             ? '<div class="shop-grid shop-emote-grid">' + SHOP_EMOTES.map(emoteCard).join('') + '</div>' +
               '<p class="shop-hint">Im Spiel: auf deine Figur tippen → 💬 → Emote auswählen.</p>'
             : tab === 'avatare'
@@ -146,6 +209,12 @@ export function renderShop(root, ctx) {
     root.querySelectorAll('[data-buy]').forEach(b => b.addEventListener('click', () => buy(b.dataset.buy)));
     root.querySelectorAll('[data-free]').forEach(b => b.addEventListener('click', () => claim(b.dataset.free)));
     root.querySelectorAll('[data-select]').forEach(b => b.addEventListener('click', () => select(b.dataset.select)));
+    root.querySelectorAll('[data-openbox]').forEach((b) => b.addEventListener('click', openBox));
+    root.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => { slot = b.dataset.slot; render(); }));
+    root.querySelectorAll('[data-part]').forEach((b) => b.addEventListener('click', () => { draft = { ...draft, [slot]: b.dataset.part || null }; if (!draft[slot]) delete draft[slot]; render(); }));
+    root.querySelector('[data-saveoutfit]')?.addEventListener('click', saveOutfit);
+    root.querySelectorAll('[data-wear]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.wear; const sl = itemInfo(id).slot; draft = { ...outfit, [sl]: id }; slot = sl; tab = 'garderobe'; box = { st: 'idle', res: null }; saveOutfit(); }));
+    root.querySelectorAll('[data-usedesign]').forEach((b) => b.addEventListener('click', () => { if (typeof ctx.useDesign === 'function') ctx.useDesign(b.dataset.usedesign.replace(/^design-/, '')); notice = 'Spielfeld gewechselt.'; noticeKind = 'success'; render(); }));
     root.querySelector('[data-customform]')?.addEventListener('submit', (e) => { e.preventDefault(); saveCustom(e.target.querySelector('input').value); });
   }
 
@@ -162,6 +231,30 @@ export function renderShop(root, ctx) {
       notice = 'Gekauft! 🎉'; noticeKind='success';
     } catch (e) { notice=e?.message || 'Der Kauf konnte nicht abgeschlossen werden.'; noticeKind='error'; }
     finally { busy=false; render(); }
+  }
+
+  async function openBox() {
+    if (busy || typeof ctx.openBox !== 'function') return;
+    if (balance < BOX_PRICE) { notice = 'Dafür reichen deine Dublonen noch nicht.'; noticeKind = 'error'; render(); return; }
+    busy = true; notice = ''; box = { st: 'shake', res: null }; render();
+    const t0 = Date.now();
+    try {
+      const r = await ctx.openBox();
+      await new Promise((ok) => setTimeout(ok, Math.max(0, 1400 - (Date.now() - t0))));
+      inventory.add(r.item); balance = Number(r.balance);
+      boxState = { since_legend: r.rarity === 'legendaer' ? 0 : (boxState.since_legend || 0) + 1, since_epic: ['episch', 'legendaer'].includes(r.rarity) ? 0 : (boxState.since_epic || 0) + 1 };
+      box = { st: 'open', res: r };
+      if (typeof ctx.onBox === 'function') ctx.onBox(r);
+    } catch (e) { box = { st: 'idle', res: null }; notice = e?.message || 'Die Kiste klemmt – nochmal versuchen.'; noticeKind = 'error'; }
+    finally { busy = false; render(); }
+  }
+
+  async function saveOutfit() {
+    if (busy || typeof ctx.setOutfit !== 'function') return;
+    busy = true; notice = ''; render();
+    try { outfit = { ...(await ctx.setOutfit(draft)) }; draft = { ...outfit }; notice = 'Angezogen! Alle sehen es am Tisch.'; noticeKind = 'success'; }
+    catch (e) { notice = e?.message || 'Das hat nicht geklappt.'; noticeKind = 'error'; }
+    finally { busy = false; render(); }
   }
 
   async function claim(id) {
