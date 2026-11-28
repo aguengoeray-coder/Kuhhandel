@@ -326,3 +326,5 @@
 .wd-left .wd-set{font-size:10.5px}
 .wd-cell small{font-size:10px}
 .wd-grid{gap:6px}
+/* v1.3 iPad: Figur in „Anziehen“ groß statt winzig */
+@media (min-height:700px){.wd-left .wd-fig .shop-avatar-full,.wd-left .wd-fig svg{max-height:420px}}
