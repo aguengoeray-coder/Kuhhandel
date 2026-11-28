@@ -4593,3 +4593,4 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 .sa-ding.myth { animation: mythhue 2.4s linear infinite; filter: drop-shadow(0 0 5px #FF4FD8) drop-shadow(0 0 12px #4FA8FF); }
 @keyframes mythhue { to { filter: drop-shadow(0 0 5px #FF4FD8) drop-shadow(0 0 12px #4FA8FF) hue-rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .sa-ding.myth { animation: none; } }
+.mysets .chip.card em .emsp { display: none; } /* eigene Sets im Kuhhandel: Spezialkarte = goldener Rahmen (wenig Platz) */
