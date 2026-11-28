@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '1.7.0', date: '28.11.', items: ['📖 Sammelbuch: sammle alle Gegenstände – Belohnungen bei 25/50/75/100 % (Gratis-Kisten und Dublonen)', '🎁 Doppelte Gegenstände an Freunde verschenken', '👑 8 neue Köpfe: Krone, Heiligenschein, Teufelshörner, Wikingerhelm …', '🎸 Dein Gegenstand jubelt mit, wenn du ein Tier bekommst', '🟣 Seltene Outfits leuchten am Tisch im Namensschild'] },
   { v: '1.6.0', date: '28.11.', items: ['🛹 Beine mit Bewegung: Räder drehen sich, Traktor qualmt und blinkt, Stelzen federn, Wolke 7 mit Regenbogen', '👢 Neu in der Kiste: Gummistiefel, Cowboystiefel, Hoverboard, Moonboots, Jetpack-Hose, Lava-Stiefel'] },
   { v: '1.5.0', date: '28.11.', items: ['🔎 Gegenstände in der Hand 30 % größer', '🚀 Raketenstiefel mit echter Düsenflamme, Rauch – und man schwebt'] },
   { v: '1.4.0', date: '28.11.', items: ['⚔️ 16 neue Gegenstände – von Fliegenklatsche bis Drachenaxt', '🌈 Neue Stufe MYTHISCH: 2× denselben legendären Gegenstand schmieden → Regenbogen-Klinge, Kosmos-Hammer oder Einhorn-Lanze', '🃏 Tier-Sets der Mitspieler aufgeräumt: „2×★“ = 2 Tiere + Spezialkarte, nichts überdeckt sich mehr'] },

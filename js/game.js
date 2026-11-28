@@ -16,6 +16,7 @@ import { quartetShow, qshowMs, quartetSound, ratKingShow, kingMs, ratHat } from 
 import { theaterFx, sceneScript, sceneHtml } from './theater.js';
 import { SHOP_EMOTES } from './shop.js';
 import { animalBody } from './beasts.js';
+import { itemGag, topRarity } from './outfits.js';
 import { haptic } from './haptics.js';
 
 export const SEAT_COLORS = ['#C2570C', '#1D5FC2', '#B8285F', '#6D3FC0'];
@@ -317,6 +318,8 @@ export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', '
 
 // Auslage passt nicht in ihre Breite (viele Tiere, große Schrift)? Dann nachmessen und kleiner machen – nie unter die Knöpfe
 // v1.3: Tier-Sets der Mitspieler links/rechts dürfen nie in deine Figur (links) oder deine Knöpfe (rechts) wachsen → nach dem Zeichnen messen und verkleinern
+// v1.7 Gag des Gegenstands (3 Emojis fliegen auf) – ohne Gegenstand das bekannte 🎉
+function gagHtml(o) { const g = itemGag(o?.ding); return g ? `<span class="gag">${g.map((e, k) => `<i style="--k:${k}">${e}</i>`).join('')}</span>` : '<i class="cheerstar">🎉</i>'; }
 function fitSeats(root) {
   const stage = root.querySelector('.stage'); if (!stage) return;
   const tops = (sel) => [...stage.querySelectorAll(sel)].map((e) => e.getBoundingClientRect()).filter((r) => r.height > 0);
@@ -938,7 +941,7 @@ export function renderGame(root, ctx) {
     const om = state.phase === 'auction' && v.auction?.openMoney?.[p.id];
     const openMoney = om ? `<div class="openmoney" title="${esc(p.name)} hat offen gezeigt" aria-label="Offene Scheine: ${om.join(', ') || 'keine'}">${om.length ? om.map((m) => `<i style="--m:${MONEY_COLORS[m]}">${m}</i>`).join('') : '<em>keine Scheine</em>'}<b>= ${om.reduce((x, y) => x + y, 0)}</b></div>` : '';
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
-    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${streakLevel(v, p.id) ? ` gr${streakLevel(v, p.id)}` : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${openMoney}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
+    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${streakLevel(v, p.id) ? ` gr${streakLevel(v, p.id)}` : ''}${topRarity(avatarLookup(p.id)?.outfit) ? ` rar-${topRarity(avatarLookup(p.id)?.outfit)}` : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${openMoney}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
@@ -2030,11 +2033,11 @@ export function renderGame(root, ctx) {
     if (rid === meId) {
       // v0.56: du jubelst selbst – deine Figur unten rechts hüpft, das 🎉 kommt von ihr
       local.meJubAt = Date.now() + ch.payAt - 150;
-      keepFx(`<div class="cheerfx me burst" data-aim-to="@me" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true"><i class="cheerstar">🎉</i></div>`, ch.payAt + 1700, tg);
+      keepFx(`<div class="cheerfx me burst" data-aim-to="@me" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true">${gagHtml(avatarLookup(meId)?.outfit)}</div>`, ch.payAt + 1700, tg);
     } else if (ri >= 0) {
       const pr = avatarLookup(rid);
       const inner = pr?.shop ? shopAvatarFull(pr.shop, '', pr.outfit) : `<span class="cheerhead">${avatar(v.players[ri], ri)}</span>`;
-      keepFx(`<div class="cheerfx ${rid === meId ? 'me' : ''} ${pr?.shop ? 'full' : ''}" data-aim-to="${esc(rid)}" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true">${inner}<i class="cheerstar">🎉</i></div>`, ch.payAt + 1700, tg);
+      keepFx(`<div class="cheerfx ${rid === meId ? 'me' : ''} ${pr?.shop ? 'full' : ''}" data-aim-to="${esc(rid)}" data-aim-anchor="center" style="animation-delay:${ch.payAt - 150}ms" aria-hidden="true">${inner}${gagHtml(pr?.outfit)}</div>`, ch.payAt + 1700, tg);
     }
   }
   // v0.52.1: Rattenrunde – wer eine Karte legt, dessen Schein fliegt verdeckt in den Topf in der Mitte

@@ -333,3 +333,24 @@
 .wd-info.r-mythisch{--rc:#FF4FD8}.forge .fp.r-mythisch{--rc:#FF4FD8}
 .box-reveal.r-mythisch{box-shadow:0 0 0 3px #FF4FD8,0 0 40px #B84FFFcc,0 0 90px #4FA8FF66}
 .rtag.r-mythisch,.r-mythisch .rtag{background:linear-gradient(90deg,#FF4F4F,#FFB02E,#F5E642,#4FD86A,#4FA8FF,#B84FFF)!important;color:#fff!important}
+/* v1.7 Sammelbuch */
+.bk { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; padding-bottom: 8px; }
+.bk-top { display: flex; align-items: center; gap: 10px; font-family: var(--font-head); color: #FFE9A8; }
+.bk-bar { flex: 1; height: 12px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; }
+.bk-bar i { display: block; height: 100%; background: linear-gradient(90deg, #FFB02E, #FFD23F); border-radius: 6px; }
+.bk-lvs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.bk-lv { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 10px; background: rgba(0,0,0,.25); border: 2px solid rgba(255,255,255,.08); font-size: 12px; text-align: center; color: #EEE; }
+.bk-lv b { font-family: var(--font-head); font-size: 15px; }
+.bk-lv i { font-style: normal; }
+.bk-lv.ready { border-color: #FFD23F; box-shadow: 0 0 10px rgba(255,210,63,.45); }
+.bk-lv.done { opacity: .6; }
+.bk-lv button { background: #2F8F4E; color: #fff; border: 0; border-radius: 8px; padding: 4px 10px; font-family: var(--font-head); font-size: 13px; }
+.bk-h { margin: 4px 0 0; font-family: var(--font-head); font-size: 14px; color: #FFE9A8; }
+.bk-h small { opacity: .7; font-size: 12px; }
+.bk-grid { overflow: visible !important; max-height: none !important; flex: none; grid-auto-rows: max-content; }
+.bk > * { flex: none; }
+/* v1.7 Doppeltes verschenken */
+.wd-gift { margin-top: 4px; background: #7A4BD1; color: #fff; border: 0; border-radius: 8px; padding: 4px 10px; font-family: var(--font-head); font-size: 13px; }
+.wd-giftto { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.wd-giftto button { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 3px 8px; font-size: 12px; }
+.wd-giftto .x { background: transparent; border: 0; }
