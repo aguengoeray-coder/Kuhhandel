@@ -4498,3 +4498,15 @@ html, body { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-si
 /* v0.97 Startseite & Tisch stehen fest: keine Seiten-Scrollbalken, kein Gummiband */
 html, body { overscroll-behavior: none; }
 html:has(.home), html:has(.home) body, html:has(.stage), html:has(.stage) body { overflow: hidden; height: 100%; }
+
+/* v1.1 Admin: Schenken */
+.apw.agift { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.apw.agift label { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; }
+.apw.agift input { width: 84px; }
+/* v1.1 Legendäre Gegenstände: goldene Aura + Funkeln, immer sichtbar */
+.sa-ding.leg { filter: drop-shadow(0 0 4px #FFD86B) drop-shadow(0 0 10px #F5A524); }
+.sa-ding.leg .leg-aura circle { animation: legpulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+.sa-ding.leg .leg-star { animation: fxtw 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+.sa-ding.leg .s2 { animation-delay: -.5s; } .sa-ding.leg .s3 { animation-delay: -.9s; }
+@keyframes legpulse { 0%, 100% { opacity: .2; transform: scale(.85); } 50% { opacity: .5; transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .sa-ding.leg .leg-aura circle, .sa-ding.leg .leg-star { animation: none; } }

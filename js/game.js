@@ -1904,7 +1904,7 @@ export function renderGame(root, ctx) {
         const lbl = { partie: 'Mitgespielt', quartett: 'Quartette', sieg: 'Sieg' };
         const tot = ctx.myRewards.reduce((t, x) => t + x.amount, 0);
         return ctx.myRewards.length ? `<div class="pdubs">${ctx.myRewards.map((x) => `<span>+${x.amount} ${lbl[x.kind] || ''}</span>`).join('')}<b>= +${tot} <i class="dub" aria-label="Dublonen"></i></b></div>`
-          : '<div class="pdubs none" title="Zählt erst ab 3 Spielern, 6 Minuten und 25 Zügen; höchstens 60 am Tag">Keine Dublonen<small>Partie zu kurz/klein oder Tageslimit</small></div>';
+          : '<div class="pdubs none" title="Dublonen gibt es, wenn mindestens 2 angemeldete Spieler mitspielen">Keine Dublonen<small>nur mit mind. 2 angemeldeten Spielern</small></div>';
       })() : ''}
       <div class="sform2">${openRow ? `${esc(teamsOn ? openRow.teamName : openRow.id === meId ? 'Du' : openRow.name)}: ${scoreFormula(teamsOn ? teamPool(state, openRow.team) : state.players[idxOf(openRow.id)], openRow.blocked, !!state.settings?.moneyCounts, openRow.mission)}${teamsOn ? ' (Team)' : ''}${openRow.blocked ? ` · ${esc(aname(openRow.blocked))} blockiert` : ''}${openRow.mission ? `<span class="sfmiss">🎯 ${esc(openRow.mission.text)} – ${openRow.mission.done ? `erfüllt, +${openRow.mission.bonus}` : `nicht geschafft${openRow.mission.need <= 4 ? ` (${openRow.mission.got}/${openRow.mission.need})` : ''}`}</span>` : ''}` : ''}</div>
       <div class="endbtns">
