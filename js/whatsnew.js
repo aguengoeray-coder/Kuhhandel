@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '1.0.1', date: '22.11.', items: ['👑 Neues legendäres Set: Goldene Kuh (Kopf + Goldrüstung + Goldene Hufe) → Goldregen', '🏺 Neues legendäres Set: Pharao → Sonnenkönig', '⚒️ Schmieden mit Amboss-Show und großem Ergebnis', '👆 Shop-Knöpfe reagieren zuverlässiger'] },
   { v: '1.0.0', date: '22.11.', items: ['⚒️ Schmiede: 2 Gegenstände gleicher Farbe → 1 Gegenstand der nächsten Stufe (grau → blau → lila → gold)', '🔢 Doppelte Gegenstände zeigen ihre Anzahl (×2, ×3 …)'] },
   { v: '0.99.0', date: '22.11.', items: ['🛒 Shop aufgeräumt: Kiste · Avatare · Anziehen · Sprüche & Emotes', '✨ Avatar-Karten zeigen ihren Set-Effekt', '👕 Anziehen: alles links auf einen Blick, ohne Scrollen'] },
   { v: '0.98.0', date: '22.11.', items: ['✨ Garderobe startet mit „Sets“: jedes Set eine Zeile, ein Tipp zieht alle 3 Teile an', '🔎 Einzelteile mit Filter „Nur meine / Alle“'] },

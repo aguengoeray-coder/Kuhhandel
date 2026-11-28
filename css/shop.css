@@ -185,7 +185,7 @@
 .shop-tier-legendaer.v2{box-shadow:0 0 14px #E8B83F44}
 .shop-tier-kult.v2{box-shadow:0 0 14px #E2557A44}
 .shop-avatar-full.still *{animation-play-state:paused}
-.shop-avatar-item.v2:hover .shop-avatar-full.still *,.shop-avatar-item.v2.is-trying .shop-avatar-full.still *{animation-play-state:running}
+@media (hover:hover){.shop-avatar-item.v2:hover .shop-avatar-full.still *,.shop-avatar-item.v2.is-trying .shop-avatar-full.still *{animation-play-state:running}}
 .kiste-side,.wd-left{background:#00000038}
 @media(max-height:400px){.stage-figwrap,.stage-figwrap .shop-avatar-full{height:160px}.shop-split{grid-template-columns:180px 1fr}}
 
@@ -258,7 +258,7 @@
 
 /* v0.99 Avatar-Karten: Effekt sichtbar (ruhig), Effektname */
 .shop-avatar-item.v2 .shop-fxname{display:block;font:700 10px var(--font-head,Fredoka,sans-serif);color:#F5C542;margin-top:-2px}
-.shop-avatar-item.v2:not(:hover):not(.is-trying) .card-fig *{animation-play-state:paused!important}
+.shop-avatar-item.v2:not(.is-trying) .card-fig *{animation-play-state:paused!important}@media (hover:hover){.shop-avatar-item.v2:hover .card-fig *{animation-play-state:running!important}}
 .shop-sub{margin:0 0 8px}
 
 /* v1.0 Schmiede */
@@ -274,3 +274,30 @@
 .wd-cell .forgepick{position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 3px #F5C542;background:#F5C54233;display:flex;align-items:flex-start;justify-content:flex-start;padding:2px 5px;font:800 12px var(--font-head,Fredoka,sans-serif);color:#F5C542;font-style:normal}
 .wd-fig.forged{animation:forged .9s ease-out}
 @keyframes forged{0%{filter:brightness(3) drop-shadow(0 0 18px #F5C542)}100%{filter:none}}
+
+/* v1.0.1 Knöpfe zuverlässig auf dem Handy: größere Tippflächen, sofortiges Feedback, kein Doppeltipp-Zoom */
+.shop-shell button,.shop-shell [data-tryitem]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.shop-shell button:not([disabled]):active,.shop-shell [data-tryitem]:active{transform:scale(.95);filter:brightness(1.15)}
+.wd-slots button,.wd-filter button,.sr-btn,.wd-presets button,.shop-tabs button{min-height:34px}
+.wd-filter button{padding:5px 13px}
+.shop-shell button[disabled]{cursor:default}
+/* v1.0.1 Schmiede-Show */
+.forge-fx{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%,#3a1d0acc,#000000e0 70%);animation:fffade .25s ease-out both}
+@keyframes fffade{from{opacity:0}}
+.forge-fx .box-reveal{max-width:min(560px,92%)}
+.ff-stage{position:relative;width:300px;height:210px}
+.ff-anvil{position:absolute;left:80px;top:128px;width:140px;height:46px;background:linear-gradient(#5B6670,#2F363C);border:4px solid #1b1b1f;border-radius:10px 10px 4px 4px;clip-path:polygon(0 0,100% 0,82% 55%,82% 100%,18% 100%,18% 55%)}
+.ff-in{position:absolute;top:58px;width:72px;height:72px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#ffffff14}
+.ff-in .thumb-fig,.ff-in svg{width:68px!important;height:68px!important}
+.ff-in.a{left:0;animation:ffa 1.6s ease-in forwards}.ff-in.b{right:0;animation:ffb 1.6s ease-in forwards}
+@keyframes ffa{0%{transform:none}35%{transform:translateX(78px) rotate(-12deg)}55%,100%{transform:translate(114px,10px) scale(.4);opacity:0}}
+@keyframes ffb{0%{transform:none}35%{transform:translateX(-78px) rotate(12deg)}55%,100%{transform:translate(-114px,10px) scale(.4);opacity:0}}
+.ff-hammer{position:absolute;left:150px;top:20px;font-size:58px;transform-origin:85% 85%;animation:ffhit .38s cubic-bezier(.5,0,.8,.4) .45s 3 both}
+@keyframes ffhit{0%{transform:rotate(-55deg)}75%{transform:rotate(18deg)}100%{transform:rotate(-55deg)}}
+.ff-sparks{position:absolute;left:150px;top:124px}
+.ff-sparks i{position:absolute;width:6px;height:6px;border-radius:50%;background:#FFD25A;box-shadow:0 0 8px #FF8A1C;opacity:0;animation:ffspark .5s ease-out calc(.72s + var(--d)) 3}
+@keyframes ffspark{0%{opacity:1;transform:rotate(var(--a)) translateX(0)}100%{opacity:0;transform:rotate(var(--a)) translateX(56px)}}
+.ff-txt{position:absolute;left:0;right:0;bottom:0;text-align:center;color:#FFD25A;font:800 16px var(--font-head,Fredoka,sans-serif);animation:ffpulse .6s ease-in-out infinite alternate}
+@keyframes ffpulse{to{opacity:.55}}
+.br-new{display:block;color:#ffffffd0;font:600 12px var(--font-head,Fredoka,sans-serif)}
+@media (prefers-reduced-motion: reduce){.ff-in,.ff-hammer,.ff-sparks i,.ff-txt{animation:none}}

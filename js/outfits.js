@@ -75,6 +75,11 @@ const PARTS = {
   'kopf:weihnachtsmann': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M30 30Q44 -6 80 2Q100 8 104 26q-10-8-20-8Q90 28 90 30z" fill="#D02A3A"/><ellipse cx="60" cy="31" rx="34" ry="7" fill="#FFFDF5"/><circle cx="104" cy="28" r="7" fill="#FFFDF5"/></g>' },
   'brust:weihnachtsmann': { top: '#D02A3A', sleeve: '#D02A3A', chest: '<path d="M56 90h8v60h-8z" fill="#FFFDF5" stroke="#2A2420" stroke-width="2"/><path d="M36 128h48v9H36z" fill="#1E1E24" stroke="#2A2420" stroke-width="2"/><rect x="53" y="126" width="14" height="13" rx="2" fill="none" stroke="#E0B23C" stroke-width="3"/>' },
   'beine:weihnachtsmann': { pants: '#D02A3A', shoes: '#1E1E24', legExtra: '<g fill="#FFFDF5" stroke="#2A2420" stroke-width="2"><rect x="38" y="174" width="18" height="7" rx="3"/><rect x="64" y="174" width="18" height="7" rx="3"/></g>' },
+  // v1.0.1 Goldene Hufe (Set Goldene Kuh) + Pharao-Set
+  'beine:goldhufe': { pants: 'url(#gold-glow)', shoes: '#D99519', feet: 'kuhhuf', legExtra: '<g fill="none" stroke="#FFF3B0" stroke-width="2"><path d="M44 158v14M76 158v14"/></g>' },
+  'kopf:pharao': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M26 34Q26 4 60 4Q94 4 94 34L100 86H84L88 40H32L36 86H20z" fill="#F5C542"/><path d="M24 44h12M22 56h13M21 68h14M84 44h12M85 56h13M85 68h14M34 14q26-10 52 0M30 24q30-10 60 0" stroke="#1F4FA8" stroke-width="4" fill="none"/><path d="M28 34h64" stroke="#1F4FA8" stroke-width="5"/><path d="M56 22q4-10 8 0l-2 6h-4z" fill="#1F4FA8"/></g>' },
+  'brust:pharao': { top: '#FFFDF5', sleeve: '#C8A27A', chest: '<path d="M36 92q24 22 48 0v10q-24 22-48 0z" fill="#F5C542" stroke="#2A2420" stroke-width="2"/><path d="M38 98q22 18 44 0" stroke="#1F4FA8" stroke-width="3" fill="none"/><path d="M40 104q20 14 40 0" stroke="#C8443A" stroke-width="2.5" fill="none"/>' },
+  'beine:pharao': { pants: '#FFFDF5', shoes: '#C99B5A', legExtra: '<path d="M38 150h44l-4 16H42z" fill="#FFFDF5" stroke="#2A2420" stroke-width="2"/><path d="M56 150v16M64 150v16" stroke="#F5C542" stroke-width="3"/>' },
   'beine:raketenstiefel': { feet: 'duese', pants: '#5B6670', shoes: '#E2643A', legExtra: '<g class="flame"><path d="M40 196q0 8-4 12q8-2 8-10M80 196q0 8 4 12q-8-2-8-10" fill="#F6B13A" stroke="#B74A27" stroke-width="2"/></g>' },
 };
 
@@ -132,6 +137,10 @@ export const BOX_ITEMS = {
   'brust:samurai': { slot: 'brust', name: 'Samurai-Rüstung', rarity: 'episch' },
   'beine:samurai': { slot: 'beine', name: 'Samurai-Hakama', rarity: 'episch' },
   'kopf:astronaut': { slot: 'kopf', name: 'Raumhelm', rarity: 'legendaer' },
+  'beine:goldhufe': { slot: 'beine', name: 'Goldene Hufe', rarity: 'legendaer' },
+  'kopf:pharao': { slot: 'kopf', name: 'Pharaonen-Haube', rarity: 'legendaer' },
+  'brust:pharao': { slot: 'brust', name: 'Pharaonen-Kragen', rarity: 'legendaer' },
+  'beine:pharao': { slot: 'beine', name: 'Pharaonen-Schurz', rarity: 'legendaer' },
   'kopf:weihnachtsmann': { slot: 'kopf', name: 'Weihnachtsmütze', rarity: 'episch', month: 12 },
   'brust:weihnachtsmann': { slot: 'brust', name: 'Weihnachtsmantel', rarity: 'episch', month: 12 },
   'beine:weihnachtsmann': { slot: 'beine', name: 'Weihnachtsstiefel', rarity: 'episch', month: 12 },
@@ -170,6 +179,8 @@ export const SET_FX = {
   samurai: { fx: 'sakura', c: '#FFB7D0', name: 'Kirschblüten' },
   astronaut: { fx: 'sterne', c: '#B8A6FF', name: 'Sternenstaub' },
   weihnachtsmann: { fx: 'schnee', c: '#FFFFFF', name: 'Schneegestöber' },
+  goldkuh: { fx: 'geld', c: '#F5C542', name: 'Goldregen' },
+  pharao: { fx: 'glanz', c: '#FFD86B', name: 'Sonnenkönig' },
 };
 const fxc = (set) => (SET_FX[set] || {}).c || '#FFD34E';
 // Hinter der Figur (viewBox 0 0 120 200, Überstand erlaubt)
@@ -233,12 +244,18 @@ export function fullOutfit(active, outfit = {}) {
 // Set komplett? → Avatar-ID des Sets
 export function setOf(o) {
   const av = (k) => (String(o?.[k] || '').startsWith(`${k}:`) ? String(o[k]).slice(k.length + 1) : null);
-  const a = av('kopf'); return a && a === av('brust') && a === av('beine') && SET_FX[a] ? a : null;
+  const a = av('kopf'); if (a && a === av('brust') && a === av('beine') && SET_FX[a]) return a;
+  for (const s of Object.keys(BOX_SETS)) if (BOX_SETS[s].parts && BOX_SETS[s].parts.every((p, i) => o?.[['kopf', 'brust', 'beine'][i]] === p)) return s; // v1.0.1
+  return null;
 }
 // v0.93 Sammel-Sets aus der Kiste (Kopf + Brust + Beine) → Fortschritt in der Garderobe, Hinweis beim Ziehen
-export const BOX_SETS = { ritter: { name: 'Ritter', icon: '🛡️' }, samurai: { name: 'Samurai', icon: '⛩️' }, astronaut: { name: 'Astronaut', icon: '🚀' }, weihnachtsmann: { name: 'Weihnachtsmann', icon: '🎅' } };
-export function boxSetOf(id) { const s = String(id || '').split(':')[1]; return BOX_SETS[s] && ['kopf', 'brust', 'beine'].includes(String(id).split(':')[0]) ? s : null; }
-export function boxSetProgress(set, inventory) { const inv = inventory instanceof Set ? inventory : new Set(inventory || []); const parts = ['kopf', 'brust', 'beine'].map((k) => `${k}:${set}`); return { have: parts.filter((p) => inv.has(p)), parts }; }
+export const BOX_SETS = { ritter: { name: 'Ritter', icon: '🛡️' }, samurai: { name: 'Samurai', icon: '⛩️' }, astronaut: { name: 'Astronaut', icon: '🚀' }, weihnachtsmann: { name: 'Weihnachtsmann', icon: '🎅' },
+  // v1.0.1: Sets mit Teilen anderer Namen (Goldene Kuh = vorhandener Kopf + Goldrüstung + neue Hufe)
+  goldkuh: { name: 'Goldene Kuh', icon: '👑', parts: ['kopf:goldkuh', 'brust:goldruestung', 'beine:goldhufe'] },
+  pharao: { name: 'Pharao', icon: '🏺' } };
+export const boxSetParts = (set) => BOX_SETS[set]?.parts || ['kopf', 'brust', 'beine'].map((k) => `${k}:${set}`);
+export function boxSetOf(id) { return Object.keys(BOX_SETS).find((s) => boxSetParts(s).includes(String(id || ''))) || null; }
+export function boxSetProgress(set, inventory) { const inv = inventory instanceof Set ? inventory : new Set(inventory || []); const parts = boxSetParts(set); return { have: parts.filter((p) => inv.has(p)), parts }; }
 // Kurzname eines Teils für Listen
 export function partName(id, avatarName) {
   if (BOX_ITEMS[id]) return BOX_ITEMS[id].name;
