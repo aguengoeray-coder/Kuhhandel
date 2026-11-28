@@ -6,6 +6,8 @@
 - [x] **Goldrausch I** ab 3 (goldene Flammen-Aura um die Figur, ⚡ am Namen), **Goldrausch II** ab 6 (größere Aura, Blitze, ⚡⚡). Sinkt die Strähne, verwandelt man sich zurück.
 - [x] **Verwandlungs-Moment** für alle sichtbar: Lichtblitz an der Figur + Banner „⚡ Mo ist im GOLDRAUSCH II!“ bzw. „💨 … verliert den Goldrausch“.
 - [x] Effekte-Schalter „Aus“ blendet die Aura aus; Demo `&gr=2,1,0,2`.
+- [x] **Shop aufgeräumt (Alp 28.11. 12:47):** Reiter einheitlich (Kuh-Kiste nicht mehr dauerhaft gelb), Anziehen: Schmiede als kleiner Knopf statt breiter Leiste, kompakte Teil-Info (eine Zeile), Set-Liste nur noch im Reiter Sets, Fußzeile nur bei Avataren/Sprüchen → deutlich mehr Platz für die Teile.
+- [x] **Knöpfe im Shop zuverlässig:** ein Tipp löst sofort beim Loslassen aus – auch wenn iOS den Klick verschluckt (z. B. direkt nach dem Scrollen); doppelte Auslösung ausgeschlossen.
 
 ## v1.1.0 – Gratis-Kiste, Set-Jackpot, Effekt frei wählbar, Admin schenkt (Alp 22.11. 21:19/21:21, 28.11. 11:31)
 
