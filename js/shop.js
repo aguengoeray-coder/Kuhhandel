@@ -99,12 +99,12 @@ export function renderShop(root, ctx) {
   let infoId = null; // v0.96 zuletzt angetipptes Teil → Info-Kasten
   // v0.96 Chance pro Kiste: Seltenheits-Chance / Anzahl Teile dieser Seltenheit (Saison-Teile nur in ihrem Monat)
   const RAR_P = { gewoehnlich: 0.60, selten: 0.27, episch: 0.10, legendaer: 0.03 };
-  const chanceOf = (id) => { const it = BOX_ITEMS[id]; if (!it) return null; const mon = new Date().getMonth() + 1; if (it.month && it.month !== mon) return 0;
+  const chanceOf = (id) => { const it = BOX_ITEMS[id]; if (!it) return null; if (it.forge) return -1; const mon = new Date().getMonth() + 1; if (it.month && it.month !== mon) return 0;
     const n = Object.values(BOX_ITEMS).filter((x) => x.rarity === it.rarity && (!x.month || x.month === mon)).length; return RAR_P[it.rarity] / Math.max(1, n); };
-  const RNAME = { gewoehnlich: 'Gewöhnlich', selten: 'Selten', episch: 'Episch', legendaer: 'Legendär' };
+  const RNAME = { gewoehnlich: 'Gewöhnlich', selten: 'Selten', episch: 'Episch', legendaer: 'Legendär', mythisch: '🌈 Mythisch' };
   const infoHtml = (id) => { if (!id) return ''; const it = itemInfo(id); const has = inventory.has(id) || partsOwned().has(id); const n = (ctx.invCount || {})[id] || (has ? 1 : 0); const ch = chanceOf(id); const st = boxSetOf(id);
     // v1.2.1 kompakt: Name + eine Zeile mit Seltenheit · Anzahl · Herkunft
-    const src = ch === null ? '🛒 Avatar' : ch === 0 ? '📦 nur im ' + MONTHS[it.month - 1] : '📦 ' + (ch * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' %';
+    const src = ch === null ? '🛒 Avatar' : ch === -1 ? '⚒️ nur Schmiede (2× gleiches Legendär)' : ch === 0 ? '📦 nur im ' + MONTHS[it.month - 1] : '📦 ' + (ch * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' %';
     return '<div class="wd-info r-' + rarOf(id) + '"><b>' + esc(it ? it.name : partName(id, avName)) + '</b><span>' + (it ? RNAME[it.rarity] || '' : 'Avatar-Teil') + (st ? ' · ' + BOX_SETS[st].icon + ' ' + esc(BOX_SETS[st].name) : '') + ' · ' + (has ? (n > 1 ? n + '× ✓' : '✓') : '🔒') + ' · ' + src + '</span></div>'; };
   const savePresets = () => { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch { /* privat/gesperrt: nur für diese Sitzung */ } if (typeof ctx.savePresets === 'function') ctx.savePresets([0, 1, 2].map((k) => presets[k] || null)); };
   // v0.91 Kuh-Kiste + Garderobe
@@ -118,7 +118,7 @@ export function renderShop(root, ctx) {
   let forged = null;
   let forgeFx = null; // v1.0.1 Schmiede-Show: { st: 'smith' | 'reveal', picks, res }
   let noticeT = 0; // zuletzt geschmiedetes Teil (Aufblitzen)
-  const NEXT_RAR = { gewoehnlich: 'selten', selten: 'episch', episch: 'legendaer' };
+  const NEXT_RAR = { gewoehnlich: 'selten', selten: 'episch', episch: 'legendaer', legendaer: 'mythisch' }; // v1.4: 2× DASSELBE Legendäre → Mythisch
   const cntOf = (id) => (ctx.invCount || {})[id] || (inventory.has(id) ? 1 : 0); // v0.98 Einzelteile: nur meine / alle
   let tryOn = null; // v0.92 Anprobieren: Avatar-Vorschau links, gekauft wird erst mit dem Knopf
   let box = { st: 'idle', res: null }; // idle | shake | open
@@ -158,7 +158,7 @@ export function renderShop(root, ctx) {
           boxBtn('', true) + '</div></div>'
       : '<div class="box-stage ' + (box.st === 'shake' ? 'shake' : '') + '"><div class="kuhkiste" aria-hidden="true"><i class="kk-lid"></i><i class="kk-body"></i><i class="kk-spots"></i><i class="kk-lock">?</i></div>' +
           boxBtn('big', false) + (boxFree() === 'daily' ? '<p class="kk-daily">Jeden Tag eine Kiste umsonst!</p>' : '') + '</div>';
-    const odds = Object.entries(RARITIES).map(([k, v]) => '<li class="r-' + k + '"><i style="background:' + v.color + '"></i>' + v.name + '<b>' + v.chance + ' %</b></li>').join('');
+    const odds = Object.entries(RARITIES).filter(([, v]) => v.chance > 0).map(([k, v]) => '<li class="r-' + k + '"><i style="background:' + v.color + '"></i>' + v.name + '<b>' + v.chance + ' %</b></li>').join('');
     const pool = Object.entries(BOX_ITEMS).filter(([, it]) => it.slot !== 'design' || true);
     const got = pool.filter(([id]) => inventory.has(id)).length;
     return '<div class="kiste-wrap"><div class="kiste-main">' + stage + '</div>' +
@@ -192,11 +192,11 @@ export function renderShop(root, ctx) {
   // v1.0 Schmiede-Leiste: 2 Gegenstände gleicher Seltenheit → 1 Gegenstand der nächsten Seltenheit
   const forgeBar = () => {
     if (!forge) return '<div class="forge"><span>⚒️ <b>Schmiede</b> · 2 gleiche Farbe → 1 höhere</span><button class="sr-btn go" data-forge="on">Schmieden</button></div>';
-    const r0 = forge[0] ? rarOf(forge[0]) : null; const ok = forge.length === 2 && r0 && rarOf(forge[1]) === r0 && NEXT_RAR[r0];
+    const r0 = forge[0] ? rarOf(forge[0]) : null; const ok = forge.length === 2 && r0 && rarOf(forge[1]) === r0 && NEXT_RAR[r0] && (r0 !== 'legendaer' || forge[0] === forge[1]);
     const pick = (k) => forge[k] ? '<span class="fp r-' + rarOf(forge[k]) + '">' + itemThumb(forge[k]) + '</span>' : '<span class="fp empty">?</span>';
     return '<div class="forge on">' + pick(0) + '<b>+</b>' + pick(1) + '<b>→</b><span class="fp res' + (ok ? ' r-' + NEXT_RAR[r0] : '') + '">' + (ok ? '✨ ' + RARITIES[NEXT_RAR[r0]].name : '?') + '</span>' +
       '<button class="sr-btn go" data-forge="go" ' + (ok && !busy ? '' : 'disabled') + '>⚒️ Schmieden!</button><button class="sr-btn" data-forge="off">Abbrechen</button></div>' +
-      '<p class="forge-hint">' + (forge.length < 2 ? 'Tippe 2 Gegenstände gleicher Farbe an (dasselbe Teil zweimal geht, wenn du es doppelt hast).' : ok ? 'Beide werden verbraucht – du bekommst zufällig einen ' + RARITIES[NEXT_RAR[r0]].name + '-Gegenstand.' : r0 === 'legendaer' ? 'Legendär ist schon die höchste Stufe.' : 'Die beiden haben nicht dieselbe Farbe.') + '</p>';
+      '<p class="forge-hint">' + (forge.length < 2 ? 'Tippe 2 Gegenstände gleicher Farbe an (dasselbe Teil zweimal geht, wenn du es doppelt hast).' : ok ? 'Beide werden verbraucht – du bekommst zufällig einen ' + RARITIES[NEXT_RAR[r0]].name + '-Gegenstand.' : r0 === 'legendaer' && rarOf(forge[1]) === r0 ? 'Für Mythisch brauchst du zweimal DENSELBEN legendären Gegenstand.' : r0 === 'mythisch' ? 'Mythisch ist die höchste Stufe.' : 'Die beiden haben nicht dieselbe Farbe.') + '</p>';
   };
   async function doForge() {
     if (busy || !forge || forge.length !== 2 || typeof ctx.combine !== 'function') return;
@@ -245,7 +245,7 @@ export function renderShop(root, ctx) {
       '<div class="wd-filter"><button class="' + (onlyMine ? 'on' : '') + '" data-onlymine="1">Nur meine</button><button class="' + (!onlyMine ? 'on' : '') + '" data-onlymine="0">Alle' + (nLocked ? ' (+' + nLocked + ' 🔒)' : '') + '</button>' + (slot === 'ding' && !forge ? '<button class="wd-forge" data-forge="on">⚒️ Schmieden</button>' : '') + '</div>' +
       '<div class="wd-grid">' + (slot === 'ding' || draft[slot] ? '<button class="wd-cell none' + (!draft[slot] ? ' on' : '') + '" data-part="">' + (slot === 'ding' ? '✋ Nichts' : '↺ Vom Avatar') + '</button>' : '') +
       list.map((id) => cell(id, false)).join('') + locked.map((id) => cell(id, true)).join('') + '</div>' +
-      (locked.length ? '<p class="shop-hint">📦 = nur in der Kuh-Kiste</p>' : '')) + '</div></div>';
+      '') + '</div></div>';
   };
   const tierLabel = { selten: 'Selten', episch: 'Episch', legendaer: 'Legendär', kult: 'Kult' };
   // v0.92 Bühne links: deine Figur (oder die Anprobe) groß im Spot
@@ -338,7 +338,7 @@ export function renderShop(root, ctx) {
             : subTabs() + (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
               '<div class="shop-grid shop-saying-grid">' + customCard() + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
               '<p class="shop-hint">Gekaufte Sprüche findest du im Spiel unter 💬.</p>') +
-        '</div>' + forgeFxHtml() + (tab === 'avatare' || tab === 'sprueche' || tab === 'emotes' ? '<footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer>' : '') + '</section>';
+        '</div>' + forgeFxHtml() + '</section>' // v1.4 (Alp): keine Fußzeile mehr;
     restoreScroll(root, snap); // v0.99 Scroll-Stand bleiben
 
     root.querySelector('[data-close]')?.addEventListener('click', () => ctx.close());

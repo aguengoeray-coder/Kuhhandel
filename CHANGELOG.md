@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## v1.4.0 – Neue Gegenstände, Mythisch, aufgeräumte Mitspieler-Sets (Alp 28.11. 13:57–14:03)
+
+- [x] **16 neue Gegenstände** (je 4 pro Seltenheit): Fliegenklatsche, Kochlöffel, Regenschirm, Baguette · Trompete, Zauberstab, Steinschleuder, Fernrohr · Dreizack, E-Gitarre, Laser-Säbel, Bumerang · Königszepter, Drachenaxt, Sternenbogen, Goldene Sense.
+- [x] **Stufe Mythisch (bunt):** nur aus der Schmiede mit 2× DEMSELBEN legendären Gegenstand → Regenbogen-Klinge, Kosmos-Hammer oder Einhorn-Lanze (Regenbogen-Aura). Nicht in der Kiste.
+- [x] **Mitspieler-Sets:** ein Schild unten mittig – „2×“, „2×★“ (mit Spezialkarte), „✓★“, nur „★“ (Spezialkarte ohne Tier); Karten mit Spezialkarte golden umrandet. Nichts überdeckt sich mehr.
+- [x] **Shop:** Fußzeile („Jeder Sieg = 10 …“) und „📦 = nur in der Kuh-Kiste“ entfernt.
+- [x] SQL `supabase/v1.4-kiste-gegenstaende.sql` (Pool + `shop_combine` mit Mythisch).
+
 ## v1.3.0 – Fehlerliste, Set-Knöpfe repariert, kürzere Tests (Alp 28.11. 13:13–13:29)
 
 - [x] **🐞 Fehler melden** (Menü am Tisch + Einstellungen): Text + automatisch Version, Gerät, Bildgröße, Spielsituation; alle sehen die Liste, „👍 auch bei mir“; Admin: „✅ erledigt“ und „📋 Alle offenen kopieren“ (fertiger Text für Claude). SQL `supabase/v1.3-fehlerliste.sql` (`feedback`, `feedback_add`, `feedback_vote`, `admin_feedback_done`).

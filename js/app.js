@@ -17,7 +17,7 @@ import { BOX_ITEMS, RARITIES, BOX_PRICE, BOX_SETS, boxSetParts } from './outfits
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.4.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1358,7 +1358,7 @@ async function openShop(startTab, only) {
     async combine(a, b) {
       const cnt = (shopMe.invCount = shopMe.invCount || {}); const inv = (shopMe.inventory = shopMe.inventory || new Set());
       let data;
-      if (DEMO) { const NEXT = { gewoehnlich: 'selten', selten: 'episch', episch: 'legendaer' }; const nx = NEXT[BOX_ITEMS[a]?.rarity]; const c = Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === 'ding' && it.rarity === nx && !it.month); const [id] = c[Math.floor(Math.random() * c.length)]; data = { item: id, rarity: nx, dupe: inv.has(id) }; }
+      if (DEMO) { const NEXT = { gewoehnlich: 'selten', selten: 'episch', episch: 'legendaer', legendaer: 'mythisch' }; const nx = NEXT[BOX_ITEMS[a]?.rarity]; const c = Object.entries(BOX_ITEMS).filter(([id, it]) => it.slot === 'ding' && it.rarity === nx && !it.month); const [id] = c[Math.floor(Math.random() * c.length)]; data = { item: id, rarity: nx, dupe: inv.has(id) }; }
       else { const res = await sb.rpc('shop_combine', { p_a: a, p_b: b }); if (res.error) throw err(res.error, 'Schmieden hat nicht geklappt.'); data = res.data; }
       for (const x of [a, b]) { cnt[x] = (cnt[x] || 1) - 1; if (cnt[x] <= 0) { delete cnt[x]; inv.delete(x); if (shopMe.outfit && shopMe.outfit.ding === x) { const o = { ...shopMe.outfit }; delete o.ding; shopMe.outfit = o; } } }
       inv.add(data.item); cnt[data.item] = (cnt[data.item] || 0) + 1;

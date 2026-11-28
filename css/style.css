@@ -4579,3 +4579,17 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 .bug p { margin: 3px 0 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .bug-a { display: flex; gap: 6px; flex-wrap: wrap; } .bug-a .abtn.on { background: #2E7D4F; color: #fff; }
 .bug-done summary { cursor: pointer; font-weight: 700; margin: 8px 0 4px; }
+/* v1.4 Mitspieler-Sets aufgeräumt (Alp): EIN Schild unten – „2×“, „2× +★“, „✓ +★“ oder nur „★“ (Spezialkarte ohne Tier); nichts überdeckt sich */
+.chip.card .spbadge { display: none; }
+.chip.card em { white-space: nowrap; display: inline-flex; align-items: center; gap: 1px; }
+.chip.card em .emsp { color: #F5C542; font-weight: 900; text-shadow: 0 0 3px rgba(0,0,0,.5); font-size: 1em; }
+.chip.card.hassp .mcard { box-shadow: 0 0 0 2px #F5C542, 0 0 8px rgba(245,197,66,.7); }
+.chip.card.sp .mcard { opacity: .8; }
+.stage .gright .prow .chip.card { position: relative; }
+.stage .gright .prow .chip.card em { position: absolute; left: 50%; right: auto; bottom: -7px; top: auto; translate: -50% 0; transform: none; min-width: 0; padding: 0 5px; font-size: 10px; line-height: 15px; border-radius: 999px; z-index: 2; }
+.stage .gright .prow .chips { row-gap: 11px; }
+.stage .gright .prow .chip.card em .emsp { margin-left: 1px; font-size: 11px; }
+/* v1.4 Mythisch (bunt): Regenbogen-Aura */
+.sa-ding.myth { animation: mythhue 2.4s linear infinite; filter: drop-shadow(0 0 5px #FF4FD8) drop-shadow(0 0 12px #4FA8FF); }
+@keyframes mythhue { to { filter: drop-shadow(0 0 5px #FF4FD8) drop-shadow(0 0 12px #4FA8FF) hue-rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .sa-ding.myth { animation: none; } }

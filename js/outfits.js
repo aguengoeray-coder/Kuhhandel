@@ -15,6 +15,8 @@ export const RARITIES = {
   selten: { name: 'Selten', color: '#3B82F6', glow: 'rgba(59,130,246,.65)', chance: 27, refund: 10 },
   episch: { name: 'Episch', color: '#A855F7', glow: 'rgba(168,85,247,.7)', chance: 10, refund: 20 },
   legendaer: { name: 'Legendär', color: '#F59E0B', glow: 'rgba(245,158,11,.8)', chance: 3, refund: 50 },
+  // v1.4 Stufe „bunt“: nicht in der Kiste – nur aus 2× demselben legendären Gegenstand in der Schmiede
+  mythisch: { name: 'Mythisch', color: '#FF4FD8', glow: 'rgba(255,79,216,.85)', chance: 0, refund: 100 },
 };
 export const BOX_PRICE = 40;
 export const PITY_LEGEND = 25; // spätestens jede 25. Kiste legendär
@@ -27,6 +29,27 @@ const S = `stroke="${INK}" stroke-width="2.5" stroke-linejoin="round" stroke-lin
 const sword = (blade, edge, grip, extra = '') => `<g ${S}><path d="M89 134l5-12" stroke="${grip}" stroke-width="6"/><path d="M86 120l16 6" stroke="#C9A227" stroke-width="5"/><path d="M92 122L115 50l6 3-1 5-19 64z" fill="${blade}"/><path d="M96 122L117 56" stroke="${edge}" stroke-width="1.5" fill="none"/>${extra}</g>`;
 // Gegenstände: in der rechten Hand (Figur 120×200, Hand bei 90/128)
 const DING_ART = {
+  // v1.4 neue Gegenstände (Alp 28.11.)
+  fliegenklatsche: `<g ${S}><path d="M90 130L106 84" stroke="#3FA34D" stroke-width="4" fill="none"/><rect x="98" y="58" width="22" height="26" rx="4" fill="#5BC06B" transform="rotate(18 109 71)"/><path d="M104 64l12 4M102 70l12 4M100 76l12 4" stroke="#2E7D3A" stroke-width="1.5"/></g>`,
+  kochloeffel: `<g ${S}><path d="M90 130L104 84" stroke="#C99B5A" stroke-width="5" fill="none"/><ellipse cx="107" cy="74" rx="8" ry="12" fill="#D9AE6E" transform="rotate(18 107 74)"/></g>`,
+  regenschirm: `<g ${S}><path d="M92 134L104 70" stroke="#2A2420" stroke-width="3" fill="none"/><path d="M92 134q-2 6-7 3" fill="none" stroke-width="3"/><path d="M82 72q22-26 44 4q-6-4-11 0q-5-5-11 0q-6-5-11 0q-6-4-11-4z" fill="#E2643A"/><path d="M104 50v-4" stroke-width="3"/></g>`,
+  baguette: `<g ${S}><path d="M86 136L118 70q4-4 6 2L94 140q-6 2-8-4z" fill="#E0A85A"/><path d="M98 120l6-2M104 108l6-2M110 96l6-2M114 84l6-2" stroke="#A8702A" stroke-width="2"/></g>`,
+  trompete: `<g ${S}><path d="M88 128l24-40" stroke="#E0B23C" stroke-width="6" fill="none"/><path d="M106 80l14-12 6 8-14 10z" fill="#F5C542"/><ellipse cx="124" cy="70" rx="6" ry="10" fill="#FFE27A" transform="rotate(40 124 70)"/><circle cx="98" cy="108" r="3" fill="#C99B2A"/><circle cx="102" cy="101" r="3" fill="#C99B2A"/></g>`,
+  zauberstab: `<g ${S}><path d="M90 130L112 70" stroke="#2A2420" stroke-width="5" fill="none"/><path d="M110 74l4-10" stroke="#FFFDF5" stroke-width="5"/><path class="spark" d="M118 56l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#FFE98A"/><circle class="spark" cx="104" cy="58" r="2" fill="#BFE6FF"/></g>`,
+  steinschleuder: `<g ${S}><path d="M90 132l8-26" stroke="#8A5A2B" stroke-width="5" fill="none"/><path d="M98 106l-6-20M98 106l12-16" stroke="#8A5A2B" stroke-width="4" fill="none"/><path d="M92 86q8 10 18 4" fill="none" stroke="#C8443A" stroke-width="2.5"/><circle cx="101" cy="90" r="4" fill="#9AA3AA"/></g>`,
+  fernrohr: `<g ${S}><path d="M88 132l10-6" stroke-width="3"/><path d="M92 128l30-36" stroke="#8A5A2B" stroke-width="9" fill="none"/><path d="M106 112l14-17" stroke="#E0B23C" stroke-width="11" fill="none"/><circle cx="123" cy="90" r="5" fill="#BFE6FF"/></g>`,
+  dreizack: `<g ${S}><path d="M90 136L112 56" stroke="#E0B23C" stroke-width="5" fill="none"/><path d="M100 64q10-6 22 4M104 60l-2-16M112 62l4-14M120 68l8-10" fill="none" stroke="#F5C542" stroke-width="4"/></g>`,
+  egitarre: `<g ${S}><path d="M98 112L118 56" stroke="#2A2420" stroke-width="5" fill="none"/><rect x="113" y="46" width="10" height="12" rx="2" fill="#2A2420" transform="rotate(20 118 52)"/><path d="M80 126q-6-14 8-18q4-12 14-4q10 0 6 14q8 10-6 14q-8 10-16 2q-8 2-6-8z" fill="#D02A3A"/><circle cx="96" cy="118" r="3" fill="#2A2420"/></g>`,
+  lasersaebel: `<g ${S}><path d="M88 134l7-16" stroke="#5B6670" stroke-width="7"/><path d="M95 118L120 52" stroke="#7CF0FF" stroke-width="7" stroke-linecap="round" fill="none" class="flick"/><path d="M95 118L120 52" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none"/></g>`,
+  bumerang: `<g ${S}><path d="M90 128q4-30 28-44l6 6q-20 14-24 40z" fill="#C99B5A"/><path d="M100 120q4-20 18-30" fill="none" stroke="#E2643A" stroke-width="2" stroke-dasharray="4 3"/></g>`,
+  koenigszepter: `<g ${S}><path d="M90 136L110 64" stroke="#E0B23C" stroke-width="6" fill="none"/><circle cx="112" cy="58" r="9" fill="#C8243A"/><path d="M104 52l4-8 4 6 4-6 4 8z" fill="#F5C542"/><circle cx="96" cy="114" r="4" fill="#3B82F6"/></g>`,
+  drachenaxt: `<g ${S}><path d="M88 136L108 66" stroke="#3A2A3A" stroke-width="6" fill="none"/><path d="M104 74q24-18 22 12q-8-8-20-2z" fill="#9AA3AA"/><path d="M104 74q-16-16-20 6q6-4 16-2z" fill="#9AA3AA"/><path d="M106 62l6-10 2 10z" fill="#3FA34D"/><path class="flick" d="M120 70q8-4 6-12" fill="none" stroke="#FF6A1C" stroke-width="3"/></g>`,
+  sternenbogen: `<g ${S}><path d="M100 140q34-40 4-96" fill="none" stroke="#5B4A7A" stroke-width="5"/><path d="M100 140L104 44" stroke="#FFE98A" stroke-width="1.5"/><path class="spark" d="M112 66l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM116 118l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" fill="#FFE98A"/></g>`,
+  sense: `<g ${S}><path d="M90 140L112 48" stroke="#5B3A2E" stroke-width="5" fill="none"/><path d="M112 50q-30-10-46 14q20-8 44-6z" fill="#E9EEF2"/><path d="M110 52q-24-6-38 8" fill="none" stroke="#F5C542" stroke-width="2"/></g>`,
+  // Mythisch (bunt): Regenbogen-Glanz
+  regenbogenklinge: `<g ${S}><defs><linearGradient id="rbw" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF4F4F"/><stop offset=".2" stop-color="#FFB02E"/><stop offset=".4" stop-color="#F5E642"/><stop offset=".6" stop-color="#4FD86A"/><stop offset=".8" stop-color="#4FA8FF"/><stop offset="1" stop-color="#B84FFF"/></linearGradient></defs><path d="M89 134l5-12" stroke="#2A2420" stroke-width="6"/><path d="M84 120l20 7" stroke="#F5C542" stroke-width="6"/><path d="M92 122L116 44l6 3-1 6-22 74z" fill="url(#rbw)"/><path class="spark" d="M124 40l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#FFFFFF"/></g>`,
+  kosmoshammer: `<g ${S}><path d="M90 136L106 76" stroke="#2A2440" stroke-width="6" fill="none"/><rect x="92" y="52" width="34" height="22" rx="5" fill="#2A1B5C" transform="rotate(16 109 63)"/><circle cx="104" cy="60" r="2" fill="#FFFFFF"/><circle cx="114" cy="66" r="1.5" fill="#FFE98A"/><circle cx="120" cy="58" r="1.8" fill="#BFE6FF"/><path d="M96 56q14-8 30 6" fill="none" stroke="#B84FFF" stroke-width="2"/></g>`,
+  einhornlanze: `<g ${S}><path d="M84 150L112 40" stroke="#FFFDF5" stroke-width="6" fill="none"/><path d="M112 40l3-18 4 20z" fill="#FFE98A"/><path d="M98 96l10 3M102 82l10 3M106 68l10 3" stroke="#FF9AD5" stroke-width="3"/><path d="M110 52q-10 6-16 0q8-2 12-8" fill="#B84FFF"/></g>`,
   gummihuhn: `<g ${S}><path d="M92 128L104 92" stroke-width="5" fill="none"/><ellipse cx="106" cy="84" rx="9" ry="12" fill="#F8D24B" transform="rotate(18 106 84)"/><path d="M112 76l6-3-2 6z" fill="#E8862F"/><path d="M103 72q2-6 6-4" fill="none" stroke="#D43C3C" stroke-width="3"/><circle cx="109" cy="80" r="1.6" fill="${INK}"/></g>`,
   heugabel: `<g ${S}><path d="M90 132L104 60" stroke="#8A5A2B" stroke-width="5" fill="none"/><path d="M96 62q8-4 16 3M100 58l-2-14M106 60l2-14M111 64l5-12" fill="none" stroke="#9AA3AA" stroke-width="3"/></g>`,
   melkeimer: `<g ${S}><path d="M80 132h26l-4 26H84z" fill="#C9D3DB"/><path d="M80 132q13-16 26 0" fill="none"/><path d="M83 140h20" stroke="#9AA3AA"/><path d="M86 136q7-3 14 0" fill="#FFFDF5" stroke-width="1.5"/></g>`,
@@ -122,6 +145,27 @@ export const BOX_ITEMS = {
   'beine:skateboard': { slot: 'beine', name: 'Skateboard', rarity: 'selten' },
   'beine:traktor': { slot: 'beine', name: 'Mini-Traktor', rarity: 'episch' },
   'beine:wolke': { slot: 'beine', name: 'Wolke 7', rarity: 'legendaer' },
+  // v1.4 neue Gegenstände
+  'ding:fliegenklatsche': { slot: 'ding', name: 'Fliegenklatsche', rarity: 'gewoehnlich' },
+  'ding:kochloeffel': { slot: 'ding', name: 'Kochlöffel', rarity: 'gewoehnlich' },
+  'ding:regenschirm': { slot: 'ding', name: 'Regenschirm', rarity: 'gewoehnlich' },
+  'ding:baguette': { slot: 'ding', name: 'Baguette', rarity: 'gewoehnlich' },
+  'ding:trompete': { slot: 'ding', name: 'Trompete', rarity: 'selten' },
+  'ding:zauberstab': { slot: 'ding', name: 'Zauberstab', rarity: 'selten' },
+  'ding:steinschleuder': { slot: 'ding', name: 'Steinschleuder', rarity: 'selten' },
+  'ding:fernrohr': { slot: 'ding', name: 'Fernrohr', rarity: 'selten' },
+  'ding:dreizack': { slot: 'ding', name: 'Dreizack', rarity: 'episch' },
+  'ding:egitarre': { slot: 'ding', name: 'E-Gitarre', rarity: 'episch' },
+  'ding:lasersaebel': { slot: 'ding', name: 'Laser-Säbel', rarity: 'episch' },
+  'ding:bumerang': { slot: 'ding', name: 'Bumerang', rarity: 'episch' },
+  'ding:koenigszepter': { slot: 'ding', name: 'Königszepter', rarity: 'legendaer' },
+  'ding:drachenaxt': { slot: 'ding', name: 'Drachenaxt', rarity: 'legendaer' },
+  'ding:sternenbogen': { slot: 'ding', name: 'Sternenbogen', rarity: 'legendaer' },
+  'ding:sense': { slot: 'ding', name: 'Goldene Sense', rarity: 'legendaer' },
+  // Mythisch – nur aus der Schmiede (2× derselbe legendäre Gegenstand), nicht in der Kiste
+  'ding:regenbogenklinge': { slot: 'ding', name: 'Regenbogen-Klinge', rarity: 'mythisch', forge: true },
+  'ding:kosmoshammer': { slot: 'ding', name: 'Kosmos-Hammer', rarity: 'mythisch', forge: true },
+  'ding:einhornlanze': { slot: 'ding', name: 'Einhorn-Lanze', rarity: 'mythisch', forge: true },
   // v0.92 Waffen-Stufen
   'ding:holzschwert': { slot: 'ding', name: 'Holzschwert', rarity: 'gewoehnlich' },
   'ding:eisenschwert': { slot: 'ding', name: 'Eisenschwert', rarity: 'selten' },
