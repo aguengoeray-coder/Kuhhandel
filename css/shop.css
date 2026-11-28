@@ -312,3 +312,17 @@
 .box-reveal.r-legendaer .br-item{animation:britem .8s cubic-bezier(.2,1.6,.4,1) .15s both,legfloat 2.4s ease-in-out 1s infinite}
 @keyframes legfloat{50%{transform:translateY(-6px) scale(1.04)}}
 .sr-acts{display:flex;gap:6px;align-items:center}
+
+/* v1.2.1 Shop aufgeräumt: einheitliche Reiter, mehr Platz für die Teile */
+.shop-tabs button.kiste-tab:not(.on){background:none!important;color:inherit!important;box-shadow:none!important}
+.wd-slots{gap:5px;flex-wrap:nowrap}
+.wd-slots button{min-height:32px;padding:0 8px;font-size:12.5px;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:4px;line-height:1}
+.wd-filter{align-items:center;margin:6px 0}
+.wd-filter button{min-height:30px;padding:3px 12px;font-size:12px}
+.wd-forge{margin-left:auto;border:0;border-radius:999px;min-height:30px;padding:3px 12px;font:800 12px var(--font-head,Fredoka,sans-serif);background:#2E7D4F;color:#fff;cursor:pointer;box-shadow:0 2px 0 #1d5233}
+.forge{margin:6px 0}
+.wd-info{padding:5px 9px;gap:2px}.wd-info b{font-size:12px}.wd-info span{font-size:10.5px;opacity:.9}
+.wd-left{gap:5px}
+.wd-left .wd-set{font-size:10.5px}
+.wd-cell small{font-size:10px}
+.wd-grid{gap:6px}

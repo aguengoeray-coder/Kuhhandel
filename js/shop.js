@@ -56,6 +56,26 @@ function addAvatarCss() {
 /** ctx = { me:{id,name}, balance, owned:Set<itemId>, activeAvatar,
  * buy(itemId):Promise, setAvatar(id):Promise, close() } */
 export function renderShop(root, ctx) {
+  // v1.2.1 Zuverlässige Knöpfe auf dem Handy: ein Tipp = sofort auslösen (beim Loslassen), auch wenn iOS den „click“
+  // verschluckt (z. B. direkt nach dem Scrollen oder wenn sich der Knopf beim Drücken verändert). Der doppelte click danach wird ignoriert.
+  if (!root.dataset.fasttap) {
+    root.dataset.fasttap = '1';
+    let down = null, fired = null;
+    const pick = (e) => e.target.closest && e.target.closest('button:not([disabled]), [data-tryitem], [role="tab"]');
+    root.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return; const el = pick(e); down = el && root.contains(el) ? { el, x: e.clientX, y: e.clientY, t: Date.now() } : null; }, { passive: true });
+    root.addEventListener('pointercancel', () => { down = null; });
+    root.addEventListener('pointerup', (e) => {
+      const d = down; down = null; if (!d) return;
+      if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12 || Date.now() - d.t > 900) return; // gewischt/lange gehalten = kein Tipp
+      if (pick(e) !== d.el || !d.el.isConnected) return;
+      fired = { el: d.el, until: Date.now() + 700 }; e.preventDefault(); d.el.click(); fired.synthetic = false;
+    });
+    root.addEventListener('click', (e) => {
+      if (!fired || Date.now() > fired.until) return;
+      if (e.isTrusted) { e.stopPropagation(); e.preventDefault(); fired = null; } // echter click nach unserem Tipp → nicht doppelt
+    }, true);
+  }
+
   if (!root || !ctx || typeof ctx.buy !== 'function' ||
       typeof ctx.setAvatar !== 'function' || typeof ctx.close !== 'function') {
     throw new TypeError('renderShop benötigt root und einen vollständigen Shop-Kontext.');
@@ -82,11 +102,10 @@ export function renderShop(root, ctx) {
   const chanceOf = (id) => { const it = BOX_ITEMS[id]; if (!it) return null; const mon = new Date().getMonth() + 1; if (it.month && it.month !== mon) return 0;
     const n = Object.values(BOX_ITEMS).filter((x) => x.rarity === it.rarity && (!x.month || x.month === mon)).length; return RAR_P[it.rarity] / Math.max(1, n); };
   const RNAME = { gewoehnlich: 'Gewöhnlich', selten: 'Selten', episch: 'Episch', legendaer: 'Legendär' };
-  const infoHtml = (id) => { if (!id) return ''; const it = itemInfo(id); const sl = SLOTS.find((k) => k.id === String(id).split(':')[0]); const has = inventory.has(id) || partsOwned().has(id); const n = (ctx.invCount || {})[id] || (has ? 1 : 0); const ch = chanceOf(id); const st = boxSetOf(id);
-    return '<div class="wd-info r-' + rarOf(id) + '"><b>' + esc(it ? it.name : partName(id, avName)) + '</b><span>' + (it ? RNAME[it.rarity] || '' : 'Avatar-Teil') + ' · ' + (sl ? sl.icon + ' ' + sl.name : '') + '</span>' +
-      (st ? '<span>' + BOX_SETS[st].icon + ' ' + esc(BOX_SETS[st].name) + '-Set</span>' : '') +
-      (ch === null ? '<span>🛒 kommt mit dem Avatar</span>' : ch === 0 ? '<span>📦 nur im ' + MONTHS[it.month - 1] + ' in der Kiste</span>' : '<span>📦 Chance pro Kiste: ' + (ch * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' %</span>') +
-      '<span>' + (has ? '✅ Besitzt du' + (n > 1 ? ' (' + n + '×, ' + (n - 1) + ' doppelt)' : '') : '🔒 Noch nicht gezogen – nur Anprobe') + '</span></div>'; };
+  const infoHtml = (id) => { if (!id) return ''; const it = itemInfo(id); const has = inventory.has(id) || partsOwned().has(id); const n = (ctx.invCount || {})[id] || (has ? 1 : 0); const ch = chanceOf(id); const st = boxSetOf(id);
+    // v1.2.1 kompakt: Name + eine Zeile mit Seltenheit · Anzahl · Herkunft
+    const src = ch === null ? '🛒 Avatar' : ch === 0 ? '📦 nur im ' + MONTHS[it.month - 1] : '📦 ' + (ch * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' %';
+    return '<div class="wd-info r-' + rarOf(id) + '"><b>' + esc(it ? it.name : partName(id, avName)) + '</b><span>' + (it ? RNAME[it.rarity] || '' : 'Avatar-Teil') + (st ? ' · ' + BOX_SETS[st].icon + ' ' + esc(BOX_SETS[st].name) : '') + ' · ' + (has ? (n > 1 ? n + '× ✓' : '✓') : '🔒') + ' · ' + src + '</span></div>'; };
   const savePresets = () => { try { localStorage.setItem(PKEY, JSON.stringify(presets)); } catch { /* privat/gesperrt: nur für diese Sitzung */ } if (typeof ctx.savePresets === 'function') ctx.savePresets([0, 1, 2].map((k) => presets[k] || null)); };
   // v0.91 Kuh-Kiste + Garderobe
   let inventory = new Set(ctx.inventory || []);
@@ -219,11 +238,11 @@ export function renderShop(root, ctx) {
     const cell = (id, lock) => '<button class="wd-cell r-' + rarOf(id) + (cur === id ? ' on' : '') + (lock ? ' locked' : '') + '" ' + 'data-part="' + esc(id) + '"' + (lock ? ' data-lock="1"' : '') + ' title="' + esc(partName(id, avName)) + '">' + itemThumb(id) + '<small>' + esc(itemInfo(id) ? itemInfo(id).name : avName(String(id).split(':')[1])) + '</small>' + (!lock && slot === 'ding' && cntOf(id) > 1 ? '<i class="cntbadge">×' + cntOf(id) + '</i>' : '') + (forge && forge.includes(id) ? '<i class="forgepick">' + forge.filter((x) => x === id).length + '</i>' : '') + (boxSetOf(id) ? '<i class="setbadge" title="' + esc(BOX_SETS[boxSetOf(id)].name) + '-Set">' + BOX_SETS[boxSetOf(id)].icon + '</i>' : '') + (lock ? '<em class="lk">' + (itemInfo(id) && itemInfo(id).month ? '📦 ' + MONTHS[itemInfo(id).month - 1] : '📦') + '</em>' : '') + '</button>';
     return '<div class="wd-wrap"><div class="wd-left"><div class="wd-fig">' + previewFor(draft) + '</div>' +
       (draft.fx && SET_FX[draft.fx] ? '<p class="wd-set">✨ Effekt gewählt: <b>' + esc(SET_FX[draft.fx].name) + '</b></p>' : '') + (set && !draft.fx ? '<p class="wd-set">✨ ' + (tryLocked() ? 'Anprobe' : 'Set komplett') + ': <b>' + esc(SET_FX[set].name) + '</b></p>' : missing ? '<p class="wd-miss">' + missing + '</p>' : '') +
-      (tryLocked() ? '<button class="shop-action shop-select" disabled>🔒 Nur Anprobe – erst ziehen</button>' : '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button>') + infoHtml(infoId) + presetsHtml() + (slot === 'sets' ? '' : setsHtml()) + '</div>' +
+      (tryLocked() ? '<button class="shop-action shop-select" disabled>🔒 Nur Anprobe – erst ziehen</button>' : '<button class="shop-action shop-select" data-saveoutfit ' + (busy || JSON.stringify(draft) === JSON.stringify(outfit) ? 'disabled' : '') + '>Anziehen</button>') + infoHtml(infoId) + presetsHtml() + '</div>' +
       '<div class="wd-right"><nav class="wd-slots">' + [{ id: 'sets', name: 'Sets', icon: '✨' }, ...SLOTS].map((x) => '<button class="' + (slot === x.id ? 'on' : '') + '" data-slot="' + x.id + '">' + x.icon + ' ' + x.name + '</button>').join('') + '</nav>' +
       (slot === 'sets' ? setsListHtml(mine) :
-      (slot === 'ding' ? forgeBar() : '') +
-      '<div class="wd-filter"><button class="' + (onlyMine ? 'on' : '') + '" data-onlymine="1">Nur meine</button><button class="' + (!onlyMine ? 'on' : '') + '" data-onlymine="0">Alle' + (nLocked ? ' (+' + nLocked + ' 🔒)' : '') + '</button></div>' +
+      (slot === 'ding' && forge ? forgeBar() : '') +
+      '<div class="wd-filter"><button class="' + (onlyMine ? 'on' : '') + '" data-onlymine="1">Nur meine</button><button class="' + (!onlyMine ? 'on' : '') + '" data-onlymine="0">Alle' + (nLocked ? ' (+' + nLocked + ' 🔒)' : '') + '</button>' + (slot === 'ding' && !forge ? '<button class="wd-forge" data-forge="on">⚒️ Schmieden</button>' : '') + '</div>' +
       '<div class="wd-grid">' + (slot === 'ding' || draft[slot] ? '<button class="wd-cell none' + (!draft[slot] ? ' on' : '') + '" data-part="">' + (slot === 'ding' ? '✋ Nichts' : '↺ Vom Avatar') + '</button>' : '') +
       list.map((id) => cell(id, false)).join('') + locked.map((id) => cell(id, true)).join('') + '</div>' +
       (locked.length ? '<p class="shop-hint">📦 = nur in der Kuh-Kiste</p>' : '')) + '</div></div>';
@@ -319,7 +338,7 @@ export function renderShop(root, ctx) {
             : subTabs() + (freeLeft > 0 && typeof ctx.claimFree === 'function' ? '<p class="shop-gift">🎁 Such dir <b>' + freeLeft + (freeLeft > 1 ? ' Sprüche' : ' Spruch') + '</b> gratis aus!</p>' : '') +
               '<div class="shop-grid shop-saying-grid">' + customCard() + SHOP_SAYINGS.map(sayingCard).join('') + '</div>' +
               '<p class="shop-hint">Gekaufte Sprüche findest du im Spiel unter 💬.</p>') +
-        '</div>' + forgeFxHtml() + '<footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer></section>';
+        '</div>' + forgeFxHtml() + (tab === 'avatare' || tab === 'sprueche' || tab === 'emotes' ? '<footer class="shop-footer">Jeder Sieg = 10 ' + DUB + ' · Einmal gekauft, dauerhaft deins.</footer>' : '') + '</section>';
     restoreScroll(root, snap); // v0.99 Scroll-Stand bleiben
 
     root.querySelector('[data-close]')?.addEventListener('click', () => ctx.close());
@@ -331,7 +350,7 @@ export function renderShop(root, ctx) {
     root.querySelectorAll('[data-select]').forEach(b => b.addEventListener('click', () => select(b.dataset.select)));
     root.querySelectorAll('[data-openbox]').forEach((b) => b.addEventListener('click', openBox));
     root.querySelectorAll('[data-try]').forEach((b) => b.addEventListener('click', () => { tryOn = b.dataset.try || null; render(); }));
-    root.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => { slot = b.dataset.slot; render(); }));
+    root.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => { slot = b.dataset.slot; infoId = null; forge = null; render(); }));
     root.querySelectorAll('[data-part]').forEach((b) => b.addEventListener('click', () => { if (forge && slot === 'ding') { const id = b.dataset.part; if (!id || b.dataset.lock) return; const picked = forge.filter((x) => x === id).length; if (forge.length < 2 && picked < Math.min(2, cntOf(id))) forge.push(id); else if (picked) forge.splice(forge.lastIndexOf(id), 1); infoId = id; return render(); } infoId = b.dataset.part || null; draft = { ...draft, [slot]: b.dataset.part || null }; if (!draft[slot]) delete draft[slot]; render(); }));
     root.querySelector('[data-saveoutfit]')?.addEventListener('click', saveOutfit);
     root.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => { const k = Number(b.dataset.preset); presetSel = k;

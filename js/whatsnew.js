@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '1.2.0', date: '28.11.', items: ['⚡ GOLDRAUSCH: Läuft es bei dir (Kuhhandel gewonnen, Schnäppchen ersteigert), verwandelst du dich – Stufe I mit goldener Flammen-Aura, Stufe II mit Blitzen. Verlierst du Kuhhandel, ist es wieder vorbei!', '🛒 Shop aufgeräumter, Knöpfe reagieren beim ersten Tipp'] },
   { v: '1.1.0', date: '28.11.', items: ['🎁 Jeden Tag eine Kuh-Kiste gratis', '💰 Dublonen ohne Tageslimit – auch für kurze Partien', '🎰 Set-Jackpot: ganz selten gibt es ein komplettes Set aus der Kiste', '✨ Komplettes Set? Dann kannst du seinen Effekt zu jedem Outfit tragen', '🌟 Legendäre Gegenstände leuchten und funkeln'] },
   { v: '1.0.1', date: '22.11.', items: ['👑 Neues legendäres Set: Goldene Kuh (Kopf + Goldrüstung + Goldene Hufe) → Goldregen', '🏺 Neues legendäres Set: Pharao → Sonnenkönig', '⚒️ Schmieden mit Amboss-Show und großem Ergebnis', '👆 Shop-Knöpfe reagieren zuverlässiger'] },
   { v: '1.0.0', date: '22.11.', items: ['⚒️ Schmiede: 2 Gegenstände gleicher Farbe → 1 Gegenstand der nächsten Stufe (grau → blau → lila → gold)', '🔢 Doppelte Gegenstände zeigen ihre Anzahl (×2, ×3 …)'] },

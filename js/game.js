@@ -9,6 +9,7 @@ import {
   isBoerse, isNewsCard, kursValue, KURS_STEP, KURS_MAX_FACTOR, DIVIDENDE, HEKTIK_COUNT, BLIND_COUNT, isMoneyCard, playPfaendung, pfaendTargets,
   ratCurrent, ratLay, ratTake, buzz, rpsPick, specialDecide, specialStage, specialNumber, specialResult, specialDecideAt, chooseBlock, waitAuction, waitExtraMs, tradeWait, divideWait, batzenStage, showBatzen,
   isDuo, divideLook, divideChoose, divideTimeout, duoPass, DIVIDE_MS, isSpecialCard, specialAnimal, moneyValue, tempoFactor,
+  streakLevel,
 } from '../src/engine.js';
 import { art, STAR } from './animals.js';
 import { quartetShow, qshowMs, quartetSound, ratKingShow, kingMs, ratHat } from './quartets.js';
@@ -920,7 +921,7 @@ export function renderGame(root, ctx) {
     const om = state.phase === 'auction' && v.auction?.openMoney?.[p.id];
     const openMoney = om ? `<div class="openmoney" title="${esc(p.name)} hat offen gezeigt" aria-label="Offene Scheine: ${om.join(', ') || 'keine'}">${om.length ? om.map((m) => `<i style="--m:${MONEY_COLORS[m]}">${m}</i>`).join('') : '<em>keine Scheine</em>'}<b>= ${om.reduce((x, y) => x + y, 0)}</b></div>` : '';
     const ratPile = laidN ? `<div class="ratpile" aria-label="${laidN} gelegt">${Array.from({ length: Math.min(laidN, 6) }, () => '<i></i>').join('')}<b>${laidN}</b></div>` : '';
-    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${openMoney}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
+    return `<div class="prow seat-${seatOf(p.id)}${turnMark}${dim}${isLeader ? ' leader' : ''}${streakLevel(v, p.id) ? ` gr${streakLevel(v, p.id)}` : ''}${local.out && local.out[p.id] && local.out[p.id].from <= Date.now() && Date.now() < local.out[p.id].until ? ' out' : ''}${ouchOn(p.id) ? ' ouch' : ''}" data-pid="${esc(p.id)}" style="--c:${SEAT_COLORS[i]}${flashing ? `;--fl:-${flashEl}ms` : ''}">${coin}${ratPile}${openMoney}${(() => { const hn = Array.isArray(state.hands?.[p.id]) ? state.hands[p.id].length : 0; return hn ? `<span class="handchip" title="${hn} Börsen-Karte${hn > 1 ? 'n' : ''} auf der Hand" aria-label="${hn} Karte${hn > 1 ? 'n' : ''} auf der Hand"><i></i>${hn > 1 ? `×${hn}` : ''}</span>` : ''; })()}
       ${bubble}${nudge}${pickTargets.includes(p.id) ? `<button type="button" class="seatpick ${local.tradeTarget === p.id ? 'on' : ''}" data-a="tTarget" data-v="${esc(p.id)}" aria-label="Kuhhandel mit ${esc(p.name)}"><span>${local.tradeTarget === p.id ? '✓ gewählt' : 'antippen'}</span></button>` : ''}
       <div class="pid" data-a="reactTo" data-v="${esc(p.id)}" role="button" aria-label="${esc(isMe ? 'Reaktion senden' : `Reaktion an ${p.name}`)}">
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
@@ -1927,6 +1928,10 @@ export function renderGame(root, ctx) {
   local.fx = (local.fx || []).filter((f) => f.until > Date.now());
   const keepFx = (html, dur, tag = null) => { if (html) local.fx.push({ html, at: Date.now(), until: Date.now() + dur, tag }); if (local.fx.length > 14) local.fx.splice(0, local.fx.length - 14); };
   if (local.waitQ) { keepFx(local.waitQ, WAITPOP_MS, 'waitpop'); local.waitQ = null; }
+  // v1.2 Goldrausch: Verwandlung (hoch/runter) groß zeigen – Blitz an der Figur + Banner
+  { const le0 = v.lastEvent; if (evFresh && le0 && le0.power) { const pw = le0.power; const up = pw.to > pw.from; const who = pw.id === meId ? 'Du' : (v.players.find((p) => p.id === pw.id)?.name || '');
+    keepFx(`<div class="powerfx lv${pw.to} ${up ? 'up' : 'down'}" data-aim-to="${pw.id === meId ? '@me' : esc(pw.id)}" data-aim-anchor="center" aria-hidden="true"><i></i><b></b></div>` +
+      `<div class="powerbanner lv${pw.to} ${up ? 'up' : 'down'}" role="status">${up ? (pw.to === 2 ? '⚡⚡ ' : '⚡ ') + esc(who) + (pw.id === meId ? ' bist' : ' ist') + ' im GOLDRAUSCH ' + (pw.to === 2 ? 'II' : 'I') + '!' : '💨 ' + esc(who) + (pw.to ? ' fällt auf Goldrausch I zurück' : (pw.id === meId ? ' verlierst' : ' verliert') + ' den Goldrausch')}</div>`, up ? 2600 : 1800, 'power'); } }
   if (local.kingQ) { keepFx(local.kingQ.html, local.kingQ.dur, 'qshow'); local.kingQ = null; }
   if (local.missAuto && local.missOpen) wakeLocal(local.missAuto + 20); // v0.82 Geheimauftrag schließt sich am Anfang von selbst
   if (local.blindQ) { keepFx(local.blindQ, Math.round(2600 * INFO_F), 'blindrev'); local.blindQ = null; } // v0.79 „Warte, warte, warte!“
@@ -2660,7 +2665,7 @@ export function renderGame(root, ctx) {
       if (local.meJubAt && now < local.meJubAt + 1700) wakeLocal(now < local.meJubAt ? local.meJubAt : local.meJubAt + 1710);
       const meOut = local.out && local.out[meId] && local.out[meId].from <= now && now < local.out[meId].until;
       return `<div class="meplate full ${pr?.shop ? '' : 'gen'} ${meOut ? 'out' : ''} ${jub ? 'jub' : ''} ${ouchOn(meId) ? 'ouch' : ''} ${DEMO_JUB ? 'demo' : ''}" style="--c:${SEAT_COLORS[meIdx]}">${myHand.length ? `<span class="myhand" aria-label="Deine Handkarten">${myHand.map((k) => `<i class="hcard ${k}" title="${k === 'pfaendung' ? 'Zwangsversteigerung: statt eines Zuges ein Tier pfänden' : 'Einspruch: wehrt eine Pfändung gegen dich ab'}">${k === 'pfaendung' ? '⚖️' : '🛡️'}</i>`).join('')}</span>` : ''}
-        <span class="mefig ${jub ? 'swing' : ''}" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop, '', pr.outfit) : aliveFig(me, meIdx, null)}${kingHat(meId)}${ouchOn(meId) ? OUCH : ''}${moodHtml(meId)}${titleBits(pr)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
+        <span class="mefig ${jub ? 'swing' : ''} ${streakLevel(v, meId) ? 'gr' + streakLevel(v, meId) : ''}" ${ctx.reactionList ? `data-a="reactTo" data-v="${esc(meId)}" role="button" aria-label="Reaktion an alle (💬)"` : ''}>${pr?.shop ? shopAvatarFull(pr.shop, '', pr.outfit) : aliveFig(me, meIdx, null)}${kingHat(meId)}${ouchOn(meId) ? OUCH : ''}${moodHtml(meId)}${titleBits(pr)}</span><span class="mename">Du</span>${jub ? '<i class="mejubstar" aria-hidden="true">🎉</i>' : ''}</div>`;
     })()}
     <div class="gright">${playersCol}</div>
     ${overlay}
