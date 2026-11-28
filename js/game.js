@@ -928,7 +928,7 @@ export function renderGame(root, ctx) {
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${myPartner === p.id ? '<b class="teamb" title="Dein Partner">🤝</b>' : ''}${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld">${isMe ? '<i></i>' : `<span class="mfan" aria-hidden="true" style="--n:${Math.min(count, 8)}">${Array.from({ length: Math.min(count, 8) }, (_, k) => `<i style="--k:${k}"></i>`).join('')}</span>`}${count}${myPartner === p.id && Array.isArray(p.money) ? `<b class="psum">${p.money.reduce((a, b) => a + b, 0)}</b>` : ''}</span>` : status}</span></div>
       </div>
-      <div class="chips ${(chips.match(/class="chip /g) || []).length > 8 ? 'manych' : ''}" data-a="setsOf" data-v="${esc(p.id)}" style="--nchip:${(chips.match(/class="chip /g) || []).length}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
+      <div class="chips ${(() => { const n = (chips.match(/class="chip /g) || []).length; return n > 10 ? 'manych c3' : n > 5 ? 'c2' : ''; })()}" data-a="setsOf" data-v="${esc(p.id)}" style="--nchip:${(chips.match(/class="chip /g) || []).length}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
     </div>`;
   }).join('');
 
