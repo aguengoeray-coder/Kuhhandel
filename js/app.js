@@ -1526,7 +1526,7 @@ function sendScene(kind, to, partner = null) {
   if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'scene', payload: s });
 }
 // v0.67: Szenen-Emotes muss man im Shop kaufen (Admins können alle)
-function canScene(kind) { if (shopMe.state === 'idle') loadShop(); return !!ui.isAdmin || shopMe.owned.has(SCENE_ITEM[kind]); }
+function canScene(kind) { return !!ui.isAdmin || shopMe.owned.has(SCENE_ITEM[kind]); }
 function canPunch() { return !!ui.isAdmin || shopMe.owned.has('emote-pruegel'); }
 function sendPunch(to) {
   if (!canPunch()) return;
