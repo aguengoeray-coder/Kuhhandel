@@ -44,6 +44,13 @@ function duoBase() {
   return g;
 }
 export function buildDemoState(kind, local) {
+  const g0 = buildDemoState0(kind, local);
+  // v1.2 Goldrausch-Vorschau: &gr=2,1 → Strähne für Platz 1 (du), 2 … (Stufe 1 = 3, Stufe 2 = 6); &grpop=2 zeigt die Verwandlung von Platz 2
+  const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+  if (g0 && qs.get('gr')) { g0.streak = {}; qs.get('gr').split(',').forEach((lv, i) => { if (g0.players[i]) g0.streak[g0.players[i].id] = [0, 3, 6][Number(lv)] || 0; }); }
+  return g0;
+}
+function buildDemoState0(kind, local) {
   let g;
   const qs = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
   if (kind === 'duo') return duoBase();

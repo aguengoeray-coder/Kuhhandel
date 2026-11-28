@@ -1236,3 +1236,12 @@ test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen
     assert.match(sq, /revoke all on function public\.admin_gift\(uuid, int, int\) from public, anon/); assert.match(sq, /perform public\.require_admin\(\)/); }
   assert.ok(sql.includes('since_legend + 1 >= 25') && sql.includes('since_epic + 1 >= 8'), 'Pech-Schutz wie in der App');
 });
+
+test('v1.2 Goldrausch: Strähne steigt mit gewonnenen Kuhhandeln, fällt bei Niederlagen, nur Optik', async () => {
+  const E = await import('../src/engine.js');
+  const st = { streak: {}, lastEvent: { type: 'x' } };
+  assert.equal(E.streakLevel(st, 'a'), 0);
+  st.streak.a = 3; assert.equal(E.streakLevel(st, 'a'), 1);
+  st.streak.a = 6; assert.equal(E.streakLevel(st, 'a'), 2);
+  assert.ok(E.STREAK_LV1 < E.STREAK_LV2 && E.STREAK_LV2 <= E.STREAK_MAX);
+});

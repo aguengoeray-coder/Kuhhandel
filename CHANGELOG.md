@@ -1,5 +1,12 @@
 # Änderungsprotokoll
 
+## v1.2.0 – Goldrausch (Alp 28.11. 11:30)
+
+- [x] **Glückssträhne pro Spieler** (`state.streak`, nur Optik – keine Regeländerung): Kuhhandel gewonnen +2, verloren −3, Versteigerung zum Schnäppchen (≤ Tierwert) +1.
+- [x] **Goldrausch I** ab 3 (goldene Flammen-Aura um die Figur, ⚡ am Namen), **Goldrausch II** ab 6 (größere Aura, Blitze, ⚡⚡). Sinkt die Strähne, verwandelt man sich zurück.
+- [x] **Verwandlungs-Moment** für alle sichtbar: Lichtblitz an der Figur + Banner „⚡ Mo ist im GOLDRAUSCH II!“ bzw. „💨 … verliert den Goldrausch“.
+- [x] Effekte-Schalter „Aus“ blendet die Aura aus; Demo `&gr=2,1,0,2`.
+
 ## v1.1.0 – Gratis-Kiste, Set-Jackpot, Effekt frei wählbar, Admin schenkt (Alp 22.11. 21:19/21:21, 28.11. 11:31)
 
 - [x] **Tägliche Gratis-Kiste** (ab Mitternacht deutscher Zeit neu), danach geschenkte Gratis-Kisten, dann 40 Dublonen.

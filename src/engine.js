@@ -224,6 +224,20 @@ function player(state, id) {
 // v0.86 Fix: Das Protokoll behält nur die letzten 200 Einträge – seine Länge bleibt dann stehen.
 // logNo zählt dagegen immer weiter (für „ist das neu?“ in der App und Ereignis-Nummern).
 export function logNo(state) { return state.logTotal ?? state.log.length; }
+
+// v1.2 Goldrausch (nur Optik, ändert keine Regel): Glückssträhne je Spieler 0 … 8.
+// Kuhhandel gewonnen +2, verloren −3; Versteigerung zum Schnäppchen (≤ Tierwert) +1, teuer gekauft ±0.
+// Stufe I ab 3, Stufe II ab 6 – sinkt die Strähne, verwandelt man sich zurück.
+export const STREAK_LV1 = 3, STREAK_LV2 = 6, STREAK_MAX = 8;
+export function streakLevel(state, id) { const v = state.streak?.[id] || 0; return v >= STREAK_LV2 ? 2 : v >= STREAK_LV1 ? 1 : 0; }
+function bumpStreak(state, id, d) {
+  if (!id || !d) return;
+  state.streak = { ...(state.streak || {}) };
+  const before = streakLevel(state, id);
+  state.streak[id] = Math.max(0, Math.min(STREAK_MAX, (state.streak[id] || 0) + d));
+  const after = streakLevel(state, id);
+  if (after !== before && state.lastEvent) state.lastEvent = { ...state.lastEvent, power: { id, from: before, to: after } };
+}
 function log(state, text) {
   state.logTotal = logNo(state) + 1;
   state.log.push(text);
@@ -988,6 +1002,7 @@ export function pay(prev, playerId, cardIndices) {
   if (!st.maxBuy || pm.amount > st.maxBuy.amount) st.maxBuy = { amount: pm.amount, animal: pm.animal };
   log(state, `${payer.name} zahlt mit ${cards.length} Karte(n). ${buyer.name} bekommt ${animalName(pm.animal)}.`);
   state.lastEvent = { n: logNo(state), type: 'auction_won', animal: pm.animal, buyer: buyer.id, amount: pm.amount, cardCount: cards.length, payer: pm.payer, payee: pm.payee, self: !!pm.self, ...(pm.forced ? { forced: true } : {}) };
+  { const av = ANIMALS.find((x) => x.id === pm.animal)?.value || 0; if (pm.amount <= av) bumpStreak(state, buyer.id, 1); } // v1.2 Schnäppchen
   nextTurn(state);
   return state;
 }
@@ -1034,7 +1049,8 @@ export function acceptTrade(prev, playerId) {
   stat(state, ch.id).tradesWon += 1;
   stat(state, tg.id).tradesLost += 1;
   bluff(state, ch.id, t.offer);
-  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer), paid: sum(t.offer) }; // v0.89 paid: effektiv bezahlt – sehen alle
+  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: true, winner: ch.id, offerSum: sum(t.offer), paid: sum(t.offer) };
+  bumpStreak(state, ch.id, 2); bumpStreak(state, t.target, -3); // v0.89 paid: effektiv bezahlt – sehen alle
   nextTurn(state);
   return state;
 }
@@ -1070,7 +1086,8 @@ export function counterTrade(prev, playerId, cardIndices) {
   stat(state, loser.id).tradesLost += 1;
   bluff(state, winner.id, challengerWins ? t.offer : counter);
   if (Math.abs(offerSum - counterSum) <= 10) { const ls = stat(state, loser.id); ls.closeLosses = (ls.closeLosses || 0) + 1; }
-  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), paid: Math.abs(offerSum - counterSum), winner: winner.id }; // diff: sehen alle (Beträge bleiben verdeckt)
+  state.lastEvent = { n: logNo(state), type: 'trade', ...t, accepted: false, counter, offerSum, counterSum, diff: Math.abs(offerSum - counterSum), paid: Math.abs(offerSum - counterSum), winner: winner.id };
+  bumpStreak(state, winner.id, 2); bumpStreak(state, winner.id === t.challenger ? t.target : t.challenger, -3); // diff: sehen alle (Beträge bleiben verdeckt)
   nextTurn(state);
   return state;
 }
