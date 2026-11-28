@@ -1269,7 +1269,8 @@ async function loadProfiles(ids) {
 // ---------- Shop (v0.48): Dublonen, Avatare, Sprüche ----------
 
 function myReactions() {
-  if (DEMO && shopMe.state === 'idle') loadShop();
+  // v1.3 Fix: auch direkt im Spiel (nach Neuladen/Update) die gekauften Sachen laden – vorher nur über die Startseite → Sprüche/Emotes „weg“
+  if (shopMe.state === 'idle') loadShop();
   return [...REACTIONS, ...(shopMe.owned.has(SHOP_CUSTOM.id) && shopMe.custom ? [shopMe.custom] : []), ...SHOP_SAYINGS.filter((x) => shopMe.owned.has(x.id)).map((x) => x.text)]; // v0.58: nur Sprüche; v0.63: eigener Spruch zuerst
 }
 
@@ -1312,7 +1313,7 @@ async function loadShop(force = false) {
     if (Object.keys(shopMe.outfit).length) shopOutfits.set(me.id, shopMe.outfit); else shopOutfits.delete(me.id);
     const cs = await sb.rpc('shop_public_sayings', { p_ids: [me.id] }).then((r) => r, () => ({ data: null })); // v0.63
     shopMe.custom = cs?.data?.[0]?.text || ''; if (shopMe.custom) customSayings.set(me.id, shopMe.custom);
-  } catch { shopMe.state = 'off'; }
+  } catch { shopMe.state = 'off'; setTimeout(() => { if (shopMe.state === 'off') { shopMe.state = 'idle'; render(); } }, 15000); } // v1.3: Netzfehler → in 15 s nochmal
   render();
 }
 
@@ -1525,7 +1526,7 @@ function sendScene(kind, to, partner = null) {
   if (!ui.game.local && roomChannel) roomChannel.send({ type: 'broadcast', event: 'scene', payload: s });
 }
 // v0.67: Szenen-Emotes muss man im Shop kaufen (Admins können alle)
-function canScene(kind) { return !!ui.isAdmin || shopMe.owned.has(SCENE_ITEM[kind]); }
+function canScene(kind) { if (shopMe.state === 'idle') loadShop(); return !!ui.isAdmin || shopMe.owned.has(SCENE_ITEM[kind]); }
 function canPunch() { return !!ui.isAdmin || shopMe.owned.has('emote-pruegel'); }
 function sendPunch(to) {
   if (!canPunch()) return;

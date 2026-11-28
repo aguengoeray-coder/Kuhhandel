@@ -5,6 +5,7 @@
 - [x] **🐞 Fehler melden** (Menü am Tisch + Einstellungen): Text + automatisch Version, Gerät, Bildgröße, Spielsituation; alle sehen die Liste, „👍 auch bei mir“; Admin: „✅ erledigt“ und „📋 Alle offenen kopieren“ (fertiger Text für Claude). SQL `supabase/v1.3-fehlerliste.sql` (`feedback`, `feedback_add`, `feedback_vote`, `admin_feedback_done`).
 - [x] **Fix Sets:** „Anziehen“/„Anprobieren“ im Reiter Sets taten nichts (kaputtes Attribut seit v1.1); jetzt: vorhandene Sets werden angezogen, fehlende angeprobt (mit Hinweis, wo es die Teile gibt).
 - [x] **Set-Effekt wählen** deutlicher: Knopf „✨ Nur Effekt“ / „✨ Effekt an“ bei jedem kompletten Set.
+- [x] **Fix „gekaufte Sprüche/Emotes weg“:** Wer direkt im Spiel neu geladen hat (z. B. nach „Neue Version da“), bekam die gekauften Sachen erst nach einem Besuch der Startseite – jetzt werden sie auch am Tisch sofort geladen (Käufe waren nie verloren, alle noch in der Datenbank). Netzfehler → automatisch neuer Versuch.
 - [x] **Fix Admin-Geschenk an sich selbst:** Kontostand wird danach neu geladen (kam an, wurde nur nicht angezeigt).
 - [x] **iPad:** Spielende-Fenster wächst mit, Knöpfe nicht mehr abgeschnitten.
 - [x] **Tests kürzer:** Browser-Tests nur noch iPhone Pro (852×393) und iPad (1180×820), 4 statt 6 Partien (~15 statt ~45 min).
