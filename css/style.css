@@ -4591,3 +4591,5 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 /* v1.3 Seiten-Sets: bis 5 Karten eine Reihe in voller Größe, 6–10 zwei Reihen etwas kleiner, mehr noch kleiner */
 .stage .gright .prow.seat-l .chips.c2, .stage .gright .prow.seat-r .chips.c2 { zoom: .8; }
 .stage .gright .prow.seat-l .chips.c3, .stage .gright .prow.seat-r .chips.c3 { zoom: .7; }
+/* v1.3 iPhone quer: „Alle anderen haben gepasst“ ohne Zusatzzeile, damit die Knopfspalte nicht in die Mitspieler-Sets wächst */
+@media (max-height: 450px) { .dock .lastin small { display: none; } .dock .lastin { padding: 5px 9px; } }

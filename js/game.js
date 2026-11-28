@@ -316,6 +316,22 @@ export const calmFor = (le, deckLeft, state = null) => (state && setTempo(state)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn', 'divided'];
 
 // Auslage passt nicht in ihre Breite (viele Tiere, große Schrift)? Dann nachmessen und kleiner machen – nie unter die Knöpfe
+// v1.3: Tier-Sets der Mitspieler links/rechts dürfen nie in deine Figur (links) oder deine Knöpfe (rechts) wachsen → nach dem Zeichnen messen und verkleinern
+function fitSeats(root) {
+  const stage = root.querySelector('.stage'); if (!stage) return;
+  const tops = (sel) => [...stage.querySelectorAll(sel)].map((e) => e.getBoundingClientRect()).filter((r) => r.height > 0);
+  for (const [seat, sel] of [['seat-l', '.mefig'], ['seat-r', '.lastin, .dock, .bidpad, .waitbtn.mine, .buzzer']]) {
+    const row = stage.querySelector(`.prow.${seat}`); const chips = row?.querySelector('.chips'); if (!chips) continue;
+    chips.style.zoom = '';
+    const c = chips.getBoundingClientRect(); if (!c.height) continue;
+    const rb = row.getBoundingClientRect(); const obs = tops(sel).filter((r) => r.right > rb.left && r.left < rb.right && r.top > c.top);
+    if (!obs.length) continue;
+    const limit = Math.min(...obs.map((r) => r.top)) - 14; // etwas Luft: Figur hüpft/jubelt
+    const over = row.getBoundingClientRect().bottom - limit; if (over <= 0) continue;
+    const z0 = Number(getComputedStyle(chips).zoom) || 1;
+    chips.style.zoom = String(Math.max(0.4, z0 * (c.height - over) / Math.max(1, c.height)).toFixed(3));
+  }
+}
 function fitAuslage(root) {
   const a = root.querySelector('.auslage');
   if (!a || !a.children.length) return;
@@ -2737,6 +2753,7 @@ export function renderGame(root, ctx) {
   fitStage();
   fitTop(root);
   fitAuslage(root);
+  fitSeats(root);
   aimFly(root);
   aimFx(root);
   routeFx(root);
