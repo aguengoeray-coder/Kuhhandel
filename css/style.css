@@ -4608,3 +4608,16 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 .stage .gright .prow.seat-l .chips.c3, .stage .gright .prow.seat-r .chips.c3 { zoom: .7; }
 /* v1.3 iPhone quer: „Alle anderen haben gepasst“ ohne Zusatzzeile, damit die Knopfspalte nicht in die Mitspieler-Sets wächst */
 @media (max-height: 450px) { .dock .lastin small { display: none; } .dock .lastin { padding: 5px 9px; } }
+/* v1.5 Raketenstiefel: Düsenflamme flackert, Rauch steigt */
+.rkt .rkfire { transform-box: fill-box; }
+.rkt .rkfire path { transform-box: fill-box; transform-origin: 50% 0; animation: rkflick .12s ease-in-out infinite alternate; }
+.rkt .rkfire .f2 { animation-duration: .09s; } .rkt .rkfire .f3 { animation-duration: .07s; }
+@keyframes rkflick { from { transform: scaleY(.75) scaleX(1.05); } to { transform: scaleY(1.15) scaleX(.92); } }
+.rkt .rksmoke circle { animation: rksmoke 1.1s ease-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+.rkt .rksmoke .s2 { animation-delay: -.55s; }
+@keyframes rksmoke { from { transform: translateY(-6px) scale(.6); opacity: .8; } to { transform: translateY(8px) scale(1.8); opacity: 0; } }
+.shop-avatar-full svg.shop-avatar-art { overflow: visible; }
+@media (prefers-reduced-motion: reduce) { .rkt .rkfire path, .rkt .rksmoke circle { animation: none; } }
+.sa-rider.hover { animation: rkhover 1.2s ease-in-out infinite alternate; } /* v1.5 Raketen-Füße: schwebt leicht */
+@keyframes rkhover { to { translate: 0 -3px; } }
+@media (prefers-reduced-motion: reduce) { .sa-rider.hover { animation: none; } }
