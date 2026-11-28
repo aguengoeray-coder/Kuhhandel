@@ -4561,3 +4561,6 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
   filter: drop-shadow(0 0 10px #FFC400) drop-shadow(0 0 18px #FF9F00); }
 .prow.gr2 .seatfig::before, .mefig.gr2::before { width: 210%; height: 190%; filter: drop-shadow(0 0 14px #FFC400) drop-shadow(0 0 26px #FF9F00) brightness(1.15); }
 .prow.gr2 .seatfig::after, .mefig.gr2::after { inset: -35% -60%; animation-duration: .8s; }
+/* Blitz-Zeichen am Namen schwebt (ändert die Platzgröße nicht) */
+.prow.gr1 .ribbon-s, .prow.gr2 .ribbon-s { position: relative; }
+.prow.gr1 .ribbon-s::after, .prow.gr2 .ribbon-s::after { position: absolute; right: -4px; top: -11px; font-size: 12px; line-height: 1; filter: drop-shadow(0 0 3px #FFB300); pointer-events: none; }
