@@ -13,11 +13,11 @@ import { haptic } from './haptics.js';
 import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM, SCENE_ITEM, SHOP_EMOTES } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
-import { BOX_ITEMS, RARITIES, BOX_PRICE } from './outfits.js';
+import { BOX_ITEMS, RARITIES, BOX_PRICE, BOX_SETS, boxSetParts } from './outfits.js';
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '1.0.1';
+export const APP_VERSION = '1.1.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1307,7 +1307,8 @@ async function loadShop(force = false) {
     const inv = await sb.from('shop_inventory').select('item_id, n').eq('user_id', me.id).then((r) => r, () => ({ data: null }));
     const wo = await sb.from('shop_wallets').select('outfit').eq('user_id', me.id).maybeSingle().then((r) => r, () => ({ data: null }));
     const bs = await sb.from('shop_box_state').select('since_legend, since_epic').eq('user_id', me.id).maybeSingle().then((r) => r, () => ({ data: null }));
-    shopMe.inventory = new Set((inv?.data || []).map((x) => x.item_id)); shopMe.invCount = Object.fromEntries((inv?.data || []).map((x) => [x.item_id, x.n || 1])); shopMe.outfit = wo?.data?.outfit || {}; sb.from('shop_wallets').select('outfit_presets').eq('user_id', me.id).maybeSingle().then((r) => { if (Array.isArray(r?.data?.outfit_presets)) shopMe.presets = r.data.outfit_presets; }, () => {}); // v0.95 Outfits im Konto (ohne Spalte: Gerät) shopMe.boxState = bs?.data || { since_legend: 0, since_epic: 0 }; shopMe.boxOk = !inv?.error && Array.isArray(inv?.data);
+    shopMe.inventory = new Set((inv?.data || []).map((x) => x.item_id)); shopMe.invCount = Object.fromEntries((inv?.data || []).map((x) => [x.item_id, x.n || 1])); shopMe.outfit = wo?.data?.outfit || {}; sb.rpc('shop_box_status').then((r) => { if (r?.data) { shopMe.daily = !!r.data.daily; shopMe.freeBoxes = Number(r.data.free_boxes) || 0; } }, () => {}); sb.from('shop_wallets').select('outfit_presets').eq('user_id', me.id).maybeSingle().then((r) => { if (Array.isArray(r?.data?.outfit_presets)) shopMe.presets = r.data.outfit_presets; }, () => {}); // v0.95 Outfits im Konto (ohne Spalte: Gerät)
+    shopMe.boxState = bs?.data || { since_legend: 0, since_epic: 0 }; shopMe.boxOk = !inv?.error && Array.isArray(inv?.data);
     if (Object.keys(shopMe.outfit).length) shopOutfits.set(me.id, shopMe.outfit); else shopOutfits.delete(me.id);
     const cs = await sb.rpc('shop_public_sayings', { p_ids: [me.id] }).then((r) => r, () => ({ data: null })); // v0.63
     shopMe.custom = cs?.data?.[0]?.text || ''; if (shopMe.custom) customSayings.set(me.id, shopMe.custom);
@@ -1335,12 +1336,23 @@ async function openShop(startTab, only) {
     inventory: shopMe.inventory || [], outfit: shopMe.outfit || {}, boxState: shopMe.boxState, tab: startTab || params.get('shoptab') || undefined, only: only || undefined, invCount: shopMe.invCount || {}, presets: shopMe.presets || null,
     savePresets(p) { shopMe.presets = p; if (!DEMO) sb.rpc('shop_set_presets', { p_presets: p }).then(() => {}, () => {}); },
     async openBox() {
-      if (DEMO) { const pool = Object.entries(BOX_ITEMS); const r0 = Math.random(); const rar = r0 < .03 ? 'legendaer' : r0 < .13 ? 'episch' : r0 < .4 ? 'selten' : 'gewoehnlich'; const c = pool.filter(([, it]) => it.rarity === (params.get('boxrar') || rar)); const [id] = c[Math.floor(Math.random() * c.length)]; const dupe = (shopMe.inventory || new Set()).has(id); const refund = dupe ? RARITIES[params.get('boxrar') || rar].refund : 0; shopMe.balance += refund - BOX_PRICE; shopMe.inventory.add(id); return { item: id, rarity: params.get('boxrar') || rar, dupe, refund, balance: shopMe.balance }; }
-      const { data, error } = await sb.rpc('shop_open_box');
-      if (error) throw err(error, 'Die Kiste klemmt – gleich nochmal versuchen.');
-      shopMe.balance = Number(data.balance); (shopMe.inventory = shopMe.inventory || new Set()).add(data.item); shopMe.invCount = shopMe.invCount || {}; shopMe.invCount[data.item] = (shopMe.invCount[data.item] || 0) + 1;
+      const inv = (shopMe.inventory = shopMe.inventory || new Set()); const cnt = (shopMe.invCount = shopMe.invCount || {});
+      let data;
+      if (DEMO) {
+        const free = shopMe.daily !== false || (shopMe.freeBoxes || 0) > 0; if (!free && shopMe.balance < BOX_PRICE) throw new Error('Zu wenig Dublonen (40 nötig)');
+        const jack = params.get('jackpot') === '1' || Math.random() < 0.005;
+        if (jack) { const sets = Object.keys(BOX_SETS).filter((k) => !BOX_ITEMS[boxSetParts(k)[0]]?.month); const st = sets[Math.floor(Math.random() * sets.length)]; const parts = boxSetParts(st); data = { item: parts[0], rarity: 'legendaer', dupe: false, refund: 0, set: st, parts }; }
+        else { const pool = Object.entries(BOX_ITEMS); const r0 = Math.random(); const rar = params.get('boxrar') || (r0 < .03 ? 'legendaer' : r0 < .13 ? 'episch' : r0 < .4 ? 'selten' : 'gewoehnlich'); const c = pool.filter(([, it]) => it.rarity === rar && !it.month); const [id] = c[Math.floor(Math.random() * c.length)]; const dupe = inv.has(id); data = { item: id, rarity: rar, dupe, refund: dupe ? RARITIES[rar].refund : 0 }; }
+        const daily = shopMe.daily !== false; if (daily) shopMe.daily = false; else if ((shopMe.freeBoxes || 0) > 0) shopMe.freeBoxes--; else shopMe.balance -= BOX_PRICE;
+        shopMe.balance += data.refund; Object.assign(data, { balance: shopMe.balance, free_boxes: shopMe.freeBoxes || 0, daily });
+      } else {
+        const res = await sb.rpc('shop_open_box'); if (res.error) throw err(res.error, 'Die Kiste klemmt – gleich nochmal versuchen.'); data = res.data;
+        shopMe.balance = Number(data.balance); shopMe.freeBoxes = Number(data.free_boxes) || 0; if (data.daily) shopMe.daily = false;
+      }
+      for (const p of data.parts || [data.item]) { inv.add(p); cnt[p] = (cnt[p] || 0) + 1; }
       return data;
     },
+    boxStatus: () => ({ daily: shopMe.daily !== false, free: shopMe.freeBoxes || 0 }),
     // v1.0 Schmiede: 2 Gegenstände gleicher Seltenheit → 1 der nächsten
     async combine(a, b) {
       const cnt = (shopMe.invCount = shopMe.invCount || {}); const inv = (shopMe.inventory = shopMe.inventory || new Set());
@@ -2174,6 +2186,7 @@ function renderModal() {
       }
       if (b.dataset.m === 'tab') { modal.tab = v; modal.confirm = null; modal.pwFor = null; modal.okMsg = ''; modal.error = ''; render(); return loadAdmin(); }
       if (b.dataset.m === 'ask') { modal.confirm = v; return render(); }
+      if (b.dataset.m === 'giftOpen') { modal.giftFor = modal.giftFor === v ? null : v; modal.pwFor = null; return render(); }
       if (b.dataset.m === 'pwOpen') { modal.pwFor = modal.pwFor === v ? null : v; return render(); }
       if (b.dataset.m === 'mkadmin') return adminAction('admin_set_admin', { p_user: v, p_on: true }, `${nameOf(v)} ist jetzt Admin.`);
       if (b.dataset.m === 'unadmin') return adminAction('admin_set_admin', { p_user: v, p_on: false }, `${nameOf(v)} ist kein Admin mehr.`);
@@ -2194,7 +2207,14 @@ function renderModal() {
     if (b.dataset.m === 'pfWear') return openShop('garderobe', 'garderobe');
     if (b.dataset.m === 'pfAv') return setMyAvatar(b.dataset.v);
   };
-  el.querySelectorAll('form.apw').forEach((f) => { f.onsubmit = (e) => {
+  // v1.1 Admin: Dublonen / Gratis-Kisten verschenken
+  el.querySelectorAll('form.agift').forEach((f) => { f.onsubmit = (e) => {
+    e.preventDefault(); const u = f.dataset.user; const dub = Math.max(0, Number(f.dub.value) || 0); const boxes = Math.max(0, Number(f.boxes.value) || 0);
+    const who = modal.adminData?.users?.find((x) => x.id === u)?.name || 'Spieler';
+    modal.giftFor = null;
+    adminAction('admin_gift', { p_user: u, p_dublonen: dub, p_boxes: boxes }, `🎁 ${who} bekommt ${dub ? dub + ' Dublonen' : ''}${dub && boxes ? ' und ' : ''}${boxes ? boxes + ' Gratis-Kiste' + (boxes > 1 ? 'n' : '') : ''}${!dub && !boxes ? 'nichts' : ''}.`);
+  }; });
+  el.querySelectorAll('form.apw:not(.agift)').forEach((f) => { f.onsubmit = (e) => {
     e.preventDefault();
     const pw = String(new FormData(f).get('pw')).trim();
     const id = f.dataset.user;
@@ -2302,10 +2322,12 @@ function adminBody() {
       <div class="arow">${avatarHtml(u.id, u.name, 'tiny')}<b>${esc(u.name)}</b>${u.is_admin ? '<span class="abadge">Admin</span>' : ''}
         <small>zuletzt ${fmtTime(u.last_sign_in_at)} · ${u.games} Spiele · ${u.wins} Siege</small></div>
       <div class="aacts">
+        <button type="button" class="abtn primary" data-m="giftOpen" data-v="${esc(u.id)}">🎁 Schenken</button>
         <button type="button" class="abtn" data-m="pwOpen" data-v="${esc(u.id)}">Passwort</button>
         ${u.id === me.id ? '' : u.is_admin ? confirmBtn(`unadmin:${u.id}`, 'Admin weg', 'unadmin', u.id) : `<button type="button" class="abtn" data-m="mkadmin" data-v="${esc(u.id)}">Zum Admin</button>`}
         ${u.id === me.id ? '' : confirmBtn(`del:${u.id}`, 'Löschen', 'delUser', u.id)}
       </div>
+      ${modal.giftFor === u.id ? `<form class="apw agift" data-user="${esc(u.id)}"><label>💰 Dublonen <input name="dub" type="number" min="0" max="10000" step="10" value="100" inputmode="numeric"></label><label>📦 Gratis-Kisten <input name="boxes" type="number" min="0" max="100" value="0" inputmode="numeric"></label><button type="submit" class="abtn primary">Schenken</button></form>` : ''}
       ${modal.pwFor === u.id ? `<form class="apw" data-user="${esc(u.id)}"><input name="pw" type="text" minlength="6" placeholder="Neues Passwort für ${esc(u.name)}" autocomplete="off" required><button type="submit" class="abtn primary">Setzen</button></form>` : ''}
     </li>`).join('')}</ul>`;
   }

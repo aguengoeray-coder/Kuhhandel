@@ -239,7 +239,7 @@ export function ownedParts(purchased = [], inventory = []) {
 // Outfit ausgehend vom aktiven Avatar ergänzen (leere Fächer = Teil des aktiven Avatars)
 export function fullOutfit(active, outfit = {}) {
   const o = outfit || {};
-  return { kopf: o.kopf || (active ? `kopf:${active}` : null), brust: o.brust || (active ? `brust:${active}` : null), beine: o.beine || (active ? `beine:${active}` : null), ding: o.ding || null };
+  return { kopf: o.kopf || (active ? `kopf:${active}` : null), brust: o.brust || (active ? `brust:${active}` : null), beine: o.beine || (active ? `beine:${active}` : null), ding: o.ding || null, ...(o.fx ? { fx: o.fx } : {}) };
 }
 // Set komplett? → Avatar-ID des Sets
 export function setOf(o) {

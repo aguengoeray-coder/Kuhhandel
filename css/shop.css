@@ -301,3 +301,14 @@
 @keyframes ffpulse{to{opacity:.55}}
 .br-new{display:block;color:#ffffffd0;font:600 12px var(--font-head,Fredoka,sans-serif)}
 @media (prefers-reduced-motion: reduce){.ff-in,.ff-hammer,.ff-sparks i,.ff-txt{animation:none}}
+/* v1.1 Gratis-Kiste, Set-Jackpot, Effekt-Knopf, legendäre Enthüllung größer */
+.shop-buy.free{background:linear-gradient(#3FB26B,#2E7D4F)!important;color:#fff!important}
+.kk-daily{margin:6px 0 0;font:700 12px var(--font-head,Fredoka,sans-serif);color:#8EE0A8;text-align:center}
+.br-jackpot{display:block;font:900 22px var(--font-head,Fredoka,sans-serif);background:linear-gradient(90deg,#FFE98A,#F59E0B,#FFE98A);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:jackshine 1.2s linear infinite}
+@keyframes jackshine{to{background-position:-200% 0}}
+.sr-btn.fxb{padding:7px 10px}.sr-btn.fxb.on{background:#F5C542;color:#2A2420}
+.box-reveal.r-legendaer{box-shadow:0 0 0 3px #F5C542,0 0 40px #F59E0Bcc,0 0 90px #F59E0B66}
+.box-reveal.r-legendaer .br-text b{font-size:1.35em;text-shadow:0 0 12px #F59E0B}
+.box-reveal.r-legendaer .br-item{animation:britem .8s cubic-bezier(.2,1.6,.4,1) .15s both,legfloat 2.4s ease-in-out 1s infinite}
+@keyframes legfloat{50%{transform:translateY(-6px) scale(1.04)}}
+.sr-acts{display:flex;gap:6px;align-items:center}

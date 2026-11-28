@@ -1,5 +1,16 @@
 # Änderungsprotokoll
 
+## v1.1.0 – Gratis-Kiste, Set-Jackpot, Effekt frei wählbar, Admin schenkt (Alp 22.11. 21:19/21:21, 28.11. 11:31)
+
+- [x] **Tägliche Gratis-Kiste** (ab Mitternacht deutscher Zeit neu), danach geschenkte Gratis-Kisten, dann 40 Dublonen.
+- [x] **Set-Jackpot:** 0,5 % pro Kiste → ein ganzes Kisten-Set auf einmal (eigene Enthüllung „🎰 SET-JACKPOT!“).
+- [x] **Set-Effekt frei wählbar:** wer ein Set komplett hat, kann dessen Effekt (✨ im Reiter Sets) zu jedem Outfit tragen (`fx`, serverseitig geprüft).
+- [x] **Legendäre Gegenstände** mit goldener Aura und Funkeln, legendäre Enthüllung größer.
+- [x] **Admin → Spieler → 🎁 Schenken:** Dublonen und Gratis-Kisten verschenken (`admin_gift`).
+- [x] **Dublonen ohne Tageslimit** und auch für kurze Partien: jede beendete Partie mit mind. 2 angemeldeten Spielern zählt (+2 Partie, +5 je Quartett, +10 Sieg).
+- [x] Pech-Schutz-Zähler der Kiste wurde seit v0.95 nicht geladen (Kommentar-Fehler) – behoben.
+- [x] SQL `supabase/v1.1-geschenke-setjackpot.sql` (Tabelle `shop_box_sets`, Spalten `free_boxes`, `last_free`, `shop_box_status`).
+
 ## v1.0.1 – Zwei legendäre Sets (Alp 22.11. 21:00)
 
 - [x] **Goldene Kuh:** Goldene Kuh (Kopf) + Goldrüstung + neu Goldene Hufe → Set-Effekt Goldregen.

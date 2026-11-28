@@ -1230,5 +1230,9 @@ test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen
   assert.deepEqual(O.boxSetProgress('ritter', ['kopf:ritter', 'beine:ritter', 'ding:lanze']).have, ['kopf:ritter', 'beine:ritter']);
   { const fs2 = await import('node:fs'); const sm = fs2.readFileSync(new URL('../supabase/v1.0-schmiede.sql', import.meta.url), 'utf8');
     assert.match(sm, /revoke all on function public\.shop_combine\(text, text\) from public, anon/); assert.match(sm, /'gewoehnlich' then 'selten' when 'selten' then 'episch' when 'episch' then 'legendaer'/); }
+  { const fs3 = await import('node:fs'); const sq = fs3.readFileSync(new URL('../supabase/v1.1-geschenke-setjackpot.sql', import.meta.url), 'utf8');
+    const rows = [...sq.matchAll(/\('([a-z]+)', array\[([^\]]+)\], (null|\d+)\)/g)].map((m) => [m[1], m[2].replace(/'/g, '').split(',')]);
+    assert.deepEqual(Object.fromEntries(rows), Object.fromEntries(Object.keys(O.BOX_SETS).map((k) => [k, O.boxSetParts(k)])), 'shop_box_sets = BOX_SETS');
+    assert.match(sq, /revoke all on function public\.admin_gift\(uuid, int, int\) from public, anon/); assert.match(sq, /perform public\.require_admin\(\)/); }
   assert.ok(sql.includes('since_legend + 1 >= 25') && sql.includes('since_epic + 1 >= 8'), 'Pech-Schutz wie in der App');
 });
