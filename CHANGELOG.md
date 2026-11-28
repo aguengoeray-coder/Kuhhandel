@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v1.5.0 – Größere Gegenstände, Raketenstiefel (Alp 28.11. 16:20)
+
+- [x] Gegenstände in der Hand 30 % größer (überall: Tisch, Shop, Startseite).
+- [x] Raketenstiefel: Metallstiefel mit Düse, dreilagige flackernde Flamme, Rauchwölkchen, Figur schwebt leicht.
+
 ## v1.4.0 – Neue Gegenstände, Mythisch, aufgeräumte Mitspieler-Sets (Alp 28.11. 13:57–14:03)
 
 - [x] **16 neue Gegenstände** (je 4 pro Seltenheit): Fliegenklatsche, Kochlöffel, Regenschirm, Baguette · Trompete, Zauberstab, Steinschleuder, Fernrohr · Dreizack, E-Gitarre, Laser-Säbel, Bumerang · Königszepter, Drachenaxt, Sternenbogen, Goldene Sense.

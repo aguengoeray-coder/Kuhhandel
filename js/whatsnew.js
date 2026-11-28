@@ -1,6 +1,7 @@
 // „Was ist neu“: kurze Liste der letzten Versionen (für Spieler, nicht für Entwickler).
 // Neue Version → oben einen Eintrag ergänzen (gleiche Nummer wie APP_VERSION). Wird nach einem Update einmal automatisch gezeigt.
 export const WHATS_NEW = [
+  { v: '1.5.0', date: '28.11.', items: ['🔎 Gegenstände in der Hand 30 % größer', '🚀 Raketenstiefel mit echter Düsenflamme, Rauch – und man schwebt'] },
   { v: '1.4.0', date: '28.11.', items: ['⚔️ 16 neue Gegenstände – von Fliegenklatsche bis Drachenaxt', '🌈 Neue Stufe MYTHISCH: 2× denselben legendären Gegenstand schmieden → Regenbogen-Klinge, Kosmos-Hammer oder Einhorn-Lanze', '🃏 Tier-Sets der Mitspieler aufgeräumt: „2×★“ = 2 Tiere + Spezialkarte, nichts überdeckt sich mehr'] },
   { v: '1.3.0', date: '28.11.', items: ['🐞 Fehler melden – im Menü am Tisch und in den Einstellungen; alle sehen die Liste, „👍 auch bei mir“', '👕 Sets: „Anziehen“/„Anprobieren“ funktioniert wieder, „✨ Nur Effekt“ trägt den Set-Effekt zu jedem Outfit', '📱 iPad: Spielende-Fenster zeigt alle Knöpfe', '💬 Gekaufte Sprüche und Emotes sind nach dem Neuladen im Spiel sofort wieder da', '⚡ Goldrausch hat immer nur einer – überholt ihn jemand, wandert er'] },
   { v: '1.2.0', date: '28.11.', items: ['⚡ GOLDRAUSCH: Läuft es bei dir (Kuhhandel gewonnen, Schnäppchen ersteigert), verwandelst du dich – Stufe I mit goldener Flammen-Aura, Stufe II mit Blitzen. Verlierst du Kuhhandel, ist es wieder vorbei!', '🛒 Shop aufgeräumter, Knöpfe reagieren beim ersten Tipp'] },
