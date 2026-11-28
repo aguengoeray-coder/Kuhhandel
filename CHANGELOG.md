@@ -1,5 +1,10 @@
 # Änderungsprotokoll
 
+## v1.6.0 – Beine aufgewertet + 6 neue (Alp 28.11. 17:06)
+
+- [x] **Aufgewertet:** Rollschuhe (Rollen drehen), Stelzen (Federn, wippen), Skateboard (Flammen-Deck, Leuchtrollen, Ollie beim Jubeln), Mini-Traktor (Räder drehen, Rauch, Rundumleuchte), Wolke 7 (fluffiger, Regenbogen, Tropfen), Goldene Hufe (Goldsaum, Funken), Ritter-Beinschienen (echte Platten mit Glanz), Jogging-/Latzhose (Streifen, Bündchen, Tasche).
+- [x] **Neu in der Kiste:** Gummistiefel (gewöhnlich), Cowboystiefel mit Sporen (selten), Hoverboard und Moonboots (episch, schweben/hüpfen), Jetpack-Hose und Lava-Stiefel (legendär). SQL `supabase/v1.6-kiste-beine.sql`.
+
 ## v1.5.0 – Größere Gegenstände, Raketenstiefel (Alp 28.11. 16:20)
 
 - [x] Gegenstände in der Hand 30 % größer (überall: Tisch, Shop, Startseite).

@@ -74,9 +74,9 @@ const DING_ART = {
 // Sehr seltene Teile aus der Kiste (gleiche Bausteine wie die Avatar-Körper)
 const PARTS = {
   'brust:ringelshirt': { top: '#E9EEF2', sleeve: '#E9EEF2', chest: '<path d="M37 104h46M38 118h44M39 132h42M40 146h40" stroke="#C8443A" stroke-width="5"/>' },
-  'beine:jogginghose': { pants: '#7A8290', shoes: '#F2F2F2', legL: 'M48 150Q46 170 46 188', legR: 'M72 150Q74 170 74 188' },
+  'beine:jogginghose': { pants: '#7A8290', shoes: '#F2F2F2', feet: 'sneaker', legL: 'M48 150Q46 170 46 188', legR: 'M72 150Q74 170 74 188', legExtra: '<path d="M42 152v26M78 152v26" stroke="#FFFFFF" stroke-width="2.5"/><path d="M39 180h14M67 180h14" stroke="#5B6270" stroke-width="4" stroke-linecap="round"/>' },
   'brust:holzfaeller': { top: '#B8352E', sleeve: '#B8352E', chest: '<path d="M44 90v62M60 88v64M76 90v62M36 112h48M34 134h52" stroke="#3B2A22" stroke-width="2.5" opacity=".7"/>' },
-  'beine:latzhose': { pants: '#4E6FA3', shoes: '#6B4A2E', front: '<rect x="44" y="118" width="32" height="30" rx="4" fill="#4E6FA3" stroke="#2A2420" stroke-width="2.5"/><circle cx="48" cy="122" r="2.5" fill="#E8C14D"/><circle cx="72" cy="122" r="2.5" fill="#E8C14D"/>' },
+  'beine:latzhose': { pants: '#4E6FA3', shoes: '#6B4A2E', front: '<rect x="44" y="118" width="32" height="30" rx="4" fill="#4E6FA3" stroke="#2A2420" stroke-width="2.5"/><circle cx="48" cy="122" r="2.5" fill="#E8C14D"/><circle cx="72" cy="122" r="2.5" fill="#E8C14D"/><rect x="52" y="128" width="16" height="11" rx="2" fill="#3D5A8A" stroke="#2A2420" stroke-width="2"/><path d="M55 128v-4M65 128v-4" stroke="#E8C14D" stroke-width="2"/>' },
   'brust:smoking': { top: '#1E1E24', sleeve: '#1E1E24', chest: '<path d="M48 88l12 34 12-34z" fill="#FFFFFF" stroke="#2A2420" stroke-width="2"/><path d="M54 92l6 4 6-4-6 4z" fill="#C8443A" stroke="#2A2420" stroke-width="1.5"/><circle cx="60" cy="110" r="1.8" fill="#2A2420"/>' },
   'beine:kuhfleck': { pants: '#FFFDF5', shoes: '#2A2420', legExtra: '<g fill="#2A2420"><ellipse cx="46" cy="162" rx="5" ry="7"/><ellipse cx="74" cy="172" rx="4" ry="6"/><ellipse cx="50" cy="180" rx="3" ry="4"/></g>' },
   'brust:astronaut': { top: '#E9EEF2', sleeve: '#E9EEF2', chest: '<rect x="46" y="102" width="28" height="18" rx="3" fill="#5B6670" stroke="#2A2420" stroke-width="2"/><circle cx="53" cy="111" r="2.5" fill="#E2643A"/><circle cx="60" cy="111" r="2.5" fill="#F5D75B"/><circle cx="67" cy="111" r="2.5" fill="#4FB0E0"/><path d="M40 140h40" stroke="#E2643A" stroke-width="4"/>' },
@@ -90,7 +90,7 @@ const PARTS = {
   // v0.92 Rüstungs-Sets (Kopf = Helm über dem eigenen Kopf, Brust, Beine) – alle 3 an → Set-Effekt
   'kopf:ritter': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M60 8q6-12 18-10q-8 4-12 12z" fill="#C8443A"/><path d="M26 40Q26 6 60 6Q94 6 94 40z" fill="#C9D3DB"/><path d="M26 34h68v8H26z" fill="#8E98A2"/><path d="M56 40h8v14h-8z" fill="#8E98A2"/><path d="M40 14q8-4 14-4" fill="none" stroke="#FFFFFF" stroke-width="2.5"/></g>' },
   'brust:ritter': { top: '#AEB7C0', sleeve: '#8E98A2', chest: '<path d="M44 92h32v50l-16 8-16-8z" fill="#E9EEF2" stroke="#2A2420" stroke-width="2.5"/><path d="M60 98v40M48 112h24" stroke="#C8443A" stroke-width="6"/>' },
-  'beine:ritter': { pants: '#8E98A2', shoes: '#5B6670', legExtra: '<g fill="#C9D3DB" stroke="#2A2420" stroke-width="2"><circle cx="47" cy="166" r="5"/><circle cx="73" cy="166" r="5"/></g>' },
+  'beine:ritter': { pants: '#8E98A2', shoes: '#5B6670', legExtra: '<g fill="#C9D3DB" stroke="#2A2420" stroke-width="2"><path d="M40 152h16l-1 34H41z"/><path d="M64 152h16l-1 34H65z"/><path d="M41 166q7-6 14 0q-7 6-14 0zM65 166q7-6 14 0q-7 6-14 0z" fill="#E9EEF2"/></g><path class="gleam" d="M44 156v26M68 156v26" stroke="#FFFFFF" stroke-width="2.5" pathLength="100" stroke-dasharray="14 200" fill="none"/>' },
   'kopf:samurai': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M22 52q2-14 8-18h60q6 4 8 18l-12-6H34z" fill="#3A2A3A"/><path d="M28 38Q28 8 60 8Q92 8 92 38z" fill="#8E2A2A"/><path d="M28 34h64" stroke="#C9A227" stroke-width="3"/><path d="M60 30Q42 14 34 -4Q48 6 60 20Q72 6 86 -4Q78 14 60 30z" fill="#E0B23C"/><circle cx="60" cy="26" r="5" fill="#C9A227"/></g>' },
   'brust:samurai': { top: '#8E2A2A', sleeve: '#3A2A3A', chest: '<g stroke="#C9A227" stroke-width="2.5" fill="none"><path d="M38 104h44M38 116h44M39 128h42M40 140h40"/></g><path d="M52 96v50M68 96v50" stroke="#2A2420" stroke-width="1.5" stroke-dasharray="3 4"/>' },
   'beine:samurai': { pants: '#3A2E4A', shoes: '#2A2420', legL: 'M46 150Q42 170 44 188', legR: 'M74 150Q78 170 76 188', legExtra: '<g fill="#8E2A2A" stroke="#2A2420" stroke-width="2"><rect x="39" y="164" width="12" height="16" rx="2"/><rect x="69" y="164" width="12" height="16" rx="2"/></g>' },
@@ -99,10 +99,17 @@ const PARTS = {
   'brust:weihnachtsmann': { top: '#D02A3A', sleeve: '#D02A3A', chest: '<path d="M56 90h8v60h-8z" fill="#FFFDF5" stroke="#2A2420" stroke-width="2"/><path d="M36 128h48v9H36z" fill="#1E1E24" stroke="#2A2420" stroke-width="2"/><rect x="53" y="126" width="14" height="13" rx="2" fill="none" stroke="#E0B23C" stroke-width="3"/>' },
   'beine:weihnachtsmann': { pants: '#D02A3A', shoes: '#1E1E24', legExtra: '<g fill="#FFFDF5" stroke="#2A2420" stroke-width="2"><rect x="38" y="174" width="18" height="7" rx="3"/><rect x="64" y="174" width="18" height="7" rx="3"/></g>' },
   // v1.0.1 Goldene Hufe (Set Goldene Kuh) + Pharao-Set
-  'beine:goldhufe': { pants: 'url(#gold-glow)', shoes: '#D99519', feet: 'kuhhuf', legExtra: '<g fill="none" stroke="#FFF3B0" stroke-width="2"><path d="M44 158v14M76 158v14"/></g>' },
+  'beine:goldhufe': { pants: '#E0B23C', shoes: '#D99519', feet: 'kuhhuf', legExtra: '<g fill="none" stroke="#FFF3B0" stroke-width="2"><path d="M44 158v14M76 158v14"/></g><path d="M38 150h44" stroke="#FFE98A" stroke-width="3"/><g class="goldspark" fill="#FFF3B0"><path class="g1" d="M36 198l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z"/><path class="g2" d="M84 196l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z"/></g>' },
   'kopf:pharao': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M26 34Q26 4 60 4Q94 4 94 34L100 86H84L88 40H32L36 86H20z" fill="#F5C542"/><path d="M24 44h12M22 56h13M21 68h14M84 44h12M85 56h13M85 68h14M34 14q26-10 52 0M30 24q30-10 60 0" stroke="#1F4FA8" stroke-width="4" fill="none"/><path d="M28 34h64" stroke="#1F4FA8" stroke-width="5"/><path d="M56 22q4-10 8 0l-2 6h-4z" fill="#1F4FA8"/></g>' },
   'brust:pharao': { top: '#FFFDF5', sleeve: '#C8A27A', chest: '<path d="M36 92q24 22 48 0v10q-24 22-48 0z" fill="#F5C542" stroke="#2A2420" stroke-width="2"/><path d="M38 98q22 18 44 0" stroke="#1F4FA8" stroke-width="3" fill="none"/><path d="M40 104q20 14 40 0" stroke="#C8443A" stroke-width="2.5" fill="none"/>' },
   'beine:pharao': { pants: '#FFFDF5', shoes: '#C99B5A', legExtra: '<path d="M38 150h44l-4 16H42z" fill="#FFFDF5" stroke="#2A2420" stroke-width="2"/><path d="M56 150v16M64 150v16" stroke="#F5C542" stroke-width="3"/>' },
+  // v1.6 neue Beine
+  'beine:gummistiefel': { pants: '#4E6FA3', shoes: '#F5C542', feet: 'gummi' },
+  'beine:cowboy': { pants: '#3D5A8A', shoes: '#8A5A2B', feet: 'cowboy', legExtra: '<path d="M38 150h44" stroke="#8A5A2B" stroke-width="5"/><rect x="54" y="146" width="12" height="9" rx="2" fill="#E0B23C" stroke="#2A2420" stroke-width="2"/>' },
+  'beine:hoverboard': { ride: 'hoverboard' },
+  'beine:moonboots': { pants: '#E9EEF2', shoes: '#E9EEF2', feet: 'moon' },
+  'beine:jetpack': { pants: '#5B6670', shoes: '#2A2420', legExtra: '<path d="M36 146h48" stroke="#2A2420" stroke-width="4"/><g stroke="#2A2420" stroke-width="2.5"><rect x="14" y="112" width="15" height="36" rx="6" fill="#C9D3DB"/><rect x="91" y="112" width="15" height="36" rx="6" fill="#C9D3DB"/><path d="M29 140h8M83 140h8" stroke-width="4"/></g><path d="M16 120h11M93 120h11" stroke="#C8443A" stroke-width="3"/><g class="rkfire jet" transform="translate(21.5 148)"><path class="f1" d="M-7 0q7 28 14 0z" fill="#FF6A1C"/><path class="f2" d="M-4 0q4 17 8 0z" fill="#FFF8D8"/></g><g class="rkfire jet" transform="translate(98.5 148)"><path class="f1" d="M-7 0q7 28 14 0z" fill="#FF6A1C"/><path class="f2" d="M-4 0q4 17 8 0z" fill="#FFF8D8"/></g>' },
+  'beine:lavastiefel': { pants: '#3A2A2A', shoes: '#2A2420', feet: 'lava', legExtra: '<path d="M44 156l4 8-3 6 4 8M74 158l-3 7 4 7-3 8" fill="none" stroke="#FF6A1C" stroke-width="2" class="lavaglow"/>' },
   'beine:raketenstiefel': { feet: 'duese', pants: '#5B6670', shoes: '#E2643A', legExtra: '<g class="flame"><path d="M40 196q0 8-4 12q8-2 8-10M80 196q0 8 4 12q-8-2-8-10" fill="#F6B13A" stroke="#B74A27" stroke-width="2"/></g>' },
 };
 
@@ -182,6 +189,12 @@ export const BOX_ITEMS = {
   'beine:samurai': { slot: 'beine', name: 'Samurai-Hakama', rarity: 'episch' },
   'kopf:astronaut': { slot: 'kopf', name: 'Raumhelm', rarity: 'legendaer' },
   'beine:goldhufe': { slot: 'beine', name: 'Goldene Hufe', rarity: 'legendaer' },
+  'beine:gummistiefel': { slot: 'beine', name: 'Gummistiefel', rarity: 'gewoehnlich' },
+  'beine:cowboy': { slot: 'beine', name: 'Cowboystiefel', rarity: 'selten' },
+  'beine:hoverboard': { slot: 'beine', name: 'Hoverboard', rarity: 'episch' },
+  'beine:moonboots': { slot: 'beine', name: 'Moonboots', rarity: 'episch' },
+  'beine:jetpack': { slot: 'beine', name: 'Jetpack-Hose', rarity: 'legendaer' },
+  'beine:lavastiefel': { slot: 'beine', name: 'Lava-Stiefel', rarity: 'legendaer' },
   'kopf:pharao': { slot: 'kopf', name: 'Pharaonen-Haube', rarity: 'legendaer' },
   'brust:pharao': { slot: 'brust', name: 'Pharaonen-Kragen', rarity: 'legendaer' },
   'beine:pharao': { slot: 'beine', name: 'Pharaonen-Schurz', rarity: 'legendaer' },
