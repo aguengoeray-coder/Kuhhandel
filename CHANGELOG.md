@@ -1,5 +1,19 @@
 # Änderungsprotokoll
 
+## v1.3.0 – Fehlerliste, Set-Knöpfe repariert, kürzere Tests (Alp 28.11. 13:13–13:29)
+
+- [x] **🐞 Fehler melden** (Menü am Tisch + Einstellungen): Text + automatisch Version, Gerät, Bildgröße, Spielsituation; alle sehen die Liste, „👍 auch bei mir“; Admin: „✅ erledigt“ und „📋 Alle offenen kopieren“ (fertiger Text für Claude). SQL `supabase/v1.3-fehlerliste.sql` (`feedback`, `feedback_add`, `feedback_vote`, `admin_feedback_done`).
+- [x] **Fix Sets:** „Anziehen“/„Anprobieren“ im Reiter Sets taten nichts (kaputtes Attribut seit v1.1); jetzt: vorhandene Sets werden angezogen, fehlende angeprobt (mit Hinweis, wo es die Teile gibt).
+- [x] **Set-Effekt wählen** deutlicher: Knopf „✨ Nur Effekt“ / „✨ Effekt an“ bei jedem kompletten Set.
+- [x] **Fix „gekaufte Sprüche/Emotes weg“:** Wer direkt im Spiel neu geladen hat (z. B. nach „Neue Version da“), bekam die gekauften Sachen erst nach einem Besuch der Startseite – jetzt werden sie auch am Tisch sofort geladen (Käufe waren nie verloren, alle noch in der Datenbank). Netzfehler → automatisch neuer Versuch.
+- [x] **Fix Admin-Geschenk an sich selbst:** Kontostand wird danach neu geladen (kam an, wurde nur nicht angezeigt).
+- [x] **iPad:** Spielende-Fenster wächst mit, Knöpfe nicht mehr abgeschnitten.
+- [x] **Goldrausch nur für einen** (Alp 28.11. 14:47): immer nur der Spieler mit der längsten Glückssträhne ist im Goldrausch; überholt ihn jemand, wandert er; die Aura ersetzt den Set-Effekt.
+- [x] Legendäre Gegenstände ohne goldenen Kreis (nur Leuchten + Funkeln).
+- [x] Startseite: unter der Figur steht der Spielername; der Set-Name nur bei komplettem Set.
+- [x] Mitspieler-Sets links/rechts: bis 5 Karten eine Reihe, sonst kompakter; wachsen nie in deine Figur oder deine Knöpfe (wird nach dem Zeichnen gemessen).
+- [x] **Tests kürzer:** Browser-Tests nur noch iPhone Pro (852×393) und iPad (1180×820), 4 statt 6 Partien (~15 statt ~45 min).
+
 ## v1.2.0 – Goldrausch (Alp 28.11. 11:30)
 
 - [x] **Glückssträhne pro Spieler** (`state.streak`, nur Optik – keine Regeländerung): Kuhhandel gewonnen +2, verloren −3, Versteigerung zum Schnäppchen (≤ Tierwert) +1.

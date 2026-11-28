@@ -4,9 +4,7 @@ const require = createRequire(import.meta.url);
 export const { chromium } = require('playwright');
 
 // Bildschirmgrößen (Querformat), die jede Ansicht bestehen muss
-export const VIEWPORTS = [
+export const VIEWPORTS = [ // v1.3 (Alp 28.11.): gespielt wird nur auf iPhone Pro und iPad → nur diese Größen, Tests ~15 statt ~45 min
   { name: 'iphone-pro', width: 852, height: 393 },
-  { name: 'iphone-se', width: 667, height: 375 },
-  { name: 'iphone-max', width: 932, height: 430 },
-  { name: 'android', width: 800, height: 360 },
+  { name: 'ipad', width: 1180, height: 820 },
 ];

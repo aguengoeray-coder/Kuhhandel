@@ -4564,3 +4564,32 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 /* Blitz-Zeichen am Namen schwebt (ändert die Platzgröße nicht) */
 .prow.gr1 .ribbon-s, .prow.gr2 .ribbon-s { position: relative; }
 .prow.gr1 .ribbon-s::after, .prow.gr2 .ribbon-s::after { position: absolute; right: -4px; top: -11px; font-size: 12px; line-height: 1; filter: drop-shadow(0 0 3px #FFB300); pointer-events: none; }
+/* v1.3 iPad: Spielende-Fenster darf auf hohen Bildschirmen mitwachsen (Knöpfe wurden abgeschnitten) */
+.stage .overlay.endtable { height: clamp(374px, calc(100% - 60px), 480px); }
+/* v1.3 Fehlerliste */
+.bugform { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; }
+.bugform textarea, .bugcopytxt { width: 100%; box-sizing: border-box; border: 2px solid #2A2420; border-radius: 12px; padding: 8px 10px; font: 600 14px/1.35 var(--font-body, inherit); resize: vertical; background: #fff; color: #1d2433; }
+.bugform-f { display: flex; align-items: center; gap: 8px; } .bugform-f small { flex: 1; min-width: 0; opacity: .7; font-size: 11px; }
+.bugcopy { width: 100%; margin: 4px 0 6px; }
+.bug-sec { margin: 8px 0 4px; font-size: 14px; }
+.buglist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.bug { background: #F3F1EA; border-radius: 12px; padding: 8px 10px; }
+.bug.done { opacity: .6; } .bug.empty { text-align: center; font-weight: 700; }
+.bug-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; } .bug-h small { opacity: .65; font-size: 11px; }
+.bug p { margin: 3px 0 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bug-a { display: flex; gap: 6px; flex-wrap: wrap; } .bug-a .abtn.on { background: #2E7D4F; color: #fff; }
+.bug-done summary { cursor: pointer; font-weight: 700; margin: 8px 0 4px; }
+/* v1.3 viele Sets an der Seite (spät im Spiel, 4 Spieler): Kärtchen schrumpfen mit der Anzahl, damit der Platz nicht in Figur/Knöpfe wächst */
+.stage .gright .prow .chips { row-gap: 8px; }
+.stage .gright .prow .chip.card em { bottom: -5px; }
+/* v1.3 (Alp): legendäre Gegenstände ohne goldenen Kreis – nur leichtes Leuchten + Funkeln */
+.sa-ding.leg { filter: drop-shadow(0 0 3px rgba(255,216,107,.9)); }
+/* Goldrausch überschreibt den Set-Effekt der Figur */
+.mefig:is(.gr1, .gr2) :is(.fxb, .fxf), .prow:is(.gr1, .gr2) .seatfig :is(.fxb, .fxf) { display: none; }
+/* v1.3: Seiten-Sets breiter (5 pro Reihe) statt höher – weniger Reihen, nichts rutscht in Figur/Knöpfe */
+@media (min-width: 780px) { .stage .gright .prow.seat-l .chips:not(.x), .stage .gright .prow.seat-r .chips:not(.x) { max-width: 172px; } }
+/* v1.3 Seiten-Sets: bis 5 Karten eine Reihe in voller Größe, 6–10 zwei Reihen etwas kleiner, mehr noch kleiner */
+.stage .gright .prow.seat-l .chips.c2, .stage .gright .prow.seat-r .chips.c2 { zoom: .8; }
+.stage .gright .prow.seat-l .chips.c3, .stage .gright .prow.seat-r .chips.c3 { zoom: .7; }
+/* v1.3 iPhone quer: „Alle anderen haben gepasst“ ohne Zusatzzeile, damit die Knopfspalte nicht in die Mitspieler-Sets wächst */
+@media (max-height: 450px) { .dock .lastin small { display: none; } .dock .lastin { padding: 5px 9px; } }

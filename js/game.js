@@ -316,6 +316,22 @@ export const calmFor = (le, deckLeft, state = null) => (state && setTempo(state)
 export const CALM_TYPES = ['auction_won', 'trade', 'special_won', 'rat_taken', 'money_drawn', 'divided'];
 
 // Auslage passt nicht in ihre Breite (viele Tiere, große Schrift)? Dann nachmessen und kleiner machen – nie unter die Knöpfe
+// v1.3: Tier-Sets der Mitspieler links/rechts dürfen nie in deine Figur (links) oder deine Knöpfe (rechts) wachsen → nach dem Zeichnen messen und verkleinern
+function fitSeats(root) {
+  const stage = root.querySelector('.stage'); if (!stage) return;
+  const tops = (sel) => [...stage.querySelectorAll(sel)].map((e) => e.getBoundingClientRect()).filter((r) => r.height > 0);
+  for (const [seat, sel] of [['seat-l', '.mefig'], ['seat-r', '.lastin, .dock, .bidpad, .waitbtn.mine, .buzzer']]) {
+    const row = stage.querySelector(`.prow.${seat}`); const chips = row?.querySelector('.chips'); if (!chips) continue;
+    chips.style.zoom = '';
+    const c = chips.getBoundingClientRect(); if (!c.height) continue;
+    const rb = row.getBoundingClientRect(); const obs = tops(sel).filter((r) => r.right > rb.left && r.left < rb.right && r.top > c.top);
+    if (!obs.length) continue;
+    const limit = Math.min(...obs.map((r) => r.top)) - 14; // etwas Luft: Figur hüpft/jubelt
+    const over = row.getBoundingClientRect().bottom - limit; if (over <= 0) continue;
+    const z0 = Number(getComputedStyle(chips).zoom) || 1;
+    chips.style.zoom = String(Math.max(0.4, z0 * (c.height - over) / Math.max(1, c.height)).toFixed(3));
+  }
+}
 function fitAuslage(root) {
   const a = root.querySelector('.auslage');
   if (!a || !a.children.length) return;
@@ -766,6 +782,7 @@ export function renderGame(root, ctx) {
   // Kennung aus Nummer und Art: zwei Ereignisse mit derselben Nummer (z. B. „umsonst“ und danach Geldschein) gelten trotzdem beide als neu
   const evN = v.lastEvent ? `${v.lastEvent.n}|${v.lastEvent.type}` : null;
   const evFresh = fresh && evN != null && local.seenEvN !== evN;
+  try { window.__khGame = { phase: state.phase, zug: logNo(state), spieler: state.players.length, modus: [state.settings?.duo && 'zu zweit', state.settings?.boerse && 'Börsen-Chaos', state.settings?.turbo && 'Turbo', state.settings?.teams && 'Teams'].filter(Boolean).join(', ') || 'klassisch', at: Date.now() }; } catch { /* nur für Fehlermeldungen */ }
   // v0.82 Geheimauftrag: 🎯 oben links, am Anfang einmal von selbst offen (6 s), Antippen zeigt Auftrag und Stand
   const myMission = v.missions && v.missions[meId] ? missionStatus(v, meId) : null;
   if (myMission && local.missAuto === undefined) { local.missAuto = logNo(v) <= 4 ? Date.now() + 6500 : 0; if (local.missAuto) { local.missOpen = true; later.push(['bell', 600]); } }
@@ -927,7 +944,7 @@ export function renderGame(root, ctx) {
         ${turnMark ? '<span class="turnhint" aria-label="ist dran">⏳</span>' : ''}<div class="avatar seatfig" style="--c:${SEAT_COLORS[i]};--bd:-${(i * 0.9).toFixed(1)}s" aria-hidden="true">${aliveFig(p, i, avatarLookup(p.id)?.shop)}${kingHat(p.id)}${moodHtml(p.id)}</div>${ouchOn(p.id) ? `<span class="ouchwrap">${OUCH}</span>` : ''}
         <div class="pname"><span class="ribbon-s" style="--c:${SEAT_COLORS[i]}">${myPartner === p.id ? '<b class="teamb" title="Dein Partner">🤝</b>' : ''}${esc(isMe ? 'Du' : p.name)}</span><span class="tag-s ${isLeader && fresh ? 'pop' : ''}">${status === karten(count) ? `<span class="mcnt" title="${karten(count)} Geld">${isMe ? '<i></i>' : `<span class="mfan" aria-hidden="true" style="--n:${Math.min(count, 8)}">${Array.from({ length: Math.min(count, 8) }, (_, k) => `<i style="--k:${k}"></i>`).join('')}</span>`}${count}${myPartner === p.id && Array.isArray(p.money) ? `<b class="psum">${p.money.reduce((a, b) => a + b, 0)}</b>` : ''}</span>` : status}</span></div>
       </div>
-      <div class="chips ${(chips.match(/class="chip /g) || []).length > 8 ? 'manych' : ''}" data-a="setsOf" data-v="${esc(p.id)}" style="--nchip:${(chips.match(/class="chip /g) || []).length}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
+      <div class="chips ${(() => { const n = (chips.match(/class="chip /g) || []).length; return n > 10 ? 'manych c3' : n > 5 ? 'c2' : ''; })()}" data-a="setsOf" data-v="${esc(p.id)}" style="--nchip:${(chips.match(/class="chip /g) || []).length}" role="button" aria-label="Alle Sets von ${esc(p.name)} ansehen">${chips}</div>
     </div>`;
   }).join('');
 
@@ -1669,6 +1686,7 @@ export function renderGame(root, ctx) {
       <button type="button" class="pill pill-white pill-small" data-a="intros">⚔️ Duell-Intros: ${ctx.introsOff ? 'aus' : 'an'}</button>
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="modal" data-v="mystats">📊 Statistik</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="stats">🏆 Bestenliste</button></div>
+      <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="modal" data-v="bugs">🐞 Fehler melden</button></div>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
       ${ctx.push != null ? `<button type="button" class="pill pill-white pill-small" data-a="push">🔔 Benachrichtigung: ${ctx.push ? 'an' : 'aus'}</button>` : ''}
@@ -2735,6 +2753,7 @@ export function renderGame(root, ctx) {
   fitStage();
   fitTop(root);
   fitAuslage(root);
+  fitSeats(root);
   aimFly(root);
   aimFx(root);
   routeFx(root);

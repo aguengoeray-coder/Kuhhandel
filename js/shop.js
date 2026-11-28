@@ -186,8 +186,8 @@ export function renderShop(root, ctx) {
       const base = x.kind === 'avatar' ? x.id : (activeAvatar || 'noergler');
       return '<div class="wd-setrow' + (full ? ' full' : '') + (wearing(x) ? ' on' : '') + '"><span class="sr-fig">' + shopAvatarFull(base, 'still', o) + '</span>' +
         '<span class="sr-txt"><b>' + esc(x.name) + '</b><small><span class="sr-dots">' + x.parts.map((p) => '<i class="' + (x.have.includes(p) ? 'ok' : '') + '"></i>').join('') + '</span>' + (full ? 'Komplett · ✨ ' + esc(SET_FX[x.id].name) : x.have.length + ' von 3 · ' + (x.kind === 'avatar' ? '🛒 Shop' : '📦 Kiste')) + '</small></span>' +
-        '<span class="sr-acts">' + (full ? '<button class="sr-btn fxb' + (draft.fx === x.id ? ' on' : '') + '" data-setfx="' + esc(x.id) + '" title="Nur den Effekt im Hintergrund – zu jedem Outfit">✨' + (draft.fx === x.id ? ' An' : '') + '</button>' : '') +
-        '<button class="sr-btn' + (full ? ' go' : '') + '" data-wearset=""' + esc(x.id) + '">' + (wearing(x) ? '✓ Trägst du' : full ? 'Anziehen' : 'Anprobieren') + '</button></div>'; }).join('') + '</div>';
+        '<span class="sr-acts">' + (full ? '<button class="sr-btn fxb' + (draft.fx === x.id ? ' on' : '') + '" data-setfx="' + esc(x.id) + '" title="Nur den Hintergrund-Effekt – zu jedem Outfit tragen">' + (draft.fx === x.id ? '✨ Effekt an' : '✨ Nur Effekt') + '</button>' : '') +
+        '<button class="sr-btn' + (full ? ' go' : '') + '" data-wearset="' + esc(x.id) + '">' + (wearing(x) ? '✓ Trägst du' : full ? 'Anziehen' : 'Anprobieren') + '</button></span></div>'; }).join('') + '</div>';
   };
   // v1.0 Schmiede-Leiste: 2 Gegenstände gleicher Seltenheit → 1 Gegenstand der nächsten Seltenheit
   const forgeBar = () => {
@@ -365,7 +365,7 @@ export function renderShop(root, ctx) {
     root.querySelectorAll('[data-setfx]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.setfx; const d = { ...draft }; if (d.fx === id) delete d.fx; else d.fx = id; draft = d; saveOutfit(); }));
     root.querySelectorAll('[data-onlymine]').forEach((b) => b.addEventListener('click', () => { onlyMine = b.dataset.onlymine === '1'; render(); }));
     root.querySelectorAll('[data-wearset]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.wearset; const ps = BOX_SETS[id] ? boxSetParts(id) : ['kopf', 'brust', 'beine'].map((k) => k + ':' + id); draft = { ...draft, kopf: ps[0], brust: ps[1], beine: ps[2] }; infoId = null;
-      const mine = partsOwned(); if (ps.every((p) => mine.has(p) || inventory.has(p)) && JSON.stringify(draft) !== JSON.stringify(outfit)) return saveOutfit(); render(); }));
+      const mine = partsOwned(); if (ps.every((p) => mine.has(p) || inventory.has(p)) && JSON.stringify(draft) !== JSON.stringify(outfit)) return saveOutfit(); notice = ps.every((p) => mine.has(p) || inventory.has(p)) ? '' : '👀 Anprobe – fehlende Teile gibt es ' + (BOX_SETS[id] ? 'in der Kuh-Kiste' : 'mit dem Avatar im Shop'); noticeKind = 'info'; render(); }));
     root.querySelectorAll('[data-tryitem]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.tryitem; const it = BOX_ITEMS[id]; if (!it) return;
       if (it.slot === 'design') { tab = 'garderobe'; return render(); } tab = 'garderobe'; slot = it.slot; draft = { ...draft, [it.slot]: id }; infoId = id; render(); }));
     root.querySelector('[data-fullshop]')?.addEventListener('click', () => { only = null; tab = 'kiste'; render(); });
