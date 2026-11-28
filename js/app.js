@@ -19,7 +19,7 @@ function heroLabel(a) { const st = setOf(fullOutfit(a.id, shopMe.outfit || {}));
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '1.6.0';
+export const APP_VERSION = '1.7.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1291,6 +1291,7 @@ async function loadShop(force = false) {
   if (DEMO) {
     const av = params.get('myav') || 'noergler';
     const invL = (params.get('inv') || 'ding:donnerhammer,brust:goldruestung,beine:raketenstiefel,kopf:goldkuh,ding:gummihuhn,design-winter').split(',').filter(Boolean).map((x) => x.split('*'));
+    shopMe.friends = [{ id: "d1", name: "Nico" }, { id: "d2", name: "Mira" }, { id: "d3", name: "Tom" }]; // v1.7 Demo
     Object.assign(shopMe, { inventory: new Set(invL.map(([id]) => id)), invCount: Object.fromEntries(invL.map(([id, n]) => [id, Number(n) || 1])), outfit: {}, boxState: { since_legend: 21, since_epic: 3 } });
     Object.assign(shopMe, { state: 'ok', balance: params.get('dub') ? Number(params.get('dub')) : 105, active: av, owned: new Set([av, 'noergler', 'boersen-gauner', 'spruch-nico', 'spruch-gute-ideen', ...(params.get('eigen') ? ['spruch-eigener'] : [])]), freeLeft: params.get('free') === '0' ? 0 : 2, custom: params.get('eigen') || '' });
     if (params.get('eigen')) { customSayings.set(me.id, params.get('eigen')); customSayings.set('u2', 'Nico, schrei nicht!'); }
@@ -1311,6 +1312,8 @@ async function loadShop(force = false) {
     const wo = await sb.from('shop_wallets').select('outfit').eq('user_id', me.id).maybeSingle().then((r) => r, () => ({ data: null }));
     const bs = await sb.from('shop_box_state').select('since_legend, since_epic').eq('user_id', me.id).maybeSingle().then((r) => r, () => ({ data: null }));
     shopMe.inventory = new Set((inv?.data || []).map((x) => x.item_id)); shopMe.invCount = Object.fromEntries((inv?.data || []).map((x) => [x.item_id, x.n || 1])); shopMe.outfit = wo?.data?.outfit || {}; sb.rpc('shop_box_status').then((r) => { if (r?.data) { shopMe.daily = !!r.data.daily; shopMe.freeBoxes = Number(r.data.free_boxes) || 0; } }, () => {}); sb.from('shop_wallets').select('outfit_presets').eq('user_id', me.id).maybeSingle().then((r) => { if (Array.isArray(r?.data?.outfit_presets)) shopMe.presets = r.data.outfit_presets; }, () => {}); // v0.95 Outfits im Konto (ohne Spalte: Gerät)
+    sb.from('shop_box_state').select('book_claimed').eq('user_id', me.id).maybeSingle().then((r) => { if (Array.isArray(r?.data?.book_claimed)) shopMe.bookClaimed = r.data.book_claimed; }, () => {}); // v1.7
+    sb.from('profiles').select('id, name').neq('id', me.id).order('name').limit(60).then((r) => { if (Array.isArray(r?.data)) shopMe.friends = r.data.filter((x) => x.name); }, () => {});
     shopMe.boxState = bs?.data || { since_legend: 0, since_epic: 0 }; shopMe.boxOk = !inv?.error && Array.isArray(inv?.data);
     if (Object.keys(shopMe.outfit).length) shopOutfits.set(me.id, shopMe.outfit); else shopOutfits.delete(me.id);
     const cs = await sb.rpc('shop_public_sayings', { p_ids: [me.id] }).then((r) => r, () => ({ data: null })); // v0.63
@@ -1336,7 +1339,7 @@ async function openShop(startTab, only) {
   renderShop(root, {
     me: { id: me.id, name: me.name },
     balance: shopMe.balance, owned: shopMe.owned, activeAvatar: shopMe.active, freeLeft: shopMe.freeLeft, customText: shopMe.custom,
-    inventory: shopMe.inventory || [], outfit: shopMe.outfit || {}, boxState: shopMe.boxState, tab: startTab || params.get('shoptab') || undefined, only: only || undefined, invCount: shopMe.invCount || {}, presets: shopMe.presets || null,
+    inventory: shopMe.inventory || [], outfit: shopMe.outfit || {}, boxState: shopMe.boxState, tab: startTab || params.get('shoptab') || undefined, slot: params.get('shopslot') || undefined, only: only || undefined, invCount: shopMe.invCount || {}, presets: shopMe.presets || null,
     savePresets(p) { shopMe.presets = p; if (!DEMO) sb.rpc('shop_set_presets', { p_presets: p }).then(() => {}, () => {}); },
     async openBox() {
       const inv = (shopMe.inventory = shopMe.inventory || new Set()); const cnt = (shopMe.invCount = shopMe.invCount || {});
@@ -1357,6 +1360,20 @@ async function openShop(startTab, only) {
     },
     boxStatus: () => ({ daily: shopMe.daily !== false, free: shopMe.freeBoxes || 0 }),
     // v1.0 Schmiede: 2 Gegenstände gleicher Seltenheit → 1 der nächsten
+    // v1.7 Sammelbuch + Doppeltes verschenken
+    bookClaimed: () => shopMe.bookClaimed || [],
+    async claimBook(level) {
+      const R = { 25: { boxes: 3, dublonen: 0 }, 50: { boxes: 0, dublonen: 250 }, 75: { boxes: 10, dublonen: 0 }, 100: { boxes: 0, dublonen: 1000 } };
+      let res = { level, ...R[level] };
+      if (!DEMO) { const { data, error } = await sb.rpc('shop_claim_book', { p_level: level }); if (error) throw err(error, 'Abholen hat nicht geklappt.'); res = data || res; }
+      shopMe.bookClaimed = [...(shopMe.bookClaimed || []), level]; shopMe.freeBoxes = (shopMe.freeBoxes || 0) + (Number(res.boxes) || 0); shopMe.balance = (shopMe.balance || 0) + (Number(res.dublonen) || 0);
+      return res;
+    },
+    friends: () => shopMe.friends || [],
+    async giftItem(to, id) {
+      if (!DEMO) { const { error } = await sb.rpc('shop_gift_item', { p_to: to, p_item: id }); if (error) throw err(error, 'Verschenken hat nicht geklappt.'); }
+      const cnt = (shopMe.invCount = shopMe.invCount || {}); cnt[id] = Math.max(1, (cnt[id] || 2) - 1);
+    },
     async combine(a, b) {
       const cnt = (shopMe.invCount = shopMe.invCount || {}); const inv = (shopMe.inventory = shopMe.inventory || new Set());
       let data;

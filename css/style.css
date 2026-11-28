@@ -4638,3 +4638,14 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 .sa-ding.gleam, .sa-body .gleam { animation: gleam 2.6s ease-in-out infinite; }
 .jet path { transform-box: fill-box; transform-origin: 50% 0; animation: rkflick .1s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .ride *, .ride, .sa-rider, .lavaglow, .goldspark path, .spur circle, .jet path { animation: none !important; } }
+/* v1.7 Gag des Gegenstands beim Jubel: 3 Emojis fliegen fächerförmig hoch */
+.cheerfx .gag { position: absolute; top: -10px; left: 50%; width: 0; height: 0; }
+.cheerfx.burst .gag { position: static; display: block; width: 0; height: 0; margin: 0 auto; }
+.cheerfx .gag i { position: absolute; left: -12px; top: 0; font-style: normal; font-size: 24px; opacity: 0; animation: gagfly 1.5s ease-out both; animation-delay: calc(var(--k) * 120ms); }
+@keyframes gagfly { 0% { opacity: 0; transform: translate(0, 10px) scale(.4) rotate(0); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(calc((var(--k) - 1) * 34px), -64px) scale(1.2) rotate(calc((var(--k) - 1) * 25deg)); } }
+/* v1.7 Seltenheit am Tisch: Namensschild-Rahmen ab Episch */
+.prow.rar-episch .ribbon-s { box-shadow: inset 0 0 0 2px #B57BFF; }
+.prow.rar-legendaer .ribbon-s { box-shadow: inset 0 0 0 2px #FFD23F, 0 0 8px rgba(255, 210, 63, .6); }
+.prow.rar-mythisch .ribbon-s { box-shadow: inset 0 0 0 2px #fff, 0 0 10px rgba(255, 120, 220, .7); background-image: linear-gradient(90deg, rgba(255,92,138,.35), rgba(124,240,255,.35), rgba(245,230,66,.35)); }
+.prow.gr1 .ribbon-s, .prow.gr2 .ribbon-s { box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .cheerfx .gag i { animation-duration: .01s; } }

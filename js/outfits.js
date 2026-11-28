@@ -47,6 +47,9 @@ const DING_ART = {
   sternenbogen: `<g ${S}><path d="M100 140q34-40 4-96" fill="none" stroke="#5B4A7A" stroke-width="5"/><path d="M100 140L104 44" stroke="#FFE98A" stroke-width="1.5"/><path class="spark" d="M112 66l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM116 118l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" fill="#FFE98A"/></g>`,
   sense: `<g ${S}><path d="M90 140L112 48" stroke="#5B3A2E" stroke-width="5" fill="none"/><path d="M112 50q-30-10-46 14q20-8 44-6z" fill="#E9EEF2"/><path d="M110 52q-24-6-38 8" fill="none" stroke="#F5C542" stroke-width="2"/></g>`,
   // Mythisch (bunt): Regenbogen-Glanz
+  karotte: ['🥕', '🐰', '🥕'], auktionshammer: ['🔨', '💰', '🔨'], kuhglocke: ['🔔', '🎵', '🐄'], lasso: ['🤠', '💨', '🤠'], goldhammer: ['🔨', '🪙', '✨'],
+  geldkoffer: ['💰', '💸', '💵'], gurkensaebel: ['🥒', '⚔️', '🥒'], kristallglocke: ['🔔', '💎', '✨'], holzschwert: ['🪵', '⚔️', '💨'], eisenschwert: ['⚔️', '✨', '⚔️'],
+  lanze: ['🏇', '💨', '✨'], katana: ['🗡️', '🌸', '💨'],
   regenbogenklinge: `<g ${S}><defs><linearGradient id="rbw" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF4F4F"/><stop offset=".2" stop-color="#FFB02E"/><stop offset=".4" stop-color="#F5E642"/><stop offset=".6" stop-color="#4FD86A"/><stop offset=".8" stop-color="#4FA8FF"/><stop offset="1" stop-color="#B84FFF"/></linearGradient></defs><path d="M89 134l5-12" stroke="#2A2420" stroke-width="6"/><path d="M84 120l20 7" stroke="#F5C542" stroke-width="6"/><path d="M92 122L116 44l6 3-1 6-22 74z" fill="url(#rbw)"/><path class="spark" d="M124 40l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#FFFFFF"/></g>`,
   kosmoshammer: `<g ${S}><path d="M90 136L106 76" stroke="#2A2440" stroke-width="6" fill="none"/><rect x="92" y="52" width="34" height="22" rx="5" fill="#2A1B5C" transform="rotate(16 109 63)"/><circle cx="104" cy="60" r="2" fill="#FFFFFF"/><circle cx="114" cy="66" r="1.5" fill="#FFE98A"/><circle cx="120" cy="58" r="1.8" fill="#BFE6FF"/><path d="M96 56q14-8 30 6" fill="none" stroke="#B84FFF" stroke-width="2"/></g>`,
   einhornlanze: `<g ${S}><path d="M84 150L112 40" stroke="#FFFDF5" stroke-width="6" fill="none"/><path d="M112 40l3-18 4 20z" fill="#FFE98A"/><path d="M98 96l10 3M102 82l10 3M106 68l10 3" stroke="#FF9AD5" stroke-width="3"/><path d="M110 52q-10 6-16 0q8-2 12-8" fill="#B84FFF"/></g>`,
@@ -88,6 +91,15 @@ const PARTS = {
   'beine:traktor': { ride: 'traktor' },
   'beine:wolke': { ride: 'wolke' },
   // v0.92 Rüstungs-Sets (Kopf = Helm über dem eigenen Kopf, Brust, Beine) – alle 3 an → Set-Effekt
+  // v1.7 neue Köpfe (über dem eigenen Kopf, wie Helme)
+  'kopf:cowboyhut': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M10 26q50 14 100 0q-4 8-16 10H26q-12-2-16-10z" fill="#A86A33"/><path d="M34 24q0-22 26-22t26 22z" fill="#C2843F"/><path d="M34 20h52" stroke="#5B3A1E" stroke-width="5"/></g>' },
+  'kopf:kochmuetze': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M34 24q-14-4-10-18q8-10 18-4q6-10 18-8q12-2 18 8q10-6 18 4q4 14-10 18z" fill="#FFFFFF"/><rect x="34" y="20" width="52" height="10" rx="2" fill="#F3F1EA"/></g>' },
+  'kopf:taucherbrille': { helm: '<g stroke="#2A2420" stroke-width="2.5"><path d="M18 36h84" stroke="#FFB02E" stroke-width="6"/><rect x="28" y="24" width="64" height="24" rx="10" fill="#7FD3F0" fill-opacity=".55"/><path d="M60 26v20" stroke-width="3"/><path d="M96 40q10 0 10-14v-18" fill="none" stroke="#FFB02E" stroke-width="5"/><circle cx="106" cy="6" r="4" fill="#FFB02E"/></g>' },
+  'kopf:partyhut': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M44 24L62 -14L80 24z" fill="#FF5C8A"/><path d="M50 12l20 0M54 2l14 0" stroke="#F5E642" stroke-width="4"/><circle cx="62" cy="-15" r="5" fill="#7CF0FF"/><path d="M44 24q18 6 36 0" fill="none"/></g>' },
+  'kopf:wikinger': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M28 30Q22 6 6 4q4 18 22 30z" fill="#FFFDF5"/><path d="M92 30Q98 6 114 4q-4 18-22 30z" fill="#FFFDF5"/><path d="M28 34Q28 6 60 6Q92 6 92 34z" fill="#9AA3AA"/><path d="M28 32h64" stroke="#C9A227" stroke-width="5"/><path d="M60 6v26" stroke="#C9A227" stroke-width="4"/></g>' },
+  'kopf:krone': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M32 30l-4-24 16 12 16-18 16 18 16-12-4 24z" fill="#F5C542"/><circle cx="60" cy="14" r="4" fill="#C8243A"/><circle cx="44" cy="22" r="3" fill="#3B82F6"/><circle cx="76" cy="22" r="3" fill="#3FA34D"/></g>' },
+  'kopf:heiligenschein': { helm: '<g class="halo"><ellipse cx="60" cy="0" rx="30" ry="8" fill="none" stroke="#FFE98A" stroke-width="6"/><ellipse cx="60" cy="0" rx="30" ry="8" fill="none" stroke="#FFFFFF" stroke-width="2"/></g>' },
+  'kopf:hoerner': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M34 22Q20 4 28 -12q4 14 16 26z" fill="#C8243A"/><path d="M86 22Q100 4 92 -12q-4 14-16 26z" fill="#C8243A"/><path class="flick" d="M28 -12q2-8 6-10q-1 6 2 8z" fill="#FF6A1C" stroke="none"/><path class="flick" d="M92 -12q-2-8-6-10q1 6-2 8z" fill="#FF6A1C" stroke="none"/></g>' },
   'kopf:ritter': { helm: '<g stroke="#2A2420" stroke-width="2.5" stroke-linejoin="round"><path d="M60 8q6-12 18-10q-8 4-12 12z" fill="#C8443A"/><path d="M26 40Q26 6 60 6Q94 6 94 40z" fill="#C9D3DB"/><path d="M26 34h68v8H26z" fill="#8E98A2"/><path d="M56 40h8v14h-8z" fill="#8E98A2"/><path d="M40 14q8-4 14-4" fill="none" stroke="#FFFFFF" stroke-width="2.5"/></g>' },
   'brust:ritter': { top: '#AEB7C0', sleeve: '#8E98A2', chest: '<path d="M44 92h32v50l-16 8-16-8z" fill="#E9EEF2" stroke="#2A2420" stroke-width="2.5"/><path d="M60 98v40M48 112h24" stroke="#C8443A" stroke-width="6"/>' },
   'beine:ritter': { pants: '#8E98A2', shoes: '#5B6670', legExtra: '<g fill="#C9D3DB" stroke="#2A2420" stroke-width="2"><path d="M40 152h16l-1 34H41z"/><path d="M64 152h16l-1 34H65z"/><path d="M41 166q7-6 14 0q-7 6-14 0zM65 166q7-6 14 0q-7 6-14 0z" fill="#E9EEF2"/></g><path class="gleam" d="M44 156v26M68 156v26" stroke="#FFFFFF" stroke-width="2.5" pathLength="100" stroke-dasharray="14 200" fill="none"/>' },
@@ -181,6 +193,14 @@ export const BOX_ITEMS = {
   'ding:katana': { slot: 'ding', name: 'Katana', rarity: 'episch' },
   'ding:flammenschwert': { slot: 'ding', name: 'Flammenschwert', rarity: 'legendaer' },
   // v0.92 Rüstungs-Sets (Kopf + Brust + Beine desselben Sets → Set-Effekt); month = nur in diesem Monat in der Kiste
+  'kopf:cowboyhut': { slot: 'kopf', name: 'Cowboyhut', rarity: 'gewoehnlich' },
+  'kopf:kochmuetze': { slot: 'kopf', name: 'Kochmütze', rarity: 'gewoehnlich' },
+  'kopf:taucherbrille': { slot: 'kopf', name: 'Taucherbrille', rarity: 'selten' },
+  'kopf:partyhut': { slot: 'kopf', name: 'Partyhut', rarity: 'selten' },
+  'kopf:wikinger': { slot: 'kopf', name: 'Wikingerhelm', rarity: 'episch' },
+  'kopf:krone': { slot: 'kopf', name: 'Krone', rarity: 'episch' },
+  'kopf:heiligenschein': { slot: 'kopf', name: 'Heiligenschein', rarity: 'legendaer' },
+  'kopf:hoerner': { slot: 'kopf', name: 'Teufelshörner', rarity: 'legendaer' },
   'kopf:ritter': { slot: 'kopf', name: 'Ritterhelm', rarity: 'selten' },
   'brust:ritter': { slot: 'brust', name: 'Ritter-Wappenrock', rarity: 'selten' },
   'beine:ritter': { slot: 'beine', name: 'Ritter-Beinschienen', rarity: 'selten' },
@@ -320,3 +340,19 @@ export function partName(id, avatarName) {
   const s = SLOTS.find((x) => x.id === slot);
   return `${s ? s.name : slot}: ${avatarName ? avatarName(av) : av}`;
 }
+
+// v1.7 Gags je Gegenstand: wer ein Tier bekommt, dessen Gegenstand „macht was“ (statt nur 🎉)
+const GAGS = {
+  egitarre: ['🎸', '🎵', '🎶'], trompete: ['🎺', '🎵', '🎶'], zauberstab: ['✨', '⭐', '✨'], fliegenklatsche: ['💥', '🪰', '💥'], kochloeffel: ['🍲', '😋', '🥄'],
+  baguette: ['🥖', '🇫🇷', '🥐'], regenschirm: ['☔', '💧', '💧'], steinschleuder: ['🎯', '💫', '🎯'], fernrohr: ['🔭', '👀', '⭐'], dreizack: ['🌊', '🔱', '💧'],
+  lasersaebel: ['⚡', '✨', '⚡'], bumerang: ['🪃', '💨', '🪃'], koenigszepter: ['👑', '✨', '💎'], drachenaxt: ['🔥', '🐉', '🔥'], sternenbogen: ['🌟', '✨', '🌠'],
+  sense: ['🌾', '✨', '🌾'], gummihuhn: ['🐔', '🎵', '🐔'], melkeimer: ['🥛', '🐄', '🥛'], donnerhammer: ['⚡', '💥', '⚡'], heugabel: ['🌾', '🌾', '💨'],
+  karotte: ['🥕', '🐰', '🥕'], auktionshammer: ['🔨', '💰', '🔨'], kuhglocke: ['🔔', '🎵', '🐄'], lasso: ['🤠', '💨', '🤠'], goldhammer: ['🔨', '🪙', '✨'],
+  geldkoffer: ['💰', '💸', '💵'], gurkensaebel: ['🥒', '⚔️', '🥒'], kristallglocke: ['🔔', '💎', '✨'], holzschwert: ['🪵', '⚔️', '💨'], eisenschwert: ['⚔️', '✨', '⚔️'],
+  lanze: ['🏇', '💨', '✨'], katana: ['🗡️', '🌸', '💨'],
+  regenbogenklinge: ['🌈', '✨', '🌈'], kosmoshammer: ['🪐', '🌠', '💫'], einhornlanze: ['🦄', '🌈', '✨'], flammenschwert: ['🔥', '🔥', '✨'], kristallschwert: ['💎', '✨', '💎'],
+};
+export function itemGag(dingId) { const k = String(dingId || '').split(':')[1]; return GAGS[k] || null; }
+// höchste Seltenheit, die jemand trägt (für den Rahmen am Tisch)
+const RANK = { gewoehnlich: 1, selten: 2, episch: 3, legendaer: 4, mythisch: 5 };
+export function topRarity(o) { let best = null; for (const id of Object.values(o || {})) { const r = BOX_ITEMS[id]?.rarity; if (r && (!best || RANK[r] > RANK[best])) best = r; } return best && RANK[best] >= 3 ? best : null; }

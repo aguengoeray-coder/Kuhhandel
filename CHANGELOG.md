@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v1.7.0 – Sammelbuch, Verschenken, neue Köpfe, Gags (Alp 28.11. 18:45)
+
+- [x] **📖 Sammelbuch** (Anziehen → Sammelbuch): alle Kisten-Gegenstände nach Seltenheit, fehlende gesperrt; Belohnungen einmalig bei 25 % (3 Gratis-Kisten), 50 % (250 Dublonen), 75 % (10 Gratis-Kisten), 100 % (1000 Dublonen) – serverseitig `shop_claim_book`.
+- [x] **🎁 Doppeltes verschenken:** Gegenstand antippen → ab 2 Stück an einen Mitspieler schenken (`shop_gift_item`, eins bleibt immer bei dir).
+- [x] **8 neue Köpfe:** Cowboyhut, Kochmütze (gewöhnlich), Taucherbrille, Partyhut (selten), Wikingerhelm, Krone (episch), Heiligenschein, Teufelshörner (legendär).
+- [x] **Gags am Tisch:** Wer ein Tier bekommt, dessen Gegenstand macht was (E-Gitarre 🎶, Trompete 🎺, Zauberstab ✨, Fliegenklatsche 💥 …) statt nur 🎉.
+- [x] **Seltenheit am Tisch:** Namensschild mit Rahmen ab Episch (lila), Legendär (gold, leuchtet), Mythisch (bunt).
+- [x] SQL `supabase/v1.7-kiste-sammlung.sql`.
+
 ## v1.6.0 – Beine aufgewertet + 6 neue (Alp 28.11. 17:06)
 
 - [x] **Aufgewertet:** Rollschuhe (Rollen drehen), Stelzen (Federn, wippen), Skateboard (Flammen-Deck, Leuchtrollen, Ollie beim Jubeln), Mini-Traktor (Räder drehen, Rauch, Rundumleuchte), Wolke 7 (fluffiger, Regenbogen, Tropfen), Goldene Hufe (Goldsaum, Funken), Ritter-Beinschienen (echte Platten mit Glanz), Jogging-/Latzhose (Streifen, Bündchen, Tasche).
