@@ -13,7 +13,9 @@ import { haptic } from './haptics.js';
 import { renderShop, SHOP_SAYINGS, SHOP_CUSTOM, SCENE_ITEM, SHOP_EMOTES } from './shop.js';
 import { WHATS_NEW } from './whatsnew.js';
 import { shopAvatar, shopAvatarFull, SHOP_AVATARS, SHOP_AVATAR_CSS, SHOP_AVATAR_FULL_CSS } from './shopavatars.js';
-import { BOX_ITEMS, RARITIES, BOX_PRICE, BOX_SETS, boxSetParts } from './outfits.js';
+import { BOX_ITEMS, RARITIES, BOX_PRICE, BOX_SETS, boxSetParts, setOf, fullOutfit } from './outfits.js';
+// v1.3 Startseite: Set-Name nur, wenn man das Set komplett trägt – sonst der eigene Name
+function heroLabel(a) { const st = setOf(fullOutfit(a.id, shopMe.outfit || {})); return st ? (BOX_SETS[st]?.name || SHOP_AVATARS.find((x) => x.id === st)?.name || me?.name || '') : (me?.name || a.name); }
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
@@ -299,7 +301,7 @@ function homeItems() {
 // v0.52: dein aktiver Shop-Avatar steht groß neben dem Tisch (Tippen öffnet den Shop)
 function heroHtml() {
   const a = SHOP_AVATARS.find((x) => x.id === shopMe.active);
-  return a ? `<button type="button" class="hb-hero" data-dock="wear" data-tier="${a.tier}" aria-label="Dein Avatar: ${esc(a.name)} – anziehen">${shopAvatarFull(a.id, '', shopMe.outfit)}<small>${esc(a.name)}</small></button>`
+  return a ? `<button type="button" class="hb-hero" data-dock="wear" data-tier="${a.tier}" aria-label="Dein Avatar: ${esc(a.name)} – anziehen">${shopAvatarFull(a.id, '', shopMe.outfit)}<small>${esc(heroLabel(a))}</small></button>`
     : `<button type="button" class="hb-hero empty" data-dock="shop" aria-label="Avatar im Shop holen"><span class="hb-ghost" aria-hidden="true">?</span><small>Avatar holen</small></button>`;
 }
 

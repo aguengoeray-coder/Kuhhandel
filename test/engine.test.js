@@ -1244,9 +1244,11 @@ test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen
 
 test('v1.2 Goldrausch: Strähne steigt mit gewonnenen Kuhhandeln, fällt bei Niederlagen, nur Optik', async () => {
   const E = await import('../src/engine.js');
-  const st = { streak: {}, lastEvent: { type: 'x' } };
+  const st = { players: [{ id: 'a' }, { id: 'b' }], streak: {}, lastEvent: { type: 'x' } };
   assert.equal(E.streakLevel(st, 'a'), 0);
   st.streak.a = 3; assert.equal(E.streakLevel(st, 'a'), 1);
   st.streak.a = 6; assert.equal(E.streakLevel(st, 'a'), 2);
+  st.streak.b = 4; assert.equal(E.streakLevel(st, 'b'), 0, 'nur einer gleichzeitig');
+  st.streak.b = 7; assert.equal(E.streakLevel(st, 'b'), 2); assert.equal(E.streakLevel(st, 'a'), 0);
   assert.ok(E.STREAK_LV1 < E.STREAK_LV2 && E.STREAK_LV2 <= E.STREAK_MAX);
 });

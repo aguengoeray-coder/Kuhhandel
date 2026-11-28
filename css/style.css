@@ -4594,3 +4594,17 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 @keyframes mythhue { to { filter: drop-shadow(0 0 5px #FF4FD8) drop-shadow(0 0 12px #4FA8FF) hue-rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .sa-ding.myth { animation: none; } }
 .mysets .chip.card em .emsp { display: none; } /* eigene Sets im Kuhhandel: Spezialkarte = goldener Rahmen (wenig Platz) */
+/* v1.3 viele Sets an der Seite (spät im Spiel, 4 Spieler): Kärtchen schrumpfen mit der Anzahl, damit der Platz nicht in Figur/Knöpfe wächst */
+.stage .gright .prow .chips { row-gap: 8px; }
+.stage .gright .prow .chip.card em { bottom: -5px; }
+/* v1.3 (Alp): legendäre Gegenstände ohne goldenen Kreis – nur leichtes Leuchten + Funkeln */
+.sa-ding.leg { filter: drop-shadow(0 0 3px rgba(255,216,107,.9)); }
+/* Goldrausch überschreibt den Set-Effekt der Figur */
+.mefig:is(.gr1, .gr2) :is(.fxb, .fxf), .prow:is(.gr1, .gr2) .seatfig :is(.fxb, .fxf) { display: none; }
+/* v1.3: Seiten-Sets breiter (5 pro Reihe) statt höher – weniger Reihen, nichts rutscht in Figur/Knöpfe */
+@media (min-width: 780px) { .stage .gright .prow.seat-l .chips:not(.x), .stage .gright .prow.seat-r .chips:not(.x) { max-width: 172px; } }
+/* v1.3 Seiten-Sets: bis 5 Karten eine Reihe in voller Größe, 6–10 zwei Reihen etwas kleiner, mehr noch kleiner */
+.stage .gright .prow.seat-l .chips.c2, .stage .gright .prow.seat-r .chips.c2 { zoom: .8; }
+.stage .gright .prow.seat-l .chips.c3, .stage .gright .prow.seat-r .chips.c3 { zoom: .7; }
+/* v1.3 iPhone quer: „Alle anderen haben gepasst“ ohne Zusatzzeile, damit die Knopfspalte nicht in die Mitspieler-Sets wächst */
+@media (max-height: 450px) { .dock .lastin small { display: none; } .dock .lastin { padding: 5px 9px; } }
