@@ -1211,7 +1211,7 @@ test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen
   const O = await import('../js/outfits.js');
   const sql = fs.readdirSync(new URL('../supabase/', import.meta.url)).filter((f) => /^v0\.9\d-kiste|^v0\.91-kuhkiste|^v1\.[\d.]+-kiste/.test(f)).sort().map((f) => fs.readFileSync(new URL(`../supabase/${f}`, import.meta.url), 'utf8')).join('\n');
   const inSql = [...new Set([...sql.matchAll(/\('([a-z:-]+)', '(gewoehnlich|selten|episch|legendaer)'\)/g)].map((m) => `${m[1]}=${m[2]}`))].sort();
-  const inApp = Object.entries(O.BOX_ITEMS).map(([id, it]) => `${id}=${it.rarity}`).sort();
+  const inApp = Object.entries(O.BOX_ITEMS).filter(([, it]) => !it.forge).map(([id, it]) => `${id}=${it.rarity}`).sort(); // v1.4: Mythisch nur aus der Schmiede
   assert.deepEqual(inSql, inApp);
   assert.equal(Object.values(O.RARITIES).reduce((a, r) => a + r.chance, 0), 100);
   for (const r of Object.keys(O.RARITIES)) assert.ok(O.boxPool(r).length >= 3, `genug ${r}`);
@@ -1234,6 +1234,11 @@ test('v0.91: Kuh-Kiste – Katalog in der App passt zur Datenbank-Liste, Chancen
     const rows = [...sq.matchAll(/\('([a-z]+)', array\[([^\]]+)\], (null|\d+)\)/g)].map((m) => [m[1], m[2].replace(/'/g, '').split(',')]);
     assert.deepEqual(Object.fromEntries(rows), Object.fromEntries(Object.keys(O.BOX_SETS).map((k) => [k, O.boxSetParts(k)])), 'shop_box_sets = BOX_SETS');
     assert.match(sq, /revoke all on function public\.admin_gift\(uuid, int, int\) from public, anon/); assert.match(sq, /perform public\.require_admin\(\)/); }
+  { const fs4 = await import('node:fs'); const sm = fs4.readFileSync(new URL('../supabase/v1.4-kiste-gegenstaende.sql', import.meta.url), 'utf8');
+    const myth = (sm.match(/v_mythic text\[\] := array\[([^\]]+)\]/) || [])[1].replace(/'/g, '').split(',').sort();
+    assert.deepEqual(myth, Object.entries(O.BOX_ITEMS).filter(([, it]) => it.forge).map(([id]) => id).sort(), 'Mythisch: SQL = App');
+    for (const id of myth) { assert.equal(O.BOX_ITEMS[id].rarity, 'mythisch'); assert.ok(O.dingArt(id).length > 50, 'Bild für ' + id); }
+    for (const [id, it] of Object.entries(O.BOX_ITEMS)) if (it.slot === 'ding') assert.ok(O.dingArt(id).length > 50, 'Bild für ' + id); }
   assert.ok(sql.includes('since_legend + 1 >= 25') && sql.includes('since_epic + 1 >= 8'), 'Pech-Schutz wie in der App');
 });
 

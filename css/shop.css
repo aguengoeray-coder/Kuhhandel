@@ -328,3 +328,8 @@
 .wd-grid{gap:6px}
 /* v1.3 iPad: Figur in „Anziehen“ groß statt winzig */
 @media (min-height:700px){.wd-left .wd-fig .shop-avatar-full,.wd-left .wd-fig svg{max-height:420px}}
+/* v1.4 Mythisch */
+.wd-cell.r-mythisch{box-shadow:inset 0 0 0 2.5px #FF4FD8,0 0 10px #FF4FD8aa;background:linear-gradient(135deg,#FF4F4F22,#F5E64222,#4FD86A22,#4FA8FF22,#B84FFF22)}
+.wd-info.r-mythisch{--rc:#FF4FD8}.forge .fp.r-mythisch{--rc:#FF4FD8}
+.box-reveal.r-mythisch{box-shadow:0 0 0 3px #FF4FD8,0 0 40px #B84FFFcc,0 0 90px #4FA8FF66}
+.rtag.r-mythisch,.r-mythisch .rtag{background:linear-gradient(90deg,#FF4F4F,#FFB02E,#F5E642,#4FD86A,#4FA8FF,#B84FFF)!important;color:#fff!important}

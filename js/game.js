@@ -126,11 +126,11 @@ function playerChips(p, tradeable = new Set(), max = CHIP_MAX) {
   for (const a of ANIMALS) {
     const n = p.animals[a.id] || 0;
     const sp = sps.has(a.id) && n > 0;
-    if (n > 0) items.push({ rank: n === 4 ? 0 : tradeable.has(a.id) ? 1 : 3, n, val: a.value, html: chip(a.id, `card ${n === 4 ? 'done' : n === 3 ? 'near3' : ''} ${sp ? 'hassp' : ''}`, `${miniCard(a.id)}<em>${n === 4 ? '✓' : `${n}×`}</em>${sp ? spB : ''}`, `${n}× ${a.name}${sp ? ' + Spezialkarte' : ''}`) });
+    if (n > 0) items.push({ rank: n === 4 ? 0 : tradeable.has(a.id) ? 1 : 3, n, val: a.value, html: chip(a.id, `card ${n === 4 ? 'done' : n === 3 ? 'near3' : ''} ${sp ? 'hassp' : ''}`, `${miniCard(a.id)}<em>${n === 4 ? '✓' : `${n}×`}${sp ? '<b class="emsp" aria-label="plus Spezialkarte">★</b>' : ''}</em>`, `${n}× ${a.name}${sp ? ' + Spezialkarte' : ''}`) });
   }
   const r = ratsOf(p);
   if (r > 0) items.push({ rank: tradeable.has(RAT) ? 1 : 2, n: r, val: 0, html: chip(RAT, 'card rat', `${miniCard(RAT)}<em>${r}×</em>`, `${r}× Ratte`) });
-  for (const id of specialsOf(p)) if (!(p.animals[id] > 0)) items.push({ rank: 4, n: 1, val: SPECIAL_VALUE, html: `<span class="chip card sp hassp" title="${aname(id)}-Spezialkarte (ohne Tier)">${miniCard(id)}${spB}</span>` });
+  for (const id of specialsOf(p)) if (!(p.animals[id] > 0)) items.push({ rank: 4, n: 1, val: SPECIAL_VALUE, html: `<span class="chip card sp hassp" title="${aname(id)}-Spezialkarte (ohne Tier)">${miniCard(id)}<em><b class="emsp">★</b></em></span>` });
   items.sort((x, y) => x.rank - y.rank || y.n - x.n || y.val - x.val);
   if (items.length <= max) return items.map((x) => x.html).join('');
   return items.slice(0, max - 1).map((x) => x.html).join('') + `<span class="chip more">+${items.length - max + 1}</span>`;
