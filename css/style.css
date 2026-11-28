@@ -4580,6 +4580,10 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 .bug-a { display: flex; gap: 6px; flex-wrap: wrap; } .bug-a .abtn.on { background: #2E7D4F; color: #fff; }
 .bug-done summary { cursor: pointer; font-weight: 700; margin: 8px 0 4px; }
 /* v1.3 viele Sets an der Seite (spät im Spiel, 4 Spieler): Kärtchen schrumpfen mit der Anzahl, damit der Platz nicht in Figur/Knöpfe wächst */
-.stage .gright .prow.seat-l .chips, .stage .gright .prow.seat-r .chips { zoom: clamp(.5, calc(5 / max(5, var(--nchip, 1))), 1); }
+.stage .gright .prow.seat-l .chips, .stage .gright .prow.seat-r .chips { zoom: clamp(.5, calc(4 / max(4, var(--nchip, 1))), 1); }
 .stage .gright .prow .chips { row-gap: 8px; }
 .stage .gright .prow .chip.card em { bottom: -5px; }
+/* v1.3 (Alp): legendäre Gegenstände ohne goldenen Kreis – nur leichtes Leuchten + Funkeln */
+.sa-ding.leg { filter: drop-shadow(0 0 3px rgba(255,216,107,.9)); }
+/* Goldrausch überschreibt den Set-Effekt der Figur */
+.mefig:is(.gr1, .gr2) :is(.fxb, .fxf), .prow:is(.gr1, .gr2) .seatfig :is(.fxb, .fxf) { display: none; }

@@ -228,15 +228,26 @@ export function logNo(state) { return state.logTotal ?? state.log.length; }
 // v1.2 Goldrausch (nur Optik, ändert keine Regel): Glückssträhne je Spieler 0 … 8.
 // Kuhhandel gewonnen +2, verloren −3; Versteigerung zum Schnäppchen (≤ Tierwert) +1, teuer gekauft ±0.
 // Stufe I ab 3, Stufe II ab 6 – sinkt die Strähne, verwandelt man sich zurück.
+// v1.3 (Alp): immer nur EINER am Tisch ist im Goldrausch – wer die längste Strähne hat (bei Gleichstand bleibt der bisherige).
 export const STREAK_LV1 = 3, STREAK_LV2 = 6, STREAK_MAX = 8;
-export function streakLevel(state, id) { const v = state.streak?.[id] || 0; return v >= STREAK_LV2 ? 2 : v >= STREAK_LV1 ? 1 : 0; }
+const lvOf = (v) => (v >= STREAK_LV2 ? 2 : v >= STREAK_LV1 ? 1 : 0);
+function powerHolder(state) {
+  const st = state.streak || {}; const cur = state.power?.id;
+  let best = null;
+  for (const p of state.players) { const v = st[p.id] || 0; if (!lvOf(v)) continue; if (!best || v > best.v || (v === best.v && p.id === cur)) best = { id: p.id, v }; }
+  return best ? { id: best.id, lv: lvOf(best.v) } : null;
+}
+export function streakLevel(state, id) { const h = state.power === undefined ? powerHolder(state) : state.power; return h && h.id === id ? h.lv : 0; }
 function bumpStreak(state, id, d) {
   if (!id || !d) return;
+  const before = state.power === undefined ? powerHolder(state) : state.power;
   state.streak = { ...(state.streak || {}) };
-  const before = streakLevel(state, id);
   state.streak[id] = Math.max(0, Math.min(STREAK_MAX, (state.streak[id] || 0) + d));
-  const after = streakLevel(state, id);
-  if (after !== before && state.lastEvent) state.lastEvent = { ...state.lastEvent, power: { id, from: before, to: after } };
+  const after = powerHolder({ ...state, power: before });
+  state.power = after;
+  if (!state.lastEvent) return;
+  if (after && (!before || before.id !== after.id || before.lv !== after.lv)) state.lastEvent = { ...state.lastEvent, power: { id: after.id, from: before && before.id === after.id ? before.lv : 0, to: after.lv, ...(before && before.id !== after.id ? { took: before.id } : {}) } };
+  else if (!after && before) state.lastEvent = { ...state.lastEvent, power: { id: before.id, from: before.lv, to: 0 } };
 }
 function log(state, text) {
   state.logTotal = logNo(state) + 1;
