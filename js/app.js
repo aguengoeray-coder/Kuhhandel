@@ -17,7 +17,7 @@ import { BOX_ITEMS, RARITIES, BOX_PRICE, BOX_SETS, boxSetParts } from './outfits
 import { loadTheme, saveTheme, applyTheme, themeModal, PRESETS, SPECIAL_PRESETS, bgForTable, DEFAULT_THEME } from './theme.js';
 import { scores, ANIMALS, ANIMAL_BY_ID, RAT, isSpecialCard, specialAnimal, ratCurrent, specialStage, isMoneyCard, moneyValue, MONEY_VALUES, MAX_MONEY_CARDS, isNewsCard } from '../src/engine.js';
 
-export const APP_VERSION = '1.2.0';
+export const APP_VERSION = '1.3.0';
 const app = document.getElementById('app');
 const params = new URLSearchParams(location.search);
 const DEMO = params.get('demo'); // nur für Screenshots: ?demo=start oder ?demo=room
@@ -1630,6 +1630,30 @@ async function loadStats() {
 // Eigene Statistik (Startseite → „Meine Statistik“)
 const DEMO_MYSTATS = Array.from({ length: 12 }, (_, k) => ({ score: [1500, 4870, 3200, 900, 7150, 2600, 3900, 1200, 5400, 2100, 3300, 4100][k], quartets: [3, 5, 4, 2, 6, 3, 4, 2, 5, 3, 4, 4][k], won: [0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1][k] === 1,
   extras: k < 8 ? { animals: [['kuh', 'hund', 'katze'], ['kuh', 'pferd', 'esel', 'gans', 'hahn'], ['kuh', 'schaf', 'hund', 'ziege']][k % 3], maxBuy: { animal: ['pferd', 'kuh', 'schwein'][k % 3], amount: [620, 410, 380][k % 3] }, tradesWon: k % 3 + 1, tradesLost: k % 2 } : null }));
+// v1.3 Fehlerliste: jeder meldet, alle sehen, Admin hakt ab und kopiert
+const bugCtx = () => { const g = window.__khGame && Date.now() - window.__khGame.at < 10 * 60 * 1000 ? window.__khGame : null; const ua = navigator.userAgent;
+  const dev = /iPad|Macintosh.*Mobile/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? 'iPad' : /iPhone/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android' : 'Computer';
+  return { v: APP_VERSION, geraet: dev, bild: `${innerWidth}×${innerHeight}`, ...(g ? { phase: g.phase, zug: g.zug, spieler: g.spieler, modus: g.modus } : { ort: 'Startseite' }) }; };
+const PHASE_DE = { turn: 'Zug', auction: 'Versteigerung', trade: 'Kuhhandel', rat: 'Rattenrunde', special: 'Spezialkarte', divide: 'Aufteilen', ended: 'Spielende', pfaendung: 'Pfändung' };
+const bugCtxText = (c) => [c.v && 'v' + c.v, c.geraet, c.bild, c.phase ? `${PHASE_DE[c.phase] || c.phase}, Zug ${c.zug}, ${c.spieler} Spieler, ${c.modus}` : c.ort].filter(Boolean).join(' · ');
+async function loadBugs() {
+  if (DEMO) { modal.bugs = modal.bugs || [{ id: 2, name: 'Nico', text: 'Beim Kuhhandel springt das Angebot manchmal zurück.', context: { v: '1.2.0', geraet: 'iPhone', bild: '852×393', phase: 'trade', zug: 88, spieler: 4, modus: 'klassisch' }, votes: ['x'], done: false, created_at: new Date().toISOString() }, { id: 1, name: 'Alp', text: 'Shop-Knopf brauchte zwei Tipps.', context: { v: '1.1.0', geraet: 'iPad', bild: '1180×820', ort: 'Startseite' }, votes: [], done: true, created_at: new Date(Date.now() - 3600e3).toISOString() }]; return render(); }
+  const { data, error } = await sb.from('feedback').select('id, user_id, name, text, context, votes, done, created_at').order('created_at', { ascending: false }).limit(200);
+  if (!modal || modal.kind !== 'bugs') return;
+  modal.bugs = error ? [] : data; modal.bugErr = error ? 'Die Fehlerliste ist gleich da (Datenbank wird eingerichtet).' : ''; render();
+}
+function bugsBody() {
+  const list = modal.bugs; const open = (list || []).filter((b) => !b.done); const done = (list || []).filter((b) => b.done);
+  const item = (b) => `<li class="bug ${b.done ? 'done' : ''}"><div class="bug-h"><b>${esc(b.name)}</b><small>${esc(fmtTime(b.created_at))} · ${esc(bugCtxText(b.context || {}))}</small></div><p>${esc(b.text)}</p>
+    <div class="bug-a"><button type="button" class="abtn ${(b.votes || []).includes(me?.id) ? 'on' : ''}" data-m="bugVote" data-v="${b.id}">👍 auch bei mir${(b.votes || []).length ? ' · ' + b.votes.length : ''}</button>${ui.isAdmin ? `<button type="button" class="abtn ${b.done ? '' : 'primary'}" data-m="bugDone" data-v="${b.id}" data-d="${b.done ? '0' : '1'}">${b.done ? '↩︎ wieder offen' : '✅ erledigt'}</button>` : ''}</div></li>`;
+  return `<h2>🐞 Fehler melden</h2>
+    <form class="bugform"><textarea name="t" rows="3" maxlength="1000" placeholder="Was ist passiert? (z. B. „Beim Kuhhandel ging der Knopf erst beim 3. Mal“)" required>${esc(modal.bugDraft || '')}</textarea>
+      <div class="bugform-f"><small>Automatisch dabei: ${esc(bugCtxText(bugCtx()))}</small><button type="submit" class="abtn primary">Senden</button></div></form>
+    ${modal.okMsg ? `<p class="aok">${esc(modal.okMsg)}</p>` : ''}${modal.bugErr || modal.error ? `<p class="aerr">${esc(modal.bugErr || modal.error)}</p>` : ''}
+    ${modal.bugCopyText ? `<textarea class="bugcopytxt" rows="5" readonly>${esc(modal.bugCopyText)}</textarea>` : ''}
+    ${ui.isAdmin && open.length ? `<button type="button" class="abtn primary bugcopy" data-m="bugCopy">📋 Alle offenen kopieren (${open.length})</button>` : ''}
+    ${list ? `<h3 class="bug-sec">Offen (${open.length})</h3><ul class="buglist">${open.map(item).join('') || '<li class="bug empty">Nichts offen 🎉</li>'}</ul>${done.length ? `<details class="bug-done"><summary>Erledigt (${done.length})</summary><ul class="buglist">${done.map(item).join('')}</ul></details>` : ''}` : '<p class="mtext">Lädt …</p>'}`;
+}
 async function loadMyStats() {
   if (DEMO) { modal.mine = DEMO_MYSTATS; return render(); }
   let res = await sb.from('game_results').select('score, quartets, won, created_at, extras').eq('player_id', me.id).order('created_at', { ascending: false }).limit(500);
@@ -2012,6 +2036,7 @@ function openModal(kind) {
   if (kind === 'pin') loadPin();
   if (kind === 'stats') loadStats();
   if (kind === 'mystats') loadMyStats();
+  if (kind === 'bugs') loadBugs();
   if (kind === 'kasse') loadKasse();
   if (kind === 'profile') { modal.tab = 'figur'; loadMyStats(); loadShop(); } // v0.80 Mein Profil
   if (kind === 'admin') { modal.tab = 'users'; loadAdmin(); }
@@ -2103,6 +2128,7 @@ function renderModal() {
     <p class="mtext small">Die App bewegt kein Geld – sie merkt sich nur in der 💶 Kasse, wer wem was schuldet. Bezahlt wird unter euch.</p>`; }
   if (modal.kind === 'kasse') body = kasseBody();
   if (modal.kind === 'admin') body = adminBody();
+  if (modal.kind === 'bugs') body = bugsBody();
   if (modal.kind === 'mystats') body = `<h2>📊 Meine Statistik</h2>${myStatsBody(modal.mine)}`;
   if (modal.kind === 'stats') {
     const rows = modal.stats;
@@ -2129,6 +2155,7 @@ function renderModal() {
       ${PUSH_PUBLIC_KEY ? row('push', '', '🔔', 'Benachrichtigen', `<span class="stog ${pushOn() ? 'on' : ''}"></span>`) : ''}
       ${isStandalone() ? '' : row('go', 'install', '📲', 'Als App installieren')}
       ${row('go', 'mystats', '📊', 'Meine Statistik')}
+      ${row('go', 'bugs', '🐞', 'Fehler melden', 'Testphase ›')}
       ${row('go', 'news', '📰', 'Was ist neu?', `v${APP_VERSION} ›`)}
       ${ui.isAdmin ? row('go', 'admin', '🛠️', 'Admin') : ''}
       ${row('logout', '', '🚪', 'Abmelden', '', 'out')}
@@ -2173,6 +2200,18 @@ function renderModal() {
       if (b.dataset.m === 'themeReset') theme = { ...DEFAULT_THEME, bigText: theme.bigText, fx: theme.fx };
       saveTheme(store, theme); applyTheme(theme); return render();
     }
+    if (modal.kind === 'bugs') {
+      const id = Number(b.dataset.v);
+      if (b.dataset.m === 'bugVote') { if (DEMO) { const x = modal.bugs.find((y) => y.id === id); x.votes = x.votes.includes(me?.id) ? x.votes.filter((y) => y !== me?.id) : [...x.votes, me?.id]; return render(); } sb.rpc('feedback_vote', { p_id: id }).then(loadBugs); return; }
+      if (b.dataset.m === 'bugDone') { const d = b.dataset.d === '1'; if (DEMO) { modal.bugs.find((y) => y.id === id).done = d; return render(); } sb.rpc('admin_feedback_done', { p_id: id, p_done: d }).then(loadBugs); return; }
+      if (b.dataset.m === 'bugCopy') {
+        const open = (modal.bugs || []).filter((x) => !x.done);
+        const txt = 'Fehlerliste Kuhhandel (' + new Date().toLocaleDateString('de-DE') + ', ' + open.length + ' offen):\n' + open.map((x, i) => `${i + 1}. ${x.text.replace(/\s+/g, ' ')} — ${x.name}${(x.votes || []).length ? ` (+${x.votes.length} auch)` : ''} [${bugCtxText(x.context || {})}]`).join('\n');
+        const done = () => { modal.okMsg = '📋 Kopiert – einfach bei Claude einfügen.'; render(); };
+        (navigator.clipboard?.writeText(txt) || Promise.reject()).then(done, () => { modal.bugCopyText = txt; modal.okMsg = 'Kopieren ging nicht automatisch – Text unten markieren und kopieren.'; render(); });
+        return;
+      }
+    }
     if (modal.kind === 'admin') {
       const v = b.dataset.v;
       const nameOf = (id) => modal.adminData?.users?.find((u) => u.id === id)?.name || 'Spieler';
@@ -2208,10 +2247,19 @@ function renderModal() {
     if (b.dataset.m === 'pfAv') return setMyAvatar(b.dataset.v);
   };
   // v1.1 Admin: Dublonen / Gratis-Kisten verschenken
+  el.querySelectorAll('form.bugform').forEach((f) => {
+    f.t.oninput = () => { modal.bugDraft = f.t.value; };
+    f.onsubmit = async (e) => { e.preventDefault(); const t = String(f.t.value || '').trim(); if (!t) return; modal.okMsg = ''; modal.error = '';
+      if (DEMO) { modal.bugs = [{ id: Date.now(), name: me?.name || 'Du', text: t, context: bugCtx(), votes: [], done: false, created_at: new Date().toISOString() }, ...(modal.bugs || [])]; modal.bugDraft = ''; modal.okMsg = 'Danke! Steht jetzt in der Liste.'; return render(); }
+      const { error } = await sb.rpc('feedback_add', { p_text: t, p_context: bugCtx() });
+      if (error) { modal.error = String(error.message || 'Hat nicht geklappt.').replace(/^.*?:\s*/, ''); return render(); }
+      modal.bugDraft = ''; modal.okMsg = 'Danke! Steht jetzt in der Liste.'; loadBugs(); };
+  });
   el.querySelectorAll('form.agift').forEach((f) => { f.onsubmit = (e) => {
     e.preventDefault(); const u = f.dataset.user; const dub = Math.max(0, Number(f.dub.value) || 0); const boxes = Math.max(0, Number(f.boxes.value) || 0);
     const who = modal.adminData?.users?.find((x) => x.id === u)?.name || 'Spieler';
     modal.giftFor = null;
+    if (u === me.id) setTimeout(() => loadShop(true).then(() => render(), () => {}), 1200); // v1.3: sich selbst beschenkt → Kontostand neu laden
     adminAction('admin_gift', { p_user: u, p_dublonen: dub, p_boxes: boxes }, `🎁 ${who} bekommt ${dub ? dub + ' Dublonen' : ''}${dub && boxes ? ' und ' : ''}${boxes ? boxes + ' Gratis-Kiste' + (boxes > 1 ? 'n' : '') : ''}${!dub && !boxes ? 'nichts' : ''}.`);
   }; });
   el.querySelectorAll('form.apw:not(.agift)').forEach((f) => { f.onsubmit = (e) => {

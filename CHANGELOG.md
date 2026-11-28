@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## v1.3.0 – Fehlerliste, Set-Knöpfe repariert, kürzere Tests (Alp 28.11. 13:13–13:29)
+
+- [x] **🐞 Fehler melden** (Menü am Tisch + Einstellungen): Text + automatisch Version, Gerät, Bildgröße, Spielsituation; alle sehen die Liste, „👍 auch bei mir“; Admin: „✅ erledigt“ und „📋 Alle offenen kopieren“ (fertiger Text für Claude). SQL `supabase/v1.3-fehlerliste.sql` (`feedback`, `feedback_add`, `feedback_vote`, `admin_feedback_done`).
+- [x] **Fix Sets:** „Anziehen“/„Anprobieren“ im Reiter Sets taten nichts (kaputtes Attribut seit v1.1); jetzt: vorhandene Sets werden angezogen, fehlende angeprobt (mit Hinweis, wo es die Teile gibt).
+- [x] **Set-Effekt wählen** deutlicher: Knopf „✨ Nur Effekt“ / „✨ Effekt an“ bei jedem kompletten Set.
+- [x] **Fix Admin-Geschenk an sich selbst:** Kontostand wird danach neu geladen (kam an, wurde nur nicht angezeigt).
+- [x] **iPad:** Spielende-Fenster wächst mit, Knöpfe nicht mehr abgeschnitten.
+- [x] **Tests kürzer:** Browser-Tests nur noch iPhone Pro (852×393) und iPad (1180×820), 4 statt 6 Partien (~15 statt ~45 min).
+
 ## v1.2.0 – Goldrausch (Alp 28.11. 11:30)
 
 - [x] **Glückssträhne pro Spieler** (`state.streak`, nur Optik – keine Regeländerung): Kuhhandel gewonnen +2, verloren −3, Versteigerung zum Schnäppchen (≤ Tierwert) +1.

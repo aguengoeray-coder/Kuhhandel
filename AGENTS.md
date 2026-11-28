@@ -26,7 +26,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 - **Hosting:** Cloudflare Worker `kuhhandel` (statische Dateien, `wrangler.jsonc` + `.assetsignore`).
   Live: https://kuhhandel.a-guengoeray.workers.dev – jeder Push auf `main` baut automatisch neu.
 - **Datenbank/Echtzeit:** Supabase (Frankfurt). Tabellen `games`, `profiles`, `game_results` (mit `extras` für die eigene Statistik), `seat_pins`, `error_reports` (automatische Fehlerberichte), `admins` (nur Alp),
-  `kasse` (v0.84 Schuldenbuch für Einsätze: nur über `kasse_settle`/`kasse_paid_pair`, die App bewegt kein Geld), `shop_inventory`/`shop_box_state`/`shop_box_log`/`shop_box_pool` (v0.91 Kuh-Kiste: nur über `shop_open_box`, `shop_set_outfit`; v1.0 Schmiede `shop_combine`; v1.1 `admin_gift`, `shop_box_status`, Sets `shop_box_sets`; v0.95 Outfit-Plätze `shop_set_presets`), `push_subscriptions` + `push_settings` (Push „Du bist dran“: Trigger `kh_push` auf `games` meldet per pg_net an den Worker `/push`).
+  `kasse` (v0.84 Schuldenbuch für Einsätze: nur über `kasse_settle`/`kasse_paid_pair`, die App bewegt kein Geld), `shop_inventory`/`shop_box_state`/`shop_box_log`/`shop_box_pool` (v0.91 Kuh-Kiste: nur über `shop_open_box`, `shop_set_outfit`; v1.0 Schmiede `shop_combine`; v1.1 `admin_gift`, `shop_box_status`, Sets `shop_box_sets`; v0.95 Outfit-Plätze `shop_set_presets`), `feedback` (v1.3 Fehlerliste: lesen alle Angemeldeten, schreiben nur über `feedback_add`/`feedback_vote`/`admin_feedback_done`), `push_subscriptions` + `push_settings` (Push „Du bist dran“: Trigger `kh_push` auf `games` meldet per pg_net an den Worker `/push`).
   Admin-Bereich: Startseite → „⚙ Admin“ (nur für Admins; jede Admin-Funktion `admin_*` prüft in Supabase, ob der Aufrufer Admin ist).
   Konten: Name + Passwort (intern als `name@kuhhandel.app`, E-Mail-Bestätigung ist aus).
   SQL-Stand: `supabase/schema.sql` + spätere Dateien in `supabase/`.
@@ -50,7 +50,7 @@ Besitzer: Alp. Mitentwickler: Nico. Sprache im Spiel und in Absprachen: **Deutsc
 | `js/quartets.js` | Quartett-Show: eigene Szene je Tier für alle (`quartetShow`, `QSHOW_MS`); Rattenkönig-Show + Rattenmütze (`ratKingShow`, `ratHat`) |
 | `js/modes.js` | Startbildschirm: Spielmodus-Kacheln (Klassisch, Turbo, Börsen-Chaos, Beitreten) mit eigenen Bildern |
 | `js/whatsnew.js` | „Was ist neu?“ für Spieler – oberster Eintrag = `APP_VERSION` (Check prüft das) |
-| `e2e/` | Browser-Tests (Playwright): alle Ansichten × 4 Handygrößen, einheitliche Größen, komplette Partien |
+| `e2e/` | Browser-Tests (Playwright): alle Ansichten × 2 Größen (iPhone Pro 852×393, iPad 1180×820 – gespielt wird nur darauf), einheitliche Größen, 4 Partien |
 | `scripts/check.mjs` | Syntax, Versionen, „Was ist neu“, AGENTS = CLAUDE |
 | `worker/index.js` | Cloudflare Worker: liefert die Dateien aus, weckt Supabase täglich (Zeitplan in `wrangler.jsonc`), verschickt Push (`POST /push`, Secrets `PUSH_SECRET` + `VAPID_PRIVATE_JWK` nur im Cloudflare-Dashboard) |
 | `sw.js` | Service Worker: zeigt die Push-Benachrichtigung (speichert nichts zwischen) |

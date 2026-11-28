@@ -4564,3 +4564,18 @@ html[data-fx="aus"] .prow :is(.seatfig)::before, html[data-fx="aus"] .prow .seat
 /* Blitz-Zeichen am Namen schwebt (ändert die Platzgröße nicht) */
 .prow.gr1 .ribbon-s, .prow.gr2 .ribbon-s { position: relative; }
 .prow.gr1 .ribbon-s::after, .prow.gr2 .ribbon-s::after { position: absolute; right: -4px; top: -11px; font-size: 12px; line-height: 1; filter: drop-shadow(0 0 3px #FFB300); pointer-events: none; }
+/* v1.3 iPad: Spielende-Fenster darf auf hohen Bildschirmen mitwachsen (Knöpfe wurden abgeschnitten) */
+.stage .overlay.endtable { height: clamp(374px, calc(100% - 60px), 480px); }
+/* v1.3 Fehlerliste */
+.bugform { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 8px; }
+.bugform textarea, .bugcopytxt { width: 100%; box-sizing: border-box; border: 2px solid #2A2420; border-radius: 12px; padding: 8px 10px; font: 600 14px/1.35 var(--font-body, inherit); resize: vertical; background: #fff; color: #1d2433; }
+.bugform-f { display: flex; align-items: center; gap: 8px; } .bugform-f small { flex: 1; min-width: 0; opacity: .7; font-size: 11px; }
+.bugcopy { width: 100%; margin: 4px 0 6px; }
+.bug-sec { margin: 8px 0 4px; font-size: 14px; }
+.buglist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.bug { background: #F3F1EA; border-radius: 12px; padding: 8px 10px; }
+.bug.done { opacity: .6; } .bug.empty { text-align: center; font-weight: 700; }
+.bug-h { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; } .bug-h small { opacity: .65; font-size: 11px; }
+.bug p { margin: 3px 0 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bug-a { display: flex; gap: 6px; flex-wrap: wrap; } .bug-a .abtn.on { background: #2E7D4F; color: #fff; }
+.bug-done summary { cursor: pointer; font-weight: 700; margin: 8px 0 4px; }

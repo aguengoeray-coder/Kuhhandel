@@ -766,6 +766,7 @@ export function renderGame(root, ctx) {
   // Kennung aus Nummer und Art: zwei Ereignisse mit derselben Nummer (z. B. „umsonst“ und danach Geldschein) gelten trotzdem beide als neu
   const evN = v.lastEvent ? `${v.lastEvent.n}|${v.lastEvent.type}` : null;
   const evFresh = fresh && evN != null && local.seenEvN !== evN;
+  try { window.__khGame = { phase: state.phase, zug: logNo(state), spieler: state.players.length, modus: [state.settings?.duo && 'zu zweit', state.settings?.boerse && 'Börsen-Chaos', state.settings?.turbo && 'Turbo', state.settings?.teams && 'Teams'].filter(Boolean).join(', ') || 'klassisch', at: Date.now() }; } catch { /* nur für Fehlermeldungen */ }
   // v0.82 Geheimauftrag: 🎯 oben links, am Anfang einmal von selbst offen (6 s), Antippen zeigt Auftrag und Stand
   const myMission = v.missions && v.missions[meId] ? missionStatus(v, meId) : null;
   if (myMission && local.missAuto === undefined) { local.missAuto = logNo(v) <= 4 ? Date.now() + 6500 : 0; if (local.missAuto) { local.missOpen = true; later.push(['bell', 600]); } }
@@ -1669,6 +1670,7 @@ export function renderGame(root, ctx) {
       <button type="button" class="pill pill-white pill-small" data-a="intros">⚔️ Duell-Intros: ${ctx.introsOff ? 'aus' : 'an'}</button>
       <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="modal" data-v="mystats">📊 Statistik</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="stats">🏆 Bestenliste</button></div>
+      <div class="menu-row"><button type="button" class="pill pill-white pill-small" data-a="modal" data-v="bugs">🐞 Fehler melden</button></div>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="rules">Spielregeln</button>
       <button type="button" class="pill pill-white pill-small" data-a="modal" data-v="design">🎨 Aussehen</button>
       ${ctx.push != null ? `<button type="button" class="pill pill-white pill-small" data-a="push">🔔 Benachrichtigung: ${ctx.push ? 'an' : 'aus'}</button>` : ''}
